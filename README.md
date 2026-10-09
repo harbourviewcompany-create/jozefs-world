@@ -16,6 +16,12 @@ The signature interface is a premium, broadcast-style football universe rather t
 - The Club squad builder includes a live tactical pitch showing selected goalkeeper, defender, midfielder and striker; all original native card selectors and stored squad data are preserved.
 - Graphics come from checked-in `arena-renderer.js` and `arena-visual.css`; there are no image CDNs, tracking dependencies or additional child data collection.
 
+### Collection, Career & World Tour art pass (2026)
+- Seven non-commercial, achievement-unlocked collectible players now have locally illustrated football jerseys, foil-style rarity borders, rating and role details, with original unlock requirements preserved.
+- The six-match Career league has an automatically updating journey rail, a graphic J/11 league emblem, a night-match scoreboard, and football kit icons on its tactical pitch.
+- The five-country World Tour features a stamped passport itinerary, a CSS-built gold trophy and coordinated night-match and penalty-kick styling.
+- `campaign-2026.css` and `campaign-2026.js` contain all new visual presentation; the familiar local progress APIs supply milestone updates without new accounts, network requests or save keys.
+
 ### The Arena — full playable football
 - A real-time, top-down 75-second football match with controllable movement, a touch D-pad, tap-to-move and arrow/WASD keyboard play.
 - Pass the ball to a teammate using PASS/J and ask for the one-two with another press. Tap SKILL BURST or press L to escape defenders; it has a real cooldown.
