@@ -1,6 +1,6 @@
 # Jozef's World ⚽
 
-A private, kid-friendly soccer adventure made for Jozef. Play games, create a player, win the World Tour Cup, explore countries and discover soccer facts.
+Jozef FC // After Dark is a private football universe. Play an actual Arena match, develop Jozef's squad, challenge rivals, build a career, and travel the world. Your game. Your world.
 
 **Live:** https://harbourviewcompany-create.github.io/jozefs-world/  
 **Standalone playable page:** https://harbourviewcompany-create.github.io/jozefs-world/world.html
@@ -9,6 +9,19 @@ A private, kid-friendly soccer adventure made for Jozef. Play games, create a pl
 
 ### Jozef FC // After Dark
 The signature interface is a premium, broadcast-style football universe rather than a generic children's site: floodlit stadium crest, custom J/11 identity, editorial type, neon-acid accents, responsive player HUD, real matchday indicator, cinematic motion, and a seven-destination quick navigation deck. Deep links and browser back/forward work between sections. Reduced-motion preferences are honoured.
+
+### The Arena — full playable football
+- A real-time, top-down 75-second football match with controllable movement, a touch D-pad, tap-to-move and arrow/WASD keyboard play.
+- Pass the ball to the teammate using PASS/J, shoot using SHOOT/K, evade three tracking defenders, and outplay the keeper.
+- Score goals, win matches and grow a private Jozef FC record; opponent counterattacks sometimes score, but tackles are not automatically goals.
+- Win two matches to open **Neon City** against Midnight City FC, and five to face **The Neon Royals** in Legend Arena. Each venue has its own field colours and story.
+- The player wears Jozef's currently selected Jozef FC kit and jersey number, rather than a default uniform.
+
+### Tactical squad builder
+- Seven earned player cards become usable in four squad positions: keeper, defender, playmaker and striker. Unfilled positions have academy players.
+- A card must first be earned through Career, World Tour, goals or learning, and can only be used once in the lineup.
+- Squad abilities feed directly into Arena movement, passing and shooting, with Balanced, Attack and Defence tactics.
+- Player and squad saves live privately on the device and are included in parent progress backups.
 
 ### STREET//11 — original real-time arcade
 A 55-second neon street-football lane-runner with animated defenders, star collection, combos, personal bests, three hearts, escalating pace, and a pause/resume system. Play on phones by tapping lanes or large left/right controls, or with arrow/A/D keys on a keyboard. Completed runs can earn Jozef FC XP; scores are stored locally.
@@ -35,6 +48,8 @@ A 55-second neon street-football lane-runner with animated defenders, star colle
 | `world.html`, `index.html` | Canonical complete page and published homepage |
 | `stadium.css`, `stadium.js` | After Dark visual design, deep links and command deck |
 | `street.js` | Canvas-based STREET//11 game |
+| `arena.js`, `arena.css` | Top-down playable football, visual match controller, rival storylines |
+| `squad.js` | Four-position tactical lineup and earned skill bonuses |
 | `sw.js`, `manifest.webmanifest` | PWA shell and install metadata |
 | `extras.js`, `clubhouse.js` | Saved player XP, cards and backup |
 | `career.js`, `tournament.js` | Soccer season and international tour |
@@ -48,4 +63,4 @@ No public chatrooms, public profiles, ads, payments or first-party analytics. Pr
 
 ## Verified October 9, 2026
 
-A live browser test confirmed the cinematic responsive HQ, STREET//11 launch and left/right controls, Career Mode and World Tour navigation, and opening and closing the control room. Automated Node release checks covered the complete six-match Career season, local backup compatibility, offline asset coverage, single STREET//11 instance, keyboard controls and full-time behaviour. GitHub Actions reported 18 tests passed, 0 failed and a successful production deployment at commit `4865abb9919edbca39ee7a8762c295915e85c479`. Full physical-device performance testing remains a separate step.
+A live browser test confirmed the cinematic responsive HQ, STREET//11 launch and left/right controls, Career Mode and World Tour navigation, and opening and closing the control room. Automated Node release checks covered the complete six-match Career season, local backup compatibility, offline asset coverage, single STREET//11 instance, keyboard controls and full-time behaviour. GitHub Actions must pass the complete suite before publishing. Arena and squad tests additionally cover a complete football match, pause/resume, save persistence and tactical player unlocks. Full physical-device performance testing remains a separate step.
