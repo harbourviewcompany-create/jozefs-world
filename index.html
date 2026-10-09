@@ -28,6 +28,7 @@
   <link rel="stylesheet" href="who.css" />
   <link rel="stylesheet" href="visual-2026.css" />
   <link rel="stylesheet" href="arena-visual.css" />
+  <link rel="stylesheet" href="campaign-2026.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Lilita+One&family=Nunito:wght@400;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -478,9 +479,20 @@
           <span>Cups <b id="tour-crowns">0</b></span>
         </div>
       </div>
-      <div class="tour-cup-art" aria-hidden="true">🏆<span>⭐ ⚽ ⭐</span></div>
+      <div class="tour-cup-art" aria-hidden="true"><span class="tour-cup-mark">J/11</span><span class="tour-cup-base">WORLD TOUR CUP</span></div>
     </div>
 
+    <div class="tour-passport-deck" aria-label="Your five World Tour destinations">
+      <div class="campaign-track-label"><span>WORLD TOUR / CLUB PASSPORT</span><strong id="tour-passport-status">FIRST DESTINATION</strong></div>
+      <div class="tour-passport-grid" role="list">
+        <div class="tour-passport-stamp is-current" id="tour-passport-0" role="listitem"><span>01 / CAN</span><strong>CANADA</strong><small>OTTAWA</small></div>
+        <div class="tour-passport-stamp" id="tour-passport-1" role="listitem"><span>02 / JPN</span><strong>JAPAN</strong><small>TOKYO</small></div>
+        <div class="tour-passport-stamp" id="tour-passport-2" role="listitem"><span>03 / BRA</span><strong>BRAZIL</strong><small>RIO</small></div>
+        <div class="tour-passport-stamp" id="tour-passport-3" role="listitem"><span>04 / FRA</span><strong>FRANCE</strong><small>PARIS</small></div>
+        <div class="tour-passport-stamp" id="tour-passport-4" role="listitem"><span>05 / ARG</span><strong>ARGENTINA</strong><small>BUENOS AIRES</small></div>
+      </div>
+      <div class="campaign-track-footer"><strong id="tour-passport-progress">0 / 5 STAMPS</strong><span id="tour-passport-cups">0 WORLD CUPS</span></div>
+    </div>
     <div class="tour-layout">
       <div>
         <div id="tour-stage" class="tour-stage" data-tier="0">
@@ -567,7 +579,19 @@
           <span>League cups <b id="career-cups">0</b></span>
         </div>
       </div>
-      <div class="career-big-ball" aria-hidden="true">🏟️</div>
+      <div class="career-big-ball" aria-hidden="true"><span>J/11</span><small>ROAD TO GLORY</small></div>
+    </div>
+    <div class="career-season-track" aria-label="Six match season progression">
+      <div class="campaign-track-label"><span>SEASON PATH / 06 MATCHES</span><strong id="career-visual-status">READY FOR KICKOFF</strong></div>
+      <div class="career-season-rail" role="list" aria-label="Season fixtures">
+        <div class="career-season-round is-current" id="career-visual-round-0" role="listitem"><b>01</b><span>OPENING</span></div>
+        <div class="career-season-round" id="career-visual-round-1" role="listitem"><b>02</b><span>ROUND TWO</span></div>
+        <div class="career-season-round" id="career-visual-round-2" role="listitem"><b>03</b><span>MID-SEASON</span></div>
+        <div class="career-season-round" id="career-visual-round-3" role="listitem"><b>04</b><span>THE CLIMB</span></div>
+        <div class="career-season-round" id="career-visual-round-4" role="listitem"><b>05</b><span>SEMI-FINAL</span></div>
+        <div class="career-season-round" id="career-visual-round-5" role="listitem"><b>06</b><span>FINAL</span></div>
+      </div>
+      <div class="campaign-track-footer"><strong id="career-visual-points">0 LEAGUE POINTS</strong><span id="career-visual-cups">0 CUPS</span></div>
     </div>
     <div class="career-layout">
       <div class="career-panel">
@@ -1004,5 +1028,6 @@
   <script src="street.js"></script>
   <script src="roblox.js"></script>
   <script src="visual-2026.js"></script>
+  <script src="campaign-2026.js"></script>
 </body>
 </html>
