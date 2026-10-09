@@ -31,6 +31,7 @@
       <button class="nav-btn" data-section="career">Career Mode</button>
       <button class="nav-btn" data-section="news">News & Scores</button>
       <button class="nav-btn" data-section="learn">Learn</button>
+      <button class="nav-btn" data-section="street">Night Run</button>
       <button class="nav-btn" data-section="fun">Fun Zone</button>
     </div>
     <button class="jw-xp-pill" type="button" onclick="showSection('club')" aria-label="Open Jozef FC player club">
@@ -93,6 +94,11 @@
         <div class="card-icon">📚</div>
         <h3>Learn</h3>
         <p>Rules, players, geography & more</p>
+      </div>
+      <div class="card" role="button" tabindex="0" onclick="showSection('street')">
+        <div class="card-icon">🌃</div>
+        <h3>Night Run</h3>
+        <p>Dodge, collect, beat your best</p>
       </div>
       <div class="card" role="button" tabindex="0" onclick="showSection('fun')">
         <div class="card-icon">🎉</div>
@@ -660,7 +666,33 @@
   </section>
 
   <!-- FUN ZONE SECTION -->
-  <section id="fun" class="section">
+  
+  <section id="street" class="section" tabindex="-1" aria-labelledby="street-title">
+    <div class="street-wrap">
+      <div class="street-copy">
+        <p class="eyebrow-live"><span class="pulse" aria-hidden="true"></span> Arcade</p>
+        <h2 id="street-title">Night Run</h2>
+        <p>Slide between lanes, grab neon stars, and dodge defenders. Arrow keys, A/D, or the buttons. Best score stays on this device.</p>
+        <div class="street-hud">
+          <span>Score <strong id="street-score">0</strong></span>
+          <span>Best <strong id="street-best">0</strong></span>
+          <span id="street-hearts">♥♥♥</span>
+          <span><strong id="street-time">55</strong>s</span>
+          <span id="street-combo">×1</span>
+          <span id="street-stage">UNDERGROUND</span>
+        </div>
+        <p id="street-announcement" aria-live="polite">Slide into the night.</p>
+        <div class="street-controls">
+          <button type="button" id="street-left" class="big-btn secondary">← Lane</button>
+          <button type="button" id="street-start" class="big-btn">START NIGHT RUN →</button>
+          <button type="button" id="street-right" class="big-btn secondary">Lane →</button>
+        </div>
+      </div>
+      <canvas id="street-canvas" width="360" height="520" tabindex="0" aria-label="Night Run soccer game"></canvas>
+    </div>
+  </section>
+
+<section id="fun" class="section">
     <h2 class="section-title">🎉 Fun Zone</h2>
     <p class="section-desc">Jokes, facts, and surprises!</p>
 
@@ -710,6 +742,7 @@
   <script src="training.js"></script>
   <script src="jersey-bingo.js"></script>
   <script src="matchday.js"></script>
+  <script src="street.js"></script>
   <script src="experience.js"></script>
 </body>
 </html>

@@ -305,3 +305,34 @@ footer {
   .hero-ball, .pulse { animation: none; }
   .flood { display: none; }
 }
+
+.street-wrap {
+  width: min(1180px, calc(100% - 20px));
+  margin: 16px auto;
+  display: grid;
+  grid-template-columns: 1.1fr 360px;
+  gap: 18px;
+  align-items: center;
+}
+.street-copy h2 { font-family: var(--font-display); font-size: clamp(2rem, 4vw, 3.2rem); }
+.street-hud { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.street-hud span, #street-announcement {
+  background: rgba(7,17,31,0.55);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 6px 10px;
+}
+.street-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+#street-canvas {
+  width: min(360px, 100%);
+  height: auto;
+  border-radius: 22px;
+  border: 1px solid var(--line);
+  background: #061018;
+  box-shadow: var(--shadow);
+  touch-action: none;
+}
+@media (max-width: 800px) {
+  .street-wrap { grid-template-columns: 1fr; }
+  #street-canvas { justify-self: center; }
+}

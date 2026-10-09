@@ -2,9 +2,11 @@
 
 // ---------- Navigation ----------
 function showSection(id) {
+  const section = document.getElementById(id);
+  if (!section) return;
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  section.classList.add('active');
   const btn = document.querySelector(`.nav-btn[data-section="${id}"]`);
   if (btn) btn.classList.add('active');
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -21,7 +23,8 @@ document.querySelectorAll('.game-tab').forEach(tab => {
     document.querySelectorAll('.game-tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.game-panel').forEach(p => p.classList.remove('active'));
     tab.classList.add('active');
-    document.getElementById(tab.dataset.game + '-game').classList.add('active');
+    const panel = document.getElementById(tab.dataset.game + '-game');
+    if (panel) panel.classList.add('active');
   });
 });
 

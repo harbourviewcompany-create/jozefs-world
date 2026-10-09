@@ -141,8 +141,8 @@ document.querySelectorAll('.pitch-pos').forEach(btn => {
 
 // Load additive modules: celebrations, training, jersey/bingo, match day
 (function loadExtraModules() {
-  ['celebrate.js', 'training.js', 'jersey-bingo.js', 'matchday.js'].forEach(function (src) {
-    if (document.querySelector('script[data-jw-extra="' + src + '"]')) return;
+  ['celebrate.js', 'training.js', 'jersey-bingo.js', 'matchday.js', 'street.js'].forEach(function (src) {
+    if (document.querySelector('script[src$="' + src + '"], script[data-jw-extra="' + src + '"]')) return;
     var s = document.createElement('script');
     s.src = src;
     s.async = true;
