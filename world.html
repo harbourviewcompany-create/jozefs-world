@@ -679,6 +679,19 @@
     <div class="jw-card squad-headquarters" aria-labelledby="squad-title">
       <div class="squad-head"><div><span class="studio-kicker">THE TACTICS BOARD / JOZEF FC</span><h3 id="squad-title">BUILD YOUR <em>STARTING FOUR.</em></h3><p>Every card you earn is a real squad option. Pick your players and a strategy. Your choices improve the way your team plays in The Arena.</p></div><button type="button" class="squad-kickoff" onclick="showSection('arena')">PLAY WITH THIS TEAM ↗</button></div>
       <div class="squad-config"><span id="squad-available">1 / 7 players unlocked</span><label for="squad-tactic">TEAM APPROACH <select id="squad-tactic"><option value="balanced">Balanced possession</option><option value="attack">High press / attack</option><option value="defence">Compact defence</option></select></label></div>
+      <div class="squad-pitch-board" aria-label="Your current four-player formation">
+        <div class="squad-pitch-head"><span>JOZEF FC / TACTICS</span><span>FORMATION • 1–1–1–1</span></div>
+        <div class="squad-pitch-field">
+          <div class="squad-pitch-centre" aria-hidden="true"></div>
+          <div class="squad-pitch-penalty squad-pitch-penalty-top" aria-hidden="true"></div>
+          <div class="squad-pitch-penalty squad-pitch-penalty-bottom" aria-hidden="true"></div>
+          <div class="squad-field-player squad-field-striker"><span class="squad-field-shirt" aria-hidden="true">09</span><strong id="squad-field-striker">JOZEF / ROOKIE</strong><small>STRIKER</small></div>
+          <div class="squad-field-player squad-field-mid"><span class="squad-field-shirt" aria-hidden="true">08</span><strong id="squad-field-mid">ACADEMY PLAYER</strong><small>PLAYMAKER</small></div>
+          <div class="squad-field-player squad-field-back"><span class="squad-field-shirt" aria-hidden="true">05</span><strong id="squad-field-back">ACADEMY PLAYER</strong><small>DEFENDER</small></div>
+          <div class="squad-field-player squad-field-keeper"><span class="squad-field-shirt" aria-hidden="true">01</span><strong id="squad-field-keeper">ACADEMY PLAYER</strong><small>KEEPER</small></div>
+        </div>
+        <p class="squad-pitch-foot">YOUR CLUB. YOUR TACTICS. PLAYER CARDS EARNED IN GAME.</p>
+      </div>
       <div class="squad-grid" id="squad-grid" aria-label="Your selectable four-player starting squad"></div>
       <div class="squad-foot"><strong id="squad-formation">PLAY TOGETHER</strong><span id="squad-bonuses">SPEED +0% • PASS +0% • SHOOT +0%</span></div>
       <p class="squad-explain">Locked players unlock through goals, learning, Career Mode and World Tour. Empty positions are filled by academy teammates. Each collectible card can appear only once in your lineup.</p>
@@ -977,6 +990,7 @@
   <script src="career.js"></script>
   <script src="clubhouse.js"></script>
   <script src="squad.js"></script>
+  <script src="arena-renderer.js"></script>
   <script src="arena.js"></script>
   <script src="scramble-positions.js"></script>
   <script src="celebrate.js"></script>
