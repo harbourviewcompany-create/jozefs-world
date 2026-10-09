@@ -21,6 +21,10 @@
   const setHidden = (id, hidden) => { const el = byId(id); if (el) el.hidden = hidden; };
   const int = (v, fallback = 0) => Number.isSafeInteger(Number(v)) && Number(v) >= 0 ? Number(v) : fallback;
   const choice = () => DIRECTIONS[Math.floor(Math.random() * DIRECTIONS.length)];
+  function nextLean(previous) {
+    const choices = DIRECTIONS.filter(direction => direction !== previous);
+    return choices[Math.floor(Math.random() * choices.length)];
+  }
   function defaults() {
     return { season: 1, round: 0, match: null, totalWins: 0, crowns: 0, stamps: [], correct: [] };
   }
@@ -103,7 +107,7 @@
         if (state.round === DESTINATIONS.length - 1) state.crowns++;
       }
     } else {
-      m.lean = choice();
+      m.lean = nextLean(m.lean);
     }
     save();
     if (goal) {
@@ -269,6 +273,12 @@
     text('tour-rival', d.rivalGoals);
     text('tour-goals', state.match ? state.match.shots.filter(s => s.goal).length : 0);
     text('tour-keeper', state.match?.lean ? state.match.lean.toUpperCase() : 'WAITING');
+    const glove = byId('tour-keeper-glove');
+    if (glove) {
+      const lean = state.match?.lean;
+      glove.style.transform = lean === 'left' ? 'translateX(-68px) rotate(-18deg)' :
+        lean === 'right' ? 'translateX(68px) rotate(18deg)' : 'translateX(0)';
+    }
     text('tour-shots-left', state.match ? 5 - state.match.shots.length : 5);
     text('tour-commentary', feedback);
     const controls = byId('tour-controls');
