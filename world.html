@@ -705,18 +705,26 @@
   <section id="news" class="section">
     <h2 class="section-title">📰 News & Live Scores</h2>
     <p class="section-desc">Explore soccer stories and check available match updates.</p>
-    <p class="jw-privacy-note">Scores come from an external provider and may be delayed or unavailable. Stories below are learning features, not breaking news.</p>
+    <p class="jw-privacy-note">Major-sport scores can be delayed. This is not every sport in the world, and these are not guaranteed live updates. Stories below are learning features.</p>
 
     <!-- Live Scores -->
     <div class="live-scores-box">
       <div class="live-header">
-        <h3>⚡ Live & Recent Scores</h3>
+        <h3>Live and recent scores</h3>
         <button class="action-btn small-btn" id="refresh-scores">Refresh</button>
+      </div>
+      <div class="sport-tabs" id="sport-tabs">
+        <button type="button" data-sport="all" class="active">All</button>
+        <button type="button" data-sport="Soccer">Soccer</button>
+        <button type="button" data-sport="NFL">NFL</button>
+        <button type="button" data-sport="NBA">NBA</button>
+        <button type="button" data-sport="NHL">NHL</button>
+        <button type="button" data-sport="MLB">MLB</button>
       </div>
       <div id="live-scores" class="live-scores-grid">
         <p class="loading-msg">Loading live scores...</p>
       </div>
-      <p class="powered-by">Scores provided by <a href="https://sportscore.com/" rel="noopener noreferrer" target="_blank">SportScore</a> when available. This link leaves Jozef’s World.</p>
+      <p class="powered-by">Soccer, NFL, NBA, NHL and MLB scores from ESPN. No betting lines. A refresh asks ESPN again.</p>
     </div>
 
     <h3 class="sub-heading">Cool Soccer Stories</h3>

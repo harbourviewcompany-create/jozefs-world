@@ -493,59 +493,96 @@ function startTargetGame() {
 
 document.getElementById('start-target').addEventListener('click', startTargetGame);
 
-// ========== LIVE SCORES (SportScore API) ==========
-// Escape any third-party text before rendering it as HTML.
+// ========== LIVE SCORES (major sports) ==========
 function escapeScore(value) {
-  return String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  return String(value == null ? '' : value).replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"').replace(/'/g, '&#39;');
 }
+const SCORE_BOARDS = [
+  { sport: 'Soccer', label: 'Premier League', url: 'https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard' },
+  { sport: 'Soccer', label: 'MLS', url: 'https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard' },
+  { sport: 'Soccer', label: 'Champions League', url: 'https://site.api.espn.com/apis/site/v2/sports/soccer/uefa.champions/scoreboard' },
+  { sport: 'NFL', label: 'NFL', url: 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard' },
+  { sport: 'NBA', label: 'NBA', url: 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard' },
+  { sport: 'NHL', label: 'NHL', url: 'https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard' },
+  { sport: 'MLB', label: 'MLB', url: 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard' }
+];
+let scoreGames = [];
+let scoreFilter = 'all';
+
+function readBoard(board, data) {
+  return (data.events || []).slice(0, 8).map(event => {
+    const game = (event.competitions || [])[0] || {};
+    const teams = game.competitors || [];
+    const home = teams.find(team => team.homeAway === 'home') || teams[0] || {};
+    const away = teams.find(team => team.homeAway === 'away') || teams[1] || {};
+    const state = (game.status && game.status.type && game.status.type.state) || event.status && event.status.type && event.status.type.state || 'pre';
+    return {
+      sport: board.sport,
+      league: board.label,
+      home: (home.team && (home.team.shortDisplayName || home.team.displayName)) || 'Home',
+      away: (away.team && (away.team.shortDisplayName || away.team.displayName)) || 'Away',
+      homeScore: home.score != null ? home.score : '-',
+      awayScore: away.score != null ? away.score : '-',
+      state,
+      detail: (game.status && game.status.type && game.status.type.shortDetail) || ''
+    };
+  });
+}
+
+function paintScores() {
+  const container = document.getElementById('live-scores');
+  if (!container) return;
+  const games = scoreGames.filter(game => scoreFilter === 'all' || game.sport === scoreFilter);
+  if (!games.length) {
+    container.innerHTML = '<p class="loading-msg">No matches for that sport right now.</p>';
+    return;
+  }
+  container.innerHTML = games.map(game => {
+    const live = game.state === 'in';
+    return `<div class="match-card ${live ? 'live' : game.state === 'post' ? 'finished' : ''}">
+      <div class="match-status ${live ? 'live-badge' : ''}">${live ? 'LIVE' : escapeScore(game.detail || game.league)} · ${escapeScore(game.league)}</div>
+      <div class="match-teams">
+        <span>${escapeScore(game.away)}</span>
+        <span class="match-score">${escapeScore(game.awayScore)} - ${escapeScore(game.homeScore)}</span>
+        <span>${escapeScore(game.home)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 async function loadLiveScores() {
   const container = document.getElementById('live-scores');
-  container.innerHTML = '<p class="loading-msg">Loading live scores...</p>';
-
-  try {
+  if (!container) return;
+  container.innerHTML = '<p class="loading-msg">Loading major sports scores...</p>';
+  const boards = await Promise.all(SCORE_BOARDS.map(async board => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 7000);
-    let res;
-    try { res = await fetch('https://sportscore.com/api/widget/matches/?sport=football&limit=12', { signal: controller.signal }); }
-    finally { clearTimeout(timeout); }
-    if (!res.ok) throw new Error('Network response was not ok');
-    const data = await res.json();
-
-    const matches = Array.isArray(data.matches) ? data.matches.slice(0, 12) : [];
-    if (matches.length === 0) {
-      container.innerHTML = '<p class="loading-msg">No matches available right now. Check back later!</p>';
-      return;
+    try {
+      const res = await fetch(board.url, { signal: controller.signal });
+      if (!res.ok) return [];
+      return readBoard(board, await res.json());
+    } catch (err) {
+      return [];
+    } finally {
+      clearTimeout(timeout);
     }
-
-    container.innerHTML = matches.map(m => {
-      const status = (m.status || '').toLowerCase();
-      const isLive = status === 'live' || status === 'inprogress' || status === 'in_play';
-      const isFinished = status === 'finished' || status === 'ft' || status === 'closed';
-      const statusText = m.status_text || m.status || '';
-      const homeScore = m.home_score != null ? m.home_score : '-';
-      const awayScore = m.away_score != null ? m.away_score : '-';
-
-      return `
-        <div class="match-card ${isLive ? 'live' : isFinished ? 'finished' : ''}">
-          <div class="match-status ${isLive ? 'live-badge' : ''}">${isLive ? '🔴 LIVE' : escapeScore(statusText)}</div>
-          <div class="match-teams">
-            <span>${escapeScore(m.home || 'Home')}</span>
-            <span class="match-score">${escapeScore(homeScore)} - ${escapeScore(awayScore)}</span>
-            <span>${escapeScore(m.away || 'Away')}</span>
-          </div>
-        </div>
-      `;
-    }).join('');
-  } catch (err) {
-    console.error(err);
-    container.innerHTML = `
-      <p class="error-msg">Could not load live scores right now.<br>
-      Don't worry — the fun stories below are always here! ⚽</p>
-    `;
+  }));
+  scoreGames = boards.flat().sort((a, b) => Number(b.state === 'in') - Number(a.state === 'in'));
+  if (!scoreGames.length) {
+    container.innerHTML = '<p class="error-msg">Scores are not available right now. They can be delayed, and this board does not cover every sport.</p>';
+    return;
   }
+  paintScores();
 }
 
-document.getElementById('refresh-scores').addEventListener('click', loadLiveScores);
+document.getElementById('refresh-scores')?.addEventListener('click', loadLiveScores);
+document.getElementById('sport-tabs')?.addEventListener('click', event => {
+  const button = event.target.closest('[data-sport]');
+  if (!button) return;
+  scoreFilter = button.dataset.sport;
+  document.querySelectorAll('#sport-tabs [data-sport]').forEach(tab => tab.classList.toggle('active', tab === button));
+  paintScores();
+});
 
 // ========== KID-FRIENDLY NEWS ==========
 const newsStories = [
