@@ -9,6 +9,7 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="extras.css" />
+  <link rel="stylesheet" href="tournament.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -22,6 +23,7 @@
       <button class="nav-btn active" data-section="home">Home</button>
       <button class="nav-btn" data-section="games">Games</button>
       <button class="nav-btn" data-section="club">Jozef FC</button>
+      <button class="nav-btn" data-section="tour">World Tour</button>
       <button class="nav-btn" data-section="news">News & Scores</button>
       <button class="nav-btn" data-section="learn">Learn</button>
       <button class="nav-btn" data-section="fun">Fun Zone</button>
@@ -55,6 +57,15 @@
         <span class="jw-help">Every 100 XP unlocks a new level</span>
       </div>
       <button type="button" class="jw-profile-open" onclick="showSection('club')">My Club →</button>
+    </div>
+    <div class="tour-promo">
+      <div class="tour-promo-icon" aria-hidden="true">🏆</div>
+      <div>
+        <span class="jw-eyebrow">NEW ADVENTURE • 5 COUNTRIES</span>
+        <h2>Jozef FC World Tour</h2>
+        <p>Challenge rival teams, score shootout goals, collect passport stamps, and unlock bigger stadiums.</p>
+      </div>
+      <button type="button" class="tour-promo-action" onclick="showSection('tour')">Start World Tour →</button>
     </div>
     <div class="quick-cards">
       <div class="card" role="button" tabindex="0" onclick="showSection('games')">
@@ -212,6 +223,94 @@
     </div>
   </section>
 
+
+  <!-- WORLD TOUR ADVENTURE -->
+  <section id="tour" class="section" tabindex="-1" aria-labelledby="tour-heading">
+    <div class="tour-hero">
+      <div>
+        <span class="tour-eyebrow">⭐ JOZEF FC PRESENTS</span>
+        <h2 id="tour-heading">The World Tour Cup <span aria-hidden="true">🏆</span></h2>
+        <p>Five countries. Five rivals. One amazing soccer adventure. Read the goalkeeper's move, take your shots and become a world champion!</p>
+        <div class="tour-summary">
+          <span>Season <b id="tour-season">1</b></span>
+          <span>Stops completed <b id="tour-current-wins">0/5</b></span>
+          <span>Cups <b id="tour-crowns">0</b></span>
+        </div>
+      </div>
+      <div class="tour-cup-art" aria-hidden="true">🏆<span>⭐ ⚽ ⭐</span></div>
+    </div>
+
+    <div class="tour-layout">
+      <div>
+        <div id="tour-stage" class="tour-stage" data-tier="0">
+          <div id="tour-match">
+            <div class="tour-match-intro">
+              <span class="tour-eyebrow">STOP <b id="tour-round">1</b> OF 5</span>
+              <h3><span id="tour-country-flag">🇨🇦</span> <span id="tour-destination">Canada</span></h3>
+              <p>Playing against <strong id="tour-opponent">Maple Strikers</strong> in <span id="tour-city">Ottawa</span></p>
+            </div>
+            <div class="tour-score">
+              <div><span>🦁 Jozef FC</span><strong id="tour-goals">0</strong></div>
+              <span class="tour-vs">VS</span>
+              <div><span>🏟️ Rivals</span><strong id="tour-rival">1</strong></div>
+            </div>
+            <p class="tour-rival-note">Your opponents already took 5 kicks. Beat their score with your 5 shots!</p>
+            <div class="tour-pitch" role="img" aria-label="Soccer goal, keeper and penalty spot">
+              <div class="tour-pitch-lights" aria-hidden="true">✦ ✦ ✦ ✦ ✦</div>
+              <div class="tour-net" aria-hidden="true"><span class="tour-net-frame">🧤</span></div>
+              <div class="tour-penalty-spot" aria-hidden="true"></div>
+              <div class="tour-match-ball" id="tour-ball" aria-hidden="true">⚽</div>
+            </div>
+            <p class="tour-keeper-clue">👀 Keeper is leaning: <strong id="tour-keeper">WAITING</strong></p>
+            <div class="tour-shots-label"><span>Your five kicks</span><span><b id="tour-shots-left">5</b> remaining</span></div>
+            <div id="tour-shots" class="tour-shots" role="group" aria-label="Kick results"></div>
+            <div id="tour-controls" class="tour-controls" hidden>
+              <p>Choose your shot! Aim away from the keeper.</p>
+              <div class="tour-kick-buttons">
+                <button type="button" data-tour-shoot="left">↖ Left corner</button>
+                <button type="button" data-tour-shoot="centre">↑ Centre</button>
+                <button type="button" data-tour-shoot="right">↗ Right corner</button>
+              </div>
+            </div>
+            <div class="tour-trivia" id="tour-quiz" hidden>
+              <span class="tour-eyebrow">BONUS LEARNING QUEST</span>
+              <h4>🌍 Passport Challenge</h4>
+              <p id="tour-quiz-fact"></p>
+              <strong id="tour-quiz-question"></strong>
+              <div id="tour-quiz-choices" class="tour-quiz-choices"></div>
+              <p id="tour-quiz-success" class="tour-quiz-success"></p>
+            </div>
+          </div>
+          <div id="tour-finale" class="tour-finale" hidden>
+            <div class="tour-finale-cup" aria-hidden="true">🏆</div>
+            <h3 id="tour-finale-title">World Tour Champion!</h3>
+            <p id="tour-finale-description">You did it!</p>
+            <p>Your passport is full. Your trophy cabinet has a new champion badge.</p>
+          </div>
+          <p id="tour-commentary" class="tour-commentary" role="status" aria-live="polite">Choose where to kick. Watch the goalkeeper!</p>
+          <button type="button" class="tour-main-action" id="tour-action">Kick off the match →</button>
+          <p class="tour-game-note" id="tour-save-note">This adventure saves progress on this device. No account or personal information needed.</p>
+        </div>
+      </div>
+
+      <aside class="tour-sidebar" aria-label="Your world tour progress">
+        <div class="tour-panel">
+          <span class="jw-eyebrow">YOUR HOME GROUND</span>
+          <h3 id="tour-stadium-name">🏡 Neighbourhood Pitch</h3>
+          <p id="tour-stadium-note">A little field for big dreams</p>
+          <p class="tour-stat-line">🏅 <strong id="tour-totalwins">0</strong> tour victories</p>
+          <div id="tour-stadium-list" class="tour-stadium-list"></div>
+        </div>
+        <div class="tour-panel">
+          <span class="jw-eyebrow">TRAVEL THE WORLD</span>
+          <h3>🛂 Your soccer passport</h3>
+          <p>Beat each rival to stamp your passport and discover a new country.</p>
+          <div id="tour-stops" class="tour-stops"></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
   <!-- JOZEF FC PLAYER CLUB -->
   <section id="club" class="section" tabindex="-1" aria-labelledby="jw-club-title">
     <div class="jw-section-head jw-club-heading">
@@ -261,6 +360,8 @@
           <div class="jw-level-track" role="progressbar" aria-label="XP to next level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div data-jw-progress></div></div>
           <p><b data-jw-badgecount>0/9</b> badges unlocked</p>
           <p>Keepy-uppy record: <b data-jw-keepy>0</b></p>
+          <p>World Tour wins: <b data-jw-tourwins>0</b> • Cups: <b data-jw-crowns>0</b></p>
+          <button type="button" class="jw-profile-open" onclick="showSection('tour')">Play World Tour →</button>
           <small>Saved privately on this device, not shared online.</small>
         </div>
       </div>
@@ -466,5 +567,6 @@
   <div id="jw-toast" class="jw-toast" aria-live="polite" role="status"></div>
   <script src="app.js"></script>
   <script src="extras.js"></script>
+  <script src="tournament.js"></script>
 </body>
 </html>
