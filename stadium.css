@@ -329,3 +329,24 @@ footer{font-size:.82rem;letter-spacing:.08em;border-top:1px solid #eaffd323;colo
 .studio-command-option{min-height:61px}
 }
 @media(prefers-reduced-motion:reduce){.studio-launcher{transition:none}.studio-launcher:hover{transform:none}}
+
+/* Phone pass: 375px clubhouse, thumb reach, no sideways page scroll */
+@media (max-width: 700px) {
+  .studio-hero h1 { font-size: clamp(42px, 12vw, 58px); line-height: 0.92; }
+  .studio-hero .hero-buttons { display: flex; flex-direction: column; align-items: stretch; gap: 10px; }
+  .studio-button-primary, .studio-button-outline, .game-launch { width: 100%; min-width: 0; }
+  .game-selector { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px; -webkit-overflow-scrolling: touch; }
+  .game-tab { flex: 0 0 auto; scroll-snap-align: start; min-height: 44px; }
+  .nav-links { scroll-snap-type: x mandatory; }
+  .nav-btn { scroll-snap-align: start; min-height: 44px; }
+  input, select, textarea { font-size: 16px; }
+  #street-canvas, .street-canvas-shell { max-width: 100%; }
+  .studio-launcher { bottom: calc(14px + env(safe-area-inset-bottom)); }
+  .roblox-card, .street-wrap { width: min(100% - 8px, 720px); }
+}
+@media (max-width: 375px) {
+  .studio-hero h1 { font-size: 40px; }
+  .studio-page-intro h2 { font-size: 46px; }
+  .studio-mode { min-height: 0; }
+  .studio-mode > strong { font-size: 40px; }
+}
