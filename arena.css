@@ -179,3 +179,7 @@
 @media(prefers-reduced-motion:reduce){
  .arena-aim-bar button:active,.arena-skill-strip button:active{transform:none}
 }
+
+/* Keep the native 420 × 600 field ratio even on short mobile screens. */
+.arena-pitch-frame canvas {width:min(100%,420px,50.4vh);height:auto;max-height:none;aspect-ratio:420 / 600}
+.squad-foot span {white-space:normal;overflow-wrap:anywhere;line-height:1.55}
