@@ -1,13 +1,13 @@
 /* Jozef FC offline shell: only same-origin public game assets. Never caches personal progress. */
-const CACHE='jozef-fc-app-shell-v4';
+const CACHE='jozef-fc-app-shell-v5';
 const CORE=[
  './','./index.html','./world.html','./favicon.svg','./manifest.webmanifest',
  './styles.css','./pitch.css','./extras.css','./tournament.css','./career.css',
- './clubhouse.css','./scramble-positions.css','./stadium.css','./arcade.css',
+ './clubhouse.css','./scramble-positions.css','./stadium.css','./arcade.css','./arena.css',
  './matchday.css','./training.css','./jersey-bingo.css',
  './app.js','./extras.js','./tournament.js','./career.js','./clubhouse.js',
  './scramble-positions.js','./celebrate.js','./training.js',
- './jersey-bingo.js','./matchday.js','./street.js','./stadium.js','./arcade.js','./roblox.js'
+ './jersey-bingo.js','./matchday.js','./street.js','./stadium.js','./arcade.js','./roblox.js','./squad.js','./arena.js'
 ];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE)
