@@ -28,17 +28,7 @@
       if (thumb) {
         thumb.hidden = true;
         thumb.removeAttribute('src');
-        if (ready) {
-          fetch('https://thumbnails.roblox.com/v1/places/gameicons?placeIds=' + id + '&size=150x150&format=Png&isCircular=false')
-            .then(r => r.json())
-            .then(data => {
-              const url = data && data.data && data.data[0] && data.data[0].imageUrl;
-              if (!url) return;
-              thumb.src = url;
-              thumb.hidden = false;
-            })
-            .catch(() => {});
-        }
+        // Avoid third-party requests before a parent approves leaving the site.
       }
     }
 
@@ -61,6 +51,10 @@
     play.addEventListener('click', () => {
       const id = play.dataset.place;
       if (!id) return;
+      if (!window.confirm('Parent or guardian: this will open a Roblox experience outside Jozef’s World. Roblox has its own account, chat and safety settings. Continue?')) {
+        if (status) status.textContent = 'Staying in Jozef’s World.';
+        return;
+      }
       const web = 'https://www.roblox.com/games/' + id;
       window.open(web, '_blank', 'noopener');
     });
