@@ -25,7 +25,7 @@
   <link rel="stylesheet" href="arcade.css" />
   <link rel="stylesheet" href="arena.css" />
   <link rel="stylesheet" href="playmode.css" />
-  <link rel="stylesheet" href="who.css" />
+  <link rel="stylesheet" href="notes.css" />
   <link rel="stylesheet" href="visual-2026.css" />
   <link rel="stylesheet" href="arena-visual.css" />
   <link rel="stylesheet" href="campaign-2026.css" />
@@ -35,18 +35,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Lilita+One&family=Nunito:wght@400;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 </head>
 <body>
-
-  <div id="who-gate" class="who-gate" hidden role="dialog" aria-modal="true" aria-labelledby="who-title">
-    <div class="who-card">
-      <p class="eyebrow-live">Jozef FC</p>
-      <h2 id="who-title">Who is playing?</h2>
-      <p>Pick a side. Jozef gets the games. Dad gets the backup and match-day controls. You can switch later.</p>
-      <div class="who-picks">
-        <button type="button" class="who-pick" id="who-jozef"><strong>Jozef</strong><small>Play the matches</small></button>
-        <button type="button" class="who-pick dad" id="who-dad"><strong>Dad</strong><small>Save the season</small></button>
-      </div>
-    </div>
-  </div>
 
   <a href="#main" class="jw-skip">Skip to content</a>
   <!-- Navigation -->
@@ -67,12 +55,6 @@
       <button class="nav-btn" data-section="roblox">Roblox</button>
       <button class="nav-btn" data-section="notes">Notes <span id="note-dot" class="note-dot" hidden>●</span></button>
       <button class="nav-btn" data-section="fun">Locker Room</button>
-      <label class="who-toggle" id="who-switch">
-        <span>Jozef</span>
-        <input type="checkbox" id="who-input" aria-label="Switch between Jozef and Dad" />
-        <span class="who-track" aria-hidden="true"><span class="who-thumb"></span></span>
-        <span>Dad</span>
-      </label>
     </div>
     <button class="jw-xp-pill" type="button" onclick="showSection('club')" aria-label="Open Jozef FC player club">
       <span>⭐ <b data-jw-xp>0</b> XP</span><span class="jw-level-chip">LVL <b data-jw-level>1</b></span>
@@ -80,7 +62,6 @@
   </nav>
 
   <!-- HOME SECTION -->
-  <p class="dad-note" data-parent>Dad mode. Progress backup and Match Day are open. Jozef's games stay on this device.</p>
   <section id="home" class="section active" tabindex="-1"><div id="main"></div>
 
     <div class="hero studio-hero">
@@ -728,11 +709,11 @@
       <div class="clubhouse-card-grid" id="clubhouse-cards" aria-label="Soccer player card collection"></div>
     </div>
     <div class="jw-card clubhouse-backup">
-      <div class="jw-section-head"><div><span class="jw-eyebrow">FOR A PARENT OR GUARDIAN</span><h3>💾 Save Jozef's progress</h3></div></div>
-      <p data-parent>Save this season. The file includes XP, badges, Street best, the squad, and family notes. It stays on this device until you move the file. Nothing is uploaded.</p>
+      <div class="jw-section-head"><div><span class="jw-eyebrow">KEEP YOUR CLUB SAFE</span><h3>💾 Save club progress</h3></div></div>
+      <p>Save this season. The file includes XP, badges, Street best, the squad, and club notes. It stays on this device until you move the file. Nothing is uploaded.</p>
       <div class="clubhouse-backup-actions">
-        <button class="jw-profile-open" type="button" id="clubhouse-export" data-parent>Save this season</button>
-        <button class="jw-sound" type="button" id="clubhouse-import-button" data-parent>Restore from backup</button>
+        <button class="jw-profile-open" type="button" id="clubhouse-export">Save this season</button>
+        <button class="jw-sound" type="button" id="clubhouse-import-button">Restore from backup</button>
         <input id="clubhouse-import" type="file" accept=".json,application/json" hidden aria-label="Choose a Jozef's World backup file" />
       </div>
       <p class="jw-privacy-note" id="clubhouse-backup-status" role="status" aria-live="polite">Keep the file private. Restoring a backup replaces saved progress on this device after confirmation.</p>
@@ -945,7 +926,7 @@
 <section id="notes" class="section" tabindex="-1" aria-labelledby="notes-title">
     <div class="notes-card">
       <h2 id="notes-title">Family notes</h2>
-      <p>Jozef and Dad can leave short notes on this device. They are not sent to the internet.</p>
+      <p>Everyone using this device sees the same club notes. They are not sent to the internet.</p>
       <form id="note-form">
         <label for="note-text">New note</label>
         <input id="note-text" maxlength="120" autocomplete="off" placeholder="Good luck today" />
@@ -999,16 +980,10 @@
     <button type="button" onclick="showSection('arena')">Arena</button>
     <button type="button" onclick="showSection('street')">Street</button>
     <button type="button" onclick="showSection('club')">Club</button>
-    <label class="who-toggle dock">
-    <span>J</span>
-    <input type="checkbox" id="who-input-phone" aria-label="Switch between Jozef and Dad" />
-    <span class="who-track" aria-hidden="true"><span class="who-thumb"></span></span>
-    <span>D</span>
-  </label>
+    <button type="button" onclick="showSection('notes')">Notes</button>
   </nav>
 
   <div id="jw-toast" class="jw-toast" aria-live="polite" role="status"></div>
-  <script src="who.js"></script>
   <script src="notes.js"></script>
   <script src="app.js"></script>
   <script src="extras.js"></script>
