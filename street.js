@@ -77,11 +77,11 @@
       best=score;
       try{localStorage.setItem(bestKey,String(best));}catch(_){}
     }
-    const earned=score>=20;
-    if(earned)window.JozefWorld?.record('street',{score});
+    const eligible=score>=20;
+    const xp=eligible?Number(window.JozefWorld?.record?.('street',{score}))||0:0;
     const message=hearts===0?'Full-time! Great effort, captain.':
       'Full-time! '+score+' points. The stadium is cheering for you!';
-    announce(message+(earned?' XP awarded for your run!':' Try collecting more stars to earn XP.'));
+    announce(message+(xp>0?' +'+xp+' XP earned!':eligible?' Your record still counts. Daily XP limit reached.':' Try collecting more stars to earn XP.'));
     updateHUD();setPanel();
   }
   function update(dt){
