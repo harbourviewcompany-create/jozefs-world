@@ -131,7 +131,12 @@ function shoot(){
 }
 function loseBall(){
  if(tackleCooldown>0)return;
- tackleCooldown=1.3;them+=1;flash=-.65;msg('THE RIVALS COUNTER! WIN IT BACK.');
+ tackleCooldown=1.3;
+ // A tackle is not automatically a goal: only some recoveries lead to a scoring counter.
+ const conceded=Math.random()<(actor.y>360?.46:.25);
+ if(conceded)them++;
+ flash=conceded?-.65:-.18;
+ msg(conceded?'RIVALS SCORE ON THE BREAK! RESET AND GO AGAIN.':'RIVALS WIN THE BALL. RECOVER YOUR SHAPE!');
  if(them>=4){resetPositions();end();return;}
  resetPositions();
 }
