@@ -60,6 +60,7 @@
       <button class="nav-btn" data-section="training">Training</button>
       <button class="nav-btn" data-section="matchday">Match Day</button>
       <button class="nav-btn" data-section="roblox">Roblox</button>
+      <button class="nav-btn" data-section="notes">Notes</button>
       <button class="nav-btn" data-section="fun">Locker Room</button>
       <label class="who-toggle" id="who-switch">
         <span>Jozef</span>
@@ -859,6 +860,18 @@
       <p id="roblox-status" class="jw-shot-feedback" aria-live="polite">Paste the Roblox game link once. It stays on this browser.</p>
     </div>
   </section>
+<section id="notes" class="section" tabindex="-1" aria-labelledby="notes-title">
+    <div class="notes-card">
+      <h2 id="notes-title">Family notes</h2>
+      <p>Jozef and Dad can leave short notes on this device. They are not sent to the internet.</p>
+      <form id="note-form">
+        <label for="note-text">New note</label>
+        <input id="note-text" maxlength="120" autocomplete="off" placeholder="Good luck today" />
+        <button type="submit" class="action-btn">Leave note</button>
+      </form>
+      <div id="note-list" aria-live="polite"></div>
+    </div>
+  </section>
 <section id="fun" class="section">
     <h2 class="section-title">THE LOCKER ROOM</h2>
     <p class="section-desc">Off-pitch stories, jokes, and surprises. A place to relax between games.</p>
@@ -914,6 +927,7 @@
 
   <div id="jw-toast" class="jw-toast" aria-live="polite" role="status"></div>
   <script src="who.js"></script>
+  <script src="notes.js"></script>
   <script src="app.js"></script>
   <script src="extras.js"></script>
   <script src="tournament.js"></script>

@@ -60,6 +60,7 @@
       <button class="nav-btn" data-section="training">Training</button>
       <button class="nav-btn" data-section="matchday">Match Day</button>
       <button class="nav-btn" data-section="roblox">Roblox</button>
+      <button class="nav-btn" data-section="notes">Notes</button>
       <button class="nav-btn" data-section="fun">Locker Room</button>
       <label class="who-toggle" id="who-switch">
         <span>Jozef</span>
@@ -171,7 +172,14 @@
       <div class="arena-game">
         <div class="arena-topbar"><span><span class="studio-status-dot"></span> JOZEF FC · LIVE FOOTBALL</span><span id="arena-venue">NEIGHBOURHOOD COURT</span></div>
         <div class="arena-scoreboard"><div><small>JOZEF FC</small><strong id="arena-score">0 : 0</strong><small>RIVALS</small></div><div><small>MATCH CLOCK</small><strong id="arena-clock">75s</strong><small id="arena-tactic">BALANCED</small></div></div>
-        <div class="arena-pitch-frame"><canvas id="arena-canvas" width="420" height="600" tabindex="0" role="img" aria-label="Live football game. Move using the directional pad or arrow keys. Pass using J and shoot using K."></canvas></div>
+        <div class="arena-mini-ticker"><span>SHOTS <strong id="arena-shots">0</strong></span><span>KEEPER SAVES <strong id="arena-keeper-saves">0</strong></span><span>SET YOUR CORNER. OUTSMART THE KEEPER.</span></div>
+        <div class="arena-pitch-frame"><canvas id="arena-canvas" width="420" height="600" tabindex="0" role="img" aria-label="Live football game. Move using the directional pad or arrow keys. Aim with 1 2 3, pass using J, shoot using K and skill burst with L."></canvas></div>
+        <div class="arena-aim-bar" role="group" aria-label="Choose a shot target">
+          <div class="arena-aim-caption">AIM YOUR SHOT <strong id="arena-aim-label">LEFT POST</strong></div>
+          <button id="arena-aim-0" type="button" aria-pressed="true">↖ LEFT <small>1</small></button>
+          <button id="arena-aim-1" type="button" aria-pressed="false">↑ CENTRE <small>2</small></button>
+          <button id="arena-aim-2" type="button" aria-pressed="false">↗ RIGHT <small>3</small></button>
+        </div>
         <div class="arena-controller">
           <div class="arena-direction" aria-label="Movement controls">
             <button id="arena-up" type="button" aria-label="Run forward">↑</button>
@@ -184,6 +192,7 @@
             <button type="button" id="arena-shoot" class="arena-shoot">SHOOT <small>K</small></button>
           </div>
         </div>
+        <div class="arena-skill-strip"><button id="arena-skill" type="button" disabled>SKILL BURST <small>L</small></button><span id="arena-skill-status">SKILL READY</span><small>Accelerate past defenders. Recharges between moves.</small></div>
         <button id="arena-start" type="button" class="arena-kickoff">KICK OFF →</button>
         <p id="arena-status" class="arena-status" role="status" aria-live="polite">Your pitch is ready.</p>
       </div>
@@ -198,8 +207,8 @@
           <div><small>MATCHES</small><strong id="arena-matches">0</strong></div>
         </div>
         <div class="arena-guide-rule"><b>01 / DRIVE</b><p>Hold arrows, WASD, or the touch pad to run. Tap the field to move toward a spot.</p></div>
-        <div class="arena-guide-rule"><b>02 / CREATE</b><p>Use PASS or J for a teammate one-two. Smart positioning opens space.</p></div>
-        <div class="arena-guide-rule"><b>03 / FINISH</b><p>Use SHOOT or K. Beat the keeper to the top goal. You have 75 seconds to win.</p></div>
+        <div class="arena-guide-rule"><b>02 / CREATE</b><p>Use PASS or J to link with a teammate. Press again to request a one-two. Tap SKILL BURST or L for an evasive speed move.</p></div>
+        <div class="arena-guide-rule"><b>03 / FINISH</b><p>Pick a left, centre, or right target with buttons or 1–3, then SHOOT or K. The keeper reads your attempt, but sometimes guesses wrong.</p></div>
         <div class="arena-guide-rule"><b>04 / LEVEL UP</b><p>Earn new players in Career and World Tour, then build a starting squad for better gameplay.</p></div>
         <button class="studio-mini-route" type="button" onclick="showSection('club')">MANAGE YOUR SQUAD <span>↗</span></button>
       </aside>
@@ -851,6 +860,18 @@
       <p id="roblox-status" class="jw-shot-feedback" aria-live="polite">Paste the Roblox game link once. It stays on this browser.</p>
     </div>
   </section>
+<section id="notes" class="section" tabindex="-1" aria-labelledby="notes-title">
+    <div class="notes-card">
+      <h2 id="notes-title">Family notes</h2>
+      <p>Jozef and Dad can leave short notes on this device. They are not sent to the internet.</p>
+      <form id="note-form">
+        <label for="note-text">New note</label>
+        <input id="note-text" maxlength="120" autocomplete="off" placeholder="Good luck today" />
+        <button type="submit" class="action-btn">Leave note</button>
+      </form>
+      <div id="note-list" aria-live="polite"></div>
+    </div>
+  </section>
 <section id="fun" class="section">
     <h2 class="section-title">THE LOCKER ROOM</h2>
     <p class="section-desc">Off-pitch stories, jokes, and surprises. A place to relax between games.</p>
@@ -906,6 +927,7 @@
 
   <div id="jw-toast" class="jw-toast" aria-live="polite" role="status"></div>
   <script src="who.js"></script>
+  <script src="notes.js"></script>
   <script src="app.js"></script>
   <script src="extras.js"></script>
   <script src="tournament.js"></script>
