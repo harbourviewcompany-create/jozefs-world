@@ -1,1 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><rect width="96" height="96" rx="24" fill="#123e58"/><circle cx="48" cy="48" r="35" fill="#9df578"/><text x="48" y="66" font-size="55" text-anchor="middle">⚽</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#081426"/>
+  <path d="M8 40h48v8H8z" fill="#14c37a"/>
+  <circle cx="32" cy="28" r="12" fill="#f4f1e6"/>
+  <path d="M32 18l3 7h7l-5.5 4.2 2.1 6.8L32 32.2 25.4 36l2.1-6.8L22 25h7z" fill="#081426"/>
+  <circle cx="32" cy="28" r="12" fill="none" stroke="#f5c451" stroke-width="2"/>
+</svg>

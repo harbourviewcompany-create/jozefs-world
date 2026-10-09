@@ -7,6 +7,13 @@ A private, kid-friendly soccer adventure made for Jozef. Play games, create a pl
 
 ## Features
 
+### Floodlight Clubhouse
+- Night-stadium home with a daily tunnel walk-out, captain's coin, and Saturday kickoff clock.
+- Training Camp, Match Day checklist, formation builder, jersey designer and soccer bingo load with the page.
+- Optional local whistle. Progress still stays in this browser.
+
+
+
 ### World Tour Cup
 - Play five opponents: Canada, Japan, Brazil, France and Argentina.
 - Take five penalty kicks per match. The goalkeeper visibly leans left, centre or right; choose another direction to score.
