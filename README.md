@@ -1,49 +1,50 @@
-# ⚽ Jozef's World
+# Jozef's World ⚽
 
-**An interactive soccer clubhouse for an awesome 8-year-old soccer fan.**
+A private, kid-friendly soccer adventure made for Jozef. Play games, create a player, win the World Tour Cup, explore countries and discover soccer facts.
 
-Repo: https://github.com/harbourviewcompany-create/jozefs-world
+**Live:** https://harbourviewcompany-create.github.io/jozefs-world/  
+**Standalone playable page:** https://harbourviewcompany-create.github.io/jozefs-world/world.html
 
-## What's inside
+## Features
 
-### Games (7+)
-- Penalty Shootout
-- Memory Match
-- Soccer Quiz
-- Keepy-Uppy
-- Goalie Reaction
-- Target Practice
-- **Word Scramble** (new)
+### World Tour Cup
+- Play five opponents: Canada, Japan, Brazil, France and Argentina.
+- Take five penalty kicks per match. The goalkeeper visibly leans left, centre or right; choose another direction to score.
+- Beat your opponent's shootout total to earn the country passport stamp and **60 XP** (daily earning limits apply).
+- Learn capital cities in an optional quiz for bonus XP.
+- Earn badges and unlock new stadiums after 2, 4 and 8 total wins.
+- Replay lost matches, resume games after refresh and start another season after winning the cup.
 
-### Jozef FC Player Club
-- Customize mascot, kit colours, and jersey number
-- Earn XP, levels, and badges (including **Word Wizard**)
-- Daily missions
+### Seven arcade games
+Penalty Shootout, Memory Match, Soccer Quiz, Keepy-Uppy, Goalie Reaction, Target Practice and Soccer Word Scramble.
 
-### World Tour
-- Multi-country adventure with shootouts and passport stamps
+### Jozef FC
+- Mascots, kit colours, jersey number and a player card.
+- Level progression, goals/saves, 13 achievement badges and daily missions.
+- All progress stored in this browser; no account required.
 
-### News & Live Scores
-- Live/recent football scores via SportScore
-- Kid-friendly soccer stories
+### Learn, scores and fun
+- Soccer rules, maths, world geography, vocabulary, interactive positions on the field, facts and jokes.
+- Optional third-party SportScore updates when the external feed is available. Scores may be delayed or unavailable; static stories are educational content rather than current reporting.
 
-### Learn
-- Rules, famous players, world soccer, vocabulary, math
-- **Positions on the Field** interactive pitch (new)
+## Technology and deployment
 
-### Fun Zone
-- Jokes, facts, and encouragement
+Pure HTML/CSS/JavaScript, no build step or database. This project uses GitHub Pages. The [Pages workflow](.github/workflows/pages.yml) runs on pushes to `main`, copies `world.html` to the published `index.html`, then deploys the static assets. This guarantees that the deployed homepage uses the complete saved page rather than temporary loader placeholders.
 
-## View the site
+| File | Purpose |
+|---|---|
+| `world.html` | Canonical complete playable page |
+| `index.html` | Root page (kept in sync with world.html) |
+| `app.js`, `styles.css` | Arcade games and original site |
+| `extras.js`, `extras.css` | Jozef FC XP, profile and badges |
+| `tournament.js`, `tournament.css` | World Tour logic and presentation |
+| `scramble-positions.js`, `scramble-positions.css` | Word puzzles and field positions |
+| `tests/smoke-checklist.md` | Manual acceptance tests |
 
-Enable **GitHub Pages** (Settings → Pages → Deploy from `main` / root), then open:
+## Child privacy
 
-`https://harbourviewcompany-create.github.io/jozefs-world/`
+No public chatrooms, public profiles, ads, payments or first-party analytics. Progress is stored on-device using `localStorage` and is not synchronized across devices. Clearing site data resets progress. Google Fonts and the optional external score provider can receive normal browser requests. External sports information should be reviewed for child suitability before adding any new feed.
 
-Or open `index.html` locally in a browser.
+## Verification
 
-## Privacy
-
-Progress is stored only in the browser (`localStorage`). No accounts, no tracking.
-
-**Go Jozef!** ⚽🏆
+A live browser test completed all five kicks of Canada's World Tour match, confirmed match victory, passport stamp, capital-city question, XP and badge rewards, and saved-progress persistence across refresh. All seven arcade tabs and the interactive field-positions tab have been checked for loading. See the smoke checklist for additional tests, including other opponents, the final cup and stadium milestones.
