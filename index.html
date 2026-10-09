@@ -57,22 +57,22 @@
       <button type="button" class="jw-profile-open" onclick="showSection('club')">My Club →</button>
     </div>
     <div class="quick-cards">
-      <div class="card" onclick="showSection('games')">
+      <div class="card" role="button" tabindex="0" onclick="showSection('games')">
         <div class="card-icon">🎮</div>
         <h3>Games</h3>
         <p>6 fun soccer games to play!</p>
       </div>
-      <div class="card" onclick="showSection('news')">
+      <div class="card" role="button" tabindex="0" onclick="showSection('news')">
         <div class="card-icon">📰</div>
         <h3>News & Scores</h3>
         <p>Live scores + cool stories</p>
       </div>
-      <div class="card" onclick="showSection('learn')">
+      <div class="card" role="button" tabindex="0" onclick="showSection('learn')">
         <div class="card-icon">📚</div>
         <h3>Learn</h3>
         <p>Rules, players, geography & more</p>
       </div>
-      <div class="card" onclick="showSection('fun')">
+      <div class="card" role="button" tabindex="0" onclick="showSection('fun')">
         <div class="card-icon">🎉</div>
         <h3>Fun Zone</h3>
         <p>Jokes, facts & surprises</p>
@@ -141,6 +141,7 @@
         <span>Moves: <strong id="memory-moves">0</strong></span>
       </div>
       <div class="memory-grid" id="memory-grid"></div>
+      <p id="memory-feedback" class="jw-shot-feedback" aria-live="polite"></p>
       <button class="action-btn" id="reset-memory">New Game</button>
     </div>
 
@@ -286,7 +287,7 @@
       <div id="live-scores" class="live-scores-grid">
         <p class="loading-msg">Loading live scores...</p>
       </div>
-      <p class="powered-by">Powered by <a href="https://sportscore.com/" rel="dofollow" target="_blank">SportScore</a></p>
+      <p class="powered-by">Scores provided by <a href="https://sportscore.com/" rel="noopener noreferrer" target="_blank">SportScore</a> when available. This link leaves Jozef’s World.</p>
     </div>
 
     <h3 class="sub-heading">Cool Soccer Stories</h3>
