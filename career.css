@@ -1,0 +1,52 @@
+/* Jozef FC Career League — responsive, high-contrast and touch-friendly. */
+.career-hero{background:radial-gradient(circle at 90% 0,#266eaa 0,#142e60 65%,#102147 100%);padding:29px 31px;border-radius:26px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:20px;box-shadow:0 12px 24px #162c5533}
+.career-hero h2{color:#fff;font-size:clamp(1.9rem,4vw,2.7rem);line-height:1.15;margin:5px 0 9px}
+.career-hero p{color:#e5f2ff;max-width:680px}
+.career-eyebrow{color:#ffea7c;font-weight:900;font-size:.8rem;letter-spacing:.12em}
+.career-big-ball{font-size:6.4rem;filter:drop-shadow(0 9px 7px #02132866)}
+.career-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.career-meta span{border-radius:13px;background:#ffffff22;padding:8px 12px;border:1px solid #ffffff33;font-weight:800;font-size:.91rem}
+.career-layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(270px,1fr);gap:18px;align-items:start}
+.career-panel{border-radius:22px;background:#fff;border:2px solid #e0ebf1;padding:22px;box-shadow:0 7px 22px #1e39561a}
+.career-panel h3{color:#203958;margin:4px 0 12px;font-size:1.4rem}
+.career-match-head{background:linear-gradient(120deg,#0e7c55,#188db4);color:#fff;padding:23px 20px;border-radius:17px;text-align:center;margin:-6px -6px 17px}
+.career-match-head h3{color:#fff;margin:7px 0;font-size:clamp(1.5rem,3.2vw,2rem)}
+.career-match-head p{color:#e9f8ff;font-size:.95rem}
+.career-team-flag{font-size:2.7rem;display:block}
+.career-info-strip{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:13px}
+.career-info-strip span{font-size:.86rem;background:#ffffff28;padding:7px 10px;border-radius:10px}
+.career-rule{background:#f3f8fe;color:#34516b;border-left:4px solid #428acc;padding:13px;border-radius:12px;line-height:1.6;font-size:.9rem;margin:15px 0}
+.career-step-panel{background:#fff8e7;border:2px solid #f7dda5;border-radius:17px;padding:20px 17px;margin:13px 0}
+.career-step-panel h4{color:#203955;margin:8px 0 19px;font-size:clamp(1.15rem,2.4vw,1.5rem);line-height:1.4}
+.career-choices{display:grid;gap:11px}
+.career-choice{width:100%;text-align:left;border:2px solid #cbdfee;background:#fff;padding:14px 15px;border-radius:13px;cursor:pointer;font-weight:850;color:#234561;min-height:56px}
+.career-choice:hover{background:#e6f3ff;border-color:#2b8fdd}
+.career-choice:focus-visible,.career-primary:focus-visible{outline:4px solid #ffbf42;outline-offset:3px}
+.career-primary{background:#ffdf61;color:#1e3654;border:0;border-radius:15px;padding:16px 21px;min-height:57px;width:100%;cursor:pointer;font-size:1.05rem;font-weight:950;box-shadow:0 4px 0 #d5a83d}
+.career-primary:hover{background:#fff0a7}
+.career-primary:active{transform:translateY(2px);box-shadow:0 2px 0 #d5a83d}
+.career-status{min-height:22px;font-weight:800;color:#155e49;margin:13px 0}
+.career-save-note{font-size:.79rem;color:#67768b;margin-top:17px;text-align:center}
+.career-fixtures{display:grid;gap:8px}
+.career-fixture{background:#f6f8fc;border:1px solid #dce4ef;padding:11px;border-radius:13px;display:flex;gap:10px;align-items:center}
+.career-fixture.current{background:#e9f5ff;border:2px solid #5ca1e4}
+.career-fixture.complete{background:#f1faf4;border:1px solid #c1e6d0}
+.career-flag{font-size:1.85rem;min-width:35px}
+.career-fixture>div{display:grid;gap:3px;flex:1;min-width:0}
+.career-fixture strong{color:#25405f;font-size:.91rem;line-height:1.2}
+.career-fixture small{color:#596b7a;font-size:.76rem}
+.career-marker{font-size:.83rem;font-weight:950;background:#e7ebf2;border-radius:8px;padding:6px 8px;color:#334a62}
+.career-result{padding:27px 19px;border:2px solid #f5cf68;background:#fff6de;border-radius:18px;text-align:center;margin:15px 0}
+.career-result h3{font-size:1.8rem;color:#1a4264}
+.career-result p{color:#3d526d;margin-top:12px}
+.career-side-note{font-size:.82rem;color:#6c7989;margin-top:12px}
+.career-promo{background:linear-gradient(125deg,#fef1bc,#ccefed);color:#173b52;border:2px solid #b7decc;border-radius:19px;margin:0 0 20px;padding:19px;display:flex;align-items:center;gap:16px}
+.career-promo-icon{font-size:3.2rem}
+.career-promo h2{font-size:clamp(1.25rem,3vw,1.7rem);color:#1a4d5a;margin:0 0 5px}
+.career-promo p{font-size:.9rem;color:#416575}
+.career-promo>div:nth-child(2){flex:1}
+.career-promo button{font-size:.92rem;min-height:47px;background:#163b60;color:white;border:0;border-radius:12px;padding:10px 13px;cursor:pointer;font-weight:900}
+.career-promo button:hover{background:#246599}
+@media(max-width:880px){.career-layout{grid-template-columns:1fr}.career-hero{padding:22px}.career-big-ball{font-size:4.3rem}}
+@media(max-width:660px){.career-hero{display:block}.career-big-ball{display:none}.career-promo{flex-wrap:wrap}.career-promo button{width:100%}.career-panel{padding:15px}.career-hero h2{font-size:1.9rem}}
+@media(prefers-reduced-motion:reduce){.career-primary:active{transform:none}}
