@@ -60,7 +60,7 @@
       <button class="nav-btn" data-section="training">Training</button>
       <button class="nav-btn" data-section="matchday">Match Day</button>
       <button class="nav-btn" data-section="roblox">Roblox</button>
-      <button class="nav-btn" data-section="notes">Notes</button>
+      <button class="nav-btn" data-section="notes">Notes <span id="note-dot" class="note-dot" hidden>●</span></button>
       <button class="nav-btn" data-section="fun">Locker Room</button>
       <label class="who-toggle" id="who-switch">
         <span>Jozef</span>
@@ -97,6 +97,15 @@
         <div class="studio-hero-crest"><span class="studio-crest-top">THE NEXT GENERATION</span><span class="studio-crest-j">J</span><span class="studio-crest-11">/ 11</span><span class="studio-crest-bottom">JOZEF FOOTBALL CLUB</span></div>
         <div class="studio-art-number">11</div><div class="studio-art-ticker">STRIKE FIRST / PLAY FOREVER</div>
       </div>
+    </div>
+
+
+    <div class="today-card" id="today-card">
+      <p class="eyebrow-live">Today</p>
+      <h2>One Arena match. One Street run.</h2>
+      <p id="today-note">No new notes.</p>
+      <p id="today-street">Street best: 000</p>
+      <button type="button" class="studio-button-primary" onclick="showSection('arena')">Play today's match</button>
     </div>
 
     <div class="studio-signal-row" aria-label="Your current progress">
@@ -600,6 +609,7 @@
             <div><strong data-jw-goals>0</strong><small>Goals</small></div>
             <div><strong data-jw-saves>0</strong><small>Saves</small></div>
             <div><strong data-jw-level>1</strong><small>Level</small></div>
+            <div><strong id="club-street-best">000</strong><small>Street</small></div>
           </div>
         </div>
       </div>
@@ -655,9 +665,9 @@
     </div>
     <div class="jw-card clubhouse-backup">
       <div class="jw-section-head"><div><span class="jw-eyebrow">FOR A PARENT OR GUARDIAN</span><h3>💾 Save Jozef's progress</h3></div></div>
-      <p data-parent>Progress stays on this device. A parent can save a private backup file or restore it on another device. Nothing is uploaded to a server.</p>
+      <p data-parent>Save this season. The file includes XP, badges, Street best, the squad, and family notes. It stays on this device until you move the file. Nothing is uploaded.</p>
       <div class="clubhouse-backup-actions">
-        <button class="jw-profile-open" type="button" id="clubhouse-export" data-parent>Download progress backup</button>
+        <button class="jw-profile-open" type="button" id="clubhouse-export" data-parent>Save this season</button>
         <button class="jw-sound" type="button" id="clubhouse-import-button" data-parent>Restore from backup</button>
         <input id="clubhouse-import" type="file" accept=".json,application/json" hidden aria-label="Choose a Jozef's World backup file" />
       </div>
