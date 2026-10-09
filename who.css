@@ -36,3 +36,6 @@ body.who-jozef [data-parent] { display: none; }
 body.who-dad .dad-note { display: block; }
 .dad-note { display: none; margin: 12px auto; width: min(720px, calc(100% - 20px)); padding: 12px 14px; border-radius: 14px; background: rgba(36, 48, 68, 0.9); }
 @media (max-width: 600px) { .who-picks { grid-template-columns: 1fr; } }
+
+.who-gate.is-open { display: grid; }
+.who-switch { border: 1px solid rgba(245,196,81,0.45) !important; }
