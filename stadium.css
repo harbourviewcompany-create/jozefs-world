@@ -356,7 +356,7 @@ footer{font-size:.82rem;letter-spacing:.08em;border-top:1px solid #eaffd323;colo
   body { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
   .phone-dock {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     position: fixed;
     left: 0; right: 0; bottom: 0;
     z-index: 90;
