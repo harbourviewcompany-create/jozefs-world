@@ -90,6 +90,9 @@ function render(){
   const top=make('div','squad-position-head');
   top.append(make('span','squad-position-label',String(idx+1).padStart(2,'0')+' / '+label),make('small','',tip));
   const active=CARDS.find(x=>x.id===state.slots[slot]);
+  // Formation board mirrors card selection without storing duplicate state.
+  const positionLabel=$('squad-field-'+slot);
+  if(positionLabel)positionLabel.textContent=active?active.name.toUpperCase():'ACADEMY PLAYER';
   const preview=make('div','squad-position-card');
   preview.append(make('span','squad-position-number',active?.icon||'--'),make('strong','',active?.name||'ACADEMY PLAYER'));
   preview.append(make('small','',active?'OVR '+active.rating+' / '+active.style.toUpperCase():'OVR 58 / STARTER'));
@@ -111,6 +114,8 @@ function render(){
   item.append(top,preview,select);el.appendChild(item);
  });
  const v=calculate();const scale=n=>Math.round(n*100);
+ const formationBoard=$('squad-formation-visual');
+ if(formationBoard)formationBoard.dataset.tactic=state.tactic;
  const info=$('squad-bonuses');if(info)info.textContent='SPEED +'+scale(v.speed)+'%  •  PASS +'+scale(v.pass)+'%  •  SHOOT +'+scale(v.shot)+'%  •  DEFENCE +'+scale(v.defence)+'%  •  SAVES +'+scale(v.keeper)+'%';
  const count=$('squad-available');if(count)count.textContent=cards.length+' / '+CARDS.length+' players unlocked';
  const select=$('squad-tactic');if(select)select.value=state.tactic;
