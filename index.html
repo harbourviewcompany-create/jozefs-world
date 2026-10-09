@@ -24,14 +24,29 @@
   <link rel="stylesheet" href="stadium.css" />
   <link rel="stylesheet" href="arcade.css" />
   <link rel="stylesheet" href="arena.css" />
+  <link rel="stylesheet" href="who.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Lilita+One&family=Nunito:wght@400;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
+
+  <div id="who-gate" class="who-gate" hidden role="dialog" aria-modal="true" aria-labelledby="who-title">
+    <div class="who-card">
+      <p class="eyebrow-live">Jozef FC</p>
+      <h2 id="who-title">Who is playing?</h2>
+      <p>Pick a side. Jozef gets the games. Dad gets the backup and match-day controls. You can switch later.</p>
+      <div class="who-picks">
+        <button type="button" class="who-pick" id="who-jozef"><strong>Jozef</strong><small>Play the matches</small></button>
+        <button type="button" class="who-pick dad" id="who-dad"><strong>Dad</strong><small>Save the season</small></button>
+      </div>
+    </div>
+  </div>
+
   <a href="#main" class="jw-skip">Skip to content</a>
   <!-- Navigation -->
   <nav class="navbar" aria-label="Jozef FC main navigation">
+    <button type="button" class="nav-btn who-switch" id="who-switch">Switch <span id="who-now">player</span></button>
     <div class="nav-brand"><span class="studio-brand-mark" aria-hidden="true">J<span>11</span></span><span class="studio-brand-title">JOZEF <b>FC</b><small>THE FUTURE IS OURS</small></span></div>
     <div class="nav-links">
       <button class="nav-btn active" data-section="home">HQ</button>
@@ -54,6 +69,7 @@
   </nav>
 
   <!-- HOME SECTION -->
+  <p class="dad-note" data-parent>Dad mode. Progress backup and Match Day are open. Jozef's games stay on this device.</p>
   <section id="home" class="section active" tabindex="-1"><div id="main"></div>
 
     <div class="hero studio-hero">
@@ -625,10 +641,10 @@
     </div>
     <div class="jw-card clubhouse-backup">
       <div class="jw-section-head"><div><span class="jw-eyebrow">FOR A PARENT OR GUARDIAN</span><h3>💾 Save Jozef's progress</h3></div></div>
-      <p>Progress stays on this device. A parent can save a private backup file or restore it on another device. Nothing is uploaded to a server.</p>
+      <p data-parent>Progress stays on this device. A parent can save a private backup file or restore it on another device. Nothing is uploaded to a server.</p>
       <div class="clubhouse-backup-actions">
-        <button class="jw-profile-open" type="button" id="clubhouse-export">Download progress backup</button>
-        <button class="jw-sound" type="button" id="clubhouse-import-button">Restore from backup</button>
+        <button class="jw-profile-open" type="button" id="clubhouse-export" data-parent>Download progress backup</button>
+        <button class="jw-sound" type="button" id="clubhouse-import-button" data-parent>Restore from backup</button>
         <input id="clubhouse-import" type="file" accept=".json,application/json" hidden aria-label="Choose a Jozef's World backup file" />
       </div>
       <p class="jw-privacy-note" id="clubhouse-backup-status" role="status" aria-live="polite">Keep the file private. Restoring a backup replaces saved progress on this device after confirmation.</p>
@@ -878,6 +894,7 @@
   </nav>
 
   <div id="jw-toast" class="jw-toast" aria-live="polite" role="status"></div>
+  <script src="who.js"></script>
   <script src="app.js"></script>
   <script src="extras.js"></script>
   <script src="tournament.js"></script>

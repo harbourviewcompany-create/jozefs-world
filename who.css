@@ -1,0 +1,38 @@
+.who-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(5, 12, 18, 0.88);
+}
+.who-gate[hidden] { display: none; }
+.who-card {
+  width: min(560px, 100%);
+  padding: 22px;
+  border-radius: 24px;
+  background: #101820;
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+  color: #f4f7f2;
+}
+.who-card h2 { font-family: "Lilita One", "Nunito", sans-serif; font-size: 2.4rem; line-height: 1; margin: 6px 0 8px; }
+.who-picks { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.who-pick {
+  min-height: 120px;
+  border: 0;
+  border-radius: 16px;
+  background: #1b2830;
+  color: white;
+  cursor: pointer;
+  font-family: "Barlow Condensed", "Outfit", sans-serif;
+}
+.who-pick strong { display: block; font-size: 28px; letter-spacing: 0.04em; }
+.who-pick small { color: #c5d2cc; }
+.who-pick.dad { background: #243044; }
+.who-switch { margin-left: 8px; }
+body.who-jozef [data-parent] { display: none; }
+body.who-dad .dad-note { display: block; }
+.dad-note { display: none; margin: 12px auto; width: min(720px, calc(100% - 20px)); padding: 12px 14px; border-radius: 14px; background: rgba(36, 48, 68, 0.9); }
+@media (max-width: 600px) { .who-picks { grid-template-columns: 1fr; } }
