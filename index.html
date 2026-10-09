@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⚽ Jozef's World</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-brand">⚽ Jozef's World</div>
+    <div class="nav-links">
+      <button class="nav-btn active" data-section="home">Home</button>
+      <button class="nav-btn" data-section="games">Games</button>
+      <button class="nav-btn" data-section="news">News</button>
+      <button class="nav-btn" data-section="learn">Learn</button>
+      <button class="nav-btn" data-section="fun">Fun Zone</button>
+    </div>
+  </nav>
+
+  <!-- HOME SECTION -->
+  <section id="home" class="section active">
+    <div class="hero">
+      <div class="hero-content">
+        <h1>Welcome to <span class="highlight">Jozef's World</span>!</h1>
+        <p class="hero-subtitle">Your special place for soccer fun, games, learning & adventures ⚽</p>
+        <div class="hero-buttons">
+          <button class="big-btn" onclick="showSection('games')">🎮 Play Games</button>
+          <button class="big-btn secondary" onclick="showSection('learn')">📚 Learn Soccer</button>
+        </div>
+      </div>
+      <div class="hero-ball">⚽</div>
+    </div>
+
+    <div class="quick-cards">
+      <div class="card" onclick="showSection('games')">
+        <div class="card-icon">🎮</div>
+        <h3>Games</h3>
+        <p>Penalty shootouts, memory match & quizzes!</p>
+      </div>
+      <div class="card" onclick="showSection('news')">
+        <div class="card-icon">📰</div>
+        <h3>Sports News</h3>
+        <p>Cool soccer stories just for kids</p>
+      </div>
+      <div class="card" onclick="showSection('learn')">
+        <div class="card-icon">📚</div>
+        <h3>Learn</h3>
+        <p>Rules, players, geography & more</p>
+      </div>
+      <div class="card" onclick="showSection('fun')">
+        <div class="card-icon">🎉</div>
+        <h3>Fun Zone</h3>
+        <p>Jokes, facts & surprises</p>
+      </div>
+    </div>
+
+    <div class="message-box">
+      <p>💪 Keep practicing, stay kind, and always have fun — you're a star, Jozef!</p>
+    </div>
+  </section>
+
+  <!-- GAMES SECTION -->
+  <section id="games" class="section">
+    <h2 class="section-title">🎮 Soccer Games</h2>
+    <p class="section-desc">Choose a game and have a blast!</p>
+
+    <div class="game-selector">
+      <button class="game-tab active" data-game="penalty">Penalty Shootout</button>
+      <button class="game-tab" data-game="memory">Memory Match</button>
+      <button class="game-tab" data-game="quiz">Soccer Quiz</button>
+    </div>
+
+    <!-- Penalty Game -->
+    <div id="penalty-game" class="game-panel active">
+      <h3>⚽ Penalty Shootout</h3>
+      <p>Click the ball to shoot! Aim for the corners!</p>
+      <div class="score-board">
+        <span>Goals: <strong id="penalty-score">0</strong></span>
+        <span>Misses: <strong id="penalty-misses">0</strong></span>
+      </div>
+      <div class="goal-area" id="goal-area">
+        <div class="goal-post left"></div>
+        <div class="goal-post right"></div>
+        <div class="goal-net"></div>
+        <div class="keeper" id="keeper">🧤</div>
+        <div class="ball" id="penalty-ball">⚽</div>
+      </div>
+      <button class="action-btn" id="reset-penalty">Reset Score</button>
+      <p class="game-tip">Tip: Click different parts of the goal to aim!</p>
+    </div>
+
+    <!-- Memory Game -->
+    <div id="memory-game" class="game-panel">
+      <h3>🧠 Soccer Memory Match</h3>
+      <p>Flip the cards and find matching pairs!</p>
+      <div class="score-board">
+        <span>Matches: <strong id="memory-matches">0</strong> / 6</span>
+        <span>Moves: <strong id="memory-moves">0</strong></span>
+      </div>
+      <div class="memory-grid" id="memory-grid"></div>
+      <button class="action-btn" id="reset-memory">New Game</button>
+    </div>
+
+    <!-- Quiz Game -->
+    <div id="quiz-game" class="game-panel">
+      <h3>❓ Soccer Quiz Challenge</h3>
+      <div id="quiz-container">
+        <div class="quiz-progress">Question <span id="quiz-num">1</span> of 8</div>
+        <div class="quiz-question" id="quiz-question">Loading...</div>
+        <div class="quiz-options" id="quiz-options"></div>
+        <div class="quiz-feedback" id="quiz-feedback"></div>
+        <div class="quiz-score">Score: <strong id="quiz-score">0</strong></div>
+      </div>
+      <button class="action-btn" id="restart-quiz" style="display:none;">Play Again</button>
+    </div>
+  </section>
+
+  <!-- NEWS SECTION -->
+  <section id="news" class="section">
+    <h2 class="section-title">📰 Soccer News for Kids</h2>
+    <p class="section-desc">Fun stories and updates from the world of soccer!</p>
+
+    <div class="news-grid" id="news-grid">
+      <!-- Filled by JS -->
+    </div>
+  </section>
+
+  <!-- LEARN SECTION -->
+  <section id="learn" class="section">
+    <h2 class="section-title">📚 Learn About Soccer</h2>
+    <p class="section-desc">Become a soccer superstar with these cool lessons!</p>
+
+    <div class="learn-tabs">
+      <button class="learn-tab active" data-learn="rules">Rules</button>
+      <button class="learn-tab" data-learn="players">Famous Players</button>
+      <button class="learn-tab" data-learn="world">Soccer Around the World</button>
+      <button class="learn-tab" data-learn="vocab">Cool Words</button>
+      <button class="learn-tab" data-learn="math">Soccer Math</button>
+    </div>
+
+    <div class="learn-content">
+      <div id="learn-rules" class="learn-panel active">
+        <h3>⚽ Basic Soccer Rules</h3>
+        <ul class="fun-list">
+          <li><strong>11 players</strong> on each team (including the goalkeeper)</li>
+          <li>The ball can only be kicked or headed — no hands (except the goalkeeper!)</li>
+          <li>A game is usually <strong>90 minutes</strong> long (two halves of 45 minutes)</li>
+          <li>You score a <strong>goal</strong> by getting the ball into the other team's net</li>
+          <li>If the ball goes out of bounds on the side → <strong>throw-in</strong></li>
+          <li>If it goes out behind the goal → <strong>goal kick</strong> or <strong>corner kick</strong></li>
+          <li>No pushing, tripping, or being mean — that's a <strong>foul</strong></li>
+          <li>Yellow card = warning • Red card = you're out of the game!</li>
+        </ul>
+      </div>
+
+      <div id="learn-players" class="learn-panel">
+        <h3>🌟 Famous Soccer Stars</h3>
+        <div class="player-cards">
+          <div class="player-card">
+            <div class="player-emoji">🐐</div>
+            <h4>Lionel Messi</h4>
+            <p>From Argentina. Many people call him the greatest of all time. He has won the World Cup!</p>
+          </div>
+          <div class="player-card">
+            <div class="player-emoji">👑</div>
+            <h4>Cristiano Ronaldo</h4>
+            <p>From Portugal. Super fast, jumps incredibly high, and scores tons of goals.</p>
+          </div>
+          <div class="player-card">
+            <div class="player-emoji">🇧🇷</div>
+            <h4>Pelé</h4>
+            <p>Brazilian legend. Won 3 World Cups. Many say he was the first true soccer superstar.</p>
+          </div>
+          <div class="player-card">
+            <div class="player-emoji">🇫🇷</div>
+            <h4>Kylian Mbappé</h4>
+            <p>French speedster. Super young and already one of the best players in the world.</p>
+          </div>
+          <div class="player-card">
+            <div class="player-emoji">🇺🇸</div>
+            <h4>Alex Morgan</h4>
+            <p>American soccer hero. Scored amazing goals for the US Women's National Team.</p>
+          </div>
+          <div class="player-card">
+            <div class="player-emoji">🏴󠁧󠁢󠁥󠁮󠁧󠁿</div>
+            <h4>Harry Kane</h4>
+            <p>England's goal machine. Great at scoring from almost anywhere!</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="learn-world" class="learn-panel">
+        <h3>🌍 Soccer Around the World</h3>
+        <p>Soccer (or "football" in most countries) is the most popular sport on Earth!</p>
+        <ul class="fun-list">
+          <li><strong>Brazil</strong> – 5 World Cup wins. Home of the "beautiful game"</li>
+          <li><strong>Germany</strong> – 4 World Cups. Known for teamwork and strong defense</li>
+          <li><strong>Argentina</strong> – Home of Messi. Passionate fans everywhere</li>
+          <li><strong>France</strong> – Won the World Cup in 2018. Lots of fast, skilled players</li>
+          <li><strong>England</strong> – Where modern soccer began. Home of the Premier League</li>
+          <li><strong>Spain</strong> – Famous for "tiki-taka" – lots of short, quick passes</li>
+          <li><strong>USA</strong> – Growing fast! Strong women's team and exciting MLS</li>
+          <li><strong>Japan & South Korea</strong> – Super disciplined and technical players</li>
+        </ul>
+        <p class="fun-fact">💡 Did you know? Over 250 million people play soccer around the world!</p>
+      </div>
+
+      <div id="learn-vocab" class="learn-panel">
+        <h3>🗣️ Cool Soccer Words</h3>
+        <div class="vocab-grid">
+          <div class="vocab-item"><strong>Goal</strong> – When the ball goes into the net!</div>
+          <div class="vocab-item"><strong>Assist</strong> – A pass that helps a teammate score</div>
+          <div class="vocab-item"><strong>Hat-trick</strong> – Scoring 3 goals in one game</div>
+          <div class="vocab-item"><strong>Clean sheet</strong> – When the goalkeeper doesn't let any goals in</div>
+          <div class="vocab-item"><strong>Dribble</strong> – Running with the ball using your feet</div>
+          <div class="vocab-item"><strong>Pass</strong> – Kicking the ball to a teammate</div>
+          <div class="vocab-item"><strong>Tackle</strong> – Taking the ball away from an opponent</div>
+          <div class="vocab-item"><strong>Offside</strong> – Being too far forward when the ball is passed</div>
+          <div class="vocab-item"><strong>Corner</strong> – A kick from the corner of the field</div>
+          <div class="vocab-item"><strong>Free kick</strong> – A kick awarded after a foul</div>
+          <div class="vocab-item"><strong>Penalty</strong> – A special free kick from the penalty spot</div>
+          <div class="vocab-item"><strong>Stadium</strong> – The big place where games are played</div>
+        </div>
+      </div>
+
+      <div id="learn-math" class="learn-panel">
+        <h3>🧮 Soccer Math Fun</h3>
+        <p>Practice your math with soccer!</p>
+        <div class="math-challenges">
+          <div class="math-card">
+            <p>If a team scores 3 goals in the first half and 2 in the second half, how many goals did they score in total?</p>
+            <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Show Answer</button>
+            <p class="answer" style="display:none;">5 goals! ⚽</p>
+          </div>
+          <div class="math-card">
+            <p>A game is 90 minutes. How many minutes is each half?</p>
+            <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Show Answer</button>
+            <p class="answer" style="display:none;">45 minutes each half</p>
+          </div>
+          <div class="math-card">
+            <p>If Messi scores 2 goals in 4 games, how many goals does he average per game?</p>
+            <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Show Answer</button>
+            <p class="answer" style="display:none;">0.5 goals per game (2 ÷ 4)</p>
+          </div>
+          <div class="math-card">
+            <p>There are 11 players on a team. How many players are on the field if both teams are playing?</p>
+            <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Show Answer</button>
+            <p class="answer" style="display:none;">22 players!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FUN ZONE SECTION -->
+  <section id="fun" class="section">
+    <h2 class="section-title">🎉 Fun Zone</h2>
+    <p class="section-desc">Jokes, facts, and surprises!</p>
+
+    <div class="fun-grid">
+      <div class="fun-card">
+        <h3>😂 Soccer Jokes</h3>
+        <div id="joke-box">
+          <p id="joke-text">Click the button for a joke!</p>
+          <button class="action-btn" id="new-joke">Tell Me a Joke!</button>
+        </div>
+      </div>
+
+      <div class="fun-card">
+        <h3>🤯 Amazing Facts</h3>
+        <div id="fact-box">
+          <p id="fact-text">Click for a cool soccer fact!</p>
+          <button class="action-btn" id="new-fact">Surprise Me!</button>
+        </div>
+      </div>
+
+      <div class="fun-card wide">
+        <h3>🌈 Random Encouragement</h3>
+        <div id="encourage-box">
+          <p id="encourage-text">You're awesome, Jozef!</p>
+          <button class="action-btn" id="new-encourage">Get Motivated!</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="trophy-message">
+      <p>🏆 Remember: Every great player started just like you — with practice, smiles, and love for the game!</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>Made with ❤️ for Jozef • Keep playing, keep learning, keep shining! ⚽</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
