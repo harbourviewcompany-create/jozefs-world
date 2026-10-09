@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: '22'
       - name: Validate interactive games before publishing
-        run: node --test tests/career.test.cjs
+        run: node --test tests/*.test.cjs
       - name: Restore verified interactive homepage
         run: |
           test -f world.html
