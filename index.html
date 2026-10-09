@@ -16,7 +16,7 @@
     <div class="nav-links">
       <button class="nav-btn active" data-section="home">Home</button>
       <button class="nav-btn" data-section="games">Games</button>
-      <button class="nav-btn" data-section="news">News</button>
+      <button class="nav-btn" data-section="news">News & Scores</button>
       <button class="nav-btn" data-section="learn">Learn</button>
       <button class="nav-btn" data-section="fun">Fun Zone</button>
     </div>
@@ -27,10 +27,10 @@
     <div class="hero">
       <div class="hero-content">
         <h1>Welcome to <span class="highlight">Jozef's World</span>!</h1>
-        <p class="hero-subtitle">Your special place for soccer fun, games, learning & adventures ⚽</p>
+        <p class="hero-subtitle">Your special place for soccer fun, games, live scores, learning & adventures ⚽</p>
         <div class="hero-buttons">
           <button class="big-btn" onclick="showSection('games')">🎮 Play Games</button>
-          <button class="big-btn secondary" onclick="showSection('learn')">📚 Learn Soccer</button>
+          <button class="big-btn secondary" onclick="showSection('news')">📰 Live Scores</button>
         </div>
       </div>
       <div class="hero-ball">⚽</div>
@@ -40,12 +40,12 @@
       <div class="card" onclick="showSection('games')">
         <div class="card-icon">🎮</div>
         <h3>Games</h3>
-        <p>Penalty shootouts, memory match & quizzes!</p>
+        <p>6 fun soccer games to play!</p>
       </div>
       <div class="card" onclick="showSection('news')">
         <div class="card-icon">📰</div>
-        <h3>Sports News</h3>
-        <p>Cool soccer stories just for kids</p>
+        <h3>News & Scores</h3>
+        <p>Live scores + cool stories</p>
       </div>
       <div class="card" onclick="showSection('learn')">
         <div class="card-icon">📚</div>
@@ -67,18 +67,21 @@
   <!-- GAMES SECTION -->
   <section id="games" class="section">
     <h2 class="section-title">🎮 Soccer Games</h2>
-    <p class="section-desc">Choose a game and have a blast!</p>
+    <p class="section-desc">Choose a game and have a blast! 6 games ready to play.</p>
 
     <div class="game-selector">
-      <button class="game-tab active" data-game="penalty">Penalty Shootout</button>
-      <button class="game-tab" data-game="memory">Memory Match</button>
-      <button class="game-tab" data-game="quiz">Soccer Quiz</button>
+      <button class="game-tab active" data-game="penalty">Penalty</button>
+      <button class="game-tab" data-game="memory">Memory</button>
+      <button class="game-tab" data-game="quiz">Quiz</button>
+      <button class="game-tab" data-game="keepy">Keepy-Uppy</button>
+      <button class="game-tab" data-game="goalie">Goalie Reaction</button>
+      <button class="game-tab" data-game="target">Target Practice</button>
     </div>
 
     <!-- Penalty Game -->
     <div id="penalty-game" class="game-panel active">
       <h3>⚽ Penalty Shootout</h3>
-      <p>Click the ball to shoot! Aim for the corners!</p>
+      <p>Click the goal to shoot! Aim for the corners!</p>
       <div class="score-board">
         <span>Goals: <strong id="penalty-score">0</strong></span>
         <span>Misses: <strong id="penalty-misses">0</strong></span>
@@ -118,13 +121,79 @@
       </div>
       <button class="action-btn" id="restart-quiz" style="display:none;">Play Again</button>
     </div>
+
+    <!-- Keepy-Uppy Game -->
+    <div id="keepy-game" class="game-panel">
+      <h3>🦵 Keepy-Uppy</h3>
+      <p>Click the ball (or press Space) to keep it in the air! How many can you do?</p>
+      <div class="score-board">
+        <span>Keep-ups: <strong id="keepy-count">0</strong></span>
+        <span>Best: <strong id="keepy-best">0</strong></span>
+      </div>
+      <div class="keepy-area" id="keepy-area">
+        <div class="keepy-ball" id="keepy-ball">⚽</div>
+        <div class="keepy-ground"></div>
+      </div>
+      <button class="action-btn" id="reset-keepy">Reset</button>
+      <p class="game-tip">Click fast when the ball is falling!</p>
+    </div>
+
+    <!-- Goalie Reaction Game -->
+    <div id="goalie-game" class="game-panel">
+      <h3>🧤 Goalie Reaction</h3>
+      <p>A ball will fly toward the goal. Click the side it's coming from to save it!</p>
+      <div class="score-board">
+        <span>Saves: <strong id="goalie-saves">0</strong></span>
+        <span>Goals Against: <strong id="goalie-goals">0</strong></span>
+      </div>
+      <div class="goalie-area" id="goalie-area">
+        <div class="goalie-net"></div>
+        <div class="goalie-keeper" id="goalie-keeper">🧤</div>
+        <div class="goalie-ball" id="goalie-ball" style="display:none;">⚽</div>
+        <div class="goalie-zones">
+          <button class="zone-btn" data-side="left">LEFT</button>
+          <button class="zone-btn" data-side="center">CENTER</button>
+          <button class="zone-btn" data-side="right">RIGHT</button>
+        </div>
+      </div>
+      <button class="action-btn" id="start-goalie">Start Round</button>
+      <p class="game-tip" id="goalie-status">Press Start, then watch carefully!</p>
+    </div>
+
+    <!-- Target Practice Game -->
+    <div id="target-game" class="game-panel">
+      <h3>🎯 Target Practice</h3>
+      <p>Click the targets as they appear! How many can you hit in 30 seconds?</p>
+      <div class="score-board">
+        <span>Hits: <strong id="target-hits">0</strong></span>
+        <span>Time: <strong id="target-time">30</strong>s</span>
+      </div>
+      <div class="target-area" id="target-area">
+        <p class="target-start-msg" id="target-start-msg">Press Start to begin!</p>
+      </div>
+      <button class="action-btn" id="start-target">Start Game</button>
+      <p class="game-tip">Bigger targets = easier. Smaller ones = more points!</p>
+    </div>
   </section>
 
   <!-- NEWS SECTION -->
   <section id="news" class="section">
-    <h2 class="section-title">📰 Soccer News for Kids</h2>
-    <p class="section-desc">Fun stories and updates from the world of soccer!</p>
+    <h2 class="section-title">📰 News & Live Scores</h2>
+    <p class="section-desc">Real-time soccer scores and fun stories for kids!</p>
 
+    <!-- Live Scores -->
+    <div class="live-scores-box">
+      <div class="live-header">
+        <h3>⚡ Live & Recent Scores</h3>
+        <button class="action-btn small-btn" id="refresh-scores">Refresh</button>
+      </div>
+      <div id="live-scores" class="live-scores-grid">
+        <p class="loading-msg">Loading live scores...</p>
+      </div>
+      <p class="powered-by">Powered by <a href="https://sportscore.com/" rel="dofollow" target="_blank">SportScore</a></p>
+    </div>
+
+    <h3 class="sub-heading">Cool Soccer Stories</h3>
     <div class="news-grid" id="news-grid">
       <!-- Filled by JS -->
     </div>
