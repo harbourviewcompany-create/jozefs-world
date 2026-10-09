@@ -1,0 +1,44 @@
+.play-exit { display: none; }
+@media (max-width: 800px) {
+  body.play-open .navbar,
+  body.play-open .phone-dock,
+  body.play-open .studio-page-intro,
+  body.play-open .arena-guide,
+  body.play-open .street-side-panel { display: none !important; }
+  body.play-open { padding-bottom: 0 !important; }
+  body.play-open #arena.section.active,
+  body.play-open #street.section.active,
+  body.play-open #games.section.active {
+    position: fixed;
+    inset: 0;
+    z-index: 96;
+    overflow: auto;
+    margin: 0;
+    padding: calc(8px + env(safe-area-inset-top)) 8px calc(10px + env(safe-area-inset-bottom));
+    background: #071216;
+  }
+  body.play-open .play-exit {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    margin-bottom: 8px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.12);
+    color: white;
+    font: 800 13px/1 "Barlow Condensed", "Outfit", sans-serif;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  body.play-open .arena-pitch-frame,
+  body.play-open .street-canvas-shell { max-width: 100%; }
+  body.play-open #arena-canvas,
+  body.play-open #street-canvas {
+    width: 100%;
+    height: auto;
+    max-height: 48vh;
+  }
+  body.play-open .arena-controller,
+  body.play-open .street-controls { position: sticky; bottom: 0; }
+}
