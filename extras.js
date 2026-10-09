@@ -13,13 +13,17 @@
     { id: 'perfect-score', icon: '🌟', title: 'Perfect Score', description: 'Get every quiz answer right', ready: s => s.perfect >= 1 },
     { id: 'target-star', icon: '🎯', title: 'Sharp Shooter', description: 'Score 12 points in Target Practice', ready: s => s.targetBest >= 12 },
     { id: 'keepy-king', icon: '🚀', title: 'Keepy King', description: 'Make 10 keepy-uppies', ready: s => s.keepyBest >= 10 },
-    { id: 'triple-threat', icon: '👑', title: 'Daily Hero', description: 'Complete all three daily missions', ready: s => missionDone(s) }
+    { id: 'triple-threat', icon: '👑', title: 'Daily Hero', description: 'Complete all three daily missions', ready: s => Boolean(s.dailyHero) },
+    { id: 'world-traveller', icon: '🌍', title: 'World Traveller', description: 'Win your first World Tour match', ready: s => s.tourWins >= 1 },
+    { id: 'geography-star', icon: '🧭', title: 'Geography Star', description: 'Solve your first travel challenge', ready: s => s.geography >= 1 },
+    { id: 'world-champion', icon: '🥇', title: 'World Champion', description: 'Win the five-country cup', ready: s => s.championships >= 1 }
   ];
   const defaultState = () => ({
     xp: 0, goals: 0, saves: 0, memory: 0, quizzes: 0, perfect: 0,
     keepyBest: 0, targetBest: 0, club: 'Jozef FC', avatar: '🦁', kit: COLORS[0],
     number: 10, day: dayKey(), daily: {}, dailyHero: '', earned: [],
-    sound: false
+    sound: false, tourWins: 0, championships: 0, geography: 0,
+    rewardedTours: [], rewardedGeography: [], rewardedTitles: []
   });
   function dayKey() {
     const d = new Date();
@@ -30,13 +34,16 @@
     try { value = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (_) {}
     const s = { ...defaultState(), ...value };
     s.xp = Math.max(0, Number(s.xp) || 0);
-    for (const name of ['goals', 'saves', 'memory', 'quizzes', 'perfect', 'keepyBest', 'targetBest']) {
+    for (const name of ['goals', 'saves', 'memory', 'quizzes', 'perfect', 'keepyBest', 'targetBest', 'tourWins', 'championships', 'geography']) {
       s[name] = Math.max(0, Number(s[name]) || 0);
     }
     if (!COLORS.includes(s.kit)) s.kit = COLORS[0];
     if (!AVATARS.includes(s.avatar)) s.avatar = AVATARS[0];
     s.number = Math.min(99, Math.max(1, Number(s.number) || 10));
     if (!Array.isArray(s.earned)) s.earned = [];
+    for (const key of ['rewardedTours', 'rewardedGeography', 'rewardedTitles']) {
+      if (!Array.isArray(s[key])) s[key] = [];
+    }
     try { s.keepyBest = Math.max(s.keepyBest, Number(localStorage.getItem('jozefKeepyBest')) || 0); } catch (_) {}
     if (s.day !== dayKey()) { s.day = dayKey(); s.daily = {}; }
     if (!s.daily || typeof s.daily !== 'object') s.daily = {};
@@ -81,12 +88,22 @@
   }
   function record(action, info = {}) {
     if (state.day !== dayKey()) { state.day = dayKey(); state.daily = {}; }
-    const rewards = { goal: 5, save: 8, memory: 30, quiz: 20, keepy: 15, target: 15 };
-    const caps = { goal: 10, save: 10, memory: 3, quiz: 3, keepy: 1, target: 3 };
+    const rewards = { goal: 5, save: 8, memory: 30, quiz: 20, keepy: 15, target: 15, tournament: 60, geography: 15, championship: 120 };
+    const caps = { goal: 10, save: 10, memory: 3, quiz: 3, keepy: 1, target: 3, tournament: 10, geography: 10, championship: 3 };
     if (!(action in rewards)) return;
+    const uniqueReward = { tournament: 'rewardedTours', geography: 'rewardedGeography', championship: 'rewardedTitles' }[action];
+    if (uniqueReward) {
+      const id = String(info.winId || '');
+      if (!/^season-[1-9][0-9]{0,4}-round-[0-4]$/.test(id)) return;
+      if (state[uniqueReward].includes(id)) return; // Reloads cannot duplicate rewards.
+      state[uniqueReward].push(id);
+    }
     if (action === 'target' && (Number(info.score) || 0) <= 0) return;
     if (action === 'keepy' && (Number(info.count) || 0) < 10) return;
     if (action === 'goal') state.goals++;
+    if (action === 'tournament') state.tourWins++;
+    if (action === 'geography') state.geography++;
+    if (action === 'championship') state.championships++;
     if (action === 'save') state.saves++;
     if (action === 'memory') state.memory++;
     if (action === 'quiz') {
@@ -118,6 +135,8 @@
     setAll('[data-jw-xp]', state.xp);
     setAll('[data-jw-level]', level);
     setAll('[data-jw-goals]', state.goals);
+    setAll('[data-jw-tourwins]', state.tourWins);
+    setAll('[data-jw-crowns]', state.championships);
     setAll('[data-jw-saves]', state.saves);
     setAll('[data-jw-badgecount]', state.earned.length + '/' + AWARDS.length);
     setAll('[data-jw-avatar]', state.avatar);
@@ -129,12 +148,7 @@
       el.parentElement?.setAttribute('aria-valuenow', String(levelXP));
     });
     document.querySelectorAll('[data-jw-kit]').forEach(el => el.style.setProperty('--kit-color', state.kit));
-    document.querySelectorAll('.quick-cards .card[role="button"]').forEach(el => {
-    el.addEventListener('keydown', event => {
-      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); el.click(); }
-    });
-  });
-  document.querySelectorAll('[data-choose-avatar]').forEach(el => {
+    document.querySelectorAll('[data-choose-avatar]').forEach(el => {
       const selected = el.dataset.chooseAvatar === state.avatar;
       el.setAttribute('aria-pressed', String(selected));
     });
@@ -171,6 +185,12 @@
       }
     }
   }
+  // Install keyboard handlers once (not during every progress render).
+  document.querySelectorAll('.quick-cards .card[role="button"]').forEach(el => {
+    el.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); el.click(); }
+    });
+  });
   document.querySelectorAll('[data-choose-avatar]').forEach(el => {
     el.addEventListener('click', () => {
       if (!AVATARS.includes(el.dataset.chooseAvatar)) return;
