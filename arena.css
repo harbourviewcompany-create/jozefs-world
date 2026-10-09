@@ -120,3 +120,62 @@
 .arena-rival strong{display:block;font:900 clamp(29px,3vw,43px)/.95 var(--sf-display);color:#d5ff7f;margin:12px 0}
 .arena-rival p{font-size:.86rem;line-height:1.6;color:#bcd8cb}
 @media(max-width:600px){.arena-rival{padding:17px}}
+
+/* Arena 2.0: intentional shooting, one-two passes, visible action states */
+.arena-mini-ticker {
+  display:flex;align-items:center;flex-wrap:wrap;gap:8px 17px;
+  margin:-1px 0 12px;padding:0 4px;color:#b9dbc8;
+  font:800 10px var(--sf-ui);letter-spacing:.07em;
+}
+.arena-mini-ticker span:last-child {color:#daff89;margin-left:auto}
+.arena-mini-ticker strong{font:900 18px var(--sf-display);color:#ddffc4;padding-left:4px}
+.arena-aim-bar {
+  display:grid;grid-template-columns:minmax(125px,1fr) repeat(3,minmax(0,.82fr));
+  gap:7px;align-items:center;margin-top:12px;
+}
+.arena-aim-caption{display:flex;flex-direction:column;gap:5px;padding:4px 8px;
+  color:#b7d5c6;font:850 10px var(--sf-ui);letter-spacing:.09em}
+.arena-aim-caption strong{color:#d4ff80;font:900 17px var(--sf-display)}
+.arena-aim-bar button{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  min-height:52px;border:1px solid #aff2c568;border-radius:9px;
+  background:#123a3c;color:#d9f5dd;cursor:pointer;
+  padding:8px 5px;font:900 12px var(--sf-ui);
+  letter-spacing:.03em;touch-action:manipulation;
+}
+.arena-aim-bar button small,.arena-skill-strip small {
+  font:800 10px var(--sf-ui);letter-spacing:0;
+}
+.arena-aim-bar button.selected,.arena-aim-bar button[aria-pressed="true"] {
+  background:#cafa60;color:#062925;border-color:#cafa60;
+  box-shadow:0 0 0 2px #cafa6023;
+}
+.arena-aim-bar button:active{transform:scale(.98)}
+.arena-skill-strip{display:grid;grid-template-columns:auto auto 1fr;gap:11px;
+ align-items:center;margin-top:13px;padding:10px;border:1px solid #abffd83b;
+ background:#0d3438;border-radius:12px}
+.arena-skill-strip button{border-radius:9px;background:#7be7dc;color:#062b2c;
+ border:1px solid #b9fdf3;padding:11px 13px;cursor:pointer;
+ font:900 12px var(--sf-ui);min-height:47px}
+.arena-skill-strip button:disabled{cursor:default;opacity:.58}
+.arena-skill-strip button:not(:disabled):active{transform:scale(.97)}
+.arena-skill-strip>span{font:900 12px var(--sf-display);
+ color:#d4ff89;letter-spacing:.04em;white-space:nowrap}
+.arena-skill-strip>small{color:#b4d2c8;font-size:.71rem;line-height:1.35}
+.arena-pitch-frame canvas{touch-action:manipulation}
+@media(max-width:750px){
+ .arena-aim-bar{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+ .arena-aim-caption{grid-column:1/-1;flex-direction:row;justify-content:space-between}
+ .arena-aim-bar button{font-size:11px;min-height:49px}
+ .arena-skill-strip{grid-template-columns:auto 1fr}
+ .arena-skill-strip>small{grid-column:1/-1}
+ .arena-mini-ticker{font-size:9px}
+}
+@media(max-width:380px){
+ .arena-aim-bar button{font-size:10px;gap:4px}
+ .arena-skill-strip button{padding:9px;font-size:11px}
+ .arena-mini-ticker span:last-child{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+ .arena-aim-bar button:active,.arena-skill-strip button:active{transform:none}
+}
