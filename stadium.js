@@ -103,6 +103,10 @@ function boot(){
  });
  document.addEventListener('visibilitychange',()=>{if(!document.hidden){updateHud();updateFixture()}});
  window.setInterval(()=>{updateHud();updateFixture()},60000);
+ // Installable offline app. Cache only same-origin public HTML/CSS/JS, never player data.
+ if(typeof navigator!=='undefined'&&'serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>{}),{once:true});
+ }
  // No forced tunnel, confusing onboarding prompts, or automatic sound.
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
