@@ -1,0 +1,225 @@
+/* JOZEF FC // 2026 responsive QA repair.
+   Based on real iPhone screenshots (390px-class viewport).
+   Loaded LAST, after the legacy Club and graphics files.
+   Presentation-only: no routes, game data, or save keys are changed. */
+
+/* Legacy light Club cards were still overriding the dark stadium palette.
+   Keep the premium profile card, but bring the rest of Club into the same theme. */
+#club .jw-club-heading .section-title{
+  color:#f3faf5;
+  font:900 clamp(30px,4.4vw,46px)/1.07 var(--sf-display);
+  text-align:left;
+}
+#club .jw-club-heading .jw-eyebrow,
+#club .jw-collectibles .jw-eyebrow,
+#club .jw-trophy-card .jw-eyebrow,
+#club .clubhouse-backup .jw-eyebrow{color:#c8ff5a}
+#club .jw-club-heading p{color:#c2dcd4;line-height:1.55}
+#club .jw-sound{
+  background:#163c43;color:#f4fff0;border:1px solid #a5ded277;
+  border-radius:11px;min-height:45px;padding:9px 14px;
+  font:800 13px/1.3 var(--sf-ui);
+  width:auto;max-width:100%;white-space:nowrap;flex:0 0 auto;
+}
+#club .jw-sound[aria-pressed="true"]{border-color:#c8ff5a;color:#d5ff95}
+#club .jw-club-options > .jw-card,
+#club .jw-progress-card,
+#club .jw-collectibles,
+#club .clubhouse-backup,
+#club .jw-trophy-card{
+  background:linear-gradient(150deg,#152f38,#0c1f29 88%);
+  color:#f3faf5;border:1px solid #c6ead342;
+  border-radius:18px;box-shadow:0 14px 33px #02121ca6,inset 0 1px #f7ffec16;
+}
+#club .jw-club-options .jw-card h3,
+#club .jw-collectibles h3,
+#club .clubhouse-backup h3,
+#club .jw-trophy-card h3{color:#f3faf5}
+#club .jw-club-options .jw-card p,
+#club .jw-collectibles p,
+#club .clubhouse-backup p,
+#club .jw-trophy-card p{color:#c2dad1}
+#club .jw-progress-card > strong{
+  color:#c8ff5a;font:900 clamp(29px,4vw,38px)/1.1 var(--sf-display);
+}
+#club .jw-progress-card small{color:#b8d5cb}
+#club .jw-progress-card .jw-profile-open{
+  background:#c8ff5a;color:#092320;border:1px solid #e6ffb7;
+  font:900 14px var(--sf-ui);min-height:49px;
+  box-shadow:0 8px 20px #030f17a8;margin-top:7px;
+}
+#club .jw-progress-card .jw-level-track{
+  background:#061e29;border:1px solid #a2c8b13e;overflow:hidden;
+}
+#club .jw-progress-card .jw-level-track>div{
+  background:linear-gradient(90deg,#71e7e4,#c8ff5a);
+}
+#club .jw-number-label{color:#effbe9;line-height:1.35}
+#club .jw-number-label input{
+  background:#081c25;color:#f8fff1;border:1px solid #b4e0ce8a;
+  min-width:85px;min-height:45px;font:850 19px var(--sf-ui);
+}
+#club .jw-picker button:not([data-choose-kit]){
+  background:#1e3746;border:2px solid #a9c9c37c;
+  color:#f6fff4;
+}
+#club .jw-picker button[aria-pressed="true"]{
+  border-color:#c8ff5a;box-shadow:0 0 0 3px #c8ff5a48;
+}
+#club .jw-picker button{touch-action:manipulation}
+#club .jw-colors button{box-shadow:inset 0 1px #ffffff5a,0 3px 11px #0005}
+#club .jw-level-chip{
+  background:#294a3d;color:#e6ffbf;border:1px solid #c8ff5a6b;
+  font-size:12px;white-space:nowrap;padding:7px 10px;
+}
+#club .jw-privacy-note,
+#club .clubhouse-backup-status{
+  background:#102c35;color:#c6dfd7;border-left:3px solid #71e7e4;
+  line-height:1.5;
+}
+#club .jw-badge{
+  background:#173a38;border:1px solid #89d6b371;
+  color:#e8fdec;
+}
+#club .jw-badge.locked{background:#162933;border-color:#adc8b83c;opacity:.83}
+#club .jw-badge strong{color:#f1ffed}
+#club .jw-badge small{color:#b5d2c7}
+/* Contrast: Stadium signal tile was dark from visual-2026.css,
+   but the earlier accent selector still forced near-black text. */
+#home .studio-signal-row .studio-signal-accent{
+  background:linear-gradient(150deg,#255341,#163a38 86%);
+  border:1px solid #c8ff5a69;color:#ecffe6;
+}
+#home .studio-signal-row .studio-signal-accent .studio-signal-label,
+#home .studio-signal-row .studio-signal-accent small{color:#cae8cc}
+#home .studio-signal-row .studio-signal-accent strong{color:#d7ff94}
+
+/* Tactical markers: the previous flex row gave long names only 35px of
+   space. Preserve the football layout, but put name and role in a 2-row grid. */
+#club .squad-field-player{
+  box-sizing:border-box;display:grid;
+  grid-template-columns:34px minmax(0,1fr);grid-template-rows:auto auto;
+  align-content:center;align-items:center;column-gap:10px;row-gap:3px;
+  padding:8px 10px;max-width:calc(100% - 12px);min-width:0;
+  width:190px;min-height:60px;
+}
+#club .squad-field-player .squad-field-shirt{
+  grid-column:1;grid-row:1/3;width:34px;height:38px;min-width:0;flex:none;
+}
+#club .squad-field-player strong{
+  grid-column:2;grid-row:1;display:block;min-width:0;max-width:none;
+  font:900 15px/1.05 var(--sf-display);color:#fff;
+  text-align:left;word-break:normal;overflow-wrap:normal;hyphens:none;
+  white-space:normal;text-wrap:balance;
+}
+#club .squad-field-player small{
+  grid-column:2;grid-row:2;min-width:0;
+  color:#bfe9d5;font:850 9px/1.2 var(--sf-ui);
+  letter-spacing:.07em;text-align:left;
+}
+#club .squad-pitch-foot{color:#c5e9d4;line-height:1.35}
+/* More balanced formation markers with room near both sidelines. */
+#club .squad-field-mid{left:31%}
+#club .squad-field-back{left:69%}
+/* Consistent squad slot card labels and easier-to-tap selection. */
+#club .squad-position-card strong{color:#f8fff4;line-height:1.26}
+#club .squad-position-card small{color:#c2e3d6;line-height:1.25}
+#club .squad-select{min-height:49px;border-color:#a2e0ce99}
+#club .squad-foot{gap:9px}
+#club .squad-foot strong,#club .squad-foot span{line-height:1.4}
+#club .squad-explain{color:#b5d1c8!important}
+
+/* iPhone header: a single compact brand/XP row plus an accessible
+   horizontally scrollable category row. The bottom dock still works. */
+@media(max-width:700px){
+  .navbar{
+    display:grid;grid-template-columns:minmax(0,1fr) auto;grid-auto-flow:row;
+    gap:8px;padding:9px 12px 8px;top:0;width:100%;
+    margin:0;border-radius:0;
+  }
+  .navbar .nav-brand{
+    grid-column:1;grid-row:1;width:auto;min-width:0;
+    justify-content:flex-start;text-align:left;white-space:nowrap;
+  }
+  .navbar .studio-brand-title{font-size:22px}
+  .navbar .studio-brand-title small{font-size:7px;margin-top:3px}
+  .navbar .jw-xp-pill{
+    grid-column:2;grid-row:1;min-height:40px;
+    padding:8px 10px;margin:0;justify-self:end;font-size:.71rem;
+  }
+  .navbar .nav-links{
+    grid-column:1/-1;grid-row:2;order:0;display:flex;
+    justify-content:flex-start;flex:initial;align-items:center;
+    width:100%;min-width:0;gap:5px;max-width:100%;
+    overflow-x:auto;overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;
+    scroll-snap-type:x proximity;
+  }
+  .navbar .nav-btn{min-height:40px;padding:9px 13px;font-size:12px}
+  .navbar .nav-links .who-toggle{display:none}
+  .phone-dock{padding:8px 8px calc(8px + env(safe-area-inset-bottom))}
+  .phone-dock button{min-height:50px;padding:7px 4px}
+  .phone-dock button:focus-visible{outline-offset:-3px}
+  #club.section{padding:20px 12px calc(94px + env(safe-area-inset-bottom))}
+  #club .jw-club-heading{display:flex;flex-direction:column;align-items:stretch;gap:10px}
+  #club .jw-club-heading .section-title{font-size:clamp(28px,8vw,39px);line-height:1.1}
+  #club .jw-club-heading .jw-sound{align-self:flex-start;max-width:100%;min-width:0}
+  #club .jw-club-grid{margin:14px auto;gap:14px}
+  #club .jw-club-options{gap:14px}
+  #club .jw-club-options > .jw-card,
+  #club .jw-collectibles,#club .clubhouse-backup,#club .jw-trophy-card{padding:19px}
+  #club .jw-profile-stadium{min-height:390px}
+  #club .jw-player-avatar{font-size:6rem}
+  #club .jw-picker{gap:8px}
+  #club .jw-picker button{min-width:49px;min-height:49px}
+  #club .jw-number-label{font-size:15px;gap:12px}
+  #club .jw-progress-card > strong{display:block}
+  #club .squad-pitch-board{padding:10px;margin-top:17px}
+  #club .squad-pitch-field{min-height:390px}
+  #club .squad-field-player{width:170px;min-height:58px;column-gap:7px;padding:6px 8px;
+      grid-template-columns:32px minmax(0,1fr)}
+  #club .squad-field-player strong{font-size:14px;line-height:1.07}
+  #club .squad-field-player .squad-field-shirt{width:32px;height:36px}
+  #club .squad-field-mid{left:32%}
+  #club .squad-field-back{left:68%}
+  #club .squad-grid{gap:9px}
+  #club .squad-position{padding:9px}
+  #club .squad-position-card{padding:12px 8px;min-height:128px}
+  #club .squad-position-card strong{font-size:12px}
+  #club .squad-position-card small{font-size:10px}
+  #club .squad-foot{align-items:flex-start;padding:16px}
+  #club .squad-foot span{font-size:12px}
+  #club .jw-collectibles .jw-section-head{flex-wrap:wrap;align-items:flex-start;gap:10px}
+  #home .studio-hero-copy{padding:24px 19px 19px}
+  #home .studio-hero h1{font-size:clamp(48px,12.7vw,70px);line-height:.91;margin:18px 0}
+  #home .studio-hero .hero-subtitle{font-size:15px;line-height:1.5}
+  #home .studio-hero-art{min-height:238px}
+  #home .studio-hero-crest{width:min(190px,52%);top:50%}
+  #home .studio-crest-j{font-size:112px}
+  #home .studio-crest-11{font-size:27px}
+  #home .studio-crest-top{font-size:8px}
+  #home .studio-crest-bottom{font-size:7px;letter-spacing:.06em}
+  #home .studio-art-ticker{font-size:8px;right:8px}
+  #home .studio-hero-foot{margin-top:13px;gap:7px 16px;font-size:9px}
+  #home .studio-signal-row{margin:14px 0 33px}
+  #home .studio-signal{padding:14px 12px}
+  #home .studio-signal-label{font-size:9px}
+  #home .studio-signal strong{font-size:30px}
+  #home .studio-signal small{font-size:9px;line-height:1.35}
+}
+@media(max-width:380px){
+  .navbar .studio-brand-title{font-size:20px}
+  .navbar .jw-xp-pill{font-size:.64rem;padding:7px 8px}
+  #club .squad-pitch-field{min-height:370px}
+  #club .squad-field-player{width:154px;grid-template-columns:29px minmax(0,1fr);gap:6px;padding:5px 7px}
+  #club .squad-field-player .squad-field-shirt{width:29px;height:33px}
+  #club .squad-field-player strong{font-size:13px}
+  #club .squad-field-player small{font-size:8px}
+  #club .squad-field-mid{left:33%}
+  #club .squad-field-back{left:67%}
+  #club .squad-position-card strong{font-size:11px}
+  #home .studio-hero h1{font-size:clamp(43px,12.8vw,50px)}
+}
+@media(prefers-reduced-motion:reduce){
+  #club .squad-field-player,.navbar .nav-btn,.phone-dock button{transition:none!important;animation:none!important}
+}
