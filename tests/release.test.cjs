@@ -45,3 +45,20 @@ test('street game uses local-only saved records and has genuine pause and keyboa
  assert.match(js,/JozefWorld\?\.record\('street'/);
  assert.doesNotMatch(js,/fetch\(|XMLHttpRequest|WebSocket/);
 });
+
+test('every permanent navigation destination is accepted by the stadium router',()=>{
+ const stadium=fs.readFileSync(path.join(root,'stadium.js'),'utf8');
+ const list=stadium.match(/const ids=\[([^\]]+)\]/)?.[1]||'';
+ const allowed=new Set([...list.matchAll(/'([^']+)'/g)].map(m=>m[1]));
+ const menu=[...html.matchAll(/class="nav-btn[^"]*" data-section="([^"]+)"/g)].map(m=>m[1]);
+ for(const id of menu)assert.ok(allowed.has(id),'stadium route blocks navigation to '+id);
+ assert.ok(allowed.has('arena'));
+ assert.ok(allowed.has('training'));
+ assert.ok(allowed.has('roblox'));
+});
+test('external Roblox leaves the site only after guardian confirmation',()=>{
+ const script=fs.readFileSync(path.join(root,'roblox.js'),'utf8');
+ assert.match(script,/window\.confirm\(/);
+ assert.match(script,/window\.open\(web, '_blank', 'noopener'\)/);
+ assert.doesNotMatch(script,/fetch\('https:\/\/thumbnails\.roblox\.com/,'no passive child-data requests');
+});
