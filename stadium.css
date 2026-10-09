@@ -294,3 +294,38 @@ footer{font-size:.82rem;letter-spacing:.08em;border-top:1px solid #eaffd323;colo
 }
 /* High-contrast styling for cross-feature reusable controls. */
 #street [hidden]{display:none!important}
+
+/* The floating control room replaces a large, always-visible menu on small screens. */
+.studio-launcher{position:fixed;z-index:95;right:23px;bottom:22px;display:flex;flex-direction:column;align-items:center;
+ justify-content:center;min-width:75px;min-height:71px;border-radius:14px;border:1px solid #e8ffbf91;cursor:pointer;
+ color:#0b2523;background:#cafa60;box-shadow:0 12px 36px #071414ba,0 0 30px #cafa6026;transition:transform .2s;}
+.studio-launcher:hover{transform:translateY(-4px)}
+.studio-launcher>strong{font:900 32px/.8 var(--sf-display);letter-spacing:-.08em}
+.studio-launcher>strong span{font-size:15px}
+.studio-launcher small{font:900 9px var(--sf-ui);letter-spacing:.05em;margin-top:8px}
+.studio-command{position:fixed;inset:0;margin:auto;border:1px solid #cafa6069;border-radius:18px;width:min(650px,calc(100% - 26px));
+ max-height:min(92vh,740px);padding:0;color:#effeea;background:#081f26;box-shadow:0 50px 110px #020609d9;overflow:auto}
+.studio-command::backdrop{background:#020b11d9;backdrop-filter:blur(9px)}
+.studio-command-header{display:flex;justify-content:space-between;gap:15px;align-items:start;padding:30px 31px 20px;
+ background:radial-gradient(circle at 95% -50%,#cafa6036,transparent 58%),#112e2d;border-bottom:1px solid #cafa6043}
+.studio-command-header h2{font:900 clamp(38px,6vw,60px)/.9 var(--sf-display);color:#f2fbeb;margin-top:13px}
+.studio-command-header h2 em{color:#cafa60;font-style:normal}
+.studio-command-close{width:42px;height:42px;border-radius:9px;border:1px solid #d8ffce64;
+ background:#e9ffe712;color:#f6ffe9;font-size:20px;cursor:pointer}
+.studio-command-options{padding:12px 17px 18px;display:grid;gap:4px}
+.studio-command-option{display:flex;align-items:center;text-align:left;gap:16px;min-height:69px;padding:13px;
+ border:1px solid transparent;border-bottom-color:#eaffd61d;background:transparent;color:#edf9e9;cursor:pointer;border-radius:10px}
+.studio-command-option:hover,.studio-command-option:focus-visible{background:#cafa6019;border-color:#cafa6061}
+.studio-command-num{font:900 25px var(--sf-display);color:#cafa60;min-width:34px}
+.studio-command-name{display:grid;gap:4px;flex:1;font:900 23px/.9 var(--sf-display)}
+.studio-command-name small{font:800 9px var(--sf-ui);letter-spacing:.13em;color:#98b7aa}
+.studio-command-arrow{font-size:24px;color:#cafa60}
+@media(max-width:600px){
+.studio-launcher{right:12px;bottom:14px;min-width:63px;min-height:61px;border-radius:11px}
+.studio-launcher>strong{font-size:28px}
+.studio-launcher small{font-size:7px}
+.studio-command-header{padding:25px 20px 18px}
+.studio-command-options{padding:8px}
+.studio-command-option{min-height:61px}
+}
+@media(prefers-reduced-motion:reduce){.studio-launcher{transition:none}.studio-launcher:hover{transform:none}}
