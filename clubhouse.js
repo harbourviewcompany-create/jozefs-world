@@ -36,7 +36,8 @@
     }
     const total=$('clubhouse-card-count');if(total)total.textContent=count+' / '+cardDefs.length;
   }
-  const KEYS=['jozefs-world-player-v1','jozefs-world-tour-v1','jozefs-world-career-v1','jozefKeepyBest','jozefs-world-street-best-v1'];
+  const KEYS=['jozefs-world-player-v1','jozefs-world-tour-v1','jozefs-world-career-v1','jozefKeepyBest','jozefs-world-street-best-v1',
+    'jozefs-world-matchday-v1','jozefs-world-formation-v1','jozefs-world-training-v1','jozefs-world-jersey-v1','jozefs-world-bingo-v1','jozefs-world-missions-v1'];
   const status=message=>{const el=$('clubhouse-backup-status');if(el)el.textContent=message};
   function read(key) {
     try {return localStorage.getItem(key)}catch(_){return null}
@@ -80,7 +81,10 @@
     if(present.length===0||present.some(k=>!KEYS.includes(k)))throw new Error('The backup contains unexpected data.');
     const output={};
     for(const key of KEYS){
-      const value=Object.prototype.hasOwnProperty.call(payload.data,key)?payload.data[key]:null;
+      // Older backups did not contain all modes. Never erase newer progress when
+      // restoring an older backup that omitted a key.
+      if(!Object.prototype.hasOwnProperty.call(payload.data,key))continue;
+      const value=payload.data[key];
       if(value===null){output[key]=null;continue;}
       if(['jozefKeepyBest','jozefs-world-street-best-v1'].includes(key)){
         if(!/^[0-9]{1,7}$/.test(String(value)))throw new Error('Invalid keepy-uppy score.');
@@ -98,7 +102,7 @@
         throw new Error('Invalid Career Mode data.');
       output[key]=JSON.stringify(value);
     }
-    if(KEYS.every(k=>output[k]===null))throw new Error('The backup does not contain any progress.');
+    if(Object.values(output).every(value=>value===null))throw new Error('The backup does not contain any progress.');
     return output;
   }
   async function importBackup(event) {
@@ -108,12 +112,12 @@
     try {
       const text=await file.text();
       const values=checkBackup(JSON.parse(text));
-      const confirmMessage='Restore this backup? This REPLACES saved player XP, trophies, Career Mode and World Tour on this device. Continue?';
+      const confirmMessage='Restore this backup? This will replace saved progress for the activities included in the file. Progress for activities not in this backup will stay unchanged. Continue?';
       if(!window.confirm(confirmMessage)){status('Restore cancelled. Your progress was not changed.');return;}
       const old={};
       for(const key of KEYS)old[key]=read(key);
       try {
-        for(const key of KEYS){if(values[key]===null)localStorage.removeItem(key);else localStorage.setItem(key,values[key]);}
+        for(const key of KEYS){if(!Object.prototype.hasOwnProperty.call(values,key))continue;if(values[key]===null)localStorage.removeItem(key);else localStorage.setItem(key,values[key]);}
       }catch(error){
         for(const key of KEYS){
           try{if(old[key]===null)localStorage.removeItem(key);else localStorage.setItem(key,old[key])}catch(_){}
