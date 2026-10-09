@@ -36,7 +36,7 @@
     }
     const total=$('clubhouse-card-count');if(total)total.textContent=count+' / '+cardDefs.length;
   }
-  const KEYS=['jozefs-world-player-v1','jozefs-world-tour-v1','jozefs-world-career-v1','jozefKeepyBest'];
+  const KEYS=['jozefs-world-player-v1','jozefs-world-tour-v1','jozefs-world-career-v1','jozefKeepyBest','jozefs-world-street-best-v1'];
   const status=message=>{const el=$('clubhouse-backup-status');if(el)el.textContent=message};
   function read(key) {
     try {return localStorage.getItem(key)}catch(_){return null}
@@ -47,7 +47,7 @@
       for(const key of KEYS){
         const value=read(key);
         if(value==null){data[key]=null;continue;}
-        data[key]=key==='jozefKeepyBest'?String(value):JSON.parse(value);
+        data[key]=['jozefKeepyBest','jozefs-world-street-best-v1'].includes(key)?String(value):JSON.parse(value);
       }
       const backup={format:'jozefs-world-local-backup',version:1,createdAt:new Date().toISOString(),data};
       const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
@@ -82,7 +82,7 @@
     for(const key of KEYS){
       const value=Object.prototype.hasOwnProperty.call(payload.data,key)?payload.data[key]:null;
       if(value===null){output[key]=null;continue;}
-      if(key==='jozefKeepyBest'){
+      if(['jozefKeepyBest','jozefs-world-street-best-v1'].includes(key)){
         if(!/^[0-9]{1,7}$/.test(String(value)))throw new Error('Invalid keepy-uppy score.');
         output[key]=String(value);continue;
       }
