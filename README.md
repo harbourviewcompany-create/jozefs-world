@@ -5,73 +5,47 @@ A private, kid-friendly soccer adventure made for Jozef. Play games, create a pl
 **Live:** https://harbourviewcompany-create.github.io/jozefs-world/  
 **Standalone playable page:** https://harbourviewcompany-create.github.io/jozefs-world/world.html
 
-## Features
+## The experience
 
-### Floodlight Clubhouse
-- Night-stadium home with a daily tunnel walk-out, captain's coin, and Saturday kickoff clock.
-- Training Camp, Match Day checklist, formation builder, jersey designer and soccer bingo load with the page.
-- Optional local whistle. Progress still stays in this browser.
+### Jozef FC // After Dark
+The signature interface is a premium, broadcast-style football universe rather than a generic children's site: floodlit stadium crest, custom J/11 identity, editorial type, neon-acid accents, responsive player HUD, real matchday indicator, cinematic motion, and a seven-destination quick navigation deck. Deep links and browser back/forward work between sections. Reduced-motion preferences are honoured.
 
+### STREET//11 — original real-time arcade
+A 55-second neon street-football lane-runner with animated defenders, star collection, combos, personal bests, three hearts, escalating pace, and a pause/resume system. Play on phones by tapping lanes or large left/right controls, or with arrow/A/D keys on a keyboard. Completed runs can earn Jozef FC XP; scores are stored locally.
 
+### Connected football adventures
+- **Career Mode:** six-match tactical league, soccer-math preparation, evolving match field, tactical questions, results, league table and a cup after 12+ points.
+- **World Tour:** five national opponents, penalty shootouts, geography challenges, passport stamps, stadium upgrades and tournament badges.
+- **Jozef FC player collection:** kit colours, jersey number, mascot, achievements, daily missions, seven earned player cards, levels and trophies.
+- **Training arcade:** Penalty Shootout, Memory Match, Soccer Quiz, Keepy-Uppy, Goalie Reaction, Target Practice, Word Scramble, plus the extra Gate Pass, Header Hero and Spot the Ball challenges.
+- **Real Match Day:** parent-set opponent/kickoff, checklist, and a soccer formation builder.
+- **Football learning:** positions, rules, players, geography, maths and vocabulary, plus lighthearted locker-room activities.
+- **Roblox handoff:** an optional link to a user-supplied Roblox experience. That game runs on Roblox, outside this site, and no Roblox credentials are stored here.
 
-### World Tour Cup
-- Play five opponents: Canada, Japan, Brazil, France and Argentina.
-- Take five penalty kicks per match. The goalkeeper visibly leans left, centre or right; choose another direction to score.
-- Beat your opponent's shootout total to earn the country passport stamp and **60 XP** (daily earning limits apply).
-- Learn capital cities in an optional quiz for bonus XP.
-- Earn badges and unlock new stadiums after 2, 4 and 8 total wins.
-- Replay lost matches, resume games after refresh and start another season after winning the cup.
+### Modern app capabilities
+- **Installable progressive web app:** web manifest, home-screen identity and a service worker that prefers fresh assets online, with a saved game shell available offline after the initial installation/cache.
+- **Fast and private:** static HTML, CSS, Canvas and JavaScript with no first-party account, ad platform, social feed, public leaderboard or server-side profile.
+- **Parent backup:** download a private JSON file and restore it with explicit confirmation. Saves include the player, Career, World Tour, STREET//11, training, formation, jersey, bingo and real match plans. Older backups do not erase newly added activity progress.
+- **Release safety:** publishing from `main` requires Node regression tests before GitHub Pages deployment. The workflow copies the canonical `world.html` over the published `index.html`.
 
-### Career Mode: six-match soccer league
-- Face six fictional clubs through a complete season.
-- Answer soccer-math training questions to earn a defensive shield.
-- Make three interactive attacking or defending decisions per match.
-- Win = 3 points; draw = 1 point. Reach 12 league points for the championship.
-- Unlock Career rewards and trophies. Save mid-season and start a new season without losing past cups.
-- Supports mouse, touch and keyboard without external services.
-
-### Collector cards and parent-guided progress backup
-- Seven unlockable player cards earned through genuine goals, quizzes, Career matches, World Tour wins and championships — no payments or chance-based rewards.
-- The Career Mode field now visualizes a match formation, ball movement, attack/defence stages and live match score cues.
-- A parent can download a private JSON progress backup and restore it after explicit confirmation. No account or server upload is required. Restoring intentionally replaces saved local progress.
-- Backups include Jozef FC player XP, avatar, kit, badges, World Tour, Career Mode and the keepy-uppy record. Backups are checked for valid structure and size.
-
-### Seven arcade games
-Penalty Shootout, Memory Match, Soccer Quiz, Keepy-Uppy, Goalie Reaction, Target Practice and Soccer Word Scramble.
-
-### Jozef FC
-- Mascots, kit colours, jersey number and a player card.
-- Level progression, goals/saves, 17 achievement badges and daily missions.
-- All progress stored in this browser; no account required.
-
-### Learn, scores and fun
-- Soccer rules, maths, world geography, vocabulary, interactive positions on the field, facts and jokes.
-- Optional third-party SportScore updates when the external feed is available. Scores may be delayed or unavailable; static stories are educational content rather than current reporting.
-
-## Technology and deployment
-
-Pure HTML/CSS/JavaScript, no build step or database. This project uses GitHub Pages. The [Pages workflow](.github/workflows/pages.yml) runs on pushes to `main`, copies `world.html` to the published `index.html`, then deploys the static assets. It also runs `node --test tests/*.test.cjs` before publishing. This guarantees that the deployed homepage uses the complete saved page rather than temporary loader placeholders.
+## Important files
 
 | File | Purpose |
 |---|---|
-| `world.html` | Canonical complete playable page |
-| `index.html` | Root page (kept in sync with world.html) |
-| `app.js`, `styles.css` | Arcade games and original site |
-| `extras.js`, `extras.css` | Jozef FC XP, profile and badges |
-| `tournament.js`, `tournament.css` | World Tour logic and presentation |
-| `career.js`, `career.css` | League season, maths training, animated tactical match view and responsive UI |
-| `clubhouse.js`, `clubhouse.css` | Collectible player cards and on-device backup/restore |
-| `tests/career.test.cjs` | Node built-in regression checks for season progression and HTML structure |
-| `tests/clubhouse.test.cjs` | Player card and backup/import validation checks |
-| `scramble-positions.js`, `scramble-positions.css` | Word puzzles and field positions |
-| `tests/smoke-checklist.md` | Manual acceptance tests |
+| `world.html`, `index.html` | Canonical complete page and published homepage |
+| `stadium.css`, `stadium.js` | After Dark visual design, deep links and command deck |
+| `street.js` | Canvas-based STREET//11 game |
+| `sw.js`, `manifest.webmanifest` | PWA shell and install metadata |
+| `extras.js`, `clubhouse.js` | Saved player XP, cards and backup |
+| `career.js`, `tournament.js` | Soccer season and international tour |
+| `arcade.js`, `scramble-positions.js` | Additional interactive games and learning |
+| `matchday.js`, `training.js`, `jersey-bingo.js` | Matchday, drills and customization |
+| `tests/*.test.cjs` | Automated release, gameplay and save regression checks |
 
 ## Child privacy
 
-No public chatrooms, public profiles, ads, payments or first-party analytics. Progress is stored on-device using `localStorage` and is not synchronized across devices. Clearing site data resets progress. Google Fonts and the optional external score provider can receive normal browser requests. External sports information should be reviewed for child suitability before adding any new feed.
+No public chatrooms, public profiles, ads, payments or first-party analytics. Progress is stored on-device using `localStorage` and is not synchronized across devices. Clearing site data resets progress. Google Fonts and the optional external score and Roblox thumbnail/game providers can receive normal browser requests. Roblox opens only after the user chooses an experience and presses Play. External sports information should be reviewed for child suitability before adding any new feed.
 
-## Verification
+## Verified October 9, 2026
 
-The Career Mode match engine was run through a complete simulated season with six wins, 18 points and one cup; XP, training and championship rewards were also checked together with the player profile. The Node regression tests cover the complete season, unsuccessful choices, refresh continuation and correct nesting of interactive panels. The live page and static game assets were verified reachable; mobile device interaction still needs further hands-on testing.
-
-A live browser test completed all five kicks of Canada's World Tour match, confirmed match victory, passport stamp, capital-city question, XP and badge rewards, and saved-progress persistence across refresh. All seven arcade tabs and the interactive field-positions tab have been checked for loading. See the smoke checklist for additional tests, including other opponents, the final cup and stadium milestones.
+A live browser test confirmed the cinematic responsive HQ, STREET//11 launch and left/right controls, Career Mode and World Tour navigation, and opening and closing the control room. Automated Node release checks covered the complete six-match Career season, local backup compatibility, offline asset coverage, single STREET//11 instance, keyboard controls and full-time behaviour. GitHub Actions reported 18 tests passed, 0 failed and a successful production deployment at commit `4865abb9919edbca39ee7a8762c295915e85c479`. Full physical-device performance testing remains a separate step.
