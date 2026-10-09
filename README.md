@@ -12,7 +12,10 @@ The signature interface is a premium, broadcast-style football universe rather t
 
 ### The Arena — full playable football
 - A real-time, top-down 75-second football match with controllable movement, a touch D-pad, tap-to-move and arrow/WASD keyboard play.
-- Pass the ball to the teammate using PASS/J, shoot using SHOOT/K, evade three tracking defenders, and outplay the keeper.
+- Pass the ball to a teammate using PASS/J and ask for the one-two with another press. Tap SKILL BURST or press L to escape defenders; it has a real cooldown.
+- Aim with Left/Centre/Right or keys 1/2/3 before shooting with SHOOT/K; the goalkeeper guesses and commits instead of automatically saving every ball.
+- Live shooting/saves counters, match-pause safety when switching sections, and a scalable touch layout help on smaller phones.
+- Optional locally synthesized kickoff, pass, tackle, strike, save, victory and goal sounds require enabling **Sound** in My Club (off by default; no audio downloads).
 - Score goals, win matches and grow a private Jozef FC record; opponent counterattacks sometimes score, but tackles are not automatically goals.
 - Win two matches to open **Neon City** against Midnight City FC, and five to face **The Neon Royals** in Legend Arena. Each venue has its own field colours and story.
 - The player wears Jozef's currently selected Jozef FC kit and jersey number, rather than a default uniform.
@@ -20,11 +23,12 @@ The signature interface is a premium, broadcast-style football universe rather t
 ### Tactical squad builder
 - Seven earned player cards become usable in four squad positions: keeper, defender, playmaker and striker. Unfilled positions have academy players.
 - A card must first be earned through Career, World Tour, goals or learning, and can only be used once in the lineup.
-- Squad abilities feed directly into Arena movement, passing and shooting, with Balanced, Attack and Defence tactics.
+- Squad abilities affect Arena movement, passing, shooting, defender recoveries and goalkeeper coverage. Cards placed in keeper and defender slots contribute defensive bonuses; Balanced, Attack and Defence change tactics.
+- The current lineup is represented on the field, including Jozef's personalized number and the teammate/defender/keeper jersey numbers.
 - Player and squad saves live privately on the device and are included in parent progress backups.
 
 ### STREET//11 — original real-time arcade
-A 55-second neon street-football lane-runner with animated defenders, star collection, combos, personal bests, three hearts, escalating pace, and a pause/resume system. Play on phones by tapping lanes or large left/right controls, or with arrow/A/D keys on a keyboard. Completed runs can earn Jozef FC XP; scores are stored locally.
+A 55-second neon street-football lane-runner with animated defenders, star collection, combos, personal bests, three hearts, escalating pace, and a pause/resume system. Play on phones by tapping lanes or large left/right controls, or with arrow/A/D keys on a keyboard. Completed runs can earn Jozef FC XP, subject to the daily cap. The results message accurately distinguishes new XP from a saved high score; scores are stored locally.
 
 ### Connected football adventures
 - **Career Mode:** six-match tactical league, soccer-math preparation, evolving match field, tactical questions, results, league table and a cup after 12+ points.
@@ -63,4 +67,4 @@ No public chatrooms, public profiles, ads, payments or first-party analytics. Pr
 
 ## Verified October 9, 2026
 
-A live browser test confirmed the cinematic responsive HQ, STREET//11 launch and left/right controls, Career Mode and World Tour navigation, and opening and closing the control room. Automated Node release checks covered the complete six-match Career season, local backup compatibility, offline asset coverage, single STREET//11 instance, keyboard controls and full-time behaviour. GitHub Actions must pass the complete suite before publishing. Arena and squad tests additionally cover a complete football match, pause/resume, save persistence and tactical player unlocks. Full physical-device performance testing remains a separate step.
+A live browser test confirmed the cinematic responsive HQ, STREET//11 launch and left/right controls, Career Mode and World Tour navigation, and opening and closing the control room. The newer Arena has automated coverage for successful corner goals, the passing one-two, the skill cooldown, lineup bonuses, explicit sound opt-in, and a complete match result; hands-on phone gameplay still needs a device pass. Automated Node release checks covered the complete six-match Career season, local backup compatibility, offline asset coverage, single STREET//11 instance, keyboard controls and full-time behaviour. GitHub Actions must pass the complete suite before publishing. Arena and squad tests additionally cover a complete football match, pause/resume, save persistence and tactical player unlocks. Full physical-device performance testing remains a separate step.
