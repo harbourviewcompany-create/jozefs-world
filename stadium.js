@@ -69,7 +69,7 @@ function commandDeck(){
  header.innerHTML='<div><span class="studio-kicker">THE CONTROL ROOM</span><h2>WHERE TO, <em>CAPTAIN?</em></h2></div><button type="button" class="studio-command-close" aria-label="Close quick navigation">✕</button>';
  const links=document.createElement('div');links.className='studio-command-options';
  const options=[
-  ['street','01','STREET//11','THE NIGHT RUN'],['career','02','CAREER MODE','ROAD TO LEGEND'],
+  ['arena','00','THE ARENA','LIVE FOOTBALL MATCH'],['street','01','STREET//11','THE NIGHT RUN'],['career','02','CAREER MODE','ROAD TO LEGEND'],
   ['tour','03','WORLD TOUR','CHASE THE CUP'],['matchday','04','MATCHDAY','REAL-LIFE FIXTURE'],
   ['games','05','TRAINING GAMES','ARCADE & SKILLS'],['club','06','MY PLAYER','CARDS & TROPHIES'],['learn','07','LEARN','FOOTBALL INTELLIGENCE']
  ];
