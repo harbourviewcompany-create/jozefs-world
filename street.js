@@ -1,6 +1,8 @@
 /* STREET//11 — Jozef FC Night Run. Canvas arcade, keyboard and touch. Private local best. */
 (() => {
   'use strict';
+  if (window.__jozefStreetBooted) return;
+  window.__jozefStreetBooted = true;
   const W=360,H=520,LANES=[72,180,288],DURATION=55;
   const bestKey='jozefs-world-street-best-v1';
   const $=id=>document.getElementById(id);
