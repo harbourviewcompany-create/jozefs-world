@@ -24,23 +24,16 @@
     } catch (err) { return {}; }
   }
 
-  function who() {
-    return document.body.classList.contains('who-dad') ? 'Dad' : 'Jozef';
-  }
-
-  function other(name) {
-    return name === 'Dad' ? 'Jozef' : 'Dad';
-  }
-
+  // Notes belong to the one shared club. Preserve existing messages and the
+  // existing localStorage format, but do not assign permissions to a persona.
   function unread() {
-    const me = who();
-    const last = Number(seen()[me] || 0);
-    return load().some(note => note.from === other(me) && Number(note.at) > last);
+    const last = Number(seen().Shared || 0);
+    return load().some(note => Number(note.at) > last);
   }
 
   function markSeen() {
     const box = seen();
-    box[who()] = Date.now();
+    box.Shared = Date.now();
     try { localStorage.setItem(SEEN, JSON.stringify(box)); } catch (err) { /* dot may stay */ }
   }
 
@@ -62,9 +55,9 @@
     if (street) street.textContent = 'Street best: ' + best;
     if (club) club.textContent = best;
     if (note) {
-      const latest = load().find(item => item.from === other(who()));
+      const latest = load()[0];
       note.textContent = unread() && latest
-        ? other(who()) + ' left a note: ' + latest.text
+        ? 'New club note: ' + latest.text
         : 'No new notes.';
     }
     paintDot();
@@ -77,23 +70,24 @@
     const notes = load();
     if (!notes.length) {
       const empty = document.createElement('p');
-      empty.textContent = 'No notes yet. Leave one for the other player.';
+      empty.textContent = 'No notes yet. Leave a note for your club.';
       list.appendChild(empty);
       return;
     }
     notes.forEach(note => {
       const item = document.createElement('article');
-      item.className = 'note ' + (note.from === 'Dad' ? 'dad' : 'jozef');
+      item.className = 'note club';
       const name = document.createElement('strong');
-      name.textContent = note.from === 'Dad' ? 'Dad' : 'Jozef';
+      // Old Dad/Jozef signatures are retained for existing local notes.
+      name.textContent = note.from === 'Dad' || note.from === 'Jozef' ? note.from : 'Jozef FC';
       const text = document.createElement('p');
       text.textContent = note.text;
       item.append(name, text);
-      if (note.from === who() && note.id) {
+      if (note.id) {
         const del = document.createElement('button');
         del.type = 'button';
         del.className = 'note-delete';
-        del.textContent = 'Delete my note';
+        del.textContent = 'Delete note';
         del.addEventListener('click', () => {
           save(load().filter(item => item.id !== note.id));
           render();
@@ -112,9 +106,10 @@
       event.preventDefault();
       const text = input.value.trim().slice(0, 120);
       if (!text) return;
-      const notes = [{ id: Date.now().toString(36), from: who(), text, at: Date.now() }, ...load()];
+      const notes = [{ id: Date.now().toString(36), from: 'Club', text, at: Date.now() }, ...load()];
       save(notes);
       input.value = '';
+      markSeen();
       render();
       paintToday();
     });
