@@ -106,3 +106,25 @@ test('root HTML matches the publishing source and interactive panels are correct
   assert.ok(html.includes('src="career.js"'));
   assert.ok(html.includes('href="career.css"'));
 });
+
+test('unique navigation, game canvases and script entrypoints across a cinematic homepage',()=>{
+  const html=fs.readFileSync(path.join(root,'world.html'),'utf8');
+  const namedIds=[...html.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]);
+  const seen=new Set();
+  const collisions=[];
+  for(const id of namedIds){if(seen.has(id))collisions.push(id);seen.add(id);}
+  assert.deepEqual(collisions,[],'duplicate id attributes make games load incorrectly');
+  for(const id of ['street','street-canvas','street-start','street-left','street-right','studio-career-points','studio-street-best']){
+    assert.ok(seen.has(id),'missing '+id);
+  }
+  const nav=[...html.matchAll(/data-section="street"/g)];
+  assert.equal(nav.length,1,'one STREET//11 navigation entry');
+  for(const file of ['stadium.css','stadium.js','street.js','arcade.css','arcade.js']){
+    const escaped=file.replace(/\./g,'\\.');
+    const matches=[...html.matchAll(new RegExp('(?:src|href)="'+escaped+'"','g'))];
+    assert.equal(matches.length,1,'load '+file+' exactly once');
+  }
+  const pre=html.indexOf('<section id="street"');
+  const games=html.indexOf('<section id="games"');
+  assert.ok(pre>0&&pre<games,'street game must appear before training games');
+});
