@@ -141,6 +141,9 @@
     for (const award of unlocked) state.earned.push(award.id);
     if (unlocked.length) announce('New badge: ' + unlocked.map(a => a.title).join(', ') + '!');
     save(); render();
+    if (typeof window.dispatchEvent === 'function' && typeof Event === 'function') {
+      window.dispatchEvent(new Event('jozef:profile-updated'));
+    }
   }
   function setAll(selector, value) {
     document.querySelectorAll(selector).forEach(el => { el.textContent = String(value); });
