@@ -24,6 +24,8 @@ let scrambleSolved = 0;
 let scrambleStreak = 0;
 let currentScramble = null;
 let scrambleUsed = [];
+let scrambleLocked = false;
+let scrambleAdvanceTimer = null;
 
 function shuffleWord(word) {
   const arr = word.split('');
@@ -37,6 +39,8 @@ function shuffleWord(word) {
 }
 
 function nextScramble() {
+  clearTimeout(scrambleAdvanceTimer);
+  scrambleLocked = false;
   if (scrambleUsed.length >= scrambleWords.length) scrambleUsed = [];
   let pick;
   do {
@@ -57,7 +61,7 @@ function nextScramble() {
 }
 
 function checkScramble() {
-  if (!currentScramble) return;
+  if (!currentScramble || scrambleLocked) return;
   const answer = document.getElementById('scramble-input').value.trim().toUpperCase();
   const feedback = document.getElementById('scramble-feedback');
   if (!answer) {
@@ -66,6 +70,7 @@ function checkScramble() {
     return;
   }
   if (answer === currentScramble.word) {
+    scrambleLocked = true;
     scrambleSolved++;
     scrambleStreak++;
     document.getElementById('scramble-solved').textContent = scrambleSolved;
@@ -73,7 +78,7 @@ function checkScramble() {
     feedback.textContent = 'Correct! ' + currentScramble.word + ' — awesome!';
     feedback.style.color = '#27ae60';
     window.dispatchEvent(new CustomEvent('jozef:progress', { detail: { action: 'scramble' } }));
-    setTimeout(nextScramble, 1100);
+    scrambleAdvanceTimer = setTimeout(nextScramble, 1100);
   } else {
     scrambleStreak = 0;
     document.getElementById('scramble-streak').textContent = 0;
