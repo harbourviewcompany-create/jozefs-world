@@ -1,0 +1,359 @@
+/* JOZEF FC 2026 / COLLECTION + CAMPAIGN ART PASS
+   Built entirely from local CSS shapes and DOM. No new paid assets, APIs or tracking.
+   Loaded last to transform older, bright quiz surfaces into broadcast-night components. */
+:root{--j26-foil:#c8ff5a;--j26-ice:#71e7e4;--j26-winner:#f6c56b}
+/* Collectible card identity: metadata and frame are earned; no purchases or random rewards. */
+.clubhouse-card-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}
+.clubhouse-player-card,
+.clubhouse-player-card:nth-child(2n),
+.clubhouse-player-card:nth-child(3n){
+ --card-accent:#c8ff5a;--card-bloom:#8fe76a26;
+ position:relative;display:flex;flex-direction:column;align-items:stretch;
+ padding:15px;min-height:316px;gap:8px;isolation:isolate;
+ border-radius:17px;border:1px solid #c8ff5a77;
+ color:#f7fff2;text-align:left;overflow:hidden;
+ background:
+  radial-gradient(ellipse 85% 48% at 50% 30%,var(--card-bloom),transparent 90%),
+  linear-gradient(149deg,#24413b,#10252d 70%,#091820);
+ box-shadow:0 18px 45px #030c18a8,inset 0 1px #e2ffda23;
+ opacity:1;filter:none;
+ transition:transform .24s cubic-bezier(.2,.8,.2,1),box-shadow .24s,border-color .24s;
+}
+.clubhouse-player-card[data-tier="rare"]{--card-accent:#71e7e4;--card-bloom:#71e7e42e;border-color:#71e7e498}
+.clubhouse-player-card[data-tier="elite"]{--card-accent:#d4fa86;--card-bloom:#b4ff6a2c;border-color:#b9f99a9c}
+.clubhouse-player-card[data-tier="legend"],.clubhouse-player-card:last-child.unlocked{
+ --card-accent:#f6c56b;--card-bloom:#f6c56b3d;
+ border-color:#f6c56ba8;
+ background:
+  radial-gradient(ellipse 75% 58% at 50% 38%,#f6c56b2b,transparent 94%),
+  linear-gradient(149deg,#4e3e2e,#22292b 70%,#151c25);
+ box-shadow:0 19px 45px #040d15c9,0 0 24px #f6c56b15;
+}
+.clubhouse-player-card.locked,
+.clubhouse-player-card.locked:nth-child(n){
+ background:linear-gradient(150deg,#1b2d32,#101b25);
+ border-color:#b5c7c137;opacity:1;filter:none;box-shadow:inset 0 1px #edf4ea13;
+ --card-accent:#8ba09f;--card-bloom:#9aada510;
+}
+.clubhouse-player-card::before{
+ content:"";position:absolute;pointer-events:none;z-index:-1;inset:0;
+ background:
+  linear-gradient(123deg,transparent 25%,#ffffff0b 40%,transparent 54%),
+  repeating-linear-gradient(120deg,transparent 0 17px,#ffffff07 18px);
+ opacity:.95
+}
+.clubhouse-player-card::after{
+ content:"";position:absolute;pointer-events:none;inset:5px;border:1px solid #e6ffe521;
+ clip-path:polygon(0 0,28% 0,28% 2px,2px 2px,2px 28%,0 28%,0 0,100% 0,100% 32%,calc(100% - 2px) 32%,calc(100% - 2px) 2px,78% 2px,78% 0,100% 0,100% 100%,72% 100%,72% calc(100% - 2px),calc(100% - 2px) calc(100% - 2px),calc(100% - 2px) 72%,100% 72%,100% 100%,0 100%,0 72%,2px 72%,2px calc(100% - 2px),28% calc(100% - 2px),28% 100%,0 100%);
+}
+.clubhouse-player-card-top{color:#f3fbef;z-index:1;align-items:start}
+.clubhouse-player-card-top strong{
+ color:var(--card-accent)!important;font:900 44px/.85 var(--sf-display);
+ text-shadow:0 0 25px var(--card-bloom);
+}
+.clubhouse-player-card-top small{max-width:92px;text-align:right;font:850 10px/1.2 var(--sf-ui);
+ letter-spacing:.15em;color:#bce3d5}
+.clubhouse-player-card-figure{
+ position:relative;isolation:isolate;display:grid;place-items:center;
+ width:100%;min-height:130px;margin:2px 0;
+ padding:0;filter:none;font-size:0;
+}
+.clubhouse-card-halo{
+ position:absolute;width:143px;height:110px;border-radius:50%;
+ background:radial-gradient(ellipse,var(--card-bloom),transparent 71%);
+ border:1px solid #ffffff18;transform:perspective(250px) rotateX(45deg) rotate(-15deg)
+}
+.clubhouse-card-halo::before,
+.clubhouse-card-halo::after{
+ content:"";position:absolute;inset:-9px 11px;border:1px solid #ffffff1a;border-radius:50%
+}
+.clubhouse-card-halo::after{inset:13px -13px}
+.clubhouse-card-jersey{
+ position:relative;z-index:1;display:grid;place-items:center;
+ height:117px;width:127px;clip-path:polygon(24% 3%,36% 0,64% 0,76% 3%,100% 19%,87% 45%,77% 36%,77% 100%,23% 100%,23% 36%,13% 45%,0 19%);
+ color:#0e2726;font:900 38px var(--sf-display);
+ background:
+  linear-gradient(95deg,transparent 41%,#ffffff6a 43%,#ffffff37 47%,transparent 50%),
+  linear-gradient(155deg,#f8ffcd,var(--card-accent) 55%,#60a6a1);
+ filter:drop-shadow(0 8px 14px #021317a8);
+ transform:rotate(-7deg);
+}
+.clubhouse-card-jersey::before{
+ content:"";position:absolute;top:0;width:26px;height:15px;
+ border-radius:0 0 50% 50%;background:#0c2d31;
+ border:2px solid #ffffff33;border-top:0
+}
+.clubhouse-card-jersey::after{
+ content:"";position:absolute;bottom:7px;left:28%;width:44%;height:3px;
+ background:#fff7;box-shadow:0 6px #fff4
+}
+.clubhouse-card-crest{
+ position:absolute;z-index:2;top:23px;right:calc(50% - 48px);
+ font:900 8px var(--sf-display);letter-spacing:.03em;
+ color:#13312e;background:#f8ffde;padding:2px 3px;transform:rotate(-7deg)
+}
+.clubhouse-player-card.locked .clubhouse-card-jersey{
+ background:linear-gradient(150deg,#688080,#384b52);color:#e0ece3
+}
+.clubhouse-player-card-name{
+ font:900 26px/.93 var(--sf-display);
+ letter-spacing:.005em;color:#f3fbef;text-align:left;min-height:45px;
+}
+.clubhouse-card-ability{font:850 10px var(--sf-ui);letter-spacing:.1em;color:var(--card-accent)}
+.clubhouse-player-card-hint{color:#b2cfc4;text-align:left;font:750 10px/1.35 var(--sf-ui);min-height:28px}
+.clubhouse-card-rarity{display:inline-flex;align-items:center;align-self:start;gap:6px;
+ border-radius:100px;border:1px solid var(--card-accent);color:var(--card-accent);
+ padding:4px 9px;font:900 10px var(--sf-ui);letter-spacing:.13em}
+.clubhouse-card-rarity::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--card-accent)}
+.clubhouse-player-card.unlocked:hover{
+ transform:translateY(-4px) rotate(-.4deg);border-color:var(--card-accent);
+ box-shadow:0 22px 55px #020912b5,0 0 30px var(--card-bloom)
+}
+.clubhouse-player-card.locked .clubhouse-card-halo,
+.clubhouse-player-card.locked .clubhouse-card-crest{opacity:.55}
+.clubhouse-player-card.locked .clubhouse-card-ability{color:#9cb3b1}
+/* Unified campaign surfaces; override legacy bright/white cards without hiding content. */
+#career .career-panel,#tour .tour-panel{
+ background:linear-gradient(152deg,#173039,#0d202a 80%);
+ border:1px solid #c3f9df32;box-shadow:var(--j26-elevation);color:#f1faf2;
+}
+#career .career-panel h3,#tour .tour-panel h3{color:#f1faf2;font-family:var(--sf-display);
+ font-size:clamp(25px,2.5vw,34px);letter-spacing:.005em}
+#career .career-match-head{
+ background:radial-gradient(ellipse at 50% -10%,#c8ff5a30,transparent 71%),
+ linear-gradient(135deg,#174047,#102532);
+ border:1px solid #e2ffe05e;border-radius:13px;
+ box-shadow:inset 0 1px #ffffff18
+}
+#career .career-match-head h3{font-size:clamp(30px,3.5vw,46px);line-height:1.05}
+#career .career-rule{color:#badcd0;background:#10323d;border-left:3px solid #71e7e4}
+#career .career-step-panel,#tour .tour-trivia{
+ background:linear-gradient(145deg,#203842,#102b37);
+ border:1px solid #92eedc65;color:#effaf3;box-shadow:inset 0 1px #ffffff18
+}
+#career .career-step-panel h4,#tour .tour-trivia h4{color:#f4ffed}
+#career .career-choice,#tour .tour-answer{
+ color:#e9faf0;background:#15353f;border:1px solid #b4eddf70;
+ min-height:52px;border-radius:11px;box-shadow:inset 0 1px #ffffff12
+}
+#career .career-choice:hover,#tour .tour-answer:hover:not(:disabled){
+ background:#245350;color:#effff8;border-color:#c8ff5a
+}
+#career .career-choice:focus-visible,#tour .tour-answer:focus-visible{
+ outline:3px solid #c8ff5a;outline-offset:3px
+}
+#career .career-primary,#tour .tour-main-action{
+ background:linear-gradient(160deg,#eaffab,#c8ff5a);color:#092725;
+ border:1px solid #eaffbf;border-radius:12px;
+ box-shadow:0 9px 17px #041518b6,inset 0 1px #ffffff9c;
+ font-weight:900
+}
+#career .career-primary:hover,#tour .tour-main-action:hover{background:#e9ffad;color:#0e2629}
+#career .career-status{color:#9be9cd}
+#career .career-save-note,#career .career-side-note,#tour .tour-game-note{color:#9dbdb9}
+#career .career-fixture{
+ background:#122d36;border:1px solid #badacd36;color:#f1f8f1;border-radius:11px;
+}
+#career .career-fixture.current{background:#1a3d3e;border:1px solid #c8ff5a8a;
+ box-shadow:0 0 0 2px #c8ff5a1a}
+#career .career-fixture.complete{background:#1a3430;border-color:#71e7e457}
+#career .career-fixture strong{color:#f2ffea}
+#career .career-fixture small{color:#aaccc0}
+#career .career-marker{background:#2d4e4d;color:#dcffe0}
+#career .career-result{color:#f2fbee;background:linear-gradient(145deg,#3b3926,#1a2c30);
+ border:1px solid #f6c56b94}
+#career .career-result h3{color:#ffdd91}
+#career .career-result p{color:#d9e6d9}
+/* Animated match scene gains genuine football-pitch graphics instead of generic emojis. */
+#career .career-visual{border:1px solid #b9eac25e;border-radius:13px;background:#132e38;
+ box-shadow:0 15px 36px #020e18a1}
+#career .career-visual-header{background:#071d27}
+#career .career-visual-score{color:#c8ff5a;font:900 23px var(--sf-display)}
+#career .career-field-grass{
+ border:3px solid #c1edcaa0;background:
+ radial-gradient(ellipse at 48% 15%,#d6ffcf1e,transparent 80%),
+ repeating-linear-gradient(90deg,#145c43 0 42px,#115039 42px 84px);
+ box-shadow:inset 0 0 37px #051d238b
+}
+#career .career-field-grass::before{border-color:#e6ffdd99}
+#career .career-field-player,#career .career-field-rival{
+ font-size:0!important;width:24px;height:32px;
+ filter:drop-shadow(0 5px 4px #02251bbd)
+}
+#career .career-field-player::before,#career .career-field-rival::before{
+ content:"";display:block;width:22px;height:30px;
+ background:linear-gradient(150deg,#a7eeff,#3d9bce);
+ clip-path:polygon(28% 0,72% 0,100% 18%,83% 42%,76% 35%,76% 100%,24% 100%,24% 35%,17% 42%,0 18%)
+}
+#career .career-field-rival::before{background:linear-gradient(150deg,#ffb099,#f0635d)}
+#career .career-field-keeper::before{background:linear-gradient(150deg,#ffeabd,#dfa74c)}
+#career .career-field-striker::before{background:linear-gradient(150deg,#ecffc0,#b5eb54)}
+#career .career-field-ball{font-size:0!important;width:19px;height:19px;border-radius:50%;
+ background:radial-gradient(circle at 25% 25%,#fff,#def1e5 48%,#658d93 100%);
+ border:2px solid #0b2e31;box-shadow:0 2px 9px #051825a1}
+#career .career-field-ball::before{content:"";display:block;width:7px;height:7px;margin:4px;
+ clip-path:polygon(50% 0,100% 38%,81% 100%,19% 100%,0 38%);background:#1e4a52}
+#career .career-field-goal{font-size:0!important;width:88px;height:23px;left:calc(50% - 44px);top:0;
+ background:repeating-linear-gradient(90deg,#eaffee67 0 1px,transparent 2px 10px),
+ repeating-linear-gradient(0deg,#ffffff66 0 1px,transparent 2px 7px);
+ border:2px solid #e5ffee;border-top:0;z-index:1}
+#career .career-field-caption{background:#102c34;color:#c1e9dc}
+#career .career-hero{position:relative;isolation:isolate;overflow:hidden}
+#career .career-big-ball{position:relative;display:grid;place-items:center;gap:4px;
+ flex:0 0 auto;width:175px;height:175px;border-radius:50%;
+ border:2px solid #e7ffb88a;color:#c8ff5a;
+ background:
+ radial-gradient(circle at 34% 26%,#99cfad66,transparent 31%),
+ repeating-linear-gradient(0deg,transparent 0 25px,#c8ff5a1c 26px),
+ repeating-linear-gradient(90deg,transparent 0 25px,#c8ff5a1c 26px),
+ linear-gradient(145deg,#214c46,#102930);
+ box-shadow:0 0 0 12px #c8ff5a09,0 22px 47px #030f18a4,inset -15px -12px 35px #061922a8;
+ transform:rotate(-9deg)
+}
+#career .career-big-ball span{font:900 54px var(--sf-display);letter-spacing:-.06em;
+ text-shadow:0 0 20px #c8ff5a30}
+#career .career-big-ball small{font:900 8px var(--sf-ui);letter-spacing:.17em;color:#d6f6cf}
+/* The road to the cup, synchronized with stored six-match progress. */
+.career-season-track,.tour-passport-deck{margin:-4px 0 21px;padding:19px;
+ border:1px solid #c4ffc853;border-radius:17px;
+ background:linear-gradient(150deg,#152d36,#0c1e2a);
+ box-shadow:var(--j26-softshadow)}
+.campaign-track-label{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
+ color:#c8ff5a;letter-spacing:.12em;font:900 11px var(--sf-ui);margin:0 0 14px}
+.campaign-track-label strong{color:#f1ffe5}
+.campaign-track-footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+ color:#d8f5e6;font:850 11px var(--sf-ui);letter-spacing:.1em;padding-top:14px}
+.campaign-track-footer strong{color:#c8ff5a}
+.career-season-rail{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}
+.career-season-round{position:relative;min-width:0;min-height:69px;
+ display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;
+ border:1px solid #b9d7cc36;background:#122c35;border-radius:10px;color:#87aca7}
+.career-season-round b{font:900 29px/.9 var(--sf-display)}
+.career-season-round span{font:850 8px var(--sf-ui);letter-spacing:.08em;text-align:center}
+.career-season-round.is-current{color:#e7ffca;background:linear-gradient(150deg,#276047,#1c3f3e);
+ border-color:#c8ff5a;box-shadow:inset 0 1px #ffffff26,0 0 16px #c8ff5a16}
+.career-season-round.is-done{color:#d2f0e9;background:#173940;border-color:#71e7e483}
+.career-season-round.is-done::after{content:"✓";position:absolute;right:6px;top:3px;
+ color:#71e7e4;font:900 12px var(--sf-ui)}
+/* World Tour / passport with earned embossed stamps */
+#tour .tour-hero{position:relative;isolation:isolate;overflow:hidden}
+#tour .tour-cup-art{position:relative;display:flex;flex-direction:column;align-items:center;
+ justify-content:center;flex:0 0 auto;width:176px;min-height:198px;transform:rotate(7deg);
+ filter:drop-shadow(0 18px 19px #040b18ae);font-size:0}
+#tour .tour-cup-art::before{content:"";display:block;width:151px;height:146px;
+ background:linear-gradient(130deg,#fff3be,#e8b85b 46%,#ab7842);
+ clip-path:polygon(15% 4%,85% 4%,100% 0,98% 23%,87% 38%,76% 42%,62% 70%,58% 74%,58% 85%,79% 85%,82% 96%,18% 96%,21% 85%,42% 85%,42% 74%,38% 70%,24% 42%,13% 38%,2% 23%,0 0);
+ border-radius:7px}
+#tour .tour-cup-art .tour-cup-mark{position:absolute;top:40px;left:29px;
+ width:118px;text-align:center;letter-spacing:-.045em;font:900 39px var(--sf-display);
+ color:#56422e;text-shadow:0 1px #fff5c855}
+#tour .tour-cup-art .tour-cup-base{position:absolute;bottom:5px;color:#f6d68d;
+ font:900 9px var(--sf-ui);letter-spacing:.10em;text-shadow:0 2px #081723}
+#tour .tour-stage{background:linear-gradient(180deg,#173e4d 0%,#0d2e3d 43%,#102831 43%,#0c222d 100%);
+ border:1px solid #9adaca59;color:#e9f5ed;box-shadow:var(--j26-elevation);
+ border-radius:19px}
+#tour .tour-stage[data-tier="1"]{background:linear-gradient(180deg,#253e5b 0%,#123c4e 43%,#142936 43%,#10212c)}
+#tour .tour-stage[data-tier="2"]{background:linear-gradient(180deg,#443a60 0%,#253d56 43%,#1a3039 43%,#10212c)}
+#tour .tour-stage[data-tier="3"]{background:linear-gradient(180deg,#58452e 0%,#4e4739 43%,#233037 43%,#10212c)}
+#tour .tour-score>div{background:#0e303c;border:1px solid #9fe3d368;box-shadow:0 8px 17px #04172086}
+#tour .tour-score span{color:#c7e7de}
+#tour .tour-score strong{color:#e4ffad;font:900 46px var(--sf-display)}
+#tour .tour-rival-note{color:#c8e0dc}
+#tour .tour-pitch{border-color:#d5ffecba;border-width:4px;
+ background:radial-gradient(ellipse at 50% 8%,#bdffce22,transparent 67%),
+ repeating-linear-gradient(0deg,#176849 0 42px,#15563f 42px 84px);
+ box-shadow:0 12px 27px #051921bd,inset 0 0 24px #071b1d99}
+#tour .tour-net{box-shadow:inset 0 0 18px #d4f6ff32,0 0 22px #c7ffed22}
+#tour .tour-keeper-clue{color:#f5fff6}
+#tour .tour-keeper-clue strong{color:#f6d37c}
+#tour .tour-shots-label{color:#d7ece4}
+#tour .tour-shot{background:#183640;border-color:#93d4c056;color:#f5fff5}
+#tour .tour-shot.scored{background:#2c674c;border-color:#b5ffae}
+#tour .tour-shot.saved{background:#613d3e;border-color:#ff9e9f}
+#tour .tour-controls{background:#15363f;border-color:#9be8d268}
+#tour .tour-controls p{color:#e0f6ea}
+#tour .tour-kick-buttons button{background:#20504f;border:1px solid #c8ffe180;color:#f1ffea}
+#tour .tour-kick-buttons button:hover{background:#2f6860;color:#faffee}
+#tour .tour-commentary{color:#c8efd7}
+#tour .tour-stadium-tile{color:#ebf8ef;background:#132e38;border-color:#9ad3bc45}
+#tour .tour-stadium-tile.is-unlocked{background:#235144;border-color:#c8ff5a8a}
+#tour .tour-stadium-tile strong{color:#f0f9f0}
+#tour .tour-stadium-tile small{color:#aaccc1}
+#tour .tour-stop{background:#102e38;border:1px solid #b4ddcf3f;color:#f2faf2}
+#tour .tour-stop.is-now{background:#265046;border-color:#c8ff5a}
+#tour .tour-stop.is-done{background:#22444a;border-color:#71e7e48c}
+#tour .tour-stop strong{color:#f5fff3}
+#tour .tour-stop small{color:#b4dacf}
+#tour .tour-trivia p{color:#d4e5df}
+#tour .tour-finale{background:#332f22;color:#ffebc4;border-color:#f6c56b}
+#tour .tour-finale h3{color:#ffe3a0}
+#tour .tour-finale p{color:#e7ddbd}
+.tour-passport-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}
+.tour-passport-stamp{position:relative;isolation:isolate;min-width:0;min-height:95px;
+ padding:12px 8px;display:flex;flex-direction:column;justify-content:space-between;gap:5px;
+ border-radius:9px;border:1px dashed #b8dcc34c;background:#102b36;
+ color:#7b9c9c;overflow:hidden}
+.tour-passport-stamp::before{content:"";position:absolute;inset:5px;border:1px solid #dae7ce20;
+ pointer-events:none;border-radius:4px}
+.tour-passport-stamp span{font:800 10px var(--sf-ui);letter-spacing:.07em}
+.tour-passport-stamp strong{font:900 clamp(18px,2.4vw,29px)/.91 var(--sf-display)}
+.tour-passport-stamp small{font:800 10px var(--sf-ui);letter-spacing:.09em}
+.tour-passport-stamp.is-current{border-style:solid;border-color:#c8ff5a;
+ background:linear-gradient(140deg,#255448,#153a40);color:#e4ffca}
+.tour-passport-stamp.is-stamped{border-color:#71e7e4b7;color:#bcf7ec;
+ background:linear-gradient(140deg,#214a50,#173640)}
+.tour-passport-stamp.is-stamped::after{content:"✓";position:absolute;right:7px;top:8px;
+ width:24px;height:24px;border-radius:50%;border:1px solid #71e7e4b3;
+ display:grid;place-items:center;color:#c4fff7;transform:rotate(-14deg);
+ font:900 17px var(--sf-ui)}
+@media(max-width:1120px){
+ .clubhouse-card-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .tour-passport-grid{gap:7px}
+}
+@media(max-width:760px){
+ .career-season-rail{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .tour-passport-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ #career .career-big-ball{width:118px;height:118px}
+ #career .career-big-ball span{font-size:36px}
+ #tour .tour-cup-art{width:114px;min-height:145px}
+ #tour .tour-cup-art::before{width:110px;height:115px}
+ #tour .tour-cup-art .tour-cup-mark{left:12px;top:27px;font-size:28px;width:90px}
+ #tour .tour-cup-art .tour-cup-base{font-size:7px;bottom:-2px}
+}
+@media(max-width:600px){
+ .clubhouse-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .clubhouse-player-card,.clubhouse-player-card:nth-child(n){min-height:274px;padding:11px}
+ .clubhouse-card-jersey{width:97px;height:94px;font-size:30px}
+ .clubhouse-player-card-figure{min-height:102px}
+ .clubhouse-card-crest{right:calc(50% - 39px);top:14px}
+ .clubhouse-card-halo{width:110px;height:98px}
+ .clubhouse-player-card-top strong{font-size:38px}
+ .clubhouse-player-card-name{font-size:22px}
+ .clubhouse-card-ability{font-size:9px}
+ .clubhouse-player-card-hint{font-size:9px}
+ .career-season-track,.tour-passport-deck{padding:12px}
+ #career .career-hero{gap:4px}
+ #career .career-big-ball{width:98px;height:98px;margin-right:-12px}
+ #career .career-big-ball span{font-size:32px}
+ #career .career-big-ball small{font-size:6px;letter-spacing:.06em}
+ #tour .tour-hero{gap:4px}
+ #tour .tour-cup-art{width:92px;min-height:132px}
+ #tour .tour-cup-art::before{width:86px;height:93px}
+ #tour .tour-cup-art .tour-cup-mark{left:9px;top:38px;width:76px;font-size:24px}
+ #tour .tour-cup-art .tour-cup-base{font-size:6px;letter-spacing:0}
+}
+@media(max-width:360px){
+ .clubhouse-card-grid{gap:6px}
+ .clubhouse-player-card,.clubhouse-player-card:nth-child(n){padding:8px;min-height:266px}
+ .clubhouse-player-card-top strong{font-size:34px}
+ .clubhouse-player-card-name{font-size:19px}
+ .clubhouse-card-ability{letter-spacing:0}
+ .tour-passport-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .career-season-round span{font-size:7px}
+}
+@media(hover:none){.clubhouse-player-card.unlocked:hover{transform:none}}
+@media(prefers-reduced-motion:reduce){
+ .clubhouse-player-card,.clubhouse-card-jersey,.tour-passport-stamp,
+ #career .career-field-ball,.career-field-player,.career-field-rival{animation:none!important;transition:none!important}
+ .clubhouse-player-card.unlocked:hover{transform:none}
+}
