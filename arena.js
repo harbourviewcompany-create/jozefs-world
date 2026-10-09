@@ -194,7 +194,7 @@ function loseBall(){
  tackleCooldown=1.3;
  // A tackle is not automatically a goal: only some recoveries lead to a scoring counter.
  const teamCover=Math.min(.58,squad.defence*.75+squad.keeper*.9);
- const conceded=Math.random()<Math.max(.08,(actor.y>360?.46:.25)*(1-teamCover));
+ const conceded=Math.random()<Math.max(.04,(actor.y>360?.14:.07)*(1-teamCover));
  if(conceded)them++;
  flash=conceded?-.65:-.18;cue('tackle');
  msg(conceded?'RIVALS SCORE ON THE BREAK! RESET AND GO AGAIN.':'YOUR TEAMMATES STOP THE COUNTER! RECOVER YOUR SHAPE!');

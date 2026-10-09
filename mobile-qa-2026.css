@@ -223,3 +223,13 @@
 @media(prefers-reduced-motion:reduce){
   #club .squad-field-player,.navbar .nav-btn,.phone-dock button{transition:none!important;animation:none!important}
 }
+
+@media (max-width: 800px) {
+  #street.section.active .studio-page-intro,
+  #arena.section.active .studio-page-intro { display: none !important; }
+  #street.section.active .street-controls { position: static !important; left: auto !important; right: auto !important; bottom: auto !important; z-index: 1; margin-top: 8px; }
+  #street.section.active #street-canvas { width: 100% !important; max-height: 46dvh !important; height: 46dvh !important; }
+  #arena.section.active #arena-canvas { width: 100% !important; max-height: 42dvh !important; height: 42dvh !important; }
+  #arena.section.active .arena-controller { position: static; width: 100%; }
+  #today-note { font-size: 1.05rem; }
+}
