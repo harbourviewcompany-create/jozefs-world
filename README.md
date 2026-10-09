@@ -2,7 +2,7 @@
 
 **An interactive soccer-themed website built for an awesome 8-year-old soccer fan!**
 
-Welcome to **Jozef's World** — a colorful, fun, and educational site packed with soccer games, kid-friendly sports news, learning activities, fun facts, and more.
+Welcome to **Jozef's World** — a colorful, fun, and educational site packed with soccer games, **real-time live scores**, kid-friendly sports news, learning activities, fun facts, and more.
 
 ## 🌟 Features
 
@@ -11,15 +11,18 @@ Welcome to **Jozef's World** — a colorful, fun, and educational site packed wi
 - Quick links to all the fun sections
 - Motivational soccer vibes
 
-### 🎮 Games
-- **Penalty Shootout** – Click to aim and score goals!
+### 🎮 Games (6 total!)
+- **Penalty Shootout** – Click to aim and score goals against a diving keeper
 - **Soccer Memory Match** – Flip cards and match the soccer pairs
 - **Soccer Quiz Challenge** – Test your soccer knowledge with fun questions
+- **Keepy-Uppy** – Click (or press Space) to keep the ball in the air and beat your high score
+- **Goalie Reaction** – React fast and dive to the correct side to make the save
+- **Target Practice** – Hit as many soccer-ball targets as you can in 30 seconds
 
-### 📰 Sports News
-- Kid-friendly soccer news and updates
-- Fun headlines about teams, players, and big matches
-- Easy-to-read stories perfect for young fans
+### 📰 News & Live Scores
+- **Real-time live & recent soccer scores** powered by [SportScore](https://sportscore.com/)
+- One-click refresh button
+- Kid-friendly soccer stories and positive news
 
 ### 📚 Learn
 - Soccer rules explained simply
@@ -31,8 +34,7 @@ Welcome to **Jozef's World** — a colorful, fun, and educational site packed wi
 ### 🎉 Fun Zone
 - Soccer jokes and riddles
 - Amazing soccer facts
-- Random "Did You Know?" surprises
-- Encouragement and positive messages
+- Random encouragement messages just for Jozef
 
 ## 🚀 How to View the Site
 
@@ -49,6 +51,7 @@ Just open `index.html` in any modern web browser (Chrome, Firefox, Safari, Edge)
 
 ## 🛠️ Tech Stack
 - Pure HTML, CSS & JavaScript (no frameworks needed)
+- Real-time data from SportScore API (no API key required)
 - Fully responsive – works on tablets and phones too
 - Bright, playful design made for kids
 - No accounts or logins required
@@ -58,7 +61,7 @@ Just open `index.html` in any modern web browser (Chrome, Firefox, Safari, Edge)
 jozefs-world/
 ├── index.html      # Main page
 ├── styles.css      # All the colorful styles
-├── app.js          # Games and interactivity
+├── app.js          # Games, live scores & interactivity
 └── README.md       # This file
 ```
 
