@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="extras.css" />
   <link rel="stylesheet" href="tournament.css" />
+  <link rel="stylesheet" href="career.css" />
   <link rel="stylesheet" href="scramble-positions.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,6 +26,7 @@
       <button class="nav-btn" data-section="games">Games</button>
       <button class="nav-btn" data-section="club">Jozef FC</button>
       <button class="nav-btn" data-section="tour">World Tour</button>
+      <button class="nav-btn" data-section="career">Career Mode</button>
       <button class="nav-btn" data-section="news">News & Scores</button>
       <button class="nav-btn" data-section="learn">Learn</button>
       <button class="nav-btn" data-section="fun">Fun Zone</button>
@@ -67,6 +69,12 @@
         <p>Challenge rival teams, score shootout goals, collect passport stamps, and unlock bigger stadiums.</p>
       </div>
       <button type="button" class="tour-promo-action" onclick="showSection('tour')">Start World Tour →</button>
+    </div>
+    <div class="career-promo">
+      <span class="career-promo-icon" aria-hidden="true">👟</span>
+      <div><span class="jw-eyebrow">NEW • 6-MATCH LEAGUE</span><h2>Jozef FC Career Mode</h2>
+        <p>Train your skills, make smart match decisions, and lift the league trophy.</p></div>
+      <button type="button" onclick="showSection('career')">Start Career →</button>
     </div>
     <div class="quick-cards">
       <div class="card" role="button" tabindex="0" onclick="showSection('games')">
@@ -223,6 +231,24 @@
       <button class="action-btn" id="start-target">Start Game</button>
       <p class="game-tip">Bigger targets = easier. Smaller ones = more points!</p>
     </div>
+    <!-- Word Scramble -->
+    <div id="scramble-game" class="game-panel">
+      <h3>🔤 Soccer Word Scramble</h3>
+      <p>Unscramble a soccer word with a helpful hint!</p>
+      <div class="score-board"><span>Solved: <strong id="scramble-solved">0</strong></span><span>Streak: <strong id="scramble-streak">0</strong></span></div>
+      <div class="scramble-box">
+        <div class="scramble-word" id="scramble-word" aria-label="Scrambled word"></div>
+        <p class="scramble-hint" id="scramble-hint"></p>
+        <label for="scramble-input" class="jw-eyebrow">Your answer</label>
+        <input id="scramble-input" class="scramble-input" type="text" maxlength="20" autocapitalize="characters" autocomplete="off" spellcheck="false" />
+        <p id="scramble-feedback" class="jw-shot-feedback" aria-live="polite"></p>
+        <div class="scramble-actions">
+          <button class="action-btn" type="button" id="scramble-check">Check Word</button>
+          <button class="action-btn secondary-btn" type="button" id="scramble-skip">Skip</button>
+          <button class="action-btn secondary-btn" type="button" id="scramble-new">New Word</button>
+        </div>
+      </div>
+    </div>
   </section>
 
 
@@ -311,23 +337,54 @@
         </div>
       </aside>
     </div>
-    <!-- Word Scramble -->
-    <div id="scramble-game" class="game-panel">
-      <h3>🔤 Soccer Word Scramble</h3>
-      <p>Unscramble a soccer word with a helpful hint!</p>
-      <div class="score-board"><span>Solved: <strong id="scramble-solved">0</strong></span><span>Streak: <strong id="scramble-streak">0</strong></span></div>
-      <div class="scramble-box">
-        <div class="scramble-word" id="scramble-word" aria-label="Scrambled word"></div>
-        <p class="scramble-hint" id="scramble-hint"></p>
-        <label for="scramble-input" class="jw-eyebrow">Your answer</label>
-        <input id="scramble-input" class="scramble-input" type="text" maxlength="20" autocapitalize="characters" autocomplete="off" spellcheck="false" />
-        <p id="scramble-feedback" class="jw-shot-feedback" aria-live="polite"></p>
-        <div class="scramble-actions">
-          <button class="action-btn" type="button" id="scramble-check">Check Word</button>
-          <button class="action-btn secondary-btn" type="button" id="scramble-skip">Skip</button>
-          <button class="action-btn secondary-btn" type="button" id="scramble-new">New Word</button>
+  </section>
+
+
+  <!-- CAREER MODE: FICTIONAL SIX-MATCH SEASON -->
+  <section id="career" class="section" tabindex="-1" aria-labelledby="career-heading">
+    <div class="career-hero">
+      <div>
+        <span class="career-eyebrow">JOZEF FC • PLAYER CAREER</span>
+        <h2 id="career-heading">Your Soccer League</h2>
+        <p>Train with soccer maths, help your team make smart moves, and compete in six matches. Earn 3 points for a win or 1 point for a draw. Finish with 12 points to lift the league cup!</p>
+        <div class="career-meta">
+          <span>Season <b id="career-season">1</b></span>
+          <span>League points <b id="career-points">0</b> / 18</span>
+          <span id="career-record">0W · 0D · 0L</span>
+          <span>League cups <b id="career-cups">0</b></span>
         </div>
       </div>
+      <div class="career-big-ball" aria-hidden="true">🏟️</div>
+    </div>
+    <div class="career-layout">
+      <div class="career-panel">
+        <div class="career-match-head">
+          <span class="career-eyebrow">MATCH <b id="career-match-num">1</b> OF 6</span>
+          <span id="career-opponent-flag" class="career-team-flag" aria-hidden="true">🇨🇦</span>
+          <h3>Jozef FC vs <span id="career-opponent">Capital City Cubs</span></h3>
+          <p>At <strong id="career-venue">Maple Park</strong></p>
+          <div class="career-info-strip"><span>⚽ Three match decisions</span><span id="career-training">Train before kickoff</span></div>
+        </div>
+        <p class="career-rule">How to play: Answer a quick training question to earn a shield that blocks one rival goal. Then make three soccer decisions. Each smart attacking decision scores a goal; defending correctly blocks another rival goal. There are no penalties for trying!</p>
+        <div id="career-question-panel" class="career-step-panel" hidden>
+          <span id="career-question-label" class="jw-eyebrow">TRAINING DRILL</span>
+          <h4 id="career-question">Ready?</h4>
+          <div id="career-choices" class="career-choices" role="group" aria-label="Choose your answer"></div>
+        </div>
+        <div id="career-result" class="career-result" hidden>
+          <h3 id="career-result-title">Season Complete!</h3>
+          <p id="career-result-message"></p>
+        </div>
+        <div id="career-status" class="career-status" role="status" aria-live="polite"></div>
+        <div id="career-controls"></div>
+        <p id="career-save" class="career-save-note">Your season, scores and XP save privately on this device. No account or public leaderboard.</p>
+      </div>
+      <aside class="career-panel" aria-label="League schedule and results">
+        <span class="jw-eyebrow">YOUR ROAD TO THE CUP</span>
+        <h3>League fixture list</h3>
+        <div id="career-fixtures" class="career-fixtures"></div>
+        <p class="career-side-note">Wins = 3 pts · Draws = 1 pt · Losses = 0 pts. Your six games are against imaginary teams.</p>
+      </aside>
     </div>
   </section>
 
@@ -381,6 +438,8 @@
           <p><b data-jw-badgecount>0/9</b> badges unlocked</p>
           <p>Keepy-uppy record: <b data-jw-keepy>0</b></p>
           <p>World Tour wins: <b data-jw-tourwins>0</b> • Cups: <b data-jw-crowns>0</b></p>
+          <p>Career matches: <b data-jw-careergames>0</b> • Wins: <b data-jw-careerwins>0</b> • League Cups: <b data-jw-leaguetitles>0</b></p>
+          <button type="button" class="jw-profile-open" onclick="showSection('career')">Play Career Mode →</button>
           <button type="button" class="jw-profile-open" onclick="showSection('tour')">Play World Tour →</button>
           <small>Saved privately on this device, not shared online.</small>
         </div>
@@ -542,7 +601,6 @@
           </div>
         </div>
       </div>
-    </div>
 
       <div id="learn-positions" class="learn-panel">
         <h3>🗺️ Positions on the Soccer Field</h3>
@@ -564,6 +622,7 @@
         </div>
         <div class="position-info" id="position-info" aria-live="polite"><h4>Pick a position</h4><p>Discover how the team works together!</p></div>
       </div>
+    </div>
   </section>
 
   <!-- FUN ZONE SECTION -->
@@ -610,6 +669,7 @@
   <script src="app.js"></script>
   <script src="extras.js"></script>
   <script src="tournament.js"></script>
+  <script src="career.js"></script>
   <script src="scramble-positions.js"></script>
 </body>
 </html>
