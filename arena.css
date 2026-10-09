@@ -115,3 +115,8 @@
  .arena-actions{gap:4px}
  .arena-scoreboard strong{font-size:28px}
 }
+
+.arena-rival{border:1px solid #d0ff7852;background:linear-gradient(120deg,#1b3d36,#0f272b);padding:21px;border-radius:12px;margin:23px 0 5px}
+.arena-rival strong{display:block;font:900 clamp(29px,3vw,43px)/.95 var(--sf-display);color:#d5ff7f;margin:12px 0}
+.arena-rival p{font-size:.86rem;line-height:1.6;color:#bcd8cb}
+@media(max-width:600px){.arena-rival{padding:17px}}
