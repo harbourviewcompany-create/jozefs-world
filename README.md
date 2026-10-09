@@ -1,71 +1,56 @@
-# ⚽ Jozef's World
+# Jozef's World ⚽
 
-**An interactive soccer-themed website built for an awesome 8-year-old soccer fan!**
+A playful, private soccer clubhouse for Jozef: six games, player customization, a trophy cabinet, learning content, and daily missions. No child account, chat, ads, purchases or analytics.
 
-Welcome to **Jozef's World** — a colorful, fun, and educational site packed with soccer games, **real-time live scores**, kid-friendly sports news, learning activities, fun facts, and more.
+**Play:** https://harbourviewcompany-create.github.io/jozefs-world/
 
-## 🌟 Features
+## What's included
 
-### 🏠 Home
-- Warm welcome to Jozef's World
-- Quick links to all the fun sections
-- Motivational soccer vibes
+- **Jozef FC:** Choose a mascot, kit color and jersey number. Earn XP, level up, and track goals and goalie saves.
+- **Trophy cabinet:** Nine unlockable badges for milestones, quiz results and challenges.
+- **Daily missions:** Score a goal, finish a quiz and complete Memory Match; completing all three awards a Daily Hero bonus. Missions reset on the device's local calendar date.
+- **Soccer arcade:** Penalty Shootout with left/centre/right aiming, Memory Match, Soccer Quiz, Keepy-Uppy, Goalie Reaction, and timed Target Practice.
+- **Learn and Fun Zone:** Beginner soccer rules, players, geography, soccer math, jokes and facts.
+- **News & Scores:** Static child-friendly soccer stories and an optional third-party score feed. Live score availability and freshness **are not guaranteed**; the site shows an unavailable message if the provider cannot be reached.
 
-### 🎮 Games (6 total!)
-- **Penalty Shootout** – Click to aim and score goals against a diving keeper
-- **Soccer Memory Match** – Flip cards and match the soccer pairs
-- **Soccer Quiz Challenge** – Test your soccer knowledge with fun questions
-- **Keepy-Uppy** – Click (or press Space) to keep the ball in the air and beat your high score
-- **Goalie Reaction** – React fast and dive to the correct side to make the save
-- **Target Practice** – Hit as many soccer-ball targets as you can in 30 seconds
+## Getting started
 
-### 📰 News & Live Scores
-- **Real-time live & recent soccer scores** powered by [SportScore](https://sportscore.com/)
-- One-click refresh button
-- Kid-friendly soccer stories and positive news
+Open the GitHub Pages URL above, choose **Jozef FC** to customize your player, or **Games** to start playing. Progress is stored automatically in your browser's `localStorage`. It is **not synced** between devices and will be erased if browser site storage is cleared.
 
-### 📚 Learn
-- Soccer rules explained simply
-- Famous players and their stories
-- Fun geography: where soccer is played around the world
-- Math with scores and stats
-- Cool soccer vocabulary
+There is **no backend or login**. The site requests fonts from Google Fonts and requests soccer scores from SportScore when the News & Scores tab is opened; these are external services.
 
-### 🎉 Fun Zone
-- Soccer jokes and riddles
-- Amazing soccer facts
-- Random encouragement messages just for Jozef
+## GitHub Pages deployment
 
-## 🚀 How to View the Site
+The site is published from `main` via [GitHub Actions](.github/workflows/pages.yml). On the repository's **Settings → Pages** screen, select **GitHub Actions** as the publishing source if necessary. Do not also configure a conflicting branch-based deployment.
 
-### Option 1: GitHub Pages (Recommended)
-1. Go to the repository **Settings → Pages**
-2. Under "Source", select **Deploy from a branch**
-3. Choose **main** branch and **/ (root)** folder
-4. Click Save
-5. Your site will be live at:  
-   `https://harbourviewcompany-create.github.io/jozefs-world/`
+Every push to `main` triggers the workflow:
 
-### Option 2: Open Locally
-Just open `index.html` in any modern web browser (Chrome, Firefox, Safari, Edge).
+1. Check out the repository.
+2. Configure GitHub Pages.
+3. Upload static files.
+4. Publish using `actions/deploy-pages`.
 
-## 🛠️ Tech Stack
-- Pure HTML, CSS & JavaScript (no frameworks needed)
-- Real-time data from SportScore API (no API key required)
-- Fully responsive – works on tablets and phones too
-- Bright, playful design made for kids
-- No accounts or logins required
+There is no framework build step.
 
-## 📁 Project Structure
-```
-jozefs-world/
-├── index.html      # Main page
-├── styles.css      # All the colorful styles
-├── app.js          # Games, live scores & interactivity
-└── README.md       # This file
+## Source files
+
+```text
+index.html                    Static page markup
+styles.css                    Existing game styles
+app.js                        Six games, news and educational content
+extras.css                    Responsive Jozef FC styling
+extras.js                     Browser-only XP, club and achievements
+favicon.svg                   Soccer favicon
+.github/workflows/pages.yml   GitHub Pages deployment
+tests/smoke-checklist.md      Manual acceptance checklist
 ```
 
-## ❤️ Made with Love
-Built especially for Jozef — keep practicing, keep dreaming, and keep having fun with soccer!
+## Safety and future plans
 
-**Go Jozef!** ⚽🏆
+Keep all updates age-appropriate and reviewed by a parent. Do not add an open chatroom, public leaderboards, targeted advertising or unsupervised external links.
+
+Next potential features: tournament brackets, interactive soccer science and geography missions, better animation/audio, an offline installable app, parent-approved news moderation, and optional parental controls.
+
+## Testing
+
+The live page, player avatar, kit selection, penalty goals, XP updates, First Goal badge and all six game tabs have been tested in a browser. A reported jersey-number reload bug was subsequently fixed by saving on each input event; this specific fix still needs a post-deployment retest. See [manual QA checklist](tests/smoke-checklist.md) for the remaining tests.
