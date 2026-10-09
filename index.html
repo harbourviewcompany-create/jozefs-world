@@ -1,1 +1,26 @@
-PLACEHOLDER_WILL_FAIL_IF_NOT_REPLACED
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jozef's World</title>
+  <meta name="theme-color" content="#101d42" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <style>body{font-family:Nunito,system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#e8f8f5;color:#2c3e50}.box{text-align:center;padding:2rem}</style>
+</head>
+<body>
+  <div class="box">
+    <div style="font-size:3rem">⚽</div>
+    <p><strong>Loading Jozef's World…</strong></p>
+  </div>
+  <script>
+  fetch('site.html').then(function(r){return r.text()}).then(function(html){
+    document.open();
+    document.write(html);
+    document.close();
+  }).catch(function(){
+    document.querySelector('.box').innerHTML = '<p>Could not load the clubhouse. Please refresh.</p>';
+  });
+  </script>
+</body>
+</html>
