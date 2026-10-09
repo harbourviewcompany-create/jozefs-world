@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="clubhouse.css" />
   <link rel="stylesheet" href="scramble-positions.css" />
   <link rel="stylesheet" href="stadium.css" />
+  <link rel="stylesheet" href="arcade.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Lilita+One&family=Nunito:wght@400;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -158,7 +159,7 @@
   <!-- GAMES SECTION -->
   <section id="games" class="section">
     <h2 class="section-title">🎮 Soccer Games</h2>
-    <p class="section-desc">Choose a game and have a blast! 7 games ready to play.</p>
+    <p class="section-desc">Choose a game and have a blast! 10 games ready to play.</p>
 
     <div class="game-selector">
       <button class="game-tab active" data-game="penalty">Penalty</button>
@@ -168,6 +169,9 @@
       <button class="game-tab" data-game="goalie">Goalie Reaction</button>
       <button class="game-tab" data-game="target">Target Practice</button>
       <button class="game-tab" data-game="scramble">Word Scramble</button>
+      <button class="game-tab" data-game="gate">Gate Pass</button>
+      <button class="game-tab" data-game="header">Header Hero</button>
+      <button class="game-tab" data-game="spot">Spot the Ball</button>
     </div>
 
     <!-- Penalty Game -->
@@ -292,6 +296,43 @@
         </div>
       </div>
     </div>
+
+    <div id="gate-game" class="game-panel">
+      <h3>🚪 Gate Pass</h3>
+      <p>A gate lights up. Tap the open one before it shuts.</p>
+      <div class="score-board"><span>Found: <strong id="gate-score">0</strong></span><span>Round: <strong id="gate-round">0/8</strong></span></div>
+      <div class="arcade-grid" id="gate-board">
+        <button type="button" class="gate" data-gate="0">Left</button>
+        <button type="button" class="gate" data-gate="1">Centre</button>
+        <button type="button" class="gate" data-gate="2">Right</button>
+      </div>
+      <p id="gate-status" class="jw-shot-feedback" aria-live="polite">Press start, then tap the glowing gate.</p>
+      <button class="action-btn" type="button" id="gate-start">Start Gate Pass</button>
+    </div>
+    <div id="header-game" class="game-panel">
+      <h3>👤 Header Hero</h3>
+      <p>Jump when the ball sits in the gold box. Perfect timing scores two.</p>
+      <div class="score-board"><span>Score: <strong id="header-score">0</strong></span></div>
+      <div class="header-track" aria-hidden="true"><div class="header-zone"></div><div class="header-mark" id="header-mark"></div></div>
+      <p id="header-status" class="jw-shot-feedback" aria-live="polite">Press start, then jump five times.</p>
+      <div class="arcade-actions">
+        <button class="action-btn" type="button" id="header-start">Start Headers</button>
+        <button class="action-btn" type="button" id="header-jump">Jump</button>
+      </div>
+    </div>
+    <div id="spot-game" class="game-panel">
+      <h3>👀 Spot the Ball</h3>
+      <p>Watch which boot hides the ball, then tap it.</p>
+      <div class="score-board"><span>Found: <strong id="spot-score">0</strong></span></div>
+      <div class="arcade-grid">
+        <button type="button" class="cup" data-cup="0">1</button>
+        <button type="button" class="cup" data-cup="1">2</button>
+        <button type="button" class="cup" data-cup="2">3</button>
+      </div>
+      <p id="spot-status" class="jw-shot-feedback" aria-live="polite">Press start to hide the ball.</p>
+      <button class="action-btn" type="button" id="spot-start">Start Spot the Ball</button>
+    </div>
+
   </section>
 
 
@@ -778,6 +819,7 @@
   <script src="jersey-bingo.js"></script>
   <script src="matchday.js"></script>
   <script src="stadium.js"></script>
+  <script src="arcade.js"></script>
   <script src="street.js"></script>
 </body>
 </html>
