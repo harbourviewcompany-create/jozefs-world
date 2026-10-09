@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="extras.css" />
   <link rel="stylesheet" href="tournament.css" />
   <link rel="stylesheet" href="career.css" />
+  <link rel="stylesheet" href="clubhouse.css" />
   <link rel="stylesheet" href="scramble-positions.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -365,6 +366,23 @@
           <p>At <strong id="career-venue">Maple Park</strong></p>
           <div class="career-info-strip"><span>⚽ Three match decisions</span><span id="career-training">Train before kickoff</span></div>
         </div>
+        <div class="career-visual" id="career-field" data-scene="kickoff" aria-label="Animated soccer pitch showing team formation">
+          <div class="career-visual-header"><strong>JOZEF FC</strong><span class="career-visual-score" id="career-field-score">0 – 0</span><strong>RIVALS</strong></div>
+          <div class="career-field-grass">
+            <div class="career-halfway"></div><div class="career-centre-circle"></div>
+            <span class="career-field-player career-field-keeper" aria-hidden="true">🧤</span>
+            <span class="career-field-player career-field-back career-player-one" aria-hidden="true">🔵</span>
+            <span class="career-field-player career-field-back career-player-two" aria-hidden="true">🔵</span>
+            <span class="career-field-player career-field-mid career-player-three" aria-hidden="true">🔵</span>
+            <span class="career-field-player career-field-mid career-player-four" aria-hidden="true">🔵</span>
+            <span class="career-field-player career-field-striker" aria-hidden="true">⭐</span>
+            <span class="career-field-ball" id="career-field-ball" aria-hidden="true">⚽</span>
+            <span class="career-field-rival career-rival-one" aria-hidden="true">🔴</span>
+            <span class="career-field-rival career-rival-two" aria-hidden="true">🔴</span>
+            <span class="career-field-goal" aria-hidden="true">🥅</span>
+          </div>
+          <p id="career-field-status" class="career-field-caption">Ready for the next match</p>
+        </div>
         <p class="career-rule">How to play: Answer a quick training question to earn a shield that blocks one rival goal. Then make three soccer decisions. Each smart attacking decision scores a goal; defending correctly blocks another rival goal. There are no penalties for trying!</p>
         <div id="career-question-panel" class="career-step-panel" hidden>
           <span id="career-question-label" class="jw-eyebrow">TRAINING DRILL</span>
@@ -444,6 +462,21 @@
           <small>Saved privately on this device, not shared online.</small>
         </div>
       </div>
+    </div>
+    <div class="jw-card jw-collectibles">
+      <div class="jw-section-head"><div><span class="jw-eyebrow">YOUR PLAYERS</span><h3>✨ Jozef FC Collector Cards</h3></div><span class="jw-level-chip"><span id="clubhouse-card-count">1 / 7</span> unlocked</span></div>
+      <p>Earn these cards through goals, league matches, learning and adventures. No purchases or random prizes.</p>
+      <div class="clubhouse-card-grid" id="clubhouse-cards" aria-label="Soccer player card collection"></div>
+    </div>
+    <div class="jw-card clubhouse-backup">
+      <div class="jw-section-head"><div><span class="jw-eyebrow">FOR A PARENT OR GUARDIAN</span><h3>💾 Save Jozef's progress</h3></div></div>
+      <p>Progress stays on this device. A parent can save a private backup file or restore it on another device. Nothing is uploaded to a server.</p>
+      <div class="clubhouse-backup-actions">
+        <button class="jw-profile-open" type="button" id="clubhouse-export">Download progress backup</button>
+        <button class="jw-sound" type="button" id="clubhouse-import-button">Restore from backup</button>
+        <input id="clubhouse-import" type="file" accept=".json,application/json" hidden aria-label="Choose a Jozef's World backup file" />
+      </div>
+      <p class="jw-privacy-note" id="clubhouse-backup-status" role="status" aria-live="polite">Keep the file private. Restoring a backup replaces saved progress on this device after confirmation.</p>
     </div>
     <div class="jw-card jw-trophy-card">
       <div class="jw-section-head"><div><span class="jw-eyebrow">YOUR TROPHY CABINET</span><h3>🏆 Unlock awesome badges!</h3></div></div>
@@ -670,6 +703,7 @@
   <script src="extras.js"></script>
   <script src="tournament.js"></script>
   <script src="career.js"></script>
+  <script src="clubhouse.js"></script>
   <script src="scramble-positions.js"></script>
 </body>
 </html>
