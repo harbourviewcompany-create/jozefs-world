@@ -99,10 +99,10 @@ function checkScramble() {
 }
 
 (function initScramble() {
-  const check = document.getElementById('scramble-check');
-  const input = document.getElementById('scramble-input');
-  if (check) check.addEventListener('click', checkScramble);
-  if (input) input.addEventListener('keydown', (e) => { if (e.key === 'Enter') checkScramble(); });
+  document.getElementById('scramble-check')?.addEventListener('click', checkScramble);
+  document.getElementById('scramble-input')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') checkScramble();
+  });
   document.getElementById('scramble-skip')?.addEventListener('click', () => {
     scrambleStreak = 0;
     const streakEl = document.getElementById('scramble-streak');
@@ -139,9 +139,9 @@ document.querySelectorAll('.pitch-pos').forEach(btn => {
   });
 });
 
-// Load Training Camp + celebrations
+// Load additive modules: celebrations, training, jersey/bingo/missions
 (function loadExtraModules() {
-  ['celebrate.js', 'training.js'].forEach(function (src) {
+  ['celebrate.js', 'training.js', 'jersey-bingo.js'].forEach(function (src) {
     if (document.querySelector('script[data-jw-extra="' + src + '"]')) return;
     var s = document.createElement('script');
     s.src = src;
@@ -149,11 +149,12 @@ document.querySelectorAll('.pitch-pos').forEach(btn => {
     s.dataset.jwExtra = src;
     document.body.appendChild(s);
   });
-  if (!document.querySelector('link[data-jw-extra="training.css"]')) {
+  ['training.css', 'jersey-bingo.css'].forEach(function (href) {
+    if (document.querySelector('link[data-jw-extra="' + href + '"]')) return;
     var l = document.createElement('link');
     l.rel = 'stylesheet';
-    l.href = 'training.css';
-    l.dataset.jwExtra = 'training.css';
+    l.href = href;
+    l.dataset.jwExtra = href;
     document.head.appendChild(l);
-  }
+  });
 })();
