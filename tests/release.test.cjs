@@ -42,7 +42,7 @@ test('street game uses local-only saved records and has genuine pause and keyboa
  assert.match(js,/street-right/);
  assert.match(js,/keydown/);
  assert.match(js,/visibilitychange/);
- assert.match(js,/JozefWorld\?\.record\('street'/);
+ assert.match(js,/JozefWorld\?\.record(?:\?\.)?\('street'/);
  assert.doesNotMatch(js,/fetch\(|XMLHttpRequest|WebSocket/);
 });
 
