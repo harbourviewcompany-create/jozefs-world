@@ -1,0 +1,24 @@
+{
+  "name": "Jozef FC // After Dark",
+  "short_name": "Jozef FC",
+  "description": "Jozef's own football universe. Play STREET//11, build your career, travel the world and collect trophies.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "background_color": "#061319",
+  "theme_color": "#07151a",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
