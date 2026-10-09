@@ -21,14 +21,16 @@
     { id: 'league-debut', icon: '👟', title: 'League Debut', description: 'Finish your first Career match', ready: s => s.careerGames >= 1 },
     { id: 'league-winner', icon: '🏅', title: 'Match Winner', description: 'Win a Career match', ready: s => s.careerWins >= 1 },
     { id: 'training-star', icon: '🧮', title: 'Training Star', description: 'Solve a Career training challenge', ready: s => s.trainingSuccess >= 1 },
-    { id: 'league-champion', icon: '🏆', title: 'League Champion', description: 'Win the six-match Career league', ready: s => s.leagueTitles >= 1 }
+    { id: 'league-champion', icon: '🏆', title: 'League Champion', description: 'Win the six-match Career league', ready: s => s.leagueTitles >= 1 },
+    { id: 'night-rookie', icon: '🌙', title: 'Night Rookie', description: 'Complete a STREET//11 run scoring at least 20', ready: s => s.streetRuns >= 1 },
+    { id: 'night-legend', icon: '⚡', title: 'Night Legend', description: 'Reach 150 points in STREET//11', ready: s => s.streetBest >= 150 }
   ];
   const defaultState = () => ({
     xp: 0, goals: 0, saves: 0, memory: 0, quizzes: 0, perfect: 0, scrambles: 0,
     keepyBest: 0, targetBest: 0, club: 'Jozef FC', avatar: '🦁', kit: COLORS[0],
     number: 10, day: dayKey(), daily: {}, dailyHero: '', earned: [],
     sound: false, tourWins: 0, championships: 0, geography: 0,
-    careerGames: 0, careerWins: 0, trainingSuccess: 0, leagueTitles: 0,
+    careerGames: 0, careerWins: 0, trainingSuccess: 0, leagueTitles: 0, streetRuns: 0, streetBest: 0,
     rewardedTours: [], rewardedGeography: [], rewardedTitles: [],
     rewardedCareer: [], rewardedTraining: [], rewardedLeague: []
   });
@@ -41,7 +43,7 @@
     try { value = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (_) {}
     const s = { ...defaultState(), ...value };
     s.xp = Math.max(0, Number(s.xp) || 0);
-    for (const name of ['goals', 'saves', 'memory', 'quizzes', 'perfect', 'keepyBest', 'targetBest', 'tourWins', 'championships', 'geography', 'scrambles', 'careerGames', 'careerWins', 'trainingSuccess', 'leagueTitles']) {
+    for (const name of ['goals', 'saves', 'memory', 'quizzes', 'perfect', 'keepyBest', 'targetBest', 'tourWins', 'championships', 'geography', 'scrambles', 'careerGames', 'careerWins', 'trainingSuccess', 'leagueTitles', 'streetRuns', 'streetBest']) {
       s[name] = Math.max(0, Number(s[name]) || 0);
     }
     if (!COLORS.includes(s.kit)) s.kit = COLORS[0];
@@ -52,6 +54,7 @@
       if (!Array.isArray(s[key])) s[key] = [];
     }
     try { s.keepyBest = Math.max(s.keepyBest, Number(localStorage.getItem('jozefKeepyBest')) || 0); } catch (_) {}
+    try { s.streetBest = Math.max(s.streetBest, Number(localStorage.getItem('jozefs-world-street-best-v1')) || 0); } catch (_) {}
     if (s.day !== dayKey()) { s.day = dayKey(); s.daily = {}; }
     if (!s.daily || typeof s.daily !== 'object') s.daily = {};
     return s;
@@ -95,8 +98,8 @@
   }
   function record(action, info = {}) {
     if (state.day !== dayKey()) { state.day = dayKey(); state.daily = {}; }
-    const rewards = { goal: 5, save: 8, memory: 30, quiz: 20, keepy: 15, target: 15, tournament: 60, geography: 15, championship: 120, scramble: 10, career: 20, training: 10, leaguechamp: 120 };
-    const caps = { goal: 10, save: 10, memory: 3, quiz: 3, keepy: 1, target: 3, tournament: 10, geography: 10, championship: 3, scramble: 5, career: 10, training: 6, leaguechamp: 2 };
+    const rewards = { goal: 5, save: 8, memory: 30, quiz: 20, keepy: 15, target: 15, tournament: 60, geography: 15, championship: 120, scramble: 10, career: 20, training: 10, leaguechamp: 120, street: 40 };
+    const caps = { goal: 10, save: 10, memory: 3, quiz: 3, keepy: 1, target: 3, tournament: 10, geography: 10, championship: 3, scramble: 5, career: 10, training: 6, leaguechamp: 2, street: 2 };
     if (!(action in rewards)) return;
     const uniqueReward = { tournament: 'rewardedTours', geography: 'rewardedGeography', championship: 'rewardedTitles', career: 'rewardedCareer', training: 'rewardedTraining', leaguechamp: 'rewardedLeague' }[action];
     if (uniqueReward) {
@@ -111,8 +114,10 @@
       state[uniqueReward].push(id);
     }
     if (action === 'target' && (Number(info.score) || 0) <= 0) return;
+    if (action === 'street' && (!Number.isFinite(Number(info.score)) || Number(info.score) < 20 || Number(info.score) > 1000000)) return;
     if (action === 'keepy' && (Number(info.count) || 0) < 10) return;
     if (action === 'goal') state.goals++;
+    if (action === 'street') { state.streetRuns++; state.streetBest = Math.max(state.streetBest, Math.floor(Number(info.score))); }
     if (action === 'career') { state.careerGames++; if (info.result === 'win') state.careerWins++; }
     if (action === 'training') state.trainingSuccess++;
     if (action === 'leaguechamp') state.leagueTitles++;
@@ -155,6 +160,7 @@
     setAll('[data-jw-level]', level);
     setAll('[data-jw-goals]', state.goals);
     setAll('[data-jw-tourwins]', state.tourWins);
+    setAll('[data-jw-streetbest]', state.streetBest);
     setAll('[data-jw-careergames]', state.careerGames);
     setAll('[data-jw-careerwins]', state.careerWins);
     setAll('[data-jw-leaguetitles]', state.leagueTitles);
