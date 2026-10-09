@@ -37,6 +37,7 @@
     if (!AVATARS.includes(s.avatar)) s.avatar = AVATARS[0];
     s.number = Math.min(99, Math.max(1, Number(s.number) || 10));
     if (!Array.isArray(s.earned)) s.earned = [];
+    try { s.keepyBest = Math.max(s.keepyBest, Number(localStorage.getItem('jozefKeepyBest')) || 0); } catch (_) {}
     if (s.day !== dayKey()) { s.day = dayKey(); s.daily = {}; }
     if (!s.daily || typeof s.daily !== 'object') s.daily = {};
     return s;
@@ -83,6 +84,8 @@
     const rewards = { goal: 5, save: 8, memory: 30, quiz: 20, keepy: 15, target: 15 };
     const caps = { goal: 10, save: 10, memory: 3, quiz: 3, keepy: 1, target: 3 };
     if (!(action in rewards)) return;
+    if (action === 'target' && (Number(info.score) || 0) <= 0) return;
+    if (action === 'keepy' && (Number(info.count) || 0) < 10) return;
     if (action === 'goal') state.goals++;
     if (action === 'save') state.saves++;
     if (action === 'memory') state.memory++;
@@ -123,10 +126,15 @@
     setAll('[data-jw-clubname]', 'Jozef FC');
     document.querySelectorAll('[data-jw-progress]').forEach(el => {
       el.style.width = levelXP + '%';
-      el.setAttribute('aria-valuenow', String(levelXP));
+      el.parentElement?.setAttribute('aria-valuenow', String(levelXP));
     });
     document.querySelectorAll('[data-jw-kit]').forEach(el => el.style.setProperty('--kit-color', state.kit));
-    document.querySelectorAll('[data-choose-avatar]').forEach(el => {
+    document.querySelectorAll('.quick-cards .card[role="button"]').forEach(el => {
+    el.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); el.click(); }
+    });
+  });
+  document.querySelectorAll('[data-choose-avatar]').forEach(el => {
       const selected = el.dataset.chooseAvatar === state.avatar;
       el.setAttribute('aria-pressed', String(selected));
     });
