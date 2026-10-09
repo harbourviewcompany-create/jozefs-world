@@ -9,15 +9,607 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="extras.css" />
-  <link rel="stylesheet" href="scramble-positions.css" />
   <link rel="stylesheet" href="tournament.css" />
+  <link rel="stylesheet" href="scramble-positions.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
   <a href="#main" class="jw-skip">Skip to content</a>
-  <p style="text-align:center;padding:2rem;font-family:Nunito,sans-serif">Loading Jozef's World… If you still see this, please refresh.</p>
-  <script>location.replace(location.pathname.replace(/\/?$/, '/') + '#reload');</script>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-brand">⚽ Jozef's World</div>
+    <div class="nav-links">
+      <button class="nav-btn active" data-section="home">Home</button>
+      <button class="nav-btn" data-section="games">Games</button>
+      <button class="nav-btn" data-section="club">Jozef FC</button>
+      <button class="nav-btn" data-section="tour">World Tour</button>
+      <button class="nav-btn" data-section="news">News & Scores</button>
+      <button class="nav-btn" data-section="learn">Learn</button>
+      <button class="nav-btn" data-section="fun">Fun Zone</button>
+    </div>
+    <button class="jw-xp-pill" type="button" onclick="showSection('club')" aria-label="Open Jozef FC player club">
+      <span>⭐ <b data-jw-xp>0</b> XP</span><span class="jw-level-chip">LVL <b data-jw-level>1</b></span>
+    </button>
+  </nav>
+
+  <!-- HOME SECTION -->
+  <section id="home" class="section active" tabindex="-1"><div id="main"></div>
+    <div class="hero">
+      <div class="hero-content">
+        <h1>Welcome to <span class="highlight">Jozef's World</span>!</h1>
+        <p class="hero-subtitle">Your special place for soccer fun, games, live scores, learning & adventures ⚽</p>
+        <div class="hero-buttons">
+          <button class="big-btn" onclick="showSection('games')">🎮 Play Games</button>
+          <button class="big-btn secondary" onclick="showSection('news')">📰 Live Scores</button>
+        </div>
+      </div>
+      <div class="hero-ball">⚽</div>
+    </div>
+
+    <div class="jw-profile-banner" data-jw-kit>
+      <div class="jw-avatar-circle"><span data-jw-avatar>🦁</span><span class="jw-jersey">#<b data-jw-number>10</b></span></div>
+      <div class="jw-profile-info">
+        <span class="jw-eyebrow">YOUR PLAYER JOURNEY</span>
+        <h2>Jozef FC <span class="jw-level-chip">LEVEL <b data-jw-level>1</b></span></h2>
+        <p>Train, learn, score goals and earn trophies!</p>
+        <div class="jw-level-track" role="progressbar" aria-label="XP to next level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div data-jw-progress></div></div>
+        <span class="jw-help">Every 100 XP unlocks a new level</span>
+      </div>
+      <button type="button" class="jw-profile-open" onclick="showSection('club')">My Club →</button>
+    </div>
+    <div class="tour-promo">
+      <div class="tour-promo-icon" aria-hidden="true">🏆</div>
+      <div>
+        <span class="jw-eyebrow">NEW ADVENTURE • 5 COUNTRIES</span>
+        <h2>Jozef FC World Tour</h2>
+        <p>Challenge rival teams, score shootout goals, collect passport stamps, and unlock bigger stadiums.</p>
+      </div>
+      <button type="button" class="tour-promo-action" onclick="showSection('tour')">Start World Tour →</button>
+    </div>
+    <div class="quick-cards">
+      <div class="card" role="button" tabindex="0" onclick="showSection('games')">
+        <div class="card-icon">🎮</div>
+        <h3>Games</h3>
+        <p>7 fun soccer games to play!</p>
+      </div>
+      <div class="card" role="button" tabindex="0" onclick="showSection('news')">
+        <div class="card-icon">📰</div>
+        <h3>News & Scores</h3>
+        <p>Live scores + cool stories</p>
+      </div>
+      <div class="card" role="button" tabindex="0" onclick="showSection('learn')">
+        <div class="card-icon">📚</div>
+        <h3>Learn</h3>
+        <p>Rules, players, geography & more</p>
+      </div>
+      <div class="card" role="button" tabindex="0" onclick="showSection('fun')">
+        <div class="card-icon">🎉</div>
+        <h3>Fun Zone</h3>
+        <p>Jokes, facts & surprises</p>
+      </div>
+    </div>
+
+    <div class="jw-missions">
+      <div class="jw-section-head"><div><span class="jw-eyebrow">TODAY'S ADVENTURE</span><h2>Three little missions</h2></div><span class="jw-mission-note">Play at your own pace</span></div>
+      <div class="jw-mission-grid">
+        <div class="jw-mission" data-jw-mission="goal"><span class="jw-mission-icon">⚽</span><div><strong>Score a goal</strong><small>Try Penalty Shootout</small><span class="mission-check">○ Ready</span></div><button data-jw-go="penalty" type="button">Play →</button></div>
+        <div class="jw-mission" data-jw-mission="quiz"><span class="jw-mission-icon">🧠</span><div><strong>Quiz time</strong><small>Finish the soccer quiz</small><span class="mission-check">○ Ready</span></div><button data-jw-go="quiz" type="button">Play →</button></div>
+        <div class="jw-mission" data-jw-mission="memory"><span class="jw-mission-icon">🏆</span><div><strong>Memory master</strong><small>Match all six pairs</small><span class="mission-check">○ Ready</span></div><button data-jw-go="memory" type="button">Play →</button></div>
+      </div>
+    </div>
+    <div class="message-box">
+      <p>💪 Keep practicing, stay kind, and always have fun — you're a star, Jozef!</p>
+    </div>
+  </section>
+
+  <!-- GAMES SECTION -->
+  <section id="games" class="section">
+    <h2 class="section-title">🎮 Soccer Games</h2>
+    <p class="section-desc">Choose a game and have a blast! 7 games ready to play.</p>
+
+    <div class="game-selector">
+      <button class="game-tab active" data-game="penalty">Penalty</button>
+      <button class="game-tab" data-game="memory">Memory</button>
+      <button class="game-tab" data-game="quiz">Quiz</button>
+      <button class="game-tab" data-game="keepy">Keepy-Uppy</button>
+      <button class="game-tab" data-game="goalie">Goalie Reaction</button>
+      <button class="game-tab" data-game="target">Target Practice</button>
+      <button class="game-tab" data-game="scramble">Word Scramble</button>
+    </div>
+
+    <!-- Penalty Game -->
+    <div id="penalty-game" class="game-panel active">
+      <h3>⚽ Penalty Shootout</h3>
+      <p>Click the goal to shoot! Aim for the corners!</p>
+      <div class="score-board">
+        <span>Goals: <strong id="penalty-score">0</strong></span>
+        <span>Misses: <strong id="penalty-misses">0</strong></span>
+      </div>
+      <div class="goal-area" id="goal-area">
+        <div class="goal-post left"></div>
+        <div class="goal-post right"></div>
+        <div class="goal-net"></div>
+        <div class="keeper" id="keeper">🧤</div>
+        <div class="ball" id="penalty-ball">⚽</div>
+      </div>
+      <div class="jw-aim-panel" aria-label="Choose where to aim">
+        <span>Choose your shot:</span>
+        <button type="button" data-jw-aim="27">↖ Left corner</button>
+        <button type="button" data-jw-aim="50">↑ Centre</button>
+        <button type="button" data-jw-aim="73">↗ Right corner</button>
+      </div>
+      <p id="jw-penalty-feedback" class="jw-shot-feedback" aria-live="polite">Pick a corner and take your shot!</p>
+      <button class="action-btn" id="reset-penalty">Reset Score</button>
+      <p class="game-tip">Tip: Click different parts of the goal to aim!</p>
+    </div>
+
+    <!-- Memory Game -->
+    <div id="memory-game" class="game-panel">
+      <h3>🧠 Soccer Memory Match</h3>
+      <p>Flip the cards and find matching pairs!</p>
+      <div class="score-board">
+        <span>Matches: <strong id="memory-matches">0</strong> / 6</span>
+        <span>Moves: <strong id="memory-moves">0</strong></span>
+      </div>
+      <div class="memory-grid" id="memory-grid"></div>
+      <p id="memory-feedback" class="jw-shot-feedback" aria-live="polite"></p>
+      <button class="action-btn" id="reset-memory">New Game</button>
+    </div>
+
+    <!-- Quiz Game -->
+    <div id="quiz-game" class="game-panel">
+      <h3>❓ Soccer Quiz Challenge</h3>
+      <div id="quiz-container">
+        <div class="quiz-progress">Question <span id="quiz-num">1</span> of 8</div>
+        <div class="quiz-question" id="quiz-question">Loading...</div>
+        <div class="quiz-options" id="quiz-options"></div>
+        <div class="quiz-feedback" id="quiz-feedback"></div>
+        <div class="quiz-score">Score: <strong id="quiz-score">0</strong></div>
+      </div>
+      <button class="action-btn" id="restart-quiz" style="display:none;">Play Again</button>
+    </div>
+
+    <!-- Keepy-Uppy Game -->
+    <div id="keepy-game" class="game-panel">
+      <h3>🦵 Keepy-Uppy</h3>
+      <p>Click the ball (or press Space) to keep it in the air! How many can you do?</p>
+      <div class="score-board">
+        <span>Keep-ups: <strong id="keepy-count">0</strong></span>
+        <span>Best: <strong id="keepy-best">0</strong></span>
+      </div>
+      <div class="keepy-area" id="keepy-area">
+        <div class="keepy-ball" id="keepy-ball">⚽</div>
+        <div class="keepy-ground"></div>
+      </div>
+      <button class="action-btn" id="reset-keepy">Reset</button>
+      <p class="game-tip">Click fast when the ball is falling!</p>
+    </div>
+
+    <!-- Goalie Reaction Game -->
+    <div id="goalie-game" class="game-panel">
+      <h3>🧤 Goalie Reaction</h3>
+      <p>A ball will fly toward the goal. Click the side it's coming from to save it!</p>
+      <div class="score-board">
+        <span>Saves: <strong id="goalie-saves">0</strong></span>
+        <span>Goals Against: <strong id="goalie-goals">0</strong></span>
+      </div>
+      <div class="goalie-area" id="goalie-area">
+        <div class="goalie-net"></div>
+        <div class="goalie-keeper" id="goalie-keeper">🧤</div>
+        <div class="goalie-ball" id="goalie-ball" style="display:none;">⚽</div>
+        <div class="goalie-zones">
+          <button class="zone-btn" data-side="left">LEFT</button>
+          <button class="zone-btn" data-side="center">CENTER</button>
+          <button class="zone-btn" data-side="right">RIGHT</button>
+        </div>
+      </div>
+      <button class="action-btn" id="start-goalie">Start Round</button>
+      <p class="game-tip" id="goalie-status">Press Start, then watch carefully!</p>
+    </div>
+
+    <!-- Target Practice Game -->
+    <div id="target-game" class="game-panel">
+      <h3>🎯 Target Practice</h3>
+      <p>Click the targets as they appear! How many can you hit in 30 seconds?</p>
+      <div class="score-board">
+        <span>Hits: <strong id="target-hits">0</strong></span>
+        <span>Time: <strong id="target-time">30</strong>s</span>
+      </div>
+      <div class="target-area" id="target-area">
+        <p class="target-start-msg" id="target-start-msg">Press Start to begin!</p>
+      </div>
+      <button class="action-btn" id="start-target">Start Game</button>
+      <p class="game-tip">Bigger targets = easier. Smaller ones = more points!</p>
+    </div>
+  </section>
+
+
+  <!-- WORLD TOUR ADVENTURE -->
+  <section id="tour" class="section" tabindex="-1" aria-labelledby="tour-heading">
+    <div class="tour-hero">
+      <div>
+        <span class="tour-eyebrow">⭐ JOZEF FC PRESENTS</span>
+        <h2 id="tour-heading">The World Tour Cup <span aria-hidden="true">🏆</span></h2>
+        <p>Five countries. Five rivals. One amazing soccer adventure. Read the goalkeeper's move, take your shots and become a world champion!</p>
+        <div class="tour-summary">
+          <span>Season <b id="tour-season">1</b></span>
+          <span>Stops completed <b id="tour-current-wins">0/5</b></span>
+          <span>Cups <b id="tour-crowns">0</b></span>
+        </div>
+      </div>
+      <div class="tour-cup-art" aria-hidden="true">🏆<span>⭐ ⚽ ⭐</span></div>
+    </div>
+
+    <div class="tour-layout">
+      <div>
+        <div id="tour-stage" class="tour-stage" data-tier="0">
+          <div id="tour-match">
+            <div class="tour-match-intro">
+              <span class="tour-eyebrow">STOP <b id="tour-round">1</b> OF 5</span>
+              <h3><span id="tour-country-flag">🇨🇦</span> <span id="tour-destination">Canada</span></h3>
+              <p>Playing against <strong id="tour-opponent">Maple Strikers</strong> in <span id="tour-city">Ottawa</span></p>
+            </div>
+            <div class="tour-score">
+              <div><span>🦁 Jozef FC</span><strong id="tour-goals">0</strong></div>
+              <span class="tour-vs">VS</span>
+              <div><span>🏟️ Rivals</span><strong id="tour-rival">1</strong></div>
+            </div>
+            <p class="tour-rival-note">Your opponents already took 5 kicks. Beat their score with your 5 shots!</p>
+            <div class="tour-pitch" role="img" aria-label="Soccer goal, keeper and penalty spot">
+              <div class="tour-pitch-lights" aria-hidden="true">✦ ✦ ✦ ✦ ✦</div>
+              <div class="tour-net" aria-hidden="true"><span class="tour-net-frame">🧤</span></div>
+              <div class="tour-penalty-spot" aria-hidden="true"></div>
+              <div class="tour-match-ball" id="tour-ball" aria-hidden="true">⚽</div>
+            </div>
+            <p class="tour-keeper-clue">👀 Keeper is leaning: <strong id="tour-keeper">WAITING</strong></p>
+            <div class="tour-shots-label"><span>Your five kicks</span><span><b id="tour-shots-left">5</b> remaining</span></div>
+            <div id="tour-shots" class="tour-shots" role="group" aria-label="Kick results"></div>
+            <div id="tour-controls" class="tour-controls" hidden>
+              <p>Choose your shot! Aim away from the keeper.</p>
+              <div class="tour-kick-buttons">
+                <button type="button" data-tour-shoot="left">↖ Left corner</button>
+                <button type="button" data-tour-shoot="centre">↑ Centre</button>
+                <button type="button" data-tour-shoot="right">↗ Right corner</button>
+              </div>
+            </div>
+            <div class="tour-trivia" id="tour-quiz" hidden>
+              <span class="tour-eyebrow">BONUS LEARNING QUEST</span>
+              <h4>🌍 Passport Challenge</h4>
+              <p id="tour-quiz-fact"></p>
+              <strong id="tour-quiz-question"></strong>
+              <div id="tour-quiz-choices" class="tour-quiz-choices"></div>
+              <p id="tour-quiz-success" class="tour-quiz-success"></p>
+            </div>
+          </div>
+          <div id="tour-finale" class="tour-finale" hidden>
+            <div class="tour-finale-cup" aria-hidden="true">🏆</div>
+            <h3 id="tour-finale-title">World Tour Champion!</h3>
+            <p id="tour-finale-description">You did it!</p>
+            <p>Your passport is full. Your trophy cabinet has a new champion badge.</p>
+          </div>
+          <p id="tour-commentary" class="tour-commentary" role="status" aria-live="polite">Choose where to kick. Watch the goalkeeper!</p>
+          <button type="button" class="tour-main-action" id="tour-action">Kick off the match →</button>
+          <p class="tour-game-note" id="tour-save-note">This adventure saves progress on this device. No account or personal information needed.</p>
+        </div>
+      </div>
+
+      <aside class="tour-sidebar" aria-label="Your world tour progress">
+        <div class="tour-panel">
+          <span class="jw-eyebrow">YOUR HOME GROUND</span>
+          <h3 id="tour-stadium-name">🏡 Neighbourhood Pitch</h3>
+          <p id="tour-stadium-note">A little field for big dreams</p>
+          <p class="tour-stat-line">🏅 <strong id="tour-totalwins">0</strong> tour victories</p>
+          <div id="tour-stadium-list" class="tour-stadium-list"></div>
+        </div>
+        <div class="tour-panel">
+          <span class="jw-eyebrow">TRAVEL THE WORLD</span>
+          <h3>🛂 Your soccer passport</h3>
+          <p>Beat each rival to stamp your passport and discover a new country.</p>
+          <div id="tour-stops" class="tour-stops"></div>
+        </div>
+      </aside>
+    </div>
+    <!-- Word Scramble -->
+    <div id="scramble-game" class="game-panel">
+      <h3>🔤 Soccer Word Scramble</h3>
+      <p>Unscramble a soccer word with a helpful hint!</p>
+      <div class="score-board"><span>Solved: <strong id="scramble-solved">0</strong></span><span>Streak: <strong id="scramble-streak">0</strong></span></div>
+      <div class="scramble-box">
+        <div class="scramble-word" id="scramble-word" aria-label="Scrambled word"></div>
+        <p class="scramble-hint" id="scramble-hint"></p>
+        <label for="scramble-input" class="jw-eyebrow">Your answer</label>
+        <input id="scramble-input" class="scramble-input" type="text" maxlength="20" autocapitalize="characters" autocomplete="off" spellcheck="false" />
+        <p id="scramble-feedback" class="jw-shot-feedback" aria-live="polite"></p>
+        <div class="scramble-actions">
+          <button class="action-btn" type="button" id="scramble-check">Check Word</button>
+          <button class="action-btn secondary-btn" type="button" id="scramble-skip">Skip</button>
+          <button class="action-btn secondary-btn" type="button" id="scramble-new">New Word</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- JOZEF FC PLAYER CLUB -->
+  <section id="club" class="section" tabindex="-1" aria-labelledby="jw-club-title">
+    <div class="jw-section-head jw-club-heading">
+      <div><span class="jw-eyebrow">BUILD YOUR DREAM TEAM</span><h2 class="section-title" id="jw-club-title">⚽ Welcome to Jozef FC!</h2><p>Every soccer legend starts somewhere. This is your own club!</p></div>
+      <button type="button" class="jw-sound" id="jw-sound" aria-pressed="false">🔇 Sound off</button>
+    </div>
+    <div class="jw-club-grid">
+      <div class="jw-club-main">
+        <div class="jw-card jw-profile-stadium" data-jw-kit>
+          <span class="jw-eyebrow">PLAYER CARD • JOZEF FC</span>
+          <div class="jw-player-avatar"><span data-jw-avatar>🦁</span><div class="jw-player-kit"><span data-jw-number>10</span></div></div>
+          <h3>JOZEF <span class="jw-player-bolt">★</span></h3>
+          <p>Future soccer superstar</p>
+          <div class="jw-player-stats">
+            <div><strong data-jw-goals>0</strong><small>Goals</small></div>
+            <div><strong data-jw-saves>0</strong><small>Saves</small></div>
+            <div><strong data-jw-level>1</strong><small>Level</small></div>
+          </div>
+        </div>
+      </div>
+      <div class="jw-club-options">
+        <div class="jw-card">
+          <h3>🎨 Design your player</h3>
+          <p>Pick your own mascot</p>
+          <div class="jw-picker" aria-label="Choose your mascot">
+            <button type="button" data-choose-avatar="🦁" aria-label="Lion mascot">🦁</button>
+            <button type="button" data-choose-avatar="🐯" aria-label="Tiger mascot">🐯</button>
+            <button type="button" data-choose-avatar="🦊" aria-label="Fox mascot">🦊</button>
+            <button type="button" data-choose-avatar="🐻" aria-label="Bear mascot">🐻</button>
+            <button type="button" data-choose-avatar="⚡" aria-label="Lightning mascot">⚡</button>
+            <button type="button" data-choose-avatar="⭐" aria-label="Star mascot">⭐</button>
+          </div>
+          <p>Choose your team colours</p>
+          <div class="jw-picker jw-colors" aria-label="Choose kit colour">
+            <button type="button" data-choose-kit="#21b567" style="--swatch:#21b567" aria-label="Green kit"></button>
+            <button type="button" data-choose-kit="#246bdf" style="--swatch:#246bdf" aria-label="Blue kit"></button>
+            <button type="button" data-choose-kit="#ff8b24" style="--swatch:#ff8b24" aria-label="Orange kit"></button>
+            <button type="button" data-choose-kit="#aa59e4" style="--swatch:#aa59e4" aria-label="Purple kit"></button>
+            <button type="button" data-choose-kit="#ef4f7c" style="--swatch:#ef4f7c" aria-label="Pink kit"></button>
+          </div>
+          <label class="jw-number-label" for="jw-number">Your jersey number <input id="jw-number" type="number" min="1" max="99" value="10" inputmode="numeric" /></label>
+        </div>
+        <div class="jw-card jw-progress-card">
+          <h3>⭐ Your progress</h3>
+          <strong><span data-jw-xp>0</span> total XP</strong>
+          <p>Level <b data-jw-level>1</b></p>
+          <div class="jw-level-track" role="progressbar" aria-label="XP to next level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div data-jw-progress></div></div>
+          <p><b data-jw-badgecount>0/9</b> badges unlocked</p>
+          <p>Keepy-uppy record: <b data-jw-keepy>0</b></p>
+          <p>World Tour wins: <b data-jw-tourwins>0</b> • Cups: <b data-jw-crowns>0</b></p>
+          <button type="button" class="jw-profile-open" onclick="showSection('tour')">Play World Tour →</button>
+          <small>Saved privately on this device, not shared online.</small>
+        </div>
+      </div>
+    </div>
+    <div class="jw-card jw-trophy-card">
+      <div class="jw-section-head"><div><span class="jw-eyebrow">YOUR TROPHY CABINET</span><h3>🏆 Unlock awesome badges!</h3></div></div>
+      <div class="jw-badge-grid" id="jw-badges"></div>
+    </div>
+    <p class="jw-privacy-note" id="jw-status">Player progress is saved only in this browser. Clearing browser storage removes saved rewards.</p>
+  </section>
+
+  <!-- NEWS SECTION -->
+  <section id="news" class="section">
+    <h2 class="section-title">📰 News & Live Scores</h2>
+    <p class="section-desc">Explore soccer stories and check available match updates.</p>
+    <p class="jw-privacy-note">Scores come from an external provider and may be delayed or unavailable. Stories below are learning features, not breaking news.</p>
+
+    <!-- Live Scores -->
+    <div class="live-scores-box">
+      <div class="live-header">
+        <h3>⚡ Live & Recent Scores</h3>
+        <button class="action-btn small-btn" id="refresh-scores">Refresh</button>
+      </div>
+      <div id="live-scores" class="live-scores-grid">
+        <p class="loading-msg">Loading live scores...</p>
+      </div>
+      <p class="powered-by">Scores provided by <a href="https://sportscore.com/" rel="noopener noreferrer" target="_blank">SportScore</a> when available. This link leaves Jozef’s World.</p>
+    </div>
+
+    <h3 class="sub-heading">Cool Soccer Stories</h3>
+    <div class="news-grid" id="news-grid">
+      <!-- Filled by JS -->
+    </div>
+  </section>
+
+  <!-- LEARN SECTION -->
+  <section id="learn" class="section">
+    <h2 class="section-title">📚 Learn About Soccer</h2>
+    <p class="section-desc">Become a soccer superstar with these cool lessons!</p>
+
+    <div class="learn-tabs">
+      <button class="learn-tab active" data-learn="rules">Rules</button>
+      <button class="learn-tab" data-learn="players">Famous Players</button>
+      <button class="learn-tab" data-learn="world">Soccer Around the World</button>
+      <button class="learn-tab" data-learn="vocab">Cool Words</button>
+      <button class="learn-tab" data-learn="math">Soccer Math</button>
+      <button class="learn-tab" data-learn="positions">Field Positions</button>
+    </div>
+
+    <div class="learn-content">
+      <div id="learn-rules" class="learn-panel active">
+        <h3>⚽ Basic Soccer Rules</h3>
+        <ul class="fun-list">
+          <li><strong>11 players</strong> on each team (including the goalkeeper)</li>
+          <li>The ball can only be kicked or headed — no hands (except the goalkeeper!)</li>
+          <li>A game is usually <strong>90 minutes</strong> long (two halves of 45 minutes)</li>
+          <li>You score a <strong>goal</strong> by getting the ball into the other team's net</li>
+          <li>If the ball goes out of bounds on the side → <strong>throw-in</strong></li>
+          <li>If it goes out behind the goal → <strong>goal kick</strong> or <strong>corner kick</strong></li>
+          <li>No pushing, tripping, or being mean — that's a <strong>foul</strong></li>
+          <li>Yellow card = warning • Red card = you're out of the game!</li>
+        </ul>
+      </div>
+
+      <div id="learn-players" class="learn-panel">
+        <h3>🌟 Famous Soccer Stars</h3>
+        <div class="player-cards">
+          <div class="player-card">
+            <div class="player-emoji">🐐</div>
+            <h4>Lionel Messi</h4>
+            <p>From Argentina. Many people call him the greatest of all time. He has won the World Cup!</p>
+          </div>
+          <div class="player-card">
+            <div class="player-emoji">👑</div>
+            <h4>Cristiano Ronaldo</h4>
+            <p>From Portugal. Super fast, jumps incredibly high, and scores tons of goals.</p>
+          </div>
+          <div class="player-card">
+            <div class="player-emoji">🇧🇷</div>
+            <h4>Pelé</h4>
+            <p>Brazilian legend. Won 3 World Cups. Many say he was the first true soccer superstar.</p>
+          </div>
+          <div class="player-card">
+            <div class="player-emoji">🇫🇷</div>
+            <h4>Kylian Mbappé</h4>
+            <p>French speedster. Super young and already one of the best players in the world.</p>
+          </div>
+          <div class="player-card">
+            <div class="player-emoji">🇺🇸</div>
+            <h4>Alex Morgan</h4>
+            <p>American soccer hero. Scored amazing goals for the US Women's National Team.</p>
+          </div>
+          <div class="player-card">
+            <div class="player-emoji">🏴󠁧󠁢󠁥󠁮󠁧󠁿</div>
+            <h4>Harry Kane</h4>
+            <p>England's goal machine. Great at scoring from almost anywhere!</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="learn-world" class="learn-panel">
+        <h3>🌍 Soccer Around the World</h3>
+        <p>Soccer (or "football" in most countries) is the most popular sport on Earth!</p>
+        <ul class="fun-list">
+          <li><strong>Brazil</strong> – 5 World Cup wins. Home of the "beautiful game"</li>
+          <li><strong>Germany</strong> – 4 World Cups. Known for teamwork and strong defense</li>
+          <li><strong>Argentina</strong> – Home of Messi. Passionate fans everywhere</li>
+          <li><strong>France</strong> – Won the World Cup in 2018. Lots of fast, skilled players</li>
+          <li><strong>England</strong> – Where modern soccer began. Home of the Premier League</li>
+          <li><strong>Spain</strong> – Famous for "tiki-taka" – lots of short, quick passes</li>
+          <li><strong>USA</strong> – Growing fast! Strong women's team and exciting MLS</li>
+          <li><strong>Japan & South Korea</strong> – Super disciplined and technical players</li>
+        </ul>
+        <p class="fun-fact">💡 Did you know? Over 250 million people play soccer around the world!</p>
+      </div>
+
+      <div id="learn-vocab" class="learn-panel">
+        <h3>🗣️ Cool Soccer Words</h3>
+        <div class="vocab-grid">
+          <div class="vocab-item"><strong>Goal</strong> – When the ball goes into the net!</div>
+          <div class="vocab-item"><strong>Assist</strong> – A pass that helps a teammate score</div>
+          <div class="vocab-item"><strong>Hat-trick</strong> – Scoring 3 goals in one game</div>
+          <div class="vocab-item"><strong>Clean sheet</strong> – When the goalkeeper doesn't let any goals in</div>
+          <div class="vocab-item"><strong>Dribble</strong> – Running with the ball using your feet</div>
+          <div class="vocab-item"><strong>Pass</strong> – Kicking the ball to a teammate</div>
+          <div class="vocab-item"><strong>Tackle</strong> – Taking the ball away from an opponent</div>
+          <div class="vocab-item"><strong>Offside</strong> – Being too far forward when the ball is passed</div>
+          <div class="vocab-item"><strong>Corner</strong> – A kick from the corner of the field</div>
+          <div class="vocab-item"><strong>Free kick</strong> – A kick awarded after a foul</div>
+          <div class="vocab-item"><strong>Penalty</strong> – A special free kick from the penalty spot</div>
+          <div class="vocab-item"><strong>Stadium</strong> – The big place where games are played</div>
+        </div>
+      </div>
+
+      <div id="learn-math" class="learn-panel">
+        <h3>🧮 Soccer Math Fun</h3>
+        <p>Practice your math with soccer!</p>
+        <div class="math-challenges">
+          <div class="math-card">
+            <p>If a team scores 3 goals in the first half and 2 in the second half, how many goals did they score in total?</p>
+            <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Show Answer</button>
+            <p class="answer" style="display:none;">5 goals! ⚽</p>
+          </div>
+          <div class="math-card">
+            <p>A game is 90 minutes. How many minutes is each half?</p>
+            <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Show Answer</button>
+            <p class="answer" style="display:none;">45 minutes each half</p>
+          </div>
+          <div class="math-card">
+            <p>If Messi scores 2 goals in 4 games, how many goals does he average per game?</p>
+            <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Show Answer</button>
+            <p class="answer" style="display:none;">0.5 goals per game (2 ÷ 4)</p>
+          </div>
+          <div class="math-card">
+            <p>There are 11 players on a team. How many players are on the field if both teams are playing?</p>
+            <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Show Answer</button>
+            <p class="answer" style="display:none;">22 players!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+      <div id="learn-positions" class="learn-panel">
+        <h3>🗺️ Positions on the Soccer Field</h3>
+        <p>Tap a player to find out what they do for the team.</p>
+        <div class="pitch-diagram">
+          <div class="pitch-field" aria-label="Soccer eleven-player formation">
+            <button class="pitch-pos" data-pos="st" style="left:50%;top:14%" type="button" aria-label="Striker">ST</button>
+            <button class="pitch-pos" data-pos="lw" style="left:18%;top:22%" type="button" aria-label="Left winger">LW</button>
+            <button class="pitch-pos" data-pos="rw" style="left:82%;top:22%" type="button" aria-label="Right winger">RW</button>
+            <button class="pitch-pos" data-pos="lm" style="left:19%;top:45%" type="button" aria-label="Left midfielder">LM</button>
+            <button class="pitch-pos" data-pos="cm" style="left:50%;top:46%" type="button" aria-label="Central midfielder">CM</button>
+            <button class="pitch-pos" data-pos="rm" style="left:81%;top:45%" type="button" aria-label="Right midfielder">RM</button>
+            <button class="pitch-pos" data-pos="lb" style="left:16%;top:72%" type="button" aria-label="Left back">LB</button>
+            <button class="pitch-pos" data-pos="cb" style="left:38%;top:73%" type="button" aria-label="Center back">CB</button>
+            <button class="pitch-pos" data-pos="cb2" style="left:62%;top:73%" type="button" aria-label="Second center back">CB</button>
+            <button class="pitch-pos" data-pos="rb" style="left:84%;top:72%" type="button" aria-label="Right back">RB</button>
+            <button class="pitch-pos" data-pos="gk" style="left:50%;top:91%" type="button" aria-label="Goalkeeper">GK</button>
+          </div>
+        </div>
+        <div class="position-info" id="position-info" aria-live="polite"><h4>Pick a position</h4><p>Discover how the team works together!</p></div>
+      </div>
+  </section>
+
+  <!-- FUN ZONE SECTION -->
+  <section id="fun" class="section">
+    <h2 class="section-title">🎉 Fun Zone</h2>
+    <p class="section-desc">Jokes, facts, and surprises!</p>
+
+    <div class="fun-grid">
+      <div class="fun-card">
+        <h3>😂 Soccer Jokes</h3>
+        <div id="joke-box">
+          <p id="joke-text">Click the button for a joke!</p>
+          <button class="action-btn" id="new-joke">Tell Me a Joke!</button>
+        </div>
+      </div>
+
+      <div class="fun-card">
+        <h3>🤯 Amazing Facts</h3>
+        <div id="fact-box">
+          <p id="fact-text">Click for a cool soccer fact!</p>
+          <button class="action-btn" id="new-fact">Surprise Me!</button>
+        </div>
+      </div>
+
+      <div class="fun-card wide">
+        <h3>🌈 Random Encouragement</h3>
+        <div id="encourage-box">
+          <p id="encourage-text">You're awesome, Jozef!</p>
+          <button class="action-btn" id="new-encourage">Get Motivated!</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="trophy-message">
+      <p>🏆 Remember: Every great player started just like you — with practice, smiles, and love for the game!</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>Made with ❤️ for Jozef • Keep playing, keep learning, keep shining! ⚽</p>
+  </footer>
+
+  <div id="jw-toast" class="jw-toast" aria-live="polite" role="status"></div>
+  <script src="app.js"></script>
+  <script src="extras.js"></script>
+  <script src="tournament.js"></script>
+  <script src="scramble-positions.js"></script>
 </body>
 </html>
