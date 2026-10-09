@@ -8,6 +8,7 @@ function showSection(id) {
   const btn = document.querySelector(`.nav-btn[data-section="${id}"]`);
   if (btn) btn.classList.add('active');
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (id === 'news') loadLiveScores();
 }
 
 document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -56,7 +57,6 @@ goalArea.addEventListener('click', (e) => {
   const x = ((e.clientX - rect.left) / rect.width) * 100;
   const y = ((e.clientY - rect.top) / rect.height) * 100;
 
-  // Keeper dives randomly
   const diveSide = Math.random() > 0.5 ? 30 : 70;
   keeper.style.left = diveSide + '%';
 
@@ -66,20 +66,14 @@ goalArea.addEventListener('click', (e) => {
   ball.style.bottom = 'auto';
   ball.style.transform = 'translateX(-50%) scale(0.7)';
 
-  // Determine if goal or save
   setTimeout(() => {
-    const ballX = x;
-    const keeperX = diveSide;
-    const distance = Math.abs(ballX - keeperX);
-
-    // Goal if far from keeper and inside the net area roughly
+    const distance = Math.abs(x - diveSide);
     const isInNet = y < 50 && x > 18 && x < 82;
     const isSaved = distance < 18;
 
     if (isInNet && !isSaved) {
       penaltyScore++;
       document.getElementById('penalty-score').textContent = penaltyScore;
-      // celebration flash
       goalArea.style.boxShadow = 'inset 0 0 40px rgba(46, 204, 113, 0.6)';
       setTimeout(() => goalArea.style.boxShadow = '', 600);
     } else {
@@ -107,7 +101,6 @@ document.getElementById('reset-penalty').addEventListener('click', () => {
 
 // ========== MEMORY MATCH ==========
 const memoryEmojis = ['⚽', '🏆', '🧤', '👟', '🥅', '🏅'];
-let memoryCards = [];
 let flippedCards = [];
 let matchedCount = 0;
 let moveCount = 0;
@@ -122,7 +115,6 @@ function initMemory() {
   document.getElementById('memory-moves').textContent = 0;
 
   const pairs = [...memoryEmojis, ...memoryEmojis];
-  // Shuffle
   for (let i = pairs.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
@@ -130,11 +122,10 @@ function initMemory() {
 
   const grid = document.getElementById('memory-grid');
   grid.innerHTML = '';
-  pairs.forEach((emoji, index) => {
+  pairs.forEach((emoji) => {
     const card = document.createElement('div');
     card.className = 'memory-card';
     card.dataset.emoji = emoji;
-    card.dataset.index = index;
     card.textContent = '?';
     card.addEventListener('click', () => flipCard(card));
     grid.appendChild(card);
@@ -161,7 +152,6 @@ function flipCard(card) {
       document.getElementById('memory-matches').textContent = matchedCount;
       flippedCards = [];
       canFlip = true;
-
       if (matchedCount === 6) {
         setTimeout(() => alert('🎉 Awesome! You matched them all, Jozef! Great job!'), 300);
       }
@@ -183,46 +173,14 @@ initMemory();
 
 // ========== SOCCER QUIZ ==========
 const quizQuestions = [
-  {
-    q: "How many players are on a soccer team on the field?",
-    options: ["9", "10", "11", "12"],
-    answer: 2
-  },
-  {
-    q: "What is it called when a player scores three goals in one game?",
-    options: ["Triple", "Hat-trick", "Super goal", "Mega score"],
-    answer: 1
-  },
-  {
-    q: "Which country has won the most FIFA World Cups?",
-    options: ["Germany", "Argentina", "Brazil", "Italy"],
-    answer: 2
-  },
-  {
-    q: "What color card means a player is sent off the field?",
-    options: ["Yellow", "Blue", "Red", "Green"],
-    answer: 2
-  },
-  {
-    q: "How long is a regular soccer game (without extra time)?",
-    options: ["60 minutes", "75 minutes", "90 minutes", "120 minutes"],
-    answer: 2
-  },
-  {
-    q: "Which body part can the goalkeeper use that other players cannot?",
-    options: ["Head", "Chest", "Hands", "Knees"],
-    answer: 2
-  },
-  {
-    q: "What is the name of the biggest soccer tournament in the world?",
-    options: ["Champions League", "World Cup", "Olympics", "Premier League"],
-    answer: 1
-  },
-  {
-    q: "Where did modern soccer begin?",
-    options: ["Brazil", "Spain", "England", "USA"],
-    answer: 2
-  }
+  { q: "How many players are on a soccer team on the field?", options: ["9", "10", "11", "12"], answer: 2 },
+  { q: "What is it called when a player scores three goals in one game?", options: ["Triple", "Hat-trick", "Super goal", "Mega score"], answer: 1 },
+  { q: "Which country has won the most FIFA World Cups?", options: ["Germany", "Argentina", "Brazil", "Italy"], answer: 2 },
+  { q: "What color card means a player is sent off the field?", options: ["Yellow", "Blue", "Red", "Green"], answer: 2 },
+  { q: "How long is a regular soccer game (without extra time)?", options: ["60 minutes", "75 minutes", "90 minutes", "120 minutes"], answer: 2 },
+  { q: "Which body part can the goalkeeper use that other players cannot?", options: ["Head", "Chest", "Hands", "Knees"], answer: 2 },
+  { q: "What is the name of the biggest soccer tournament in the world?", options: ["Champions League", "World Cup", "Olympics", "Premier League"], answer: 1 },
+  { q: "Where did modern soccer begin?", options: ["Brazil", "Spain", "England", "USA"], answer: 2 }
 ];
 
 let currentQuestion = 0;
@@ -285,44 +243,274 @@ document.getElementById('restart-quiz').addEventListener('click', () => {
 
 loadQuestion();
 
-// ========== NEWS ==========
-const newsStories = [
-  {
-    emoji: "🏆",
-    title: "Young Players Shine in Weekend Matches",
-    body: "Across the country, kids just like you are scoring amazing goals and making incredible saves. Keep practicing — the next star could be you!",
-    tag: "Youth Soccer"
-  },
-  {
-    emoji: "🌍",
-    title: "World Cup Dreams Start Young",
-    body: "Many of the world's best players started kicking a ball when they were 8 years old — just like Jozef! Practice, have fun, and never give up.",
-    tag: "Inspiration"
-  },
-  {
-    emoji: "🧤",
-    title: "Goalkeepers Are Superheroes",
-    body: "Did you know goalkeepers need quick reflexes, bravery, and great communication? Being a keeper is one of the coolest jobs on the field!",
-    tag: "Positions"
-  },
-  {
-    emoji: "⚽",
-    title: "The Beautiful Game Keeps Growing",
-    body: "More kids than ever are playing soccer around the world. Girls and boys, big cities and small towns — soccer brings everyone together.",
-    tag: "Global"
-  },
-  {
-    emoji: "👟",
-    title: "New Soccer Cleats Are Faster Than Ever",
-    body: "Modern soccer shoes are super light and help players run faster and turn quicker. But the most important thing is still your skills and heart!",
-    tag: "Gear"
-  },
-  {
-    emoji: "🏅",
-    title: "Teamwork Makes the Dream Work",
-    body: "The best teams aren't just full of stars — they pass, help each other, and celebrate together. Be a great teammate and everyone wins!",
-    tag: "Values"
+// ========== KEEPY-UPPY ==========
+let keepyCount = 0;
+let keepyBest = parseInt(localStorage.getItem('jozefKeepyBest') || '0');
+let keepyFalling = false;
+let keepyInterval = null;
+const keepyBall = document.getElementById('keepy-ball');
+const keepyArea = document.getElementById('keepy-area');
+
+document.getElementById('keepy-best').textContent = keepyBest;
+
+function keepyBounce() {
+  if (!keepyFalling) {
+    // start falling
+    keepyFalling = true;
+    keepyBall.style.bottom = '80px';
   }
+  keepyCount++;
+  document.getElementById('keepy-count').textContent = keepyCount;
+  if (keepyCount > keepyBest) {
+    keepyBest = keepyCount;
+    document.getElementById('keepy-best').textContent = keepyBest;
+    localStorage.setItem('jozefKeepyBest', keepyBest);
+  }
+
+  // bounce up
+  keepyBall.style.bottom = (120 + Math.random() * 80) + 'px';
+
+  clearTimeout(keepyInterval);
+  keepyInterval = setTimeout(() => {
+    // falls down
+    keepyBall.style.bottom = '20px';
+    setTimeout(() => {
+      if (keepyFalling) {
+        // missed
+        keepyFalling = false;
+        keepyCount = 0;
+        document.getElementById('keepy-count').textContent = 0;
+        keepyBall.style.bottom = '80px';
+      }
+    }, 400);
+  }, 700);
+}
+
+keepyArea.addEventListener('click', keepyBounce);
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' && document.getElementById('keepy-game').classList.contains('active')) {
+    e.preventDefault();
+    keepyBounce();
+  }
+});
+
+document.getElementById('reset-keepy').addEventListener('click', () => {
+  keepyCount = 0;
+  keepyFalling = false;
+  clearTimeout(keepyInterval);
+  document.getElementById('keepy-count').textContent = 0;
+  keepyBall.style.bottom = '80px';
+});
+
+// ========== GOALIE REACTION ==========
+let goalieSaves = 0;
+let goalieGoals = 0;
+let goalieActive = false;
+let currentSide = null;
+const goalieBall = document.getElementById('goalie-ball');
+const goalieKeeper = document.getElementById('goalie-keeper');
+const goalieStatus = document.getElementById('goalie-status');
+
+const sidePositions = {
+  left: { left: '20%', top: '30%' },
+  center: { left: '50%', top: '25%' },
+  right: { left: '80%', top: '30%' }
+};
+
+document.querySelectorAll('.zone-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (!goalieActive || !currentSide) return;
+    const chosen = btn.dataset.side;
+
+    // move keeper
+    if (chosen === 'left') goalieKeeper.style.left = '25%';
+    else if (chosen === 'right') goalieKeeper.style.left = '75%';
+    else goalieKeeper.style.left = '50%';
+
+    if (chosen === currentSide) {
+      goalieSaves++;
+      document.getElementById('goalie-saves').textContent = goalieSaves;
+      goalieStatus.textContent = '✅ SAVE! Great reflexes!';
+      goalieStatus.style.color = '#27ae60';
+    } else {
+      goalieGoals++;
+      document.getElementById('goalie-goals').textContent = goalieGoals;
+      goalieStatus.textContent = '⚽ Goal! Try again!';
+      goalieStatus.style.color = '#e74c3c';
+    }
+
+    goalieActive = false;
+    currentSide = null;
+    setTimeout(() => {
+      goalieBall.style.display = 'none';
+      goalieKeeper.style.left = '50%';
+      goalieStatus.textContent = 'Press Start for the next shot!';
+      goalieStatus.style.color = '#777';
+    }, 900);
+  });
+});
+
+document.getElementById('start-goalie').addEventListener('click', () => {
+  if (goalieActive) return;
+  goalieActive = true;
+  goalieStatus.textContent = 'Watch the ball...';
+  goalieStatus.style.color = '#3498db';
+
+  const sides = ['left', 'center', 'right'];
+  currentSide = sides[Math.floor(Math.random() * 3)];
+
+  // start ball from bottom center
+  goalieBall.style.display = 'block';
+  goalieBall.style.left = '50%';
+  goalieBall.style.top = '70%';
+  goalieBall.style.transform = 'translateX(-50%)';
+
+  // fly to target
+  setTimeout(() => {
+    const pos = sidePositions[currentSide];
+    goalieBall.style.left = pos.left;
+    goalieBall.style.top = pos.top;
+  }, 50);
+
+  // auto-miss if too slow
+  setTimeout(() => {
+    if (goalieActive) {
+      goalieGoals++;
+      document.getElementById('goalie-goals').textContent = goalieGoals;
+      goalieStatus.textContent = '⚽ Too slow! Goal!';
+      goalieStatus.style.color = '#e74c3c';
+      goalieActive = false;
+      currentSide = null;
+      setTimeout(() => {
+        goalieBall.style.display = 'none';
+        goalieKeeper.style.left = '50%';
+        goalieStatus.textContent = 'Press Start for the next shot!';
+        goalieStatus.style.color = '#777';
+      }, 800);
+    }
+  }, 1200);
+});
+
+// ========== TARGET PRACTICE ==========
+let targetHits = 0;
+let targetTimeLeft = 30;
+let targetInterval = null;
+let targetSpawnInterval = null;
+let targetRunning = false;
+const targetArea = document.getElementById('target-area');
+
+function spawnTarget() {
+  if (!targetRunning) return;
+  const target = document.createElement('div');
+  target.className = 'target';
+  const size = 40 + Math.random() * 40; // 40-80px
+  target.style.width = size + 'px';
+  target.style.height = size + 'px';
+  target.style.left = Math.random() * (targetArea.clientWidth - size) + 'px';
+  target.style.top = Math.random() * (targetArea.clientHeight - size) + 'px';
+  target.textContent = '⚽';
+
+  const points = size < 55 ? 3 : size < 70 ? 2 : 1;
+  target.title = '+' + points;
+
+  target.addEventListener('click', (e) => {
+    e.stopPropagation();
+    targetHits += points;
+    document.getElementById('target-hits').textContent = targetHits;
+    target.remove();
+  });
+
+  targetArea.appendChild(target);
+
+  // auto remove after 2s
+  setTimeout(() => {
+    if (target.parentNode) target.remove();
+  }, 2000);
+}
+
+function startTargetGame() {
+  if (targetRunning) return;
+  targetRunning = true;
+  targetHits = 0;
+  targetTimeLeft = 30;
+  document.getElementById('target-hits').textContent = 0;
+  document.getElementById('target-time').textContent = 30;
+  document.getElementById('target-start-msg').style.display = 'none';
+  targetArea.querySelectorAll('.target').forEach(t => t.remove());
+
+  targetInterval = setInterval(() => {
+    targetTimeLeft--;
+    document.getElementById('target-time').textContent = targetTimeLeft;
+    if (targetTimeLeft <= 0) {
+      clearInterval(targetInterval);
+      clearInterval(targetSpawnInterval);
+      targetRunning = false;
+      document.getElementById('target-start-msg').style.display = 'block';
+      document.getElementById('target-start-msg').textContent = `Time's up! You hit ${targetHits} points! 🎉`;
+      targetArea.querySelectorAll('.target').forEach(t => t.remove());
+    }
+  }, 1000);
+
+  targetSpawnInterval = setInterval(spawnTarget, 800);
+  spawnTarget();
+}
+
+document.getElementById('start-target').addEventListener('click', startTargetGame);
+
+// ========== LIVE SCORES (SportScore API) ==========
+async function loadLiveScores() {
+  const container = document.getElementById('live-scores');
+  container.innerHTML = '<p class="loading-msg">Loading live scores...</p>';
+
+  try {
+    const res = await fetch('https://sportscore.com/api/widget/matches/?sport=football&limit=12');
+    if (!res.ok) throw new Error('Network response was not ok');
+    const data = await res.json();
+
+    const matches = data.matches || [];
+    if (matches.length === 0) {
+      container.innerHTML = '<p class="loading-msg">No matches available right now. Check back later!</p>';
+      return;
+    }
+
+    container.innerHTML = matches.map(m => {
+      const status = (m.status || '').toLowerCase();
+      const isLive = status === 'live' || status === 'inprogress' || status === 'in_play';
+      const isFinished = status === 'finished' || status === 'ft' || status === 'closed';
+      const statusText = m.status_text || m.status || '';
+      const homeScore = m.home_score != null ? m.home_score : '-';
+      const awayScore = m.away_score != null ? m.away_score : '-';
+
+      return `
+        <div class="match-card ${isLive ? 'live' : isFinished ? 'finished' : ''}">
+          <div class="match-status ${isLive ? 'live-badge' : ''}">${isLive ? '🔴 LIVE' : statusText}</div>
+          <div class="match-teams">
+            <span>${m.home || 'Home'}</span>
+            <span class="match-score">${homeScore} - ${awayScore}</span>
+            <span>${m.away || 'Away'}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = `
+      <p class="error-msg">Could not load live scores right now.<br>
+      Don't worry — the fun stories below are always here! ⚽</p>
+    `;
+  }
+}
+
+document.getElementById('refresh-scores').addEventListener('click', loadLiveScores);
+
+// ========== KID-FRIENDLY NEWS ==========
+const newsStories = [
+  { emoji: "🏆", title: "Young Players Shine in Weekend Matches", body: "Across the country, kids just like you are scoring amazing goals and making incredible saves. Keep practicing — the next star could be you!", tag: "Youth Soccer" },
+  { emoji: "🌍", title: "World Cup Dreams Start Young", body: "Many of the world's best players started kicking a ball when they were 8 years old — just like Jozef! Practice, have fun, and never give up.", tag: "Inspiration" },
+  { emoji: "🧤", title: "Goalkeepers Are Superheroes", body: "Did you know goalkeepers need quick reflexes, bravery, and great communication? Being a keeper is one of the coolest jobs on the field!", tag: "Positions" },
+  { emoji: "⚽", title: "The Beautiful Game Keeps Growing", body: "More kids than ever are playing soccer around the world. Girls and boys, big cities and small towns — soccer brings everyone together.", tag: "Global" },
+  { emoji: "👟", title: "New Soccer Cleats Are Faster Than Ever", body: "Modern soccer shoes are super light and help players run faster and turn quicker. But the most important thing is still your skills and heart!", tag: "Gear" },
+  { emoji: "🏅", title: "Teamwork Makes the Dream Work", body: "The best teams aren't just full of stars — they pass, help each other, and celebrate together. Be a great teammate and everyone wins!", tag: "Values" }
 ];
 
 function renderNews() {
