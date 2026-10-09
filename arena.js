@@ -307,6 +307,7 @@ function draw(){
 }
 function loop(t){
  if(mode!=='playing')return;
+ if($('arena')?.classList?.contains('active')===false){pause();draw();return;}
  const dt=last?clamp((t-last)/1000,0,.037):0;last=t;
  if(dt)update(dt);
  draw();
