@@ -79,4 +79,7 @@ test('canonical homepage uses the latest stadium and loads exactly one STREET//1
  assert.ok(html.includes('class="hero studio-hero"'));
  assert.ok(html.includes('id="street-canvas"'));
  assert.ok(html.includes('data-section="street"'));
+ assert.match(html, /data-section="fun"[^>]*>Locker Room<\/button>/, 'Locker Room remains a local section, not an external link');
+ assert.ok(html.includes('<section id="fun" class="section">'), 'Locker Room section exists');
+ assert.ok(html.includes('>THE LOCKER ROOM</h2>'), 'Locker Room destination has the expected heading');
 });
