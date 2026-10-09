@@ -53,19 +53,26 @@ function safe(){
 }
 function calculate(){
  safe();
- const chosen=SLOTS.map(([slot])=>CARDS.find(card=>card.id===state.slots[slot])).filter(Boolean);
- let speed=0,pass=0,shot=0;
- for(const card of chosen){
+ let speed=0,pass=0,shot=0,defence=0,keeper=0;
+ for(const [slot] of SLOTS){
+   const card=CARDS.find(item=>item.id===state.slots[slot]);
+   if(!card)continue;
    const power=Math.max(0,(card.rating-57)/100)*.32;
+   // Styles influence the player. Lineup positions change what that player can do.
    if(card.style==='speed')speed+=power*1.5;
    if(card.style==='pass')pass+=power*1.5;
    if(card.style==='shot')shot+=power*1.4;
    if(card.style==='captain'){speed+=power*.3;pass+=power*.3;shot+=power*.3;}
+   if(slot==='keeper')keeper+=power*1.5;
+   if(slot==='back')defence+=power*1.6;
+   if(slot==='mid')pass+=power*.35;
+   if(slot==='striker')shot+=power*.4;
  }
  if(state.tactic==='attack')shot+=.07;
- if(state.tactic==='defence')speed+=.06;
- if(state.tactic==='balanced')pass+=.04;
- return {speed:Math.min(.25,speed),pass:Math.min(.25,pass),shot:Math.min(.25,shot)};
+ if(state.tactic==='defence'){speed+=.03;defence+=.09;keeper+=.03;}
+ if(state.tactic==='balanced'){pass+=.04;defence+=.03;}
+ return {speed:Math.min(.25,speed),pass:Math.min(.25,pass),shot:Math.min(.25,shot),
+   defence:Math.min(.30,defence),keeper:Math.min(.30,keeper)};
 }
 function save(){
  safe();
@@ -104,7 +111,7 @@ function render(){
   item.append(top,preview,select);el.appendChild(item);
  });
  const v=calculate();const scale=n=>Math.round(n*100);
- const info=$('squad-bonuses');if(info)info.textContent='SPEED +'+scale(v.speed)+'%  •  PASS +'+scale(v.pass)+'%  •  SHOOT +'+scale(v.shot)+'%';
+ const info=$('squad-bonuses');if(info)info.textContent='SPEED +'+scale(v.speed)+'%  •  PASS +'+scale(v.pass)+'%  •  SHOOT +'+scale(v.shot)+'%  •  DEFENCE +'+scale(v.defence)+'%  •  SAVES +'+scale(v.keeper)+'%';
  const count=$('squad-available');if(count)count.textContent=cards.length+' / '+CARDS.length+' players unlocked';
  const select=$('squad-tactic');if(select)select.value=state.tactic;
  const badge=$('squad-formation');if(badge)badge.textContent=state.tactic==='attack'?'PRESS HIGH':state.tactic==='defence'?'STAY COMPACT':'PLAY TOGETHER';
