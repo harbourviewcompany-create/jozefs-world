@@ -12,15 +12,19 @@
     { id: 'brain-power', icon: '📚', title: 'Brain Power', description: 'Complete a quiz', ready: s => s.quizzes >= 1 },
     { id: 'perfect-score', icon: '🌟', title: 'Perfect Score', description: 'Get every quiz answer right', ready: s => s.perfect >= 1 },
     { id: 'target-star', icon: '🎯', title: 'Sharp Shooter', description: 'Score 12 points in Target Practice', ready: s => s.targetBest >= 12 },
-    { id: 'word-wizard', icon: '🔤', title: 'Word Wizard', description: 'Solve 5 word scrambles', ready: s => s.scrambles >= 5 },
     { id: 'keepy-king', icon: '🚀', title: 'Keepy King', description: 'Make 10 keepy-uppies', ready: s => s.keepyBest >= 10 },
-    { id: 'triple-threat', icon: '👑', title: 'Daily Hero', description: 'Complete all three daily missions', ready: s => missionDone(s) }
+    { id: 'word-wizard', icon: '🔤', title: 'Word Wizard', description: 'Solve 5 soccer word scrambles', ready: s => s.scrambles >= 5 },
+    { id: 'triple-threat', icon: '👑', title: 'Daily Hero', description: 'Complete all three daily missions', ready: s => Boolean(s.dailyHero) },
+    { id: 'world-traveller', icon: '🌍', title: 'World Traveller', description: 'Win your first World Tour match', ready: s => s.tourWins >= 1 },
+    { id: 'geography-star', icon: '🧭', title: 'Geography Star', description: 'Solve your first travel challenge', ready: s => s.geography >= 1 },
+    { id: 'world-champion', icon: '🥇', title: 'World Champion', description: 'Win the five-country cup', ready: s => s.championships >= 1 }
   ];
   const defaultState = () => ({
     xp: 0, goals: 0, saves: 0, memory: 0, quizzes: 0, perfect: 0, scrambles: 0,
     keepyBest: 0, targetBest: 0, club: 'Jozef FC', avatar: '🦁', kit: COLORS[0],
     number: 10, day: dayKey(), daily: {}, dailyHero: '', earned: [],
-    sound: false
+    sound: false, tourWins: 0, championships: 0, geography: 0,
+    rewardedTours: [], rewardedGeography: [], rewardedTitles: []
   });
   function dayKey() {
     const d = new Date();
@@ -31,13 +35,16 @@
     try { value = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (_) {}
     const s = { ...defaultState(), ...value };
     s.xp = Math.max(0, Number(s.xp) || 0);
-    for (const name of ['goals', 'saves', 'memory', 'quizzes', 'perfect', 'keepyBest', 'targetBest', 'scrambles']) {
+    for (const name of ['goals', 'saves', 'memory', 'quizzes', 'perfect', 'keepyBest', 'targetBest', 'tourWins', 'championships', 'geography', 'scrambles']) {
       s[name] = Math.max(0, Number(s[name]) || 0);
     }
     if (!COLORS.includes(s.kit)) s.kit = COLORS[0];
     if (!AVATARS.includes(s.avatar)) s.avatar = AVATARS[0];
     s.number = Math.min(99, Math.max(1, Number(s.number) || 10));
     if (!Array.isArray(s.earned)) s.earned = [];
+    for (const key of ['rewardedTours', 'rewardedGeography', 'rewardedTitles']) {
+      if (!Array.isArray(s[key])) s[key] = [];
+    }
     try { s.keepyBest = Math.max(s.keepyBest, Number(localStorage.getItem('jozefKeepyBest')) || 0); } catch (_) {}
     if (s.day !== dayKey()) { s.day = dayKey(); s.daily = {}; }
     if (!s.daily || typeof s.daily !== 'object') s.daily = {};
@@ -82,12 +89,23 @@
   }
   function record(action, info = {}) {
     if (state.day !== dayKey()) { state.day = dayKey(); state.daily = {}; }
-    const rewards = { goal: 5, save: 8, memory: 30, quiz: 20, keepy: 15, target: 15, scramble: 10 };
-    const caps = { goal: 10, save: 10, memory: 3, quiz: 3, keepy: 1, target: 3, scramble: 5 };
+    const rewards = { goal: 5, save: 8, memory: 30, quiz: 20, keepy: 15, target: 15, tournament: 60, geography: 15, championship: 120, scramble: 10 };
+    const caps = { goal: 10, save: 10, memory: 3, quiz: 3, keepy: 1, target: 3, tournament: 10, geography: 10, championship: 3, scramble: 5 };
     if (!(action in rewards)) return;
+    const uniqueReward = { tournament: 'rewardedTours', geography: 'rewardedGeography', championship: 'rewardedTitles' }[action];
+    if (uniqueReward) {
+      const id = String(info.winId || '');
+      if (!/^season-[1-9][0-9]{0,4}-round-[0-4]$/.test(id)) return;
+      if (state[uniqueReward].includes(id)) return; // Reloads cannot duplicate rewards.
+      state[uniqueReward].push(id);
+    }
     if (action === 'target' && (Number(info.score) || 0) <= 0) return;
     if (action === 'keepy' && (Number(info.count) || 0) < 10) return;
     if (action === 'goal') state.goals++;
+    if (action === 'scramble') state.scrambles++;
+    if (action === 'tournament') state.tourWins++;
+    if (action === 'geography') state.geography++;
+    if (action === 'championship') state.championships++;
     if (action === 'save') state.saves++;
     if (action === 'memory') state.memory++;
     if (action === 'quiz') {
@@ -96,7 +114,6 @@
     }
     if (action === 'keepy') state.keepyBest = Math.max(state.keepyBest, Number(info.count) || 0);
     if (action === 'target') state.targetBest = Math.max(state.targetBest, Number(info.score) || 0);
-    if (action === 'scramble') state.scrambles++;
     const count = Number(state.daily[action]) || 0;
     state.daily[action] = count + 1;
     const xp = count < caps[action] ? rewards[action] : 0;
@@ -120,47 +137,62 @@
     setAll('[data-jw-xp]', state.xp);
     setAll('[data-jw-level]', level);
     setAll('[data-jw-goals]', state.goals);
+    setAll('[data-jw-tourwins]', state.tourWins);
+    setAll('[data-jw-crowns]', state.championships);
     setAll('[data-jw-saves]', state.saves);
-    setAll('[data-jw-keepy]', state.keepyBest);
     setAll('[data-jw-badgecount]', state.earned.length + '/' + AWARDS.length);
     setAll('[data-jw-avatar]', state.avatar);
     setAll('[data-jw-number]', state.number);
+    setAll('[data-jw-keepy]', state.keepyBest);
+    setAll('[data-jw-clubname]', 'Jozef FC');
     document.querySelectorAll('[data-jw-progress]').forEach(el => {
       el.style.width = levelXP + '%';
-      const track = el.parentElement;
-      if (track && track.getAttribute('role') === 'progressbar') {
-        track.setAttribute('aria-valuenow', String(levelXP));
-      }
+      el.parentElement?.setAttribute('aria-valuenow', String(levelXP));
     });
-    document.querySelectorAll('[data-jw-kit]').forEach(el => {
-      el.style.setProperty('--kit', state.kit);
+    document.querySelectorAll('[data-jw-kit]').forEach(el => el.style.setProperty('--kit-color', state.kit));
+    document.querySelectorAll('[data-choose-avatar]').forEach(el => {
+      const selected = el.dataset.chooseAvatar === state.avatar;
+      el.setAttribute('aria-pressed', String(selected));
     });
-    const soundBtn = document.getElementById('jw-sound');
-    if (soundBtn) {
-      soundBtn.textContent = state.sound ? '🔊 Sound on' : '🔇 Sound off';
-      soundBtn.setAttribute('aria-pressed', state.sound ? 'true' : 'false');
+    document.querySelectorAll('[data-choose-kit]').forEach(el => {
+      const selected = el.dataset.chooseKit === state.kit;
+      el.setAttribute('aria-pressed', String(selected));
+    });
+    const numberInput = document.getElementById('jw-number');
+    if (numberInput && document.activeElement !== numberInput) numberInput.value = String(state.number);
+    const sound = document.getElementById('jw-sound');
+    if (sound) {
+      sound.textContent = state.sound ? '🔊 Sound on' : '🔇 Sound off';
+      sound.setAttribute('aria-pressed', String(Boolean(state.sound)));
     }
-    const jerseyInput = document.getElementById('jw-number');
-    if (jerseyInput && document.activeElement !== jerseyInput) jerseyInput.value = state.number;
     document.querySelectorAll('[data-jw-mission]').forEach(el => {
-      const key = el.dataset.jwMission;
-      const done = (Number(state.daily[key]) || 0) > 0;
-      el.classList.toggle('done', done);
+      const completed = (Number(state.daily[el.dataset.jwMission]) || 0) > 0;
+      el.classList.toggle('complete', completed);
       const check = el.querySelector('.mission-check');
-      if (check) check.textContent = done ? '✓ Done' : '○ Ready';
+      if (check) check.textContent = completed ? '✓ Done' : '○ Ready';
     });
     const badges = document.getElementById('jw-badges');
     if (badges) {
       badges.innerHTML = '';
       for (const a of AWARDS) {
-        const item = document.createElement('div');
         const unlocked = state.earned.includes(a.id);
-        item.className = 'jw-badge' + (unlocked ? ' unlocked' : '');
-        item.innerHTML = '<span class="jw-badge-icon">' + a.icon + '</span><strong>' + a.title + '</strong><small>' + a.description + '</small>';
+        const item = document.createElement('div');
+        item.className = 'jw-badge ' + (unlocked ? 'unlocked' : 'locked');
+        item.setAttribute('aria-label', a.title + (unlocked ? ' unlocked' : ' locked'));
+        const icon = document.createElement('span'); icon.className = 'jw-badge-icon'; icon.textContent = unlocked ? a.icon : '🔒';
+        const title = document.createElement('strong'); title.textContent = a.title;
+        const desc = document.createElement('small'); desc.textContent = a.description;
+        item.append(icon, title, desc);
         badges.appendChild(item);
       }
     }
   }
+  // Install keyboard handlers once (not during every progress render).
+  document.querySelectorAll('.quick-cards .card[role="button"]').forEach(el => {
+    el.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); el.click(); }
+    });
+  });
   document.querySelectorAll('[data-choose-avatar]').forEach(el => {
     el.addEventListener('click', () => {
       if (!AVATARS.includes(el.dataset.chooseAvatar)) return;
@@ -184,6 +216,8 @@
     state.number = Math.max(1, Math.min(99, value));
     save();
     setAll('[data-jw-number]', state.number);
+    // Save on every input event, not only when the input loses focus.
+    // Mobile browsers and page reloads may not fire a "change" event first.
   }
   jerseyInput?.addEventListener('input', storeJerseyNumber);
   jerseyInput?.addEventListener('change', event => {
