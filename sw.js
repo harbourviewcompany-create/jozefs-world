@@ -1,9 +1,9 @@
 /* Jozef FC offline shell: only same-origin public game assets. Never caches personal progress. */
-const CACHE='jozef-fc-app-shell-v15';
+const CACHE='jozef-fc-app-shell-v16';
 const CORE=[
  './','./index.html','./world.html','./favicon.svg','./manifest.webmanifest',
  './styles.css','./pitch.css','./extras.css','./tournament.css','./career.css',
- './clubhouse.css','./scramble-positions.css','./stadium.css','./arcade.css','./arena.css','./playmode.css','./who.css','./visual-2026.css','./arena-visual.css','./campaign-2026.css',
+ './clubhouse.css','./scramble-positions.css','./stadium.css','./arcade.css','./arena.css','./playmode.css','./who.css','./visual-2026.css','./arena-visual.css','./campaign-2026.css','./mobile-qa-2026.css',
  './matchday.css','./training.css','./jersey-bingo.css',
  './app.js','./extras.js','./tournament.js','./career.js','./clubhouse.js',
  './scramble-positions.js','./celebrate.js','./training.js',
