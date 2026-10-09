@@ -139,9 +139,9 @@ document.querySelectorAll('.pitch-pos').forEach(btn => {
   });
 });
 
-// Load additive modules: celebrations, training, jersey/bingo/missions
+// Load additive modules: celebrations, training, jersey/bingo, match day
 (function loadExtraModules() {
-  ['celebrate.js', 'training.js', 'jersey-bingo.js'].forEach(function (src) {
+  ['celebrate.js', 'training.js', 'jersey-bingo.js', 'matchday.js'].forEach(function (src) {
     if (document.querySelector('script[data-jw-extra="' + src + '"]')) return;
     var s = document.createElement('script');
     s.src = src;
@@ -149,7 +149,7 @@ document.querySelectorAll('.pitch-pos').forEach(btn => {
     s.dataset.jwExtra = src;
     document.body.appendChild(s);
   });
-  ['training.css', 'jersey-bingo.css'].forEach(function (href) {
+  ['training.css', 'jersey-bingo.css', 'matchday.css'].forEach(function (href) {
     if (document.querySelector('link[data-jw-extra="' + href + '"]')) return;
     var l = document.createElement('link');
     l.rel = 'stylesheet';
