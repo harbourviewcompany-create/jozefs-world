@@ -7,7 +7,6 @@ const arenaJs=fs.readFileSync(path.join(__dirname,'../arena.js'),'utf8');
 const squadJs=fs.readFileSync(path.join(__dirname,'../squad.js'),'utf8');
 class MockNode {
 constructor(){this.children=[];this.events={};this.textContent='';this.value='';this.className='';this.style={};this.tagName='DIV';this.classList={contains:()=>true,toggle(){},add(){},remove(){}};}
->>>>>> 5d3514c (feat: add a private Jozef and Dad note board on this device)
  setAttribute(){}
  append(...items){this.children.push(...items)}
  appendChild(item){this.children.push(item);return item}
