@@ -154,6 +154,7 @@
     if (typeof window.dispatchEvent === 'function' && typeof Event === 'function') {
       window.dispatchEvent(new Event('jozef:profile-updated'));
     }
+    return xp; // Let games distinguish earned XP from a daily-cap replay.
   }
   function setAll(selector, value) {
     document.querySelectorAll(selector).forEach(el => { el.textContent = String(value); });
