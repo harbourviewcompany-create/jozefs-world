@@ -30,6 +30,11 @@
     const id = (location.hash || '#home').slice(1);
     paint(id);
     setTimeout(wrap, 400);
+    ['arena','street','games'].forEach(name => {
+      const node = document.getElementById(name);
+      if (!node || !('MutationObserver' in window)) return;
+      new MutationObserver(() => paint(node.classList.contains('active') ? name : (location.hash || '#home').slice(1))).observe(node, { attributes: true, attributeFilter: ['class'] });
+    });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
