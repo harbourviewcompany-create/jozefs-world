@@ -23,6 +23,12 @@ A private, kid-friendly soccer adventure made for Jozef. Play games, create a pl
 - Unlock Career rewards and trophies. Save mid-season and start a new season without losing past cups.
 - Supports mouse, touch and keyboard without external services.
 
+### Collector cards and parent-guided progress backup
+- Seven unlockable player cards earned through genuine goals, quizzes, Career matches, World Tour wins and championships — no payments or chance-based rewards.
+- The Career Mode field now visualizes a match formation, ball movement, attack/defence stages and live match score cues.
+- A parent can download a private JSON progress backup and restore it after explicit confirmation. No account or server upload is required. Restoring intentionally replaces saved local progress.
+- Backups include Jozef FC player XP, avatar, kit, badges, World Tour, Career Mode and the keepy-uppy record. Backups are checked for valid structure and size.
+
 ### Seven arcade games
 Penalty Shootout, Memory Match, Soccer Quiz, Keepy-Uppy, Goalie Reaction, Target Practice and Soccer Word Scramble.
 
@@ -37,7 +43,7 @@ Penalty Shootout, Memory Match, Soccer Quiz, Keepy-Uppy, Goalie Reaction, Target
 
 ## Technology and deployment
 
-Pure HTML/CSS/JavaScript, no build step or database. This project uses GitHub Pages. The [Pages workflow](.github/workflows/pages.yml) runs on pushes to `main`, copies `world.html` to the published `index.html`, then deploys the static assets. It also runs `node --test tests/career.test.cjs` before publishing. This guarantees that the deployed homepage uses the complete saved page rather than temporary loader placeholders.
+Pure HTML/CSS/JavaScript, no build step or database. This project uses GitHub Pages. The [Pages workflow](.github/workflows/pages.yml) runs on pushes to `main`, copies `world.html` to the published `index.html`, then deploys the static assets. It also runs `node --test tests/*.test.cjs` before publishing. This guarantees that the deployed homepage uses the complete saved page rather than temporary loader placeholders.
 
 | File | Purpose |
 |---|---|
@@ -46,8 +52,10 @@ Pure HTML/CSS/JavaScript, no build step or database. This project uses GitHub Pa
 | `app.js`, `styles.css` | Arcade games and original site |
 | `extras.js`, `extras.css` | Jozef FC XP, profile and badges |
 | `tournament.js`, `tournament.css` | World Tour logic and presentation |
-| `career.js`, `career.css` | League season, maths training, tactical choices and responsive UI |
+| `career.js`, `career.css` | League season, maths training, animated tactical match view and responsive UI |
+| `clubhouse.js`, `clubhouse.css` | Collectible player cards and on-device backup/restore |
 | `tests/career.test.cjs` | Node built-in regression checks for season progression and HTML structure |
+| `tests/clubhouse.test.cjs` | Player card and backup/import validation checks |
 | `scramble-positions.js`, `scramble-positions.css` | Word puzzles and field positions |
 | `tests/smoke-checklist.md` | Manual acceptance tests |
 
