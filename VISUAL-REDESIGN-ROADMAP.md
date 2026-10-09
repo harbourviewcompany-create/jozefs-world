@@ -37,16 +37,18 @@ Files: `arena.js`, `arena.css`, `tests/arena.test.cjs`.
 
 **Acceptance:** gameplay collision/score/XP unchanged, fast path under mobile device budget, no extra network.
 
-## Phase 3 — Squad collection & progression — tactical pitch shipped; additional card art planned
-Files: `squad.js`, `clubhouse.css`, `visual-2026.css`, tests.
-- Formation board with connected player slots, strong contrast and rarity tiers determined from existing unlocked achievements.
-- Swap control remains native `select` for accessibility; entire card style mirrors the selected player's tier.
-- Earned rewards only; avoid loot-box/pay-to-win language or purchasable card motifs.
+## Phase 3 — Squad collection & progression — implemented
+Files: `squad.js`, `clubhouse.js`, `arena-visual.css`, `campaign-2026.css`, `tests/campaign-visual.test.cjs`.
+- Existing selectable four-player formation pitch shows the selected lineup and tactic.
+- Earned collectible cards now show original CSS-rendered jerseys, a J/11 monogram, rating, player role, skill label and earned Academy/Rare/Elite/Legend tier; cards remain locked until original achievements.
+- All native card selection controls and save/backup keys remain unchanged. No loot boxes, purchases or random packs.
 
-## Phase 4 — Career and World Tour
-Files: `career.css`, `tournament.css`, `visual-2026.css`.
-- Matchday broadcast score and standings, compact fixtures, rival campaign sections, celebratory trophies.
-- World Tour as passport / destination dossier with stamped milestones; preserve underlying rounds and state.
+## Phase 4 — Career and World Tour — implemented
+Files: `world.html`, `campaign-2026.css`, `campaign-2026.js`, `tests/campaign-visual.test.cjs`.
+- Career has an original six-round roadmap, upgraded broadcast-style fixture panels, visualized shirt silhouettes on its tactical pitch and a J/11 league emblem.
+- World Tour has a five-destination illustrated passport. Completed stamps and current destination are computed from existing tour progress. Trophy and penalty goal are drawn with local CSS shapes.
+- Campaign components consume the established browser-only Career/Tour progress APIs; they don't store a second source of truth or add network requests.
+- Test coverage validates all existing modes, card tiers and progression presentations, plus offline assets and canonical page parity.
 
 ## Phase 5 — final polish
 - Audit 320/375/390/768/1024/1440px; keyboard and focus order; contrast; reduced motion; app install / offline.
