@@ -87,3 +87,38 @@ test('rejects malformed, untrusted and oversized backup data',async()=>{
   await input.events.change({target:input});
   assert.equal(app.storage.size,0);
 });
+
+test('older backups preserve newer games, training and real-life match plans',async()=>{
+  const app=load();
+  app.storage.set('jozefs-world-matchday-v1',JSON.stringify({opponent:'Tigers',date:'2026-10-24',time:'13:00'}));
+  app.storage.set('jozefs-world-street-best-v1','145');
+  app.storage.set('jozefs-world-bingo-v1',JSON.stringify({day:'2026-10-09',marked:['defence']}));
+  const legacy={format:'jozefs-world-local-backup',version:1,data:{
+    'jozefs-world-player-v1':{xp:210,goals:2},
+    'jozefs-world-tour-v1':{season:2,round:1,match:null}
+  }};
+  await app.import(legacy);
+  assert.equal(app.reloads,1);
+  assert.equal(JSON.parse(app.storage.get('jozefs-world-player-v1')).xp,210);
+  assert.equal(app.storage.get('jozefs-world-street-best-v1'),'145');
+  assert.equal(JSON.parse(app.storage.get('jozefs-world-matchday-v1')).opponent,'Tigers');
+  assert.equal(JSON.parse(app.storage.get('jozefs-world-bingo-v1')).marked[0],'defence');
+});
+test('all new activity keys are recognized in expanded local backup',async()=>{
+  const app=load();
+  const data={format:'jozefs-world-local-backup',version:1,data:{
+    'jozefs-world-player-v1':{xp:20},
+    'jozefs-world-street-best-v1':'120',
+    'jozefs-world-matchday-v1':{opponent:'Falcons',date:'2026-11-10',time:'11:30'},
+    'jozefs-world-formation-v1':{name:'4-3-3'},
+    'jozefs-world-training-v1':{completed:2},
+    'jozefs-world-jersey-v1':{name:'JOZEF',num:11,color:'#27ae60'},
+    'jozefs-world-bingo-v1':{day:'2026-10-09',marked:[]},
+    'jozefs-world-missions-v1':{day:'2026-10-09',done:[]}
+  }};
+  await app.import(data);
+  assert.equal(app.reloads,1);
+  assert.equal(app.storage.get('jozefs-world-street-best-v1'),'120');
+  assert.equal(JSON.parse(app.storage.get('jozefs-world-formation-v1')).name,'4-3-3');
+  assert.equal(JSON.parse(app.storage.get('jozefs-world-training-v1')).completed,2);
+});
