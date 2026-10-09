@@ -268,12 +268,14 @@ let keepyCount = 0;
 let keepyBest = parseInt(localStorage.getItem('jozefKeepyBest') || '0');
 let keepyFalling = false;
 let keepyInterval = null;
+let keepyBounceToken = 0;
 const keepyBall = document.getElementById('keepy-ball');
 const keepyArea = document.getElementById('keepy-area');
 
 document.getElementById('keepy-best').textContent = keepyBest;
 
 function keepyBounce() {
+  const bounceToken = ++keepyBounceToken;
   if (!keepyFalling) {
     // start falling
     keepyFalling = true;
@@ -293,9 +295,11 @@ function keepyBounce() {
 
   clearTimeout(keepyInterval);
   keepyInterval = setTimeout(() => {
+    if (bounceToken !== keepyBounceToken) return;
     // falls down
     keepyBall.style.bottom = '20px';
     setTimeout(() => {
+      if (bounceToken !== keepyBounceToken) return;
       if (keepyFalling) {
         // missed
         keepyFalling = false;
@@ -316,6 +320,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 document.getElementById('reset-keepy').addEventListener('click', () => {
+  keepyBounceToken++;
   keepyCount = 0;
   keepyFalling = false;
   clearTimeout(keepyInterval);
@@ -327,6 +332,7 @@ document.getElementById('reset-keepy').addEventListener('click', () => {
 let goalieSaves = 0;
 let goalieGoals = 0;
 let goalieActive = false;
+let goalieRoundToken = 0;
 let currentSide = null;
 const goalieBall = document.getElementById('goalie-ball');
 const goalieKeeper = document.getElementById('goalie-keeper');
@@ -374,6 +380,7 @@ document.querySelectorAll('.zone-btn').forEach(btn => {
 
 document.getElementById('start-goalie').addEventListener('click', () => {
   if (goalieActive) return;
+  const shotToken = ++goalieRoundToken;
   goalieActive = true;
   goalieStatus.textContent = 'Watch the ball...';
   goalieStatus.style.color = '#3498db';
@@ -389,14 +396,15 @@ document.getElementById('start-goalie').addEventListener('click', () => {
 
   // fly to target
   setTimeout(() => {
+    if (!goalieActive || shotToken !== goalieRoundToken || !currentSide) return;
     const pos = sidePositions[currentSide];
     goalieBall.style.left = pos.left;
     goalieBall.style.top = pos.top;
   }, 50);
 
-  // auto-miss if too slow
+  // auto-miss if too slow; ignore timers from previous shots.
   setTimeout(() => {
-    if (goalieActive) {
+    if (goalieActive && shotToken === goalieRoundToken) {
       goalieGoals++;
       document.getElementById('goalie-goals').textContent = goalieGoals;
       goalieStatus.textContent = '⚽ Too slow! Goal!';
