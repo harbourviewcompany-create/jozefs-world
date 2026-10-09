@@ -281,6 +281,19 @@ function player(x,y,color,number){
  ctx.fillStyle='#06171d';ctx.font='800 13px system-ui';ctx.textAlign='center';ctx.fillText(String(number),x,y+5);
 }
 function draw(){
+ // Presentation layer is isolated from the physics. If graphics are blocked by
+ // an older device, fall back to the original playable canvas renderer.
+ if(window.JozefArenaGraphics?.render){
+  try{
+   window.JozefArenaGraphics.render(ctx,{
+    venue:venues[Math.min(lifetime.stadium,2)].name,stadium:lifetime.stadium,
+    actor,mate,ball,defenders,keeper,squad,identity:window.JozefWorld?.getProgress?.()||{},
+    shotZones:SHOT_ZONES,aim,phase:MATCH_LENGTH-time,skillTime,flash,streak,time,us,them,mode,
+    reducedMotion:Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches)
+   });
+   return;
+  }catch(_){/* Keep football playable with the classic renderer. */}
+ }
  const venue=venues[Math.min(lifetime.stadium,2)];
  const grad=ctx.createLinearGradient(0,0,0,H);
  if(lifetime.stadium>=2){grad.addColorStop(0,'#59442b');grad.addColorStop(.55,'#6a5540');grad.addColorStop(1,'#2b2b33');}
