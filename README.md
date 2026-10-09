@@ -10,6 +10,12 @@ Jozef FC // After Dark is a private football universe. Play an actual Arena matc
 ### Jozef FC // After Dark
 The signature interface is a premium, broadcast-style football universe rather than a generic children's site: floodlit stadium crest, custom J/11 identity, editorial type, neon-acid accents, responsive player HUD, real matchday indicator, cinematic motion, and a seven-destination quick navigation deck. Deep links and browser back/forward work between sections. Reduced-motion preferences are honoured.
 
+### Arena visual upgrade (2026)
+- An original, entirely offline top-down rendering layer adds stylized players (jerseys, boots, heads, keeper gloves), stadium seating, floodlit field stripes, nets, touch-friendly HUD and shot/skill effects.
+- All three Arena venues have distinct turf and lighting treatments. The match renderer falls back to the original canvas renderer if the new presentation cannot initialize.
+- The Club squad builder includes a live tactical pitch showing selected goalkeeper, defender, midfielder and striker; all original native card selectors and stored squad data are preserved.
+- Graphics come from checked-in `arena-renderer.js` and `arena-visual.css`; there are no image CDNs, tracking dependencies or additional child data collection.
+
 ### The Arena — full playable football
 - A real-time, top-down 75-second football match with controllable movement, a touch D-pad, tap-to-move and arrow/WASD keyboard play.
 - Pass the ball to a teammate using PASS/J and ask for the one-two with another press. Tap SKILL BURST or press L to escape defenders; it has a real cooldown.
