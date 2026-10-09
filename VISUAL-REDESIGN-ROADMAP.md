@@ -28,7 +28,7 @@ Files: `visual-2026.css`, `visual-2026.js`, `world.html`, `index.html`, `sw.js`,
 
 **Acceptance:** no duplicate IDs, same canonical HTML files, progress preserved on refresh, Jozef/Dad and deep links remain intact, 320/375/768/1280px layout considered, service worker cache refreshed, all repository tests pass.
 
-## Phase 2 — Arena renderer
+## Phase 2 — Arena renderer — implemented
 Files: `arena.js`, `arena.css`, `tests/arena.test.cjs`.
 - Replace rectangular players with stylized top-down kits (head, shoulders, shadow, feet, captain ring), rather than raster sprites or external downloads.
 - Add authentic striped floodlit pitch, stadium crowd rim, net meshes, goal-mouth indicators, ball speed trails and defender pressure visualization.
@@ -37,7 +37,7 @@ Files: `arena.js`, `arena.css`, `tests/arena.test.cjs`.
 
 **Acceptance:** gameplay collision/score/XP unchanged, fast path under mobile device budget, no extra network.
 
-## Phase 3 — Squad collection & progression
+## Phase 3 — Squad collection & progression — tactical pitch shipped; additional card art planned
 Files: `squad.js`, `clubhouse.css`, `visual-2026.css`, tests.
 - Formation board with connected player slots, strong contrast and rarity tiers determined from existing unlocked achievements.
 - Swap control remains native `select` for accessibility; entire card style mirrors the selected player's tier.
