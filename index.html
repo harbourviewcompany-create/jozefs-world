@@ -23,6 +23,7 @@
   <link rel="stylesheet" href="scramble-positions.css" />
   <link rel="stylesheet" href="stadium.css" />
   <link rel="stylesheet" href="arcade.css" />
+  <link rel="stylesheet" href="arena.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Lilita+One&family=Nunito:wght@400;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -34,6 +35,7 @@
     <div class="nav-brand"><span class="studio-brand-mark" aria-hidden="true">J<span>11</span></span><span class="studio-brand-title">JOZEF <b>FC</b><small>THE FUTURE IS OURS</small></span></div>
     <div class="nav-links">
       <button class="nav-btn active" data-section="home">HQ</button>
+      <button class="nav-btn studio-arena-nav" data-section="arena">PLAY MATCH</button>
       <button class="nav-btn studio-street-nav" data-section="street">STREET//11</button>
       <button class="nav-btn" data-section="games">Games</button>
       <button class="nav-btn" data-section="club">My Club</button>
@@ -61,7 +63,7 @@
         <h1>YOUR GAME.<br><em>YOUR WORLD.</em><br><span>NO LIMITS.</span></h1>
         <p class="hero-subtitle">A universe built around one player. Train under the floodlights. Own the streets. Lead your club to the top.</p>
         <div class="hero-buttons">
-          <button type="button" class="studio-button-primary" onclick="showSection('street')"><span class="studio-button-icon">▶</span> PLAY STREET//11 <span aria-hidden="true">↗</span></button>
+          <button type="button" class="studio-button-primary" onclick="showSection('arena')"><span class="studio-button-icon">▶</span> PLAY FOOTBALL <span aria-hidden="true">↗</span></button>
           <button type="button" class="studio-button-outline" onclick="showSection('career')">ENTER CAREER <span aria-hidden="true">↗</span></button>
           <button type="button" class="game-launch" onclick="showSection('roblox')"><span class="game-launch-play" aria-hidden="true"></span><span class="game-launch-copy"><strong>Play</strong><small>Roblox</small></span></button>
         </div>
@@ -84,6 +86,12 @@
 
     <div class="studio-section-heading"><div><span class="studio-kicker">CHOOSE YOUR PATH</span><h2>WHAT'S YOUR <em>NEXT MOVE?</em></h2></div><span class="studio-section-count">03 / GAME MODES</span></div>
     <div class="studio-mode-grid">
+      <button type="button" class="studio-mode studio-mode-arena" onclick="showSection('arena')">
+        <span class="studio-mode-top"><b>00 / THE MAIN EVENT</b><span aria-hidden="true">↗</span></span>
+        <span class="studio-mode-graphic studio-mode-arena-art" aria-hidden="true"><span class="studio-arena-shirt">11</span><span class="studio-mode-tape">DRIBBLE / PASS / SHOOT</span></span>
+        <strong>THE <span>ARENA.</span></strong><small>REAL BALL CONTROL. LIVE DEFENDERS. YOUR TEAM. YOUR LEGACY.</small>
+        <span class="studio-mode-link">KICK OFF A MATCH <span>→</span></span>
+      </button>
       <button type="button" class="studio-mode studio-mode-street" onclick="showSection('street')">
         <span class="studio-mode-top"><b>01 / ARCADE</b><span aria-hidden="true">↗</span></span>
         <span class="studio-mode-graphic" aria-hidden="true"><span class="studio-mode-orbit">⚽</span><span class="studio-mode-tape">STREET DIVISION</span></span>
@@ -129,6 +137,52 @@
     </div>
   </section>
 
+
+
+  <!-- MAIN EVENT: FOOTBALL YOU CAN ACTUALLY PLAY -->
+  <section id="arena" class="section studio-arena" tabindex="-1" aria-labelledby="arena-heading">
+    <div class="studio-page-intro">
+      <span class="studio-kicker">THE MAIN EVENT / JOZEF FC</span>
+      <h2 id="arena-heading">THE <span>ARENA.</span></h2>
+      <p>Control Jozef on the pitch. Dribble through defenders. Play one-twos with your teammate. Find the angle and bury the shot. Every result builds your club.</p>
+    </div>
+    <div class="arena-layout">
+      <div class="arena-game">
+        <div class="arena-topbar"><span><span class="studio-status-dot"></span> JOZEF FC · LIVE FOOTBALL</span><span id="arena-venue">NEIGHBOURHOOD COURT</span></div>
+        <div class="arena-scoreboard"><div><small>JOZEF FC</small><strong id="arena-score">0 : 0</strong><small>RIVALS</small></div><div><small>MATCH CLOCK</small><strong id="arena-clock">75s</strong><small id="arena-tactic">BALANCED</small></div></div>
+        <div class="arena-pitch-frame"><canvas id="arena-canvas" width="420" height="600" tabindex="0" role="img" aria-label="Live football game. Move using the directional pad or arrow keys. Pass using J and shoot using K."></canvas></div>
+        <div class="arena-controller">
+          <div class="arena-direction" aria-label="Movement controls">
+            <button id="arena-up" type="button" aria-label="Run forward">↑</button>
+            <button id="arena-left" type="button" aria-label="Move left">←</button>
+            <button id="arena-down" type="button" aria-label="Run backward">↓</button>
+            <button id="arena-right" type="button" aria-label="Move right">→</button>
+          </div>
+          <div class="arena-actions">
+            <button type="button" id="arena-pass" class="arena-pass">PASS <small>J</small></button>
+            <button type="button" id="arena-shoot" class="arena-shoot">SHOOT <small>K</small></button>
+          </div>
+        </div>
+        <button id="arena-start" type="button" class="arena-kickoff">KICK OFF →</button>
+        <p id="arena-status" class="arena-status" role="status" aria-live="polite">Your pitch is ready.</p>
+      </div>
+      <aside class="arena-guide">
+        <span class="studio-kicker">THE ROAD TO LEGEND</span>
+        <h3>NOT JUST A GAME.<br><em>YOUR GAME.</em></h3>
+        <p>Your football career starts right here. A real playable pitch, a teammate you can pass to, defenders hunting the ball, and an opponent goalkeeper.</p>
+        <div class="arena-career-stats">
+          <div><small>ARENA WINS</small><strong id="arena-wins">0</strong></div>
+          <div><small>CAREER GOALS</small><strong id="arena-goals">0</strong></div>
+          <div><small>MATCHES</small><strong id="arena-matches">0</strong></div>
+        </div>
+        <div class="arena-guide-rule"><b>01 / DRIVE</b><p>Hold arrows, WASD, or the touch pad to run. Tap the field to move toward a spot.</p></div>
+        <div class="arena-guide-rule"><b>02 / CREATE</b><p>Use PASS or J for a teammate one-two. Smart positioning opens space.</p></div>
+        <div class="arena-guide-rule"><b>03 / FINISH</b><p>Use SHOOT or K. Beat the keeper to the top goal. You have 75 seconds to win.</p></div>
+        <div class="arena-guide-rule"><b>04 / LEVEL UP</b><p>Earn new players in Career and World Tour, then build a starting squad for better gameplay.</p></div>
+        <button class="studio-mini-route" type="button" onclick="showSection('club')">MANAGE YOUR SQUAD <span>↗</span></button>
+      </aside>
+    </div>
+  </section>
 
   <!-- STREET 11: THE NIGHT-RUN SIGNATURE MODE -->
   <section id="street" class="section studio-street-page" tabindex="-1" aria-labelledby="street-heading">
@@ -555,6 +609,14 @@
         </div>
       </div>
     </div>
+
+    <div class="jw-card squad-headquarters" aria-labelledby="squad-title">
+      <div class="squad-head"><div><span class="studio-kicker">THE TACTICS BOARD / JOZEF FC</span><h3 id="squad-title">BUILD YOUR <em>STARTING FOUR.</em></h3><p>Every card you earn is a real squad option. Pick your players and a strategy. Your choices improve the way your team plays in The Arena.</p></div><button type="button" class="squad-kickoff" onclick="showSection('arena')">PLAY WITH THIS TEAM ↗</button></div>
+      <div class="squad-config"><span id="squad-available">1 / 7 players unlocked</span><label for="squad-tactic">TEAM APPROACH <select id="squad-tactic"><option value="balanced">Balanced possession</option><option value="attack">High press / attack</option><option value="defence">Compact defence</option></select></label></div>
+      <div class="squad-grid" id="squad-grid" aria-label="Your selectable four-player starting squad"></div>
+      <div class="squad-foot"><strong id="squad-formation">PLAY TOGETHER</strong><span id="squad-bonuses">SPEED +0% • PASS +0% • SHOOT +0%</span></div>
+      <p class="squad-explain">Locked players unlock through goals, learning, Career Mode and World Tour. Empty positions are filled by academy teammates. Each collectible card can appear only once in your lineup.</p>
+    </div>
     <div class="jw-card jw-collectibles">
       <div class="jw-section-head"><div><span class="jw-eyebrow">YOUR PLAYERS</span><h3>✨ Jozef FC Collector Cards</h3></div><span class="jw-level-chip"><span id="clubhouse-card-count">1 / 7</span> unlocked</span></div>
       <p>Earn these cards through goals, league matches, learning and adventures. No purchases or random prizes.</p>
@@ -820,6 +882,8 @@
   <script src="tournament.js"></script>
   <script src="career.js"></script>
   <script src="clubhouse.js"></script>
+  <script src="squad.js"></script>
+  <script src="arena.js"></script>
   <script src="scramble-positions.js"></script>
   <script src="celebrate.js"></script>
   <script src="training.js"></script>
