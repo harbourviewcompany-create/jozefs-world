@@ -185,9 +185,22 @@
       save(); render();
     });
   });
-  document.getElementById('jw-number')?.addEventListener('change', e => {
-    state.number = Math.min(99, Math.max(1, Math.round(Number(e.target.value) || 10)));
-    save(); render();
+  const jerseyInput = document.getElementById('jw-number');
+  function storeJerseyNumber(event) {
+    const raw = String(event.target.value || '').trim();
+    if (!raw) return;
+    const value = Math.round(Number(raw));
+    if (!Number.isFinite(value)) return;
+    state.number = Math.max(1, Math.min(99, value));
+    save();
+    setAll('[data-jw-number]', state.number);
+    // Save on every input event, not only when the input loses focus.
+    // Mobile browsers and page reloads may not fire a "change" event first.
+  }
+  jerseyInput?.addEventListener('input', storeJerseyNumber);
+  jerseyInput?.addEventListener('change', event => {
+    storeJerseyNumber(event);
+    render();
   });
   document.getElementById('jw-sound')?.addEventListener('click', () => {
     state.sound = !state.sound; save(); render(); ding();
