@@ -3,13 +3,20 @@
   'use strict';
   const KEY = 'jozefs-world-who';
 
+  function inputs() {
+    return [...document.querySelectorAll('.who-toggle input')];
+  }
+
   function apply(who) {
+    const dad = who === 'dad';
     document.body.classList.remove('who-jozef', 'who-dad');
-    document.body.classList.add(who === 'dad' ? 'who-dad' : 'who-jozef');
-    const label = document.getElementById('who-now');
-    if (label) label.textContent = who === 'dad' ? 'Dad' : 'Jozef';
+    document.body.classList.add(dad ? 'who-dad' : 'who-jozef');
+    inputs().forEach(input => { input.checked = dad; });
     const gate = document.getElementById('who-gate');
-    if (gate) { gate.hidden = true; gate.classList.remove('is-open'); }
+    if (gate) {
+      gate.hidden = true;
+      gate.classList.remove('is-open');
+    }
   }
 
   function choose(who) {
@@ -24,20 +31,16 @@
     try { saved = localStorage.getItem(KEY) || ''; } catch (err) { saved = ''; }
     document.getElementById('who-jozef')?.addEventListener('click', () => choose('jozef'));
     document.getElementById('who-dad')?.addEventListener('click', () => choose('dad'));
-    function openGate(event) {
-      if (event) { event.preventDefault(); event.stopPropagation(); }
-      const gate = document.getElementById('who-gate');
-      if (!gate) return;
-      gate.hidden = false;
-      gate.classList.add('is-open');
-      document.getElementById('who-jozef')?.focus();
-    }
-    document.getElementById('who-switch')?.addEventListener('click', openGate);
-    document.getElementById('who-switch-phone')?.addEventListener('click', openGate);
+    inputs().forEach(input => {
+      input.addEventListener('change', () => choose(input.checked ? 'dad' : 'jozef'));
+    });
     if (saved === 'dad' || saved === 'jozef') apply(saved);
     else {
       const gate = document.getElementById('who-gate');
-      if (gate) gate.hidden = false;
+      if (gate) {
+        gate.hidden = false;
+        gate.classList.add('is-open');
+      }
     }
   }
 
