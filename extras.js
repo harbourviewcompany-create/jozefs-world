@@ -1,1 +1,224 @@
-placeholder
+/* Jozef FC — private, browser-only player progress. No accounts, analytics or public chat. */
+(() => {
+  'use strict';
+  const KEY = 'jozefs-world-player-v1';
+  const COLORS = ['#21b567', '#246bdf', '#ff8b24', '#aa59e4', '#ef4f7c'];
+  const AVATARS = ['🦁', '🐯', '🦊', '🐻', '⚡', '⭐'];
+  const AWARDS = [
+    { id: 'first-goal', icon: '⚽', title: 'First Goal', description: 'Score your first goal', ready: s => s.goals >= 1 },
+    { id: 'goal-hero', icon: '🏆', title: 'Goal Hero', description: 'Score 10 goals', ready: s => s.goals >= 10 },
+    { id: 'safe-hands', icon: '🧤', title: 'Safe Hands', description: 'Make 5 saves', ready: s => s.saves >= 5 },
+    { id: 'memory-master', icon: '🧠', title: 'Memory Master', description: 'Finish Memory Match', ready: s => s.memory >= 1 },
+    { id: 'brain-power', icon: '📚', title: 'Brain Power', description: 'Complete a quiz', ready: s => s.quizzes >= 1 },
+    { id: 'perfect-score', icon: '🌟', title: 'Perfect Score', description: 'Get every quiz answer right', ready: s => s.perfect >= 1 },
+    { id: 'target-star', icon: '🎯', title: 'Sharp Shooter', description: 'Score 12 points in Target Practice', ready: s => s.targetBest >= 12 },
+    { id: 'word-wizard', icon: '🔤', title: 'Word Wizard', description: 'Solve 5 word scrambles', ready: s => s.scrambles >= 5 },
+    { id: 'keepy-king', icon: '🚀', title: 'Keepy King', description: 'Make 10 keepy-uppies', ready: s => s.keepyBest >= 10 },
+    { id: 'triple-threat', icon: '👑', title: 'Daily Hero', description: 'Complete all three daily missions', ready: s => missionDone(s) }
+  ];
+  const defaultState = () => ({
+    xp: 0, goals: 0, saves: 0, memory: 0, quizzes: 0, perfect: 0, scrambles: 0,
+    keepyBest: 0, targetBest: 0, club: 'Jozef FC', avatar: '🦁', kit: COLORS[0],
+    number: 10, day: dayKey(), daily: {}, dailyHero: '', earned: [],
+    sound: false
+  });
+  function dayKey() {
+    const d = new Date();
+    return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-');
+  }
+  function load() {
+    let value = {};
+    try { value = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (_) {}
+    const s = { ...defaultState(), ...value };
+    s.xp = Math.max(0, Number(s.xp) || 0);
+    for (const name of ['goals', 'saves', 'memory', 'quizzes', 'perfect', 'keepyBest', 'targetBest', 'scrambles']) {
+      s[name] = Math.max(0, Number(s[name]) || 0);
+    }
+    if (!COLORS.includes(s.kit)) s.kit = COLORS[0];
+    if (!AVATARS.includes(s.avatar)) s.avatar = AVATARS[0];
+    s.number = Math.min(99, Math.max(1, Number(s.number) || 10));
+    if (!Array.isArray(s.earned)) s.earned = [];
+    try { s.keepyBest = Math.max(s.keepyBest, Number(localStorage.getItem('jozefKeepyBest')) || 0); } catch (_) {}
+    if (s.day !== dayKey()) { s.day = dayKey(); s.daily = {}; }
+    if (!s.daily || typeof s.daily !== 'object') s.daily = {};
+    return s;
+  }
+  let state = load();
+  let soundContext;
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (_) {
+      const el = document.getElementById('jw-status');
+      if (el) el.textContent = 'This browser is not saving progress. You can still play!';
+    }
+  }
+  function missionDone(s) {
+    return ['goal', 'quiz', 'memory'].every(key => (Number(s.daily[key]) || 0) > 0);
+  }
+  function ding() {
+    if (!state.sound) return;
+    try {
+      const Audio = window.AudioContext || window.webkitAudioContext;
+      if (!Audio) return;
+      soundContext ||= new Audio();
+      const osc = soundContext.createOscillator();
+      const gain = soundContext.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(660, soundContext.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(990, soundContext.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.065, soundContext.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, soundContext.currentTime + 0.18);
+      osc.connect(gain).connect(soundContext.destination);
+      osc.start(); osc.stop(soundContext.currentTime + 0.19);
+    } catch (_) {}
+  }
+  let toastTimer;
+  function announce(message) {
+    const el = document.getElementById('jw-toast');
+    if (!el) return;
+    el.textContent = message;
+    el.classList.add('visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('visible'), 2500);
+  }
+  function record(action, info = {}) {
+    if (state.day !== dayKey()) { state.day = dayKey(); state.daily = {}; }
+    const rewards = { goal: 5, save: 8, memory: 30, quiz: 20, keepy: 15, target: 15, scramble: 10 };
+    const caps = { goal: 10, save: 10, memory: 3, quiz: 3, keepy: 1, target: 3, scramble: 5 };
+    if (!(action in rewards)) return;
+    if (action === 'target' && (Number(info.score) || 0) <= 0) return;
+    if (action === 'keepy' && (Number(info.count) || 0) < 10) return;
+    if (action === 'goal') state.goals++;
+    if (action === 'save') state.saves++;
+    if (action === 'memory') state.memory++;
+    if (action === 'quiz') {
+      state.quizzes++;
+      if (Number(info.score) === Number(info.total) && Number(info.total) > 0) state.perfect++;
+    }
+    if (action === 'keepy') state.keepyBest = Math.max(state.keepyBest, Number(info.count) || 0);
+    if (action === 'target') state.targetBest = Math.max(state.targetBest, Number(info.score) || 0);
+    if (action === 'scramble') state.scrambles++;
+    const count = Number(state.daily[action]) || 0;
+    state.daily[action] = count + 1;
+    const xp = count < caps[action] ? rewards[action] : 0;
+    if (xp) { state.xp += xp; ding(); }
+    if (missionDone(state) && state.dailyHero !== state.day) {
+      state.dailyHero = state.day;
+      state.xp += 50;
+      announce('🏆 Daily Hero! All missions completed. +50 XP!');
+    } else if (xp) announce('+' + xp + ' XP • Great job, Jozef!');
+    const unlocked = AWARDS.filter(a => a.ready(state) && !state.earned.includes(a.id));
+    for (const award of unlocked) state.earned.push(award.id);
+    if (unlocked.length) announce('New badge: ' + unlocked.map(a => a.title).join(', ') + '!');
+    save(); render();
+  }
+  function setAll(selector, value) {
+    document.querySelectorAll(selector).forEach(el => { el.textContent = String(value); });
+  }
+  function render() {
+    const level = Math.floor(state.xp / 100) + 1;
+    const levelXP = state.xp % 100;
+    setAll('[data-jw-xp]', state.xp);
+    setAll('[data-jw-level]', level);
+    setAll('[data-jw-goals]', state.goals);
+    setAll('[data-jw-saves]', state.saves);
+    setAll('[data-jw-keepy]', state.keepyBest);
+    setAll('[data-jw-badgecount]', state.earned.length + '/' + AWARDS.length);
+    setAll('[data-jw-avatar]', state.avatar);
+    setAll('[data-jw-number]', state.number);
+    document.querySelectorAll('[data-jw-progress]').forEach(el => {
+      el.style.width = levelXP + '%';
+      const track = el.parentElement;
+      if (track && track.getAttribute('role') === 'progressbar') {
+        track.setAttribute('aria-valuenow', String(levelXP));
+      }
+    });
+    document.querySelectorAll('[data-jw-kit]').forEach(el => {
+      el.style.setProperty('--kit', state.kit);
+    });
+    const soundBtn = document.getElementById('jw-sound');
+    if (soundBtn) {
+      soundBtn.textContent = state.sound ? '🔊 Sound on' : '🔇 Sound off';
+      soundBtn.setAttribute('aria-pressed', state.sound ? 'true' : 'false');
+    }
+    const jerseyInput = document.getElementById('jw-number');
+    if (jerseyInput && document.activeElement !== jerseyInput) jerseyInput.value = state.number;
+    document.querySelectorAll('[data-jw-mission]').forEach(el => {
+      const key = el.dataset.jwMission;
+      const done = (Number(state.daily[key]) || 0) > 0;
+      el.classList.toggle('done', done);
+      const check = el.querySelector('.mission-check');
+      if (check) check.textContent = done ? '✓ Done' : '○ Ready';
+    });
+    const badges = document.getElementById('jw-badges');
+    if (badges) {
+      badges.innerHTML = '';
+      for (const a of AWARDS) {
+        const item = document.createElement('div');
+        const unlocked = state.earned.includes(a.id);
+        item.className = 'jw-badge' + (unlocked ? ' unlocked' : '');
+        item.innerHTML = '<span class="jw-badge-icon">' + a.icon + '</span><strong>' + a.title + '</strong><small>' + a.description + '</small>';
+        badges.appendChild(item);
+      }
+    }
+  }
+  document.querySelectorAll('[data-choose-avatar]').forEach(el => {
+    el.addEventListener('click', () => {
+      if (!AVATARS.includes(el.dataset.chooseAvatar)) return;
+      state.avatar = el.dataset.chooseAvatar;
+      save(); render(); ding();
+    });
+  });
+  document.querySelectorAll('[data-choose-kit]').forEach(el => {
+    el.addEventListener('click', () => {
+      if (!COLORS.includes(el.dataset.chooseKit)) return;
+      state.kit = el.dataset.chooseKit;
+      save(); render();
+    });
+  });
+  const jerseyInput = document.getElementById('jw-number');
+  function storeJerseyNumber(event) {
+    const raw = String(event.target.value || '').trim();
+    if (!raw) return;
+    const value = Math.round(Number(raw));
+    if (!Number.isFinite(value)) return;
+    state.number = Math.max(1, Math.min(99, value));
+    save();
+    setAll('[data-jw-number]', state.number);
+  }
+  jerseyInput?.addEventListener('input', storeJerseyNumber);
+  jerseyInput?.addEventListener('change', event => {
+    storeJerseyNumber(event);
+    render();
+  });
+  document.getElementById('jw-sound')?.addEventListener('click', () => {
+    state.sound = !state.sound; save(); render(); ding();
+  });
+  document.querySelectorAll('[data-jw-go]').forEach(el => {
+    el.addEventListener('click', () => {
+      if (typeof window.showSection !== 'function') return;
+      const game = el.dataset.jwGo;
+      window.showSection('games');
+      document.querySelector('.game-tab[data-game="' + game + '"]')?.click();
+    });
+  });
+  document.querySelectorAll('[data-jw-aim]').forEach(el => {
+    el.addEventListener('click', () => {
+      const area = document.getElementById('goal-area');
+      if (!area) return;
+      const r = area.getBoundingClientRect();
+      const x = Number(el.dataset.jwAim);
+      area.dispatchEvent(new MouseEvent('click', {
+        bubbles: true, clientX: r.left + (r.width * x / 100), clientY: r.top + (r.height * .28)
+      }));
+    });
+  });
+  window.addEventListener('jozef:progress', event => {
+    const data = event.detail || {};
+    record(data.action, data);
+  });
+  window.JozefWorld = Object.freeze({ record, getProgress: () => ({
+    xp: state.xp, level: Math.floor(state.xp / 100) + 1,
+    goals: state.goals, saves: state.saves, badges: [...state.earned]
+  })});
+  render();
+})();
