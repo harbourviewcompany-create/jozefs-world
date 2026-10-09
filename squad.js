@@ -115,7 +115,7 @@ function render(){
  });
  const v=calculate();const scale=n=>Math.round(n*100);
  const formationBoard=$('squad-formation-visual');
- if(formationBoard)formationBoard.dataset.tactic=state.tactic;
+ if(formationBoard?.dataset)formationBoard.dataset.tactic=state.tactic;
  const info=$('squad-bonuses');if(info)info.textContent='SPEED +'+scale(v.speed)+'%  •  PASS +'+scale(v.pass)+'%  •  SHOOT +'+scale(v.shot)+'%  •  DEFENCE +'+scale(v.defence)+'%  •  SAVES +'+scale(v.keeper)+'%';
  const count=$('squad-available');if(count)count.textContent=cards.length+' / '+CARDS.length+' players unlocked';
  const select=$('squad-tactic');if(select)select.value=state.tactic;
