@@ -50,3 +50,21 @@
 @media(max-width:880px){.career-layout{grid-template-columns:1fr}.career-hero{padding:22px}.career-big-ball{font-size:4.3rem}}
 @media(max-width:660px){.career-hero{display:block}.career-big-ball{display:none}.career-promo{flex-wrap:wrap}.career-promo button{width:100%}.career-panel{padding:15px}.career-hero h2{font-size:1.9rem}}
 @media(prefers-reduced-motion:reduce){.career-primary:active{transform:none}}
+
+/* Keep navigation usable on phones as more adventures are added. */
+@media(max-width:700px){
+  .navbar{gap:7px;padding:10px 12px;}
+  .navbar .nav-links{
+    display:flex;width:100%;flex-wrap:nowrap;justify-content:flex-start;
+    overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;
+    -webkit-overflow-scrolling:touch;scrollbar-width:thin;
+    padding:5px 3px 9px;gap:7px;
+  }
+  .navbar .nav-btn{
+    flex:0 0 auto;white-space:nowrap;scroll-snap-align:start;
+    min-height:44px;padding:8px 13px;font-size:.9rem;
+  }
+  .navbar .jw-xp-pill{margin:0 auto;min-height:44px;}
+  .career-match-head{padding:18px 12px;}
+  .career-choices .career-choice{min-height:55px;}
+}
