@@ -154,3 +154,38 @@ test('Arena and squad are integrated into the published document only once',()=>
  assert.equal((html.match(/src="arena.js"/g)||[]).length,1);
  assert.equal((html.match(/src="squad.js"/g)||[]).length,1);
 });
+
+
+test('keeper and defender card choices reduce counterattacking risk',()=>{
+ const x=createDom();
+ vm.runInContext(squadJs,x.ctx,{timeout:1500});
+ const initial=x.window.JozefSquad.getSquad().bonuses;
+ const keeper=x.get('squad-grid').children[0].children[2];
+ keeper.value='captain';keeper.events.change();
+ const defender=x.get('squad-grid').children[1].children[2];
+ defender.value='goal';defender.events.change();
+ const upgraded=x.window.JozefSquad.getSquad().bonuses;
+ assert.ok(upgraded.keeper>initial.keeper,'keeper card must change save strength');
+ assert.ok(upgraded.defence>initial.defence,'defender card must change defence strength');
+ assert.equal(x.window.JozefSquad.getSquad().slots.keeper,'captain');
+ assert.equal(x.window.JozefSquad.getSquad().slots.back,'goal');
+});
+test('sound effects only play after explicit club opt-in',()=>{
+ let created=0,notes=0;
+ class FakeAudioContext{
+  constructor(){created++;this.currentTime=0;this.destination={};}
+  createOscillator(){return {frequency:{setValueAtTime(){}},connect(){},start(){notes++},stop(){},type:'sine'};}
+  createGain(){return {gain:{setValueAtTime(){},exponentialRampToValueAtTime(){}},connect(){}};}
+ }
+ const off=createDom();off.window.AudioContext=FakeAudioContext;
+ off.window.JozefWorld.getProgress=()=>({sound:false});
+ vm.runInContext(arenaJs,off.ctx,{timeout:1500});
+ off.get('arena-start').click();off.get('arena-pass').click();
+ assert.equal(created,0,'the game must not play sound without consent');
+ const on=createDom();on.window.AudioContext=FakeAudioContext;
+ on.window.JozefWorld.getProgress=()=>({sound:true,number:11,kit:'#cafa60'});
+ vm.runInContext(arenaJs,on.ctx,{timeout:1500});
+ on.get('arena-start').click();on.get('arena-pass').click();
+ assert.equal(created,1,'a single audio context should be used for a session');
+ assert.ok(notes>=3,'kickoff and passing effects should be generated locally');
+});
