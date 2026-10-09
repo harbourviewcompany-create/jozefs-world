@@ -1,0 +1,124 @@
+/* Jozef FC World Tour — bold, game-like presentation with touch-first controls. */
+#tour { max-width: 1240px; }
+.tour-stage [hidden], #tour-match[hidden], #tour-finale[hidden], #tour-action[hidden] { display: none !important; }
+.tour-eyebrow { color: #ffdd65; font-weight: 1000; letter-spacing: .11em; font-size: .75rem; }
+.tour-hero { display: flex; align-items: center; justify-content: space-between; gap: 28px; padding: 30px 34px; border-radius: 27px; background: radial-gradient(circle at 92% 0%,#395e9a,#122b56 60%,#0d2042); color: #fff; box-shadow: 0 12px 27px #15295129; margin-bottom: 22px; overflow: hidden; }
+.tour-hero h2 { color: white; font-size: clamp(2rem,5vw,3.1rem); line-height: 1.1; margin: 7px 0 12px; letter-spacing: -.04em; }
+.tour-hero p { max-width: 610px; color: #e4f1ff; font-size: 1.02rem; line-height: 1.6; }
+.tour-summary { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+.tour-summary span { background: #ffffff17; border: 1px solid #ffffff37; color: #fff; border-radius: 12px; padding: 10px 14px; font-weight: 800; font-size: .85rem; }
+.tour-summary b { color: #ffeb84; }
+.tour-cup-art { font-size: 8.4rem; flex: 0 0 auto; line-height: 1.06; filter: drop-shadow(0 13px 8px #02091570); text-align: center; transform: rotate(6deg); }
+.tour-cup-art span { display: block; font-size: 1.7rem; letter-spacing: 10px; }
+.tour-layout { display: grid; grid-template-columns: minmax(0,1.8fr) minmax(270px,1fr); gap: 18px; align-items: start; }
+.tour-stage { background: linear-gradient(180deg,#152f5e 0%,#264879 45%,#ecf8fc 45%,#fff 100%); padding: 21px; border-radius: 25px; box-shadow: 0 8px 25px #101f4a18; border: 3px solid #d8e9ec; color: #182e51; overflow: hidden; }
+.tour-stage[data-tier="1"] { background: linear-gradient(180deg,#2e317b,#477dc5 45%,#eff8fc 45%,#fff 100%); }
+.tour-stage[data-tier="2"] { background: linear-gradient(180deg,#44327c,#b65d9c 45%,#f8f3fb 45%,#fff 100%); }
+.tour-stage[data-tier="3"] { background: linear-gradient(180deg,#463767,#d98b32 45%,#fff7e7 45%,#fff 100%); }
+.tour-match-intro { text-align: center; color: #fff; padding: 14px 0; }
+.tour-match-intro h3 { color: #fff; font-size: clamp(1.85rem,4vw,2.55rem); margin: 4px 0; }
+.tour-match-intro p { color: #e8efff; margin-bottom: 8px; }
+.tour-match-intro strong { color: #ffed85; }
+.tour-score { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); gap: 12px; align-items: center; max-width: 480px; margin: 8px auto 0; }
+.tour-score > div { background: #ffffffeb; border: 3px solid #d7eafd; box-shadow: 0 5px 12px #101f3b20; border-radius: 16px; text-align: center; padding: 10px; display: grid; gap: 1px; }
+.tour-score span { font-weight: 900; font-size: .82rem; color: #285277; }
+.tour-score strong { font-size: 2.3rem; line-height: 1.1; color: #133c66; }
+.tour-score .tour-vs { color: #fff; font-weight: 1000; font-size: 1rem; }
+.tour-rival-note { text-align: center; color: #f2f7ff; font-size: .77rem; margin: 8px auto 16px; max-width: 400px; }
+.tour-pitch { border-radius: 17px; border: 6px solid #fbfffa; box-shadow: 0 9px 0 #163d3050,0 15px 30px #14305b24; background: repeating-linear-gradient(0deg,#29a765 0,#29a765 45px,#209e60 45px,#209e60 90px); height: 270px; position: relative; overflow: hidden; margin: 0 0 18px; }
+.tour-pitch::before { content: ""; position: absolute; border: 3px solid #ffffff9d; border-top: 0; left: 16%; right: 16%; top: 0; height: 64%; }
+.tour-pitch::after { content: ""; position: absolute; inset: auto 35% -58px; height: 115px; border: 3px solid #ffffffad; border-radius: 50%; }
+.tour-pitch-lights { position: absolute; top: -3px; left: 0; right: 0; letter-spacing: 15px; text-align: center; font-size: 1.2rem; color: #f5ffb2; }
+.tour-net { position: absolute; left: 18%; right: 18%; top: 12px; height: 105px; border: 6px solid #e5fbff; border-bottom-width: 9px; border-radius: 7px 7px 0 0; background: repeating-linear-gradient(90deg,transparent 0,transparent 19px,#ffffff52 19px,#ffffff52 21px),repeating-linear-gradient(0deg,transparent 0,transparent 19px,#ffffff52 19px,#ffffff52 21px),#85b7e93f; box-shadow: 0 5px 14px #112b3470; display: flex; align-items: center; justify-content: center; }
+.tour-net-frame { font-size: 2.7rem; filter: drop-shadow(0 3px 3px #102e3a77); }
+.tour-penalty-spot { position: absolute; left: calc(50% - 6px); top: 69%; width: 12px; height: 12px; border-radius: 50%; background: #fff; }
+.tour-match-ball { --shot-x: 0px; position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); font-size: 3.7rem; line-height: 1; filter: drop-shadow(0 4px 3px #13442a); transform-origin: center; z-index: 2; }
+.tour-match-ball.tour-kick { animation: tour-kick 540ms cubic-bezier(.27,.57,.7,.99) both; }
+@keyframes tour-kick {
+  0% { transform: translate(-50%,0) scale(1) rotate(0); }
+  70% { transform: translate(calc(-50% + var(--shot-x)), -170px) scale(.55) rotate(390deg); }
+  100% { transform: translate(calc(-50% + var(--shot-x)), -195px) scale(.34) rotate(460deg); }
+}
+.tour-keeper-clue { text-align: center; font-weight: 850; padding: 10px 12px; border-radius: 12px; background: #e9f6ff; color: #244e7d; font-size: 1.05rem; }
+.tour-keeper-clue strong { color: #0e724a; font-size: 1.12em; }
+.tour-shots-label { display: flex; justify-content: space-between; gap: 15px; color: #475b70; margin-top: 15px; font-weight: 850; font-size: .87rem; }
+.tour-shots { display: flex; justify-content: center; gap: 12px; margin: 10px auto 17px; }
+.tour-shot { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex: 0 0 40px; border-radius: 50%; background: #e4e9ee; color: #6f7890; border: 2px solid #cfd8e4; font-size: 1.5rem; font-weight: 900; }
+.tour-shot.scored { background: #d9ffe7; border-color: #42c875; }
+.tour-shot.saved { background: #ffe8e8; border-color: #f2b4b4; color: #ac3838; }
+.tour-controls { text-align: center; margin: 16px auto; }
+.tour-controls p { margin-bottom: 9px; font-weight: 900; color: #324c71; }
+.tour-kick-buttons { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
+.tour-kick-buttons button { min-height: 58px; border-radius: 15px; padding: 8px; border: 2px solid #cfe1ff; background: #143d75; color: white; font-weight: 1000; cursor: pointer; font-size: .96rem; }
+.tour-kick-buttons button:hover { background: #236db1; }
+.tour-kick-buttons button:disabled { opacity: .6; cursor: wait; }
+.tour-main-action { display: block; width: 100%; border: 0; cursor: pointer; padding: 16px 18px; font-size: 1.05rem; font-weight: 1000; color: #173b34; background: #ffe46a; border-radius: 15px; min-height: 56px; box-shadow: 0 5px 0 #cfae36; }
+.tour-main-action:hover { background: #fff09e; }
+.tour-main-action:active { transform: translateY(2px); box-shadow: 0 3px 0 #cfae36; }
+.tour-commentary { padding: 12px 14px; border-radius: 12px; color: #153d64; background: #e9f6ff; text-align: center; font-weight: 850; margin: 16px auto; min-height: 60px; }
+.tour-game-note { color: #677387; font-size: .77rem; text-align: center; margin: 13px 0 0; }
+.tour-sidebar { display: grid; gap: 16px; }
+.tour-panel { background: white; padding: 22px; border: 2px solid #d8e8df; border-radius: 22px; box-shadow: 0 7px 18px #19412c0e; }
+.tour-panel h3 { font-size: 1.28rem; color: #193153; margin-bottom: 7px; }
+.tour-panel > p { color: #5b6d7d; font-size: .88rem; margin-bottom: 14px; }
+.tour-panel .tour-stat-line { background: #f2f7ff; border-radius: 9px; padding: 9px 12px; color: #24517c; font-weight: 800; }
+.tour-stadium-list { display: grid; gap: 7px; }
+.tour-stadium-tile { display: grid; grid-template-columns: 30px 1fr; gap: 1px 10px; align-items: center; padding: 10px 12px; background: #f3f5f8; border: 1px solid #e4e8ed; border-radius: 12px; opacity: .64; }
+.tour-stadium-tile.is-unlocked { background: #f2fff2; border-color: #bde6c4; opacity: 1; }
+.tour-stadium-tile > span { grid-row: span 2; font-size: 1.35rem; }
+.tour-stadium-tile strong { font-size: .89rem; color: #244563; line-height: 1.1; }
+.tour-stadium-tile small { color: #5d7185; font-size: .74rem; }
+.tour-stops { display: grid; gap: 7px; }
+.tour-stop { display: flex; align-items: center; gap: 12px; padding: 9px 11px; border: 1px solid #e8eaf0; border-radius: 12px; background: #f8f9fc; }
+.tour-stop.is-now { background: #e9f3ff; border: 2px solid #69a3e9; }
+.tour-stop.is-done { background: #eafbeb; border: 1px solid #82cc99; }
+.tour-stop-flag { font-size: 1.8rem; min-width: 43px; text-align: center; }
+.tour-stop > div { display: grid; gap: 0; }
+.tour-stop strong { color: #203b5b; font-size: .91rem; }
+.tour-stop small { color: #5c7184; font-size: .76rem; }
+.tour-trivia { border: 2px solid #d7c68d; border-radius: 17px; padding: 17px; margin: 19px 0; background: #fff8e5; }
+.tour-trivia .tour-eyebrow { color: #98771a; }
+.tour-trivia h4 { color: #2b4b66; font-size: 1.26rem; margin: 4px 0 8px; }
+.tour-trivia p { color: #495968; }
+.tour-trivia > strong { display: block; color: #1e3e5b; margin: 11px 0; }
+.tour-quiz-choices { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
+.tour-answer { cursor: pointer; min-height: 48px; padding: 10px 7px; font-weight: 900; color: #2d4c6d; border: 2px solid #d5c58d; border-radius: 11px; background: #fff; font-size: .85rem; }
+.tour-answer:hover:not(:disabled) { background: #ffecb2; }
+.tour-answer.correct { border-color: #4cb475; background: #dfffe9; }
+.tour-answer:disabled { cursor: default; opacity: .85; }
+.tour-trivia .tour-quiz-success { font-size: .85rem; color: #497047; font-weight: 800; margin-top: 11px; }
+.tour-finale { text-align: center; padding: 26px 20px 20px; }
+.tour-finale-cup { font-size: 9rem; line-height: 1.3; filter: drop-shadow(0 8px 8px #071b2f8f); }
+.tour-finale h3 { color: #fff; font-size: clamp(1.8rem,4vw,2.7rem); }
+.tour-finale p { color: #e3eeff; margin: 13px auto; max-width: 470px; }
+.tour-promo { background: linear-gradient(105deg,#172c52,#276e9c); color: #fff; border-radius: 21px; padding: 23px 25px; display: flex; align-items: center; gap: 19px; margin: 0 0 26px; box-shadow: 0 6px 18px #122e4f23; }
+.tour-promo-icon { font-size: 4.7rem; filter: drop-shadow(0 4px 3px #061e3c72); }
+.tour-promo > div:nth-child(2) { flex: 1; min-width: 0; }
+.tour-promo h2 { margin: 0 0 5px; font-size: clamp(1.4rem,3vw,1.9rem); color: #fff; }
+.tour-promo p { color: #dfedff; font-size: .93rem; line-height: 1.5; }
+.tour-promo .jw-eyebrow { color: #ffde64; }
+.tour-promo-action { background: #ffe472; border: 0; border-radius: 13px; padding: 13px 17px; font-weight: 1000; color: #273550; cursor: pointer; min-height: 49px; }
+.tour-promo-action:hover { background: #fff2ae; }
+@media (max-width: 920px) { .tour-layout { grid-template-columns: minmax(0,1fr); } .tour-sidebar { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (max-width: 700px) {
+  .tour-hero { padding: 23px 20px; }
+  .tour-cup-art { font-size: 5rem; }
+  .tour-cup-art span { font-size: 1rem; letter-spacing: 2px; }
+  .tour-promo { flex-wrap: wrap; padding: 19px; }
+  .tour-promo-icon { font-size: 3.6rem; }
+  .tour-promo-action { width: 100%; }
+  .tour-sidebar { grid-template-columns: 1fr; }
+  .tour-pitch { height: 238px; }
+  .tour-kick-buttons button { font-size: .82rem; padding: 8px 4px; }
+}
+@media (max-width: 440px) {
+  .tour-hero { display: block; }
+  .tour-cup-art { display: none; }
+  .tour-summary span { padding: 7px 9px; }
+  .tour-stage { padding: 14px; }
+  .tour-pitch { height: 221px; }
+  .tour-quiz-choices { grid-template-columns: 1fr; }
+  .tour-shot { width: 34px; height: 34px; flex-basis: 34px; }
+  .tour-shots { gap: 7px; }
+}
+@media (prefers-reduced-motion: reduce) { .tour-match-ball.tour-kick { animation: none; } }
