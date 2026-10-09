@@ -146,6 +146,39 @@
       item.append(flag,details,marker);host.appendChild(item);
     });
   }
+  function renderField(){
+    const r=round(), m=state.match;
+    const last=state.results.at(-1);
+    let scored=0,blocks=0;
+    if(m&&r<6){
+      m.answers.forEach((pick,i)=>{
+        const q=SCENARIOS[r][i];
+        if(pick===q[3]){if(q[0]==='attack')scored++;else blocks++;}
+      });
+    }
+    const score = m
+      ? scored+' – '+Math.max(0,OPPONENTS[r][3]-blocks-(m.trained?1:0))
+      : last ? last.us+' – '+last.them : '0 – 0';
+    txt('career-field-score',score);
+    let scene = 'kickoff';
+    if(m?.stage==='train')scene='training';
+    if(m?.stage==='play')scene=SCENARIOS[r][m.answers.length]?.[0]||'attack';
+    if(m?.stage==='feedback')scene=SCENARIOS[r][m.answers.length-1]?.[0]||'attack';
+    if(r===6)scene='final';
+    const pitch=byId('career-field');
+    if(pitch?.setAttribute)pitch.setAttribute('data-scene',scene);
+    const ball=byId('career-field-ball');
+    if(ball){
+      const lastPick=m?.answers.length?m.answers[m.answers.length-1]:null;
+      const lastQuestion=m?.answers.length?SCENARIOS[r][m.answers.length-1]:null;
+      const success=m?.stage==='feedback'&&lastQuestion&&lastPick===lastQuestion[3];
+      ball.className='career-field-ball'+(success?' career-field-success':'');
+    }
+    txt('career-field-status',m?.stage==='train'?'Warm-up: train with soccer maths':
+      m?.stage==='play'?'Choose the smartest play to move the ball':
+      m?.stage==='feedback'?'Coach is reviewing the last play':
+      r===6?'Season finished — see your league results':'Ready for the next match');
+  }
   function render(){
     const r=round(),m=state.match,done=r===6;
     txt('career-season',state.season);txt('career-points',points());
@@ -156,6 +189,7 @@
     txt('career-venue',done?'Trophy Ceremony':OPPONENTS[r][2]);
     txt('career-training',m?m.trained===true?'✓ Shield earned':m.trained===false?'No shield this match':'Training available':'Train before kickoff');
     fixtureList();
+    renderField();
     const panel=byId('career-question-panel'),controls=byId('career-controls'),choices=byId('career-choices');
     if(panel)panel.hidden=!m;
     if(controls)controls.replaceChildren();
