@@ -25,6 +25,7 @@
   <link rel="stylesheet" href="arcade.css" />
   <link rel="stylesheet" href="arena.css" />
   <link rel="stylesheet" href="who.css" />
+  <link rel="stylesheet" href="visual-2026.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Lilita+One&family=Nunito:wght@400;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -114,6 +115,26 @@
       <div class="studio-signal"><span class="studio-signal-label">WORLD TOUR</span><strong id="studio-tour-stops">00 <i>/ 05</i></strong><small id="studio-tour-stage">STAMP YOUR PASSPORT</small></div>
       <div class="studio-signal studio-signal-accent"><span class="studio-signal-label">NIGHT RUN RECORD</span><strong id="studio-street-best">000</strong><small>BEAT YOUR HIGH SCORE</small></div>
     </div>
+
+
+    <!-- 2026 CURRENT CHALLENGE / local Arena progress, no new persistence -->
+    <section class="visual-rival-card" aria-labelledby="visual-rival-heading">
+      <div class="visual-rival-content">
+        <span class="studio-kicker">RIVAL DOSSIER / YOUR NEXT CHALLENGE</span>
+        <h2 id="visual-rival-heading">FACE THE <em id="visual-rival-name">ROOFTOP ROVERS</em></h2>
+        <p id="visual-rival-story">Your first chapter starts under the neighbourhood lights. Win two matches to light up Neon City.</p>
+        <div class="visual-rival-actions">
+          <button type="button" id="visual-rival-play">ENTER THE ARENA ↗</button>
+          <strong id="visual-rival-unlock">0 / 2 WINS · NEXT: NEON CITY</strong>
+        </div>
+      </div>
+      <div class="visual-rival-board" aria-hidden="true">
+        <span class="visual-rival-number" id="visual-rival-chapter">01</span>
+        <small id="visual-rival-venue">NEIGHBOURHOOD COURT</small>
+        <div class="visual-rival-progress" role="presentation"><span id="visual-rival-meter"></span></div>
+        <small>YOUR CHAPTER / YOUR LEGACY</small>
+      </div>
+    </section>
 
     <div class="studio-section-heading"><div><span class="studio-kicker">CHOOSE YOUR PATH</span><h2>WHAT'S YOUR <em>NEXT MOVE?</em></h2></div><span class="studio-section-count">04 / GAME MODES</span></div>
     <div class="studio-mode-grid">
@@ -954,5 +975,6 @@
   <script src="arcade.js"></script>
   <script src="street.js"></script>
   <script src="roblox.js"></script>
+  <script src="visual-2026.js"></script>
 </body>
 </html>
