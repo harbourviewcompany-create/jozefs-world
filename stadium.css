@@ -379,19 +379,16 @@ footer{font-size:.82rem;letter-spacing:.08em;border-top:1px solid #eaffd323;colo
   .studio-launcher { display: none; }
 }
 
-/* street-controls pinned above the phone dock */
-@media (max-width: 700px) {
+/* street controls stay under the field, never over the runner */
+@media (max-width: 1100px) {
+  #street.section.active .studio-page-intro { display: none; }
   #street.section.active .street-controls {
-    position: fixed;
-    left: 8px;
-    right: 8px;
-    bottom: calc(78px + env(safe-area-inset-bottom));
-    z-index: 88;
-    margin: 0;
-    background: rgba(8, 18, 22, 0.94);
-    padding: 8px;
-    border-radius: 14px;
+    position: static;
+    margin-top: 10px;
+    background: transparent;
+    padding: 0;
   }
-  #street.section.active .street-game-frame { padding-bottom: 92px; }
-  .street-controls button { min-height: 64px; font-size: 14px; touch-action: manipulation; }
+  #street.section.active .street-game-frame { padding-bottom: 0; }
+  .street-controls button { min-height: 56px; font-size: 14px; touch-action: manipulation; }
+  #street-canvas { max-height: 42dvh !important; }
 }

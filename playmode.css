@@ -12,7 +12,8 @@ html, body { max-width: 100%; overflow-x: hidden; }
   body:has(#games.section.active) .phone-dock,
   body:has(#arena.section.active) .studio-page-intro,
   body:has(#arena.section.active) .arena-guide,
-  body:has(#street.section.active) .street-side-panel { display: none !important; }
+  body:has(#street.section.active) .street-side-panel,
+  body:has(#street.section.active) .studio-page-intro { display: none !important; }
   body:has(#arena.section.active),
   body:has(#street.section.active),
   body:has(#games.section.active) { padding-bottom: 0 !important; }
@@ -72,3 +73,5 @@ html, body { max-width: 100%; overflow-x: hidden; }
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+
+#street.section.active .street-controls { position: static !important; bottom: auto !important; }
