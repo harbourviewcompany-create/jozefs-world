@@ -5,13 +5,13 @@
   const career = () => window.JozefCareer?.getProgress?.() || {played:0,cups:0};
   const tour = () => window.JozefTour?.getProgress?.() || {wins:0,cups:0};
   const cardDefs = [
-    {title:'Jozef the Rookie', icon:'⚽', role:'ROOKIE', star:'60', tip:'Your first player card', ready:()=>true},
-    {title:'Goal Getter', icon:'🥅', role:'STRIKER', star:'73', tip:'Score 5 goals', ready:(p)=>p.goals>=5},
-    {title:'World Explorer', icon:'🌍', role:'WINGER', star:'76', tip:'Win a World Tour match', ready:(p,c,t)=>t.wins>=1},
-    {title:'Team Captain', icon:'🦁', role:'CAPTAIN', star:'78', tip:'Complete your first Career match', ready:(p,c)=>c.played>=1 || p.badges.includes('league-debut')},
-    {title:'Soccer Scholar', icon:'🧠', role:'PLAYMAKER', star:'81', tip:'Complete a quiz or training drill', ready:p=>p.badges.some(x=>x==='brain-power'||x==='training-star')},
-    {title:'Super Striker', icon:'⭐', role:'ATTACKER', star:'88', tip:'Score 10 goals', ready:p=>p.goals>=10},
-    {title:'Jozef the Champion', icon:'🏆', role:'LEGEND', star:'99', tip:'Win a league or World Tour cup', ready:(p,c,t)=>c.cups>=1||t.cups>=1}
+    {title:'Jozef the Rookie',role:'ROOKIE',star:'60',shirt:'11',tier:'academy',skill:'THE FIRST WHISTLE',tip:'Your first player card',ready:()=>true},
+    {title:'Goal Getter',role:'STRIKER',star:'73',shirt:'09',tier:'rare',skill:'FINISHING INSTINCT',tip:'Score 5 goals',ready:p=>p.goals>=5},
+    {title:'World Explorer',role:'WINGER',star:'76',shirt:'07',tier:'rare',skill:'GLOBAL FOOTWORK',tip:'Win a World Tour match',ready:(p,c,t)=>t.wins>=1},
+    {title:'Team Captain',role:'CAPTAIN',star:'78',shirt:'10',tier:'elite',skill:'TEAM LEADER',tip:'Complete your first Career match',ready:(p,c)=>c.played>=1||p.badges.includes('league-debut')},
+    {title:'Soccer Scholar',role:'PLAYMAKER',star:'81',shirt:'08',tier:'elite',skill:'THE BIG PASS',tip:'Complete a quiz or training drill',ready:p=>p.badges.some(x=>x==='brain-power'||x==='training-star')},
+    {title:'Super Striker',role:'ATTACKER',star:'88',shirt:'11',tier:'elite',skill:'THE TOP CORNER',tip:'Score 10 goals',ready:p=>p.goals>=10},
+    {title:'Jozef the Champion',role:'LEGEND',star:'99',shirt:'99',tier:'legend',skill:'BUILT FOR GLORY',tip:'Win a league or World Tour cup',ready:(p,c,t)=>c.cups>=1||t.cups>=1}
   ];
   const $=id=>document.getElementById(id);
   function renderCards(){
@@ -23,15 +23,26 @@
     for(const card of cardDefs){
       const isOpen=Boolean(card.ready(p,c,t));if(isOpen)count++;
       const cell=document.createElement('div');cell.className='clubhouse-player-card'+(isOpen?' unlocked':' locked');
+      cell.setAttribute('data-tier',card.tier);
       cell.setAttribute('aria-label',card.title+(isOpen?' unlocked': ' locked. '+card.tip));
       const header=document.createElement('div');header.className='clubhouse-player-card-top';
       const rating=document.createElement('strong');rating.textContent=isOpen?card.star:'--';
       const role=document.createElement('small');role.textContent=card.role;
       header.append(rating,role);
-      const figure=document.createElement('span');figure.className='clubhouse-player-card-figure';figure.textContent=isOpen?card.icon:'🔒';
+      const figure=document.createElement('span');figure.className='clubhouse-player-card-figure';
+      figure.setAttribute('aria-hidden','true');
+      const halo=document.createElement('span');halo.className='clubhouse-card-halo';
+      const jersey=document.createElement('span');jersey.className='clubhouse-card-jersey';
+      jersey.textContent=isOpen?card.shirt:'?';
+      const monogram=document.createElement('span');monogram.className='clubhouse-card-crest';
+      monogram.textContent='J/11';
+      figure.append(halo,jersey,monogram);
       const name=document.createElement('strong');name.className='clubhouse-player-card-name';name.textContent=card.title;
-      const hint=document.createElement('small');hint.className='clubhouse-player-card-hint';hint.textContent=isOpen?'✓ Collected':card.tip;
-      cell.append(header,figure,name,hint);
+      const ability=document.createElement('span');ability.className='clubhouse-card-ability';ability.textContent=isOpen?card.skill:'UNLOCK TO REVEAL';
+      const hint=document.createElement('small');hint.className='clubhouse-player-card-hint';hint.textContent=isOpen?'EARNED • IN YOUR COLLECTION':card.tip;
+      const rarity=document.createElement('span');rarity.className='clubhouse-card-rarity';
+      rarity.textContent=card.tier==='legend'?'LEGEND':card.tier==='academy'?'ACADEMY':card.tier.toUpperCase();
+      cell.append(header,figure,name,ability,hint,rarity);
       root.appendChild(cell);
     }
     const total=$('clubhouse-card-count');if(total)total.textContent=count+' / '+cardDefs.length;
