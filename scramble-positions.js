@@ -17,7 +17,15 @@ const scrambleWords = [
   { word: 'DRIBBLE', hint: 'Running with the ball at your feet' },
   { word: 'HEADER', hint: 'Hitting the ball with your head' },
   { word: 'TROPHY', hint: 'What winners lift up high' },
-  { word: 'STADIUM', hint: 'Big place where matches are played' }
+  { word: 'STADIUM', hint: 'Big place where matches are played' },
+  { word: 'OFFSIDE', hint: 'When a player is too far forward' },
+  { word: 'PENALTY', hint: 'A special kick from the spot' },
+  { word: 'CAPTAIN', hint: 'The leader who wears the armband' },
+  { word: 'WHISTLE', hint: 'What the referee blows' },
+  { word: 'CLEATS', hint: 'Shoes with studs for the pitch' },
+  { word: 'MIDFIELD', hint: 'The middle of the field' },
+  { word: 'CROSSBAR', hint: 'The bar on top of the goal' },
+  { word: 'BENCH', hint: 'Where substitutes sit' }
 ];
 
 let scrambleSolved = 0;
@@ -39,8 +47,9 @@ function shuffleWord(word) {
 }
 
 function nextScramble() {
-  clearTimeout(scrambleAdvanceTimer);
+  if (!document.getElementById('scramble-word')) return;
   scrambleLocked = false;
+  if (scrambleAdvanceTimer) { clearTimeout(scrambleAdvanceTimer); scrambleAdvanceTimer = null; }
   if (scrambleUsed.length >= scrambleWords.length) scrambleUsed = [];
   let pick;
   do {
@@ -48,22 +57,20 @@ function nextScramble() {
   } while (scrambleUsed.includes(pick.word) && scrambleUsed.length < scrambleWords.length);
   scrambleUsed.push(pick.word);
   currentScramble = pick;
-  const wordEl = document.getElementById('scramble-word');
-  const hintEl = document.getElementById('scramble-hint');
-  const inputEl = document.getElementById('scramble-input');
-  const feedbackEl = document.getElementById('scramble-feedback');
-  if (!wordEl) return;
-  wordEl.textContent = shuffleWord(pick.word);
-  hintEl.textContent = 'Hint: ' + pick.hint;
-  inputEl.value = '';
-  feedbackEl.textContent = '';
-  inputEl.focus();
+  document.getElementById('scramble-word').textContent = shuffleWord(pick.word);
+  document.getElementById('scramble-hint').textContent = 'Hint: ' + pick.hint;
+  const input = document.getElementById('scramble-input');
+  if (input) { input.value = ''; input.focus(); }
+  const feedback = document.getElementById('scramble-feedback');
+  if (feedback) feedback.textContent = '';
 }
 
 function checkScramble() {
   if (!currentScramble || scrambleLocked) return;
-  const answer = document.getElementById('scramble-input').value.trim().toUpperCase();
+  const input = document.getElementById('scramble-input');
   const feedback = document.getElementById('scramble-feedback');
+  if (!input || !feedback) return;
+  const answer = input.value.trim().toUpperCase();
   if (!answer) {
     feedback.textContent = 'Type a word first!';
     feedback.style.color = '#e67e22';
@@ -73,35 +80,38 @@ function checkScramble() {
     scrambleLocked = true;
     scrambleSolved++;
     scrambleStreak++;
-    document.getElementById('scramble-solved').textContent = scrambleSolved;
-    document.getElementById('scramble-streak').textContent = scrambleStreak;
+    const solvedEl = document.getElementById('scramble-solved');
+    const streakEl = document.getElementById('scramble-streak');
+    if (solvedEl) solvedEl.textContent = scrambleSolved;
+    if (streakEl) streakEl.textContent = scrambleStreak;
     feedback.textContent = 'Correct! ' + currentScramble.word + ' — awesome!';
     feedback.style.color = '#27ae60';
     window.dispatchEvent(new CustomEvent('jozef:progress', { detail: { action: 'scramble' } }));
+    if (window.JozefCelebrate) window.JozefCelebrate.burst(window.innerWidth/2, window.innerHeight*0.35, 20);
     scrambleAdvanceTimer = setTimeout(nextScramble, 1100);
   } else {
     scrambleStreak = 0;
-    document.getElementById('scramble-streak').textContent = 0;
+    const streakEl = document.getElementById('scramble-streak');
+    if (streakEl) streakEl.textContent = 0;
     feedback.textContent = 'Not quite — try again!';
     feedback.style.color = '#e74c3c';
   }
 }
 
-const scrambleCheck = document.getElementById('scramble-check');
-const scrambleInput = document.getElementById('scramble-input');
-if (scrambleCheck) scrambleCheck.addEventListener('click', checkScramble);
-if (scrambleInput) {
-  scrambleInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') checkScramble();
+(function initScramble() {
+  const check = document.getElementById('scramble-check');
+  const input = document.getElementById('scramble-input');
+  if (check) check.addEventListener('click', checkScramble);
+  if (input) input.addEventListener('keydown', (e) => { if (e.key === 'Enter') checkScramble(); });
+  document.getElementById('scramble-skip')?.addEventListener('click', () => {
+    scrambleStreak = 0;
+    const streakEl = document.getElementById('scramble-streak');
+    if (streakEl) streakEl.textContent = 0;
+    nextScramble();
   });
-}
-document.getElementById('scramble-skip')?.addEventListener('click', () => {
-  scrambleStreak = 0;
-  document.getElementById('scramble-streak').textContent = 0;
-  nextScramble();
-});
-document.getElementById('scramble-new')?.addEventListener('click', nextScramble);
-if (document.getElementById('scramble-word')) nextScramble();
+  document.getElementById('scramble-new')?.addEventListener('click', nextScramble);
+  if (document.getElementById('scramble-word')) nextScramble();
+})();
 
 // ========== POSITIONS ON THE FIELD ==========
 const positionFacts = {
@@ -124,6 +134,26 @@ document.querySelectorAll('.pitch-pos').forEach(btn => {
     btn.classList.add('active');
     const info = positionFacts[btn.dataset.pos];
     if (!info) return;
-    document.getElementById('position-info').innerHTML = '<h4>' + info.title + '</h4><p>' + info.text + '</p>';
+    const box = document.getElementById('position-info');
+    if (box) box.innerHTML = '<h4>' + info.title + '</h4><p>' + info.text + '</p>';
   });
 });
+
+// Load Training Camp + celebrations
+(function loadExtraModules() {
+  ['celebrate.js', 'training.js'].forEach(function (src) {
+    if (document.querySelector('script[data-jw-extra="' + src + '"]')) return;
+    var s = document.createElement('script');
+    s.src = src;
+    s.async = true;
+    s.dataset.jwExtra = src;
+    document.body.appendChild(s);
+  });
+  if (!document.querySelector('link[data-jw-extra="training.css"]')) {
+    var l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.href = 'training.css';
+    l.dataset.jwExtra = 'training.css';
+    document.head.appendChild(l);
+  }
+})();
