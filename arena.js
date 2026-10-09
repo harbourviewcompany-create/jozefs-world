@@ -47,6 +47,34 @@ function getSquad(){
  };
 }
 let squad=getSquad();
+// Small synthesized stadium sounds. Nothing is fetched or autoplayed.
+// Jozef must enable Sound in My Club and interact with the game first.
+let audioCtx=null;
+function cue(event){
+ if(window.JozefWorld?.getProgress?.()?.sound!==true)return;
+ const Audio=window.AudioContext||window.webkitAudioContext;
+ if(!Audio)return;
+ try{
+  if(!audioCtx)audioCtx=new Audio();
+  const notes={
+   start:[392,494],pass:[420],shot:[264,528],goal:[523,659,784,1046],
+   save:[310,260],tackle:[220,174],victory:[523,659,784]
+  }[event]||[];
+  const now=audioCtx.currentTime;
+  notes.forEach((hz,i)=>{
+   const osc=audioCtx.createOscillator();
+   const gain=audioCtx.createGain();
+   osc.type=event==='goal'||event==='victory'?'triangle':'sine';
+   const t=now+i*.10;
+   osc.frequency.setValueAtTime(hz,t);
+   gain.gain.setValueAtTime(.001,t);
+   gain.gain.exponentialRampToValueAtTime(.045,t+.018);
+   gain.gain.exponentialRampToValueAtTime(.001,t+.14);
+   osc.connect(gain);gain.connect(audioCtx.destination);
+   osc.start(t);osc.stop(t+.15);
+  });
+ }catch(_){/* Audio is strictly optional. Gameplay never depends on it. */}
+}
 function resize(){
  const dpr=Math.min(window.devicePixelRatio||1,2);
  canvas.width=W*dpr;canvas.height=H*dpr;
@@ -79,7 +107,7 @@ function hud(){
 function start(){
  mode='playing';time=MATCH_LENGTH;us=0;them=0;streak=0;flash=0;last=0;
  shots=0;keeperSaves=0;skillCooldown=0;skillTime=0;lastHudTick=-1;
- squad=getSquad();resetPositions();hud();
+ squad=getSquad();resetPositions();hud();cue('start');
  msg('KICK OFF! Move, pass to your teammate, and shoot into the top goal.');
  cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
 }
@@ -102,6 +130,7 @@ function end(){
 
  try{localStorage.setItem(KEY,JSON.stringify(lifetime));}catch(_){}
  window.JozefWorld?.record?.('arena',{result:won?'win':us===them?'draw':'loss',goals:us});
+ if(won)cue('victory');
  const result=won?'VICTORY!':us===them?'A HARD-FOUGHT DRAW.':'FULL TIME. REMATCH?';
  msg(result+' '+us+'–'+them+'. '+(unlocked?'NEW STADIUM UNLOCKED!':won?'Your club has earned a win!':'Every match builds your skills.'));
  window.dispatchEvent?.(new Event('jozef:progress'));
@@ -139,7 +168,7 @@ function pass(){
  if(gap>345){msg('Your teammate is too far away. Move closer!');return;}
  passRecipient=ball.owner==='actor'?'mate':'actor';
  ball={x:sender.x,y:sender.y-8,vx:0,vy:0,owner:'pass'};
- passCooldown=.48;
+ passCooldown=.48;cue('pass');
  msg(passRecipient==='mate'?'PERFECT WEIGHT! The ball is heading to your teammate.':'ONE-TWO! Jozef is getting the return pass.');
 }
 function shoot(){
@@ -156,7 +185,7 @@ function shoot(){
  // Keeper has to guess and commit. A save is earned, not guaranteed.
  const rightGuess=Math.random()<(.26+.04*Math.min(5,lifetime.wins));
  keeperDestination=rightGuess?SHOT_ZONES[aim].x:SHOT_ZONES[(aim+1+Math.floor(Math.random()*2))%3].x;
- keeperReact=.16;shotCooldown=.65;mateTime=0;shots++;streak=.45;
+ keeperReact=.16;shotCooldown=.65;mateTime=0;shots++;streak=.45;cue('shot');
  msg('SHOOTING AT THE '+SHOT_ZONES[aim].name+'! '+(p.y>360?'LONG-RANGE STRIKE!':'ONE ON ONE!'));
  hud();
 }
@@ -167,13 +196,13 @@ function loseBall(){
  const teamCover=Math.min(.58,squad.defence*.75+squad.keeper*.9);
  const conceded=Math.random()<Math.max(.08,(actor.y>360?.46:.25)*(1-teamCover));
  if(conceded)them++;
- flash=conceded?-.65:-.18;
+ flash=conceded?-.65:-.18;cue('tackle');
  msg(conceded?'RIVALS SCORE ON THE BREAK! RESET AND GO AGAIN.':'YOUR TEAMMATES STOP THE COUNTER! RECOVER YOUR SHAPE!');
  if(them>=4){resetPositions();end();return;}
  resetPositions();
 }
 function goal(){
- us+=1;flash=.75;msg('GOOOOOAL! JOZEF FC SCORES! '+us+'–'+them);
+ us+=1;flash=.75;cue('goal');msg('GOOOOOAL! JOZEF FC SCORES! '+us+'–'+them);
  if(us>=5){resetPositions();end();return;}
  resetPositions();
 }
@@ -234,7 +263,7 @@ function update(dt){
   if(ball.owner==='free'){ball.vx*=Math.max(0,1-1.0*dt);ball.vy*=Math.max(0,1-1.0*dt);receive();}
   if(ball.owner==='shot'&&ball.y<64&&Math.abs(ball.x-keeper.x)<18){
     ball.owner='free';ball.vy=220;ball.vx=ball.x<keeper.x?-85:85;
-    keeperSaves++;msg('WHAT A SAVE! FOLLOW UP ON THE REBOUND!');flash=-.22;
+    keeperSaves++;cue('save');msg('WHAT A SAVE! FOLLOW UP ON THE REBOUND!');flash=-.22;
   }else if(ball.owner==='shot'&&ball.y<=22){
     if(ball.x>GOAL.left&&ball.x<GOAL.right){goal();return;}
     ball.owner='free';ball.vx=0;ball.vy=150;msg('Just wide! Chase the loose ball.');
