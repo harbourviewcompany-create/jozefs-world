@@ -3,27 +3,36 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>⚽ Jozef's World</title>
+  <title>Jozef's World — Jozef FC Soccer Clubhouse</title>
+  <meta name="description" content="A private soccer clubhouse made for Jozef. Play soccer games, unlock trophies, customize Jozef FC and learn new skills." />
+  <meta name="theme-color" content="#101d42" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="extras.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
+  <a href="#main" class="jw-skip">Skip to content</a>
   <!-- Navigation -->
   <nav class="navbar">
     <div class="nav-brand">⚽ Jozef's World</div>
     <div class="nav-links">
       <button class="nav-btn active" data-section="home">Home</button>
       <button class="nav-btn" data-section="games">Games</button>
+      <button class="nav-btn" data-section="club">Jozef FC</button>
       <button class="nav-btn" data-section="news">News & Scores</button>
       <button class="nav-btn" data-section="learn">Learn</button>
       <button class="nav-btn" data-section="fun">Fun Zone</button>
     </div>
+    <button class="jw-xp-pill" type="button" onclick="showSection('club')" aria-label="Open Jozef FC player club">
+      <span>⭐ <b data-jw-xp>0</b> XP</span><span class="jw-level-chip">LVL <b data-jw-level>1</b></span>
+    </button>
   </nav>
 
   <!-- HOME SECTION -->
-  <section id="home" class="section active">
+  <section id="home" class="section active" tabindex="-1"><div id="main"></div>
     <div class="hero">
       <div class="hero-content">
         <h1>Welcome to <span class="highlight">Jozef's World</span>!</h1>
@@ -36,6 +45,17 @@
       <div class="hero-ball">⚽</div>
     </div>
 
+    <div class="jw-profile-banner" data-jw-kit>
+      <div class="jw-avatar-circle"><span data-jw-avatar>🦁</span><span class="jw-jersey">#<b data-jw-number>10</b></span></div>
+      <div class="jw-profile-info">
+        <span class="jw-eyebrow">YOUR PLAYER JOURNEY</span>
+        <h2>Jozef FC <span class="jw-level-chip">LEVEL <b data-jw-level>1</b></span></h2>
+        <p>Train, learn, score goals and earn trophies!</p>
+        <div class="jw-level-track" role="progressbar" aria-label="XP to next level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div data-jw-progress></div></div>
+        <span class="jw-help">Every 100 XP unlocks a new level</span>
+      </div>
+      <button type="button" class="jw-profile-open" onclick="showSection('club')">My Club →</button>
+    </div>
     <div class="quick-cards">
       <div class="card" onclick="showSection('games')">
         <div class="card-icon">🎮</div>
@@ -59,6 +79,14 @@
       </div>
     </div>
 
+    <div class="jw-missions">
+      <div class="jw-section-head"><div><span class="jw-eyebrow">TODAY'S ADVENTURE</span><h2>Three little missions</h2></div><span class="jw-mission-note">Play at your own pace</span></div>
+      <div class="jw-mission-grid">
+        <div class="jw-mission" data-jw-mission="goal"><span class="jw-mission-icon">⚽</span><div><strong>Score a goal</strong><small>Try Penalty Shootout</small><span class="mission-check">○ Ready</span></div><button data-jw-go="penalty" type="button">Play →</button></div>
+        <div class="jw-mission" data-jw-mission="quiz"><span class="jw-mission-icon">🧠</span><div><strong>Quiz time</strong><small>Finish the soccer quiz</small><span class="mission-check">○ Ready</span></div><button data-jw-go="quiz" type="button">Play →</button></div>
+        <div class="jw-mission" data-jw-mission="memory"><span class="jw-mission-icon">🏆</span><div><strong>Memory master</strong><small>Match all six pairs</small><span class="mission-check">○ Ready</span></div><button data-jw-go="memory" type="button">Play →</button></div>
+      </div>
+    </div>
     <div class="message-box">
       <p>💪 Keep practicing, stay kind, and always have fun — you're a star, Jozef!</p>
     </div>
@@ -93,6 +121,13 @@
         <div class="keeper" id="keeper">🧤</div>
         <div class="ball" id="penalty-ball">⚽</div>
       </div>
+      <div class="jw-aim-panel" aria-label="Choose where to aim">
+        <span>Choose your shot:</span>
+        <button type="button" data-jw-aim="27">↖ Left corner</button>
+        <button type="button" data-jw-aim="50">↑ Centre</button>
+        <button type="button" data-jw-aim="73">↗ Right corner</button>
+      </div>
+      <p id="jw-penalty-feedback" class="jw-shot-feedback" aria-live="polite">Pick a corner and take your shot!</p>
       <button class="action-btn" id="reset-penalty">Reset Score</button>
       <p class="game-tip">Tip: Click different parts of the goal to aim!</p>
     </div>
@@ -176,10 +211,71 @@
     </div>
   </section>
 
+  <!-- JOZEF FC PLAYER CLUB -->
+  <section id="club" class="section" tabindex="-1" aria-labelledby="jw-club-title">
+    <div class="jw-section-head jw-club-heading">
+      <div><span class="jw-eyebrow">BUILD YOUR DREAM TEAM</span><h2 class="section-title" id="jw-club-title">⚽ Welcome to Jozef FC!</h2><p>Every soccer legend starts somewhere. This is your own club!</p></div>
+      <button type="button" class="jw-sound" id="jw-sound" aria-pressed="false">🔇 Sound off</button>
+    </div>
+    <div class="jw-club-grid">
+      <div class="jw-club-main">
+        <div class="jw-card jw-profile-stadium" data-jw-kit>
+          <span class="jw-eyebrow">PLAYER CARD • JOZEF FC</span>
+          <div class="jw-player-avatar"><span data-jw-avatar>🦁</span><div class="jw-player-kit"><span data-jw-number>10</span></div></div>
+          <h3>JOZEF <span class="jw-player-bolt">★</span></h3>
+          <p>Future soccer superstar</p>
+          <div class="jw-player-stats">
+            <div><strong data-jw-goals>0</strong><small>Goals</small></div>
+            <div><strong data-jw-saves>0</strong><small>Saves</small></div>
+            <div><strong data-jw-level>1</strong><small>Level</small></div>
+          </div>
+        </div>
+      </div>
+      <div class="jw-club-options">
+        <div class="jw-card">
+          <h3>🎨 Design your player</h3>
+          <p>Pick your own mascot</p>
+          <div class="jw-picker" aria-label="Choose your mascot">
+            <button type="button" data-choose-avatar="🦁" aria-label="Lion mascot">🦁</button>
+            <button type="button" data-choose-avatar="🐯" aria-label="Tiger mascot">🐯</button>
+            <button type="button" data-choose-avatar="🦊" aria-label="Fox mascot">🦊</button>
+            <button type="button" data-choose-avatar="🐻" aria-label="Bear mascot">🐻</button>
+            <button type="button" data-choose-avatar="⚡" aria-label="Lightning mascot">⚡</button>
+            <button type="button" data-choose-avatar="⭐" aria-label="Star mascot">⭐</button>
+          </div>
+          <p>Choose your team colours</p>
+          <div class="jw-picker jw-colors" aria-label="Choose kit colour">
+            <button type="button" data-choose-kit="#21b567" style="--swatch:#21b567" aria-label="Green kit"></button>
+            <button type="button" data-choose-kit="#246bdf" style="--swatch:#246bdf" aria-label="Blue kit"></button>
+            <button type="button" data-choose-kit="#ff8b24" style="--swatch:#ff8b24" aria-label="Orange kit"></button>
+            <button type="button" data-choose-kit="#aa59e4" style="--swatch:#aa59e4" aria-label="Purple kit"></button>
+            <button type="button" data-choose-kit="#ef4f7c" style="--swatch:#ef4f7c" aria-label="Pink kit"></button>
+          </div>
+          <label class="jw-number-label" for="jw-number">Your jersey number <input id="jw-number" type="number" min="1" max="99" value="10" inputmode="numeric" /></label>
+        </div>
+        <div class="jw-card jw-progress-card">
+          <h3>⭐ Your progress</h3>
+          <strong><span data-jw-xp>0</span> total XP</strong>
+          <p>Level <b data-jw-level>1</b></p>
+          <div class="jw-level-track" role="progressbar" aria-label="XP to next level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div data-jw-progress></div></div>
+          <p><b data-jw-badgecount>0/9</b> badges unlocked</p>
+          <p>Keepy-uppy record: <b data-jw-keepy>0</b></p>
+          <small>Saved privately on this device, not shared online.</small>
+        </div>
+      </div>
+    </div>
+    <div class="jw-card jw-trophy-card">
+      <div class="jw-section-head"><div><span class="jw-eyebrow">YOUR TROPHY CABINET</span><h3>🏆 Unlock awesome badges!</h3></div></div>
+      <div class="jw-badge-grid" id="jw-badges"></div>
+    </div>
+    <p class="jw-privacy-note" id="jw-status">Player progress is saved only in this browser. Clearing browser storage removes saved rewards.</p>
+  </section>
+
   <!-- NEWS SECTION -->
   <section id="news" class="section">
     <h2 class="section-title">📰 News & Live Scores</h2>
-    <p class="section-desc">Real-time soccer scores and fun stories for kids!</p>
+    <p class="section-desc">Explore soccer stories and check available match updates.</p>
+    <p class="jw-privacy-note">Scores come from an external provider and may be delayed or unavailable. Stories below are learning features, not breaking news.</p>
 
     <!-- Live Scores -->
     <div class="live-scores-box">
@@ -366,6 +462,8 @@
     <p>Made with ❤️ for Jozef • Keep playing, keep learning, keep shining! ⚽</p>
   </footer>
 
+  <div id="jw-toast" class="jw-toast" aria-live="polite" role="status"></div>
   <script src="app.js"></script>
+  <script src="extras.js"></script>
 </body>
 </html>
