@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Jozef's World — Jozef FC Soccer Clubhouse</title>
   <meta name="description" content="A private soccer clubhouse made for Jozef. Play soccer games, unlock trophies, customize Jozef FC and learn new skills." />
-  <meta name="theme-color" content="#081426" />
+  <meta name="theme-color" content="#07151b" />
+  <meta name="color-scheme" content="dark light" />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="pitch.css" />
@@ -14,25 +15,27 @@
   <link rel="stylesheet" href="career.css" />
   <link rel="stylesheet" href="clubhouse.css" />
   <link rel="stylesheet" href="scramble-positions.css" />
+  <link rel="stylesheet" href="stadium.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Lilita+One&family=Nunito:wght@400;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
   <a href="#main" class="jw-skip">Skip to content</a>
   <!-- Navigation -->
-  <nav class="navbar">
-    <div class="nav-brand">⚽ Jozef's World</div>
+  <nav class="navbar" aria-label="Jozef FC main navigation">
+    <div class="nav-brand"><span class="studio-brand-mark" aria-hidden="true">J<span>11</span></span><span class="studio-brand-title">JOZEF <b>FC</b><small>THE FUTURE IS OURS</small></span></div>
     <div class="nav-links">
-      <button class="nav-btn active" data-section="home">Home</button>
+      <button class="nav-btn active" data-section="home">HQ</button>
+      <button class="nav-btn studio-street-nav" data-section="street">STREET//11</button>
       <button class="nav-btn" data-section="games">Games</button>
-      <button class="nav-btn" data-section="club">Jozef FC</button>
+      <button class="nav-btn" data-section="club">My Club</button>
       <button class="nav-btn" data-section="tour">World Tour</button>
-      <button class="nav-btn" data-section="career">Career Mode</button>
-      <button class="nav-btn" data-section="news">News & Scores</button>
+      <button class="nav-btn" data-section="career">Career</button>
+      <button class="nav-btn" data-section="news">Scores</button>
       <button class="nav-btn" data-section="learn">Learn</button>
       <button class="nav-btn" data-section="street">Night Run</button>
-      <button class="nav-btn" data-section="fun">Fun Zone</button>
+      <button class="nav-btn" data-section="fun">Locker Room</button>
     </div>
     <button class="jw-xp-pill" type="button" onclick="showSection('club')" aria-label="Open Jozef FC player club">
       <span>⭐ <b data-jw-xp>0</b> XP</span><span class="jw-level-chip">LVL <b data-jw-level>1</b></span>
@@ -41,74 +44,70 @@
 
   <!-- HOME SECTION -->
   <section id="home" class="section active" tabindex="-1"><div id="main"></div>
-    <div class="hero">
-      <div class="hero-content">
-        <h1>Welcome to <span class="highlight">Jozef's World</span>!</h1>
-        <p class="hero-subtitle">Your special place for soccer fun, games, live scores, learning & adventures ⚽</p>
+
+    <div class="hero studio-hero">
+      <div class="studio-hero-noise" aria-hidden="true"></div>
+      <div class="studio-hero-copy">
+        <div class="studio-overline"><span class="studio-status-dot"></span> JOZEF FC // EST. THE FUTURE <span class="studio-overline-rule"></span> PLAYER ONE</div>
+        <h1>YOUR GAME.<br><em>YOUR WORLD.</em><br><span>NO LIMITS.</span></h1>
+        <p class="hero-subtitle">A universe built around one player. Train under the floodlights. Own the streets. Lead your club to the top.</p>
         <div class="hero-buttons">
-          <button class="big-btn" onclick="showSection('games')">🎮 Play Games</button>
-          <button class="big-btn secondary" onclick="showSection('news')">📰 Live Scores</button>
+          <button type="button" class="studio-button-primary" onclick="showSection('street')"><span class="studio-button-icon">▶</span> PLAY STREET//11 <span aria-hidden="true">↗</span></button>
+          <button type="button" class="studio-button-outline" onclick="showSection('career')">ENTER CAREER <span aria-hidden="true">↗</span></button>
         </div>
+        <div class="studio-hero-foot"><span>01 / YOUR STORY STARTS HERE</span><span>OFFLINE-FIRST • NO ACCOUNTS • ALL YOU</span></div>
       </div>
-      <div class="hero-ball">⚽</div>
-    </div>
-
-    <div class="jw-profile-banner" data-jw-kit>
-      <div class="jw-avatar-circle"><span data-jw-avatar>🦁</span><span class="jw-jersey">#<b data-jw-number>10</b></span></div>
-      <div class="jw-profile-info">
-        <span class="jw-eyebrow">YOUR PLAYER JOURNEY</span>
-        <h2>Jozef FC <span class="jw-level-chip">LEVEL <b data-jw-level>1</b></span></h2>
-        <p>Train, learn, score goals and earn trophies!</p>
-        <div class="jw-level-track" role="progressbar" aria-label="XP to next level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div data-jw-progress></div></div>
-        <span class="jw-help">Every 100 XP unlocks a new level</span>
-      </div>
-      <button type="button" class="jw-profile-open" onclick="showSection('club')">My Club →</button>
-    </div>
-    <div class="tour-promo">
-      <div class="tour-promo-icon" aria-hidden="true">🏆</div>
-      <div>
-        <span class="jw-eyebrow">NEW ADVENTURE • 5 COUNTRIES</span>
-        <h2>Jozef FC World Tour</h2>
-        <p>Challenge rival teams, score shootout goals, collect passport stamps, and unlock bigger stadiums.</p>
-      </div>
-      <button type="button" class="tour-promo-action" onclick="showSection('tour')">Start World Tour →</button>
-    </div>
-    <div class="career-promo">
-      <span class="career-promo-icon" aria-hidden="true">👟</span>
-      <div><span class="jw-eyebrow">NEW • 6-MATCH LEAGUE</span><h2>Jozef FC Career Mode</h2>
-        <p>Train your skills, make smart match decisions, and lift the league trophy.</p></div>
-      <button type="button" onclick="showSection('career')">Start Career →</button>
-    </div>
-    <div class="quick-cards">
-      <div class="card" role="button" tabindex="0" onclick="showSection('games')">
-        <div class="card-icon">🎮</div>
-        <h3>Games</h3>
-        <p>7 fun soccer games to play!</p>
-      </div>
-      <div class="card" role="button" tabindex="0" onclick="showSection('news')">
-        <div class="card-icon">📰</div>
-        <h3>News & Scores</h3>
-        <p>Live scores + cool stories</p>
-      </div>
-      <div class="card" role="button" tabindex="0" onclick="showSection('learn')">
-        <div class="card-icon">📚</div>
-        <h3>Learn</h3>
-        <p>Rules, players, geography & more</p>
-      </div>
-      <div class="card" role="button" tabindex="0" onclick="showSection('street')">
-        <div class="card-icon">🌃</div>
-        <h3>Night Run</h3>
-        <p>Dodge, collect, beat your best</p>
-      </div>
-      <div class="card" role="button" tabindex="0" onclick="showSection('fun')">
-        <div class="card-icon">🎉</div>
-        <h3>Fun Zone</h3>
-        <p>Jokes, facts & surprises</p>
+      <div class="studio-hero-art" aria-label="Jozef FC illuminated stadium crest">
+        <div class="studio-light studio-light-top"></div><div class="studio-light studio-light-bottom"></div>
+        <div class="studio-art-ring studio-art-ring-one"></div><div class="studio-art-ring studio-art-ring-two"></div>
+        <div class="studio-hero-crest"><span class="studio-crest-top">THE NEXT GENERATION</span><span class="studio-crest-j">J</span><span class="studio-crest-11">/ 11</span><span class="studio-crest-bottom">JOZEF FOOTBALL CLUB</span></div>
+        <div class="studio-art-number">11</div><div class="studio-art-ticker">STRIKE FIRST / PLAY FOREVER</div>
       </div>
     </div>
 
+    <div class="studio-signal-row" aria-label="Your current progress">
+      <div class="studio-signal"><span class="studio-signal-label">PLAYER RANK</span><strong>LVL <span data-jw-level>1</span></strong><small>ALWAYS EVOLVING</small></div>
+      <div class="studio-signal"><span class="studio-signal-label">CAREER POINTS</span><strong id="studio-career-points">00</strong><small id="studio-career-stage">SEASON 01</small></div>
+      <div class="studio-signal"><span class="studio-signal-label">WORLD TOUR</span><strong id="studio-tour-stops">00 <i>/ 05</i></strong><small id="studio-tour-stage">STAMP YOUR PASSPORT</small></div>
+      <div class="studio-signal studio-signal-accent"><span class="studio-signal-label">NIGHT RUN RECORD</span><strong id="studio-street-best">000</strong><small>BEAT YOUR HIGH SCORE</small></div>
+    </div>
+
+    <div class="studio-section-heading"><div><span class="studio-kicker">CHOOSE YOUR PATH</span><h2>WHAT'S YOUR <em>NEXT MOVE?</em></h2></div><span class="studio-section-count">03 / GAME MODES</span></div>
+    <div class="studio-mode-grid">
+      <button type="button" class="studio-mode studio-mode-street" onclick="showSection('street')">
+        <span class="studio-mode-top"><b>01 / ARCADE</b><span aria-hidden="true">↗</span></span>
+        <span class="studio-mode-graphic" aria-hidden="true"><span class="studio-mode-orbit">⚽</span><span class="studio-mode-tape">STREET DIVISION</span></span>
+        <strong>STREET<span>//11</span></strong><small>55 SECONDS. THREE LIVES. EVERY MOVE COUNTS.</small><span class="studio-mode-link">TAKE THE FIELD <span>→</span></span>
+      </button>
+      <button type="button" class="studio-mode studio-mode-career" onclick="showSection('career')">
+        <span class="studio-mode-top"><b>02 / STORY</b><span aria-hidden="true">↗</span></span>
+        <span class="studio-mode-graphic" aria-hidden="true"><span class="studio-mode-shirt">11</span><span class="studio-mode-tape">ROAD TO LEGEND</span></span>
+        <strong>CAREER <span>MODE.</span></strong><small>SIX MATCHES. ONE SEASON. WRITE YOUR HISTORY.</small><span class="studio-mode-link">ENTER THE LEAGUE <span>→</span></span>
+      </button>
+      <button type="button" class="studio-mode studio-mode-world" onclick="showSection('tour')">
+        <span class="studio-mode-top"><b>03 / WORLD</b><span aria-hidden="true">↗</span></span>
+        <span class="studio-mode-graphic" aria-hidden="true"><span class="studio-mode-globe">◎</span><span class="studio-mode-tape">FIVE NATIONS</span></span>
+        <strong>WORLD <span>TOUR.</span></strong><small>FIVE COUNTRIES. ONE CUP. BECOME THE CHAMPION.</small><span class="studio-mode-link">START THE JOURNEY <span>→</span></span>
+      </button>
+    </div>
+
+    <div class="studio-lower-grid">
+      <div class="jw-profile-banner studio-profile" data-jw-kit>
+        <div class="jw-avatar-circle"><span data-jw-avatar>🦁</span><span class="jw-jersey">#<b data-jw-number>10</b></span></div>
+        <div class="jw-profile-info"><span class="studio-kicker">THE PLAYER PROFILE</span><h2>JOZEF <span class="studio-name-fc">FC.</span></h2>
+          <p>Goals, trophies, XP. Every move builds your legacy.</p>
+          <div class="jw-level-track" role="progressbar" aria-label="XP to next level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div data-jw-progress></div></div>
+          <span class="jw-help">LEVEL <b data-jw-level>1</b> • <b data-jw-xp>0</b> TOTAL XP</span>
+        </div><button type="button" class="jw-profile-open" onclick="showSection('club')">PLAYER HUB ↗</button>
+      </div>
+      <div class="studio-fixture" id="studio-fixture">
+        <span class="studio-kicker">REAL-LIFE MATCHDAY</span><strong id="studio-fixture-head">NEXT KICKOFF?</strong>
+        <p id="studio-fixture-copy">Plan your next match, build a formation, and check your kit.</p>
+        <button type="button" onclick="showSection('matchday')">MATCHDAY CENTRAL ↗</button>
+      </div>
+    </div>
     <div class="jw-missions">
-      <div class="jw-section-head"><div><span class="jw-eyebrow">TODAY'S ADVENTURE</span><h2>Three little missions</h2></div><span class="jw-mission-note">Play at your own pace</span></div>
+      <div class="jw-section-head"><div><span class="studio-kicker">THE DAILY CONTRACT</span><h2>THREE MISSIONS. <em>ONE PLAYER.</em></h2></div><span class="jw-mission-note">NO PRESSURE. JUST PROGRESS.</span></div>
       <div class="jw-mission-grid">
         <div class="jw-mission" data-jw-mission="goal"><span class="jw-mission-icon">⚽</span><div><strong>Score a goal</strong><small>Try Penalty Shootout</small><span class="mission-check">○ Ready</span></div><button data-jw-go="penalty" type="button">Play →</button></div>
         <div class="jw-mission" data-jw-mission="quiz"><span class="jw-mission-icon">🧠</span><div><strong>Quiz time</strong><small>Finish the soccer quiz</small><span class="mission-check">○ Ready</span></div><button data-jw-go="quiz" type="button">Play →</button></div>
@@ -117,6 +116,42 @@
     </div>
     <div class="message-box">
       <p>💪 Keep practicing, stay kind, and always have fun — you're a star, Jozef!</p>
+    </div>
+  </section>
+
+
+  <!-- STREET 11: THE NIGHT-RUN SIGNATURE MODE -->
+  <section id="street" class="section studio-street-page" tabindex="-1" aria-labelledby="street-heading">
+    <div class="studio-page-intro"><span class="studio-kicker">JOZEF FC / THE UNDERGROUND</span><h2 id="street-heading">STREET<span>//11</span></h2>
+      <p>Lights on. Boots ready. Dodge the defenders, chase the neon stars, and survive for 55 seconds. Three lives. One record to beat.</p>
+    </div>
+    <div class="street-layout">
+      <div class="street-game-frame">
+        <div class="street-game-topline"><span><span class="studio-status-dot"></span> NIGHT RUN // SEASON 01</span><span id="street-stage">UNDERGROUND</span></div>
+        <div class="street-game-hud">
+          <div><small>RUN SCORE</small><strong id="street-score">000</strong></div>
+          <div><small>LIVES</small><strong id="street-hearts" aria-label="3 lives">♥♥♥</strong></div>
+          <div><small>TIME LEFT</small><strong><span id="street-time">55</span><em>s</em></strong></div>
+          <div><small>COMBO</small><strong id="street-combo">×1</strong></div>
+        </div>
+        <div class="street-canvas-shell">
+          <canvas id="street-canvas" width="360" height="520" tabindex="0" aria-label="Night Run soccer game. Use arrow keys or touch controls to switch lanes." role="img"></canvas>
+          <div class="street-side-note street-side-left" aria-hidden="true">EST. 11/JOZEF</div>
+          <div class="street-side-note street-side-right" aria-hidden="true">AFTER DARK</div>
+        </div>
+        <div class="street-controls"><button type="button" id="street-left" aria-label="Move one lane left">← LEFT</button><button type="button" id="street-start">START NIGHT RUN →</button><button type="button" id="street-right" aria-label="Move one lane right">RIGHT →</button></div>
+        <p class="street-live-message" id="street-announcement" role="status" aria-live="polite">Your next run starts here.</p>
+      </div>
+      <aside class="street-side-panel">
+        <span class="studio-kicker">THE RULES OF THE STREET</span>
+        <h3>MOVE FAST.<br><em>THINK FASTER.</em></h3>
+        <div class="street-rule"><span class="street-rule-number">01</span><div><strong>CHASE THE LIGHT</strong><p>Collect neon stars to score big. Keep collecting to multiply your points.</p></div></div>
+        <div class="street-rule"><span class="street-rule-number">02</span><div><strong>DODGE THE DEFENDERS</strong><p>Red shirts block your way. You only have three lives.</p></div></div>
+        <div class="street-rule"><span class="street-rule-number">03</span><div><strong>OWN YOUR RECORD</strong><p>Every run is different. Your best score stays on this device.</p></div></div>
+        <div class="street-personal-best"><small>PERSONAL BEST / ALL TIME</small><strong id="street-best">000</strong><span>THE RECORD IS YOURS TO BREAK.</span></div>
+        <div class="street-control-guide">KEYBOARD <kbd>←</kbd> <kbd>→</kbd> / <kbd>A</kbd> <kbd>D</kbd><span>OR TAP A LANE / USE THE BIG BUTTONS</span></div>
+        <button type="button" class="studio-mini-route" onclick="showSection('club')">VIEW YOUR PLAYER RECORD <span>↗</span></button>
+      </aside>
     </div>
   </section>
 
@@ -743,6 +778,7 @@
   <script src="jersey-bingo.js"></script>
   <script src="matchday.js"></script>
   <script src="street.js"></script>
-  <script src="experience.js"></script>
+  <script src="stadium.js"></script>
+  <script src="street.js"></script>
 </body>
 </html>
