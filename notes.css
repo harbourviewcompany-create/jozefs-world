@@ -1,0 +1,11 @@
+/* Shared Jozef FC family notes and today card. One interface for everyone. */
+.notes-card { width: min(720px, calc(100% - 20px)); margin: 16px auto; padding: 18px; border-radius: 20px; background: rgba(8,16,30,0.72); border: 1px solid rgba(255,255,255,0.14); }
+.notes-card input { width: 100%; margin: 8px 0; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.25); color: white; font-size: 16px; }
+.note { margin-top: 10px; padding: 10px 12px; border-radius: 14px; background: rgba(255,255,255,0.06); }
+.note.dad { border-left: 4px solid #7eb0e8; }
+.note.jozef { border-left: 4px solid #67e25a; }
+
+.today-card { width: min(860px, calc(100% - 20px)); margin: 16px auto; padding: 18px; border-radius: 20px; background: rgba(8,16,30,0.78); border: 1px solid rgba(202,250,96,0.28); }
+.today-card h2 { font-family: "Lilita One", "Nunito", sans-serif; font-size: 1.8rem; margin: 4px 0 8px; }
+.note-dot { color: #67e25a; margin-left: 4px; }
+.note-delete { margin-top: 6px; min-height: 36px; border: 0; border-radius: 10px; background: rgba(255,255,255,0.08); color: white; }
