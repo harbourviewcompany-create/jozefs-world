@@ -38,6 +38,7 @@ document.querySelectorAll('.learn-tab').forEach(tab => {
 // ========== PENALTY SHOOTOUT ==========
 let penaltyScore = 0;
 let penaltyMisses = 0;
+let penaltyRoundToken = 0;
 const ball = document.getElementById('penalty-ball');
 const keeper = document.getElementById('keeper');
 const goalArea = document.getElementById('goal-area');
@@ -57,7 +58,8 @@ goalArea.addEventListener('click', (e) => {
   const x = ((e.clientX - rect.left) / rect.width) * 100;
   const y = ((e.clientY - rect.top) / rect.height) * 100;
 
-  const diveSide = Math.random() > 0.5 ? 30 : 70;
+  const diveSide = [27, 50, 73][Math.floor(Math.random() * 3)];
+  const roundToken = penaltyRoundToken;
   keeper.style.left = diveSide + '%';
 
   ball.classList.add('shooting');
@@ -67,23 +69,28 @@ goalArea.addEventListener('click', (e) => {
   ball.style.transform = 'translateX(-50%) scale(0.7)';
 
   setTimeout(() => {
+    if (roundToken !== penaltyRoundToken) return;
     const distance = Math.abs(x - diveSide);
     const isInNet = y < 50 && x > 18 && x < 82;
     const isSaved = distance < 18;
 
     if (isInNet && !isSaved) {
       penaltyScore++;
+      window.dispatchEvent(new CustomEvent('jozef:progress', { detail: { action: 'goal' } }));
+      document.getElementById('jw-penalty-feedback').textContent = 'GOOOAL! Amazing shot! ⚽';
       document.getElementById('penalty-score').textContent = penaltyScore;
       goalArea.style.boxShadow = 'inset 0 0 40px rgba(46, 204, 113, 0.6)';
       setTimeout(() => goalArea.style.boxShadow = '', 600);
     } else {
       penaltyMisses++;
+      document.getElementById('jw-penalty-feedback').textContent = isSaved && isInNet ? 'Great save! Try another corner.' : 'Just missed! Have another go.';
       document.getElementById('penalty-misses').textContent = penaltyMisses;
       goalArea.style.boxShadow = 'inset 0 0 40px rgba(231, 76, 60, 0.5)';
       setTimeout(() => goalArea.style.boxShadow = '', 600);
     }
 
     setTimeout(() => {
+      if (roundToken !== penaltyRoundToken) return;
       resetBall();
       keeper.style.left = '50%';
     }, 800);
@@ -91,6 +98,8 @@ goalArea.addEventListener('click', (e) => {
 });
 
 document.getElementById('reset-penalty').addEventListener('click', () => {
+  penaltyRoundToken++;
+  document.getElementById('jw-penalty-feedback').textContent = 'Fresh round! Choose your next shot.';
   penaltyScore = 0;
   penaltyMisses = 0;
   document.getElementById('penalty-score').textContent = 0;
@@ -105,14 +114,18 @@ let flippedCards = [];
 let matchedCount = 0;
 let moveCount = 0;
 let canFlip = true;
+let memoryRoundToken = 0;
 
 function initMemory() {
+  memoryRoundToken++;
   matchedCount = 0;
   moveCount = 0;
   flippedCards = [];
   canFlip = true;
   document.getElementById('memory-matches').textContent = 0;
   document.getElementById('memory-moves').textContent = 0;
+  const feedback = document.getElementById('memory-feedback');
+  if (feedback) feedback.textContent = '';
 
   const pairs = [...memoryEmojis, ...memoryEmojis];
   for (let i = pairs.length - 1; i > 0; i--) {
@@ -122,9 +135,11 @@ function initMemory() {
 
   const grid = document.getElementById('memory-grid');
   grid.innerHTML = '';
-  pairs.forEach((emoji) => {
-    const card = document.createElement('div');
+  pairs.forEach((emoji, index) => {
+    const card = document.createElement('button');
+    card.type = 'button';
     card.className = 'memory-card';
+    card.setAttribute('aria-label', 'Reveal memory card ' + (index + 1));
     card.dataset.emoji = emoji;
     card.textContent = '?';
     card.addEventListener('click', () => flipCard(card));
@@ -153,10 +168,14 @@ function flipCard(card) {
       flippedCards = [];
       canFlip = true;
       if (matchedCount === 6) {
-        setTimeout(() => alert('🎉 Awesome! You matched them all, Jozef! Great job!'), 300);
+        window.dispatchEvent(new CustomEvent('jozef:progress', { detail: { action: 'memory' } }));
+        const feedback = document.getElementById('memory-feedback');
+        if (feedback) feedback.textContent = '🏆 All six pairs matched! Great memory, Jozef!';
       }
     } else {
+      const roundToken = memoryRoundToken;
       setTimeout(() => {
+        if (roundToken !== memoryRoundToken) return;
         c1.classList.remove('flipped');
         c2.classList.remove('flipped');
         c1.textContent = '?';
@@ -189,6 +208,7 @@ let quizScore = 0;
 function loadQuestion() {
   if (currentQuestion >= quizQuestions.length) {
     document.getElementById('quiz-question').textContent = `🎉 Finished! You scored ${quizScore} out of ${quizQuestions.length}!`;
+    window.dispatchEvent(new CustomEvent('jozef:progress', { detail: { action: 'quiz', score: quizScore, total: quizQuestions.length } }));
     document.getElementById('quiz-options').innerHTML = '';
     document.getElementById('quiz-feedback').textContent = quizScore >= 6 ? "You're a soccer genius, Jozef!" : "Great effort! Keep learning!";
     document.getElementById('restart-quiz').style.display = 'inline-block';
@@ -260,6 +280,7 @@ function keepyBounce() {
     keepyBall.style.bottom = '80px';
   }
   keepyCount++;
+  if (keepyCount === 10) window.dispatchEvent(new CustomEvent('jozef:progress', { detail: { action: 'keepy', count: keepyCount } }));
   document.getElementById('keepy-count').textContent = keepyCount;
   if (keepyCount > keepyBest) {
     keepyBest = keepyCount;
@@ -329,6 +350,7 @@ document.querySelectorAll('.zone-btn').forEach(btn => {
 
     if (chosen === currentSide) {
       goalieSaves++;
+      window.dispatchEvent(new CustomEvent('jozef:progress', { detail: { action: 'save' } }));
       document.getElementById('goalie-saves').textContent = goalieSaves;
       goalieStatus.textContent = '✅ SAVE! Great reflexes!';
       goalieStatus.style.color = '#27ae60';
@@ -401,7 +423,8 @@ const targetArea = document.getElementById('target-area');
 
 function spawnTarget() {
   if (!targetRunning) return;
-  const target = document.createElement('div');
+  const target = document.createElement('button');
+  target.type = 'button';
   target.className = 'target';
   const size = 40 + Math.random() * 40; // 40-80px
   target.style.width = size + 'px';
@@ -412,6 +435,7 @@ function spawnTarget() {
 
   const points = size < 55 ? 3 : size < 70 ? 2 : 1;
   target.title = '+' + points;
+  target.setAttribute('aria-label', 'Hit soccer target for ' + points + ' points');
 
   target.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -445,6 +469,7 @@ function startTargetGame() {
       clearInterval(targetInterval);
       clearInterval(targetSpawnInterval);
       targetRunning = false;
+      window.dispatchEvent(new CustomEvent('jozef:progress', { detail: { action: 'target', score: targetHits } }));
       document.getElementById('target-start-msg').style.display = 'block';
       document.getElementById('target-start-msg').textContent = `Time's up! You hit ${targetHits} points! 🎉`;
       targetArea.querySelectorAll('.target').forEach(t => t.remove());
@@ -458,16 +483,24 @@ function startTargetGame() {
 document.getElementById('start-target').addEventListener('click', startTargetGame);
 
 // ========== LIVE SCORES (SportScore API) ==========
+// Escape any third-party text before rendering it as HTML.
+function escapeScore(value) {
+  return String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
 async function loadLiveScores() {
   const container = document.getElementById('live-scores');
   container.innerHTML = '<p class="loading-msg">Loading live scores...</p>';
 
   try {
-    const res = await fetch('https://sportscore.com/api/widget/matches/?sport=football&limit=12');
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 7000);
+    let res;
+    try { res = await fetch('https://sportscore.com/api/widget/matches/?sport=football&limit=12', { signal: controller.signal }); }
+    finally { clearTimeout(timeout); }
     if (!res.ok) throw new Error('Network response was not ok');
     const data = await res.json();
 
-    const matches = data.matches || [];
+    const matches = Array.isArray(data.matches) ? data.matches.slice(0, 12) : [];
     if (matches.length === 0) {
       container.innerHTML = '<p class="loading-msg">No matches available right now. Check back later!</p>';
       return;
@@ -483,11 +516,11 @@ async function loadLiveScores() {
 
       return `
         <div class="match-card ${isLive ? 'live' : isFinished ? 'finished' : ''}">
-          <div class="match-status ${isLive ? 'live-badge' : ''}">${isLive ? '🔴 LIVE' : statusText}</div>
+          <div class="match-status ${isLive ? 'live-badge' : ''}">${isLive ? '🔴 LIVE' : escapeScore(statusText)}</div>
           <div class="match-teams">
-            <span>${m.home || 'Home'}</span>
-            <span class="match-score">${homeScore} - ${awayScore}</span>
-            <span>${m.away || 'Away'}</span>
+            <span>${escapeScore(m.home || 'Home')}</span>
+            <span class="match-score">${escapeScore(homeScore)} - ${escapeScore(awayScore)}</span>
+            <span>${escapeScore(m.away || 'Away')}</span>
           </div>
         </div>
       `;
