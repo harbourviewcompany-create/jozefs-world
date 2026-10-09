@@ -78,7 +78,7 @@
       try{localStorage.setItem(bestKey,String(best));}catch(_){}
     }
     const earned=score>=20;
-    if(earned&&window.JozefWorld?.record)window.JozefWorld.record('street',{score});
+    if(earned)window.JozefWorld?.record('street',{score});
     const message=hearts===0?'Full-time! Great effort, captain.':
       'Full-time! '+score+' points. The stadium is cheering for you!';
     announce(message+(earned?' XP awarded for your run!':' Try collecting more stars to earn XP.'));

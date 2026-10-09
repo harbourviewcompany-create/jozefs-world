@@ -62,3 +62,6 @@
 }
 #roblox-thumb { border-radius: 16px; margin: 8px 0; background: rgba(255,255,255,0.06); }
 #roblox-play:disabled { opacity: 0.45; }
+
+.roblox-launch { border-color: #e23b3b !important; color: #fff !important; }
+.roblox-launch::before { content: "■ "; color: #ff5a5a; }
