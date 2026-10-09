@@ -24,9 +24,9 @@ function load(){
 }
 const lifetime=load();
 const venues=[
-  {name:'NEIGHBOURHOOD COURT',accent:'#cafa60',need:0},
-  {name:'NEON CITY',accent:'#73f7da',need:2},
-  {name:'LEGEND ARENA',accent:'#ffd180',need:5}
+  {name:'NEIGHBOURHOOD COURT',accent:'#cafa60',need:0,rival:'THE ROOFTOP ROVERS',story:'The neighbourhood knows your name. Earn two wins to unlock the lights of Neon City.'},
+  {name:'NEON CITY',accent:'#73f7da',need:2,rival:'MIDNIGHT CITY FC',story:'The city has heard about Jozef. Earn five total victories to enter the Legend Arena.'},
+  {name:'LEGEND ARENA',accent:'#ffd180',need:5,rival:'THE NEON ROYALS',story:'The final gates are open. You face the city champions. Keep winning to write your own legend.'}
 ];
 let mode='ready',time=MATCH_LENGTH,us=0,them=0,streak=0,flash=0,last=0,raf=0;
 let actor={x:210,y:494},mate={x:298,y:320},ball={x:210,y:482,owner:'actor',vx:0,vy:0};
@@ -57,7 +57,8 @@ function resetPositions(){
 }
 function hud(){
  put('arena-score',us+' : '+them);put('arena-clock',String(Math.ceil(Math.max(0,time))).padStart(2,'0')+'s');
- put('arena-venue',venues[Math.min(venues.length-1,lifetime.stadium)].name);
+ const venue=venues[Math.min(venues.length-1,lifetime.stadium)];
+ put('arena-venue',venue.name);put('arena-rival',venue.rival);put('arena-story',venue.story);
  put('arena-wins',lifetime.wins);put('arena-goals',lifetime.goals);
  put('arena-matches',lifetime.games);put('arena-tactic',squad.tactic.toUpperCase());
  const b=$('arena-start');if(b)b.textContent=mode==='ready'?'KICK OFF →':mode==='playing'?'PAUSE':mode==='paused'?'RESUME →':'PLAY AGAIN →';
@@ -196,7 +197,9 @@ function player(x,y,color,number){
 function draw(){
  const venue=venues[Math.min(lifetime.stadium,2)];
  const grad=ctx.createLinearGradient(0,0,0,H);
- grad.addColorStop(0,'#0a463a');grad.addColorStop(.55,'#105443');grad.addColorStop(1,'#06302b');
+ if(lifetime.stadium>=2){grad.addColorStop(0,'#59442b');grad.addColorStop(.55,'#6a5540');grad.addColorStop(1,'#2b2b33');}
+ else if(lifetime.stadium===1){grad.addColorStop(0,'#07435a');grad.addColorStop(.55,'#145b65');grad.addColorStop(1,'#092c45');}
+ else{grad.addColorStop(0,'#0a463a');grad.addColorStop(.55,'#105443');grad.addColorStop(1,'#06302b');}
  ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
  for(let y=0;y<H;y+=80){ctx.fillStyle=y%160===0?'#eaffbd09':'#00000006';ctx.fillRect(0,y,W,80);}
  ctx.strokeStyle='#e6ffe763';ctx.lineWidth=2.3;
@@ -212,7 +215,10 @@ function draw(){
  for(const d of defenders)player(d.x,d.y,'#fb8170','X');
  player(keeper.x,48,'#ffca67','GK');
  player(mate.x,mate.y,'#70dceb','7');
- player(actor.x,actor.y,'#d4fb73','11');
+ const identity=window.JozefWorld?.getProgress?.()||{};
+ const jersey=/^#[0-9a-fA-F]{6}$/.test(identity.kit)?identity.kit:'#d4fb73';
+ const number=Number.isInteger(identity.number)&&identity.number>=1&&identity.number<=99?identity.number:11;
+ player(actor.x,actor.y,jersey,number);
  ctx.shadowColor=ball.owner==='shot'?'#ffe970':'#c9faff';ctx.shadowBlur=16;
  ctx.beginPath();ctx.arc(ball.x,ball.y,8,0,Math.PI*2);
  ctx.fillStyle='#fffbe5';ctx.fill();ctx.shadowBlur=0;
