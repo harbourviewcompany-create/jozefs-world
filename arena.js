@@ -40,6 +40,9 @@ function getSquad(){
   speed:clamp(Number(val.speed)||0,0,.3),
   pass:clamp(Number(val.pass)||0,0,.3),
   shot:clamp(Number(val.shot)||0,0,.3),
+  defence:clamp(Number(val.defence)||0,0,.35),
+  keeper:clamp(Number(val.keeper)||0,0,.35),
+  lineup:{...(api?.slots||{})},
   tactic:['balanced','attack','defence'].includes(api?.tactic)?api.tactic:'balanced'
  };
 }
@@ -161,10 +164,11 @@ function loseBall(){
  if(tackleCooldown>0)return;
  tackleCooldown=1.3;
  // A tackle is not automatically a goal: only some recoveries lead to a scoring counter.
- const conceded=Math.random()<(actor.y>360?.46:.25);
+ const teamCover=Math.min(.58,squad.defence*.75+squad.keeper*.9);
+ const conceded=Math.random()<Math.max(.08,(actor.y>360?.46:.25)*(1-teamCover));
  if(conceded)them++;
  flash=conceded?-.65:-.18;
- msg(conceded?'RIVALS SCORE ON THE BREAK! RESET AND GO AGAIN.':'RIVALS WIN THE BALL. RECOVER YOUR SHAPE!');
+ msg(conceded?'RIVALS SCORE ON THE BREAK! RESET AND GO AGAIN.':'YOUR TEAMMATES STOP THE COUNTER! RECOVER YOUR SHAPE!');
  if(them>=4){resetPositions();end();return;}
  resetPositions();
 }
@@ -267,7 +271,14 @@ function draw(){
  // Defenders, keeper, partner and captain.
  for(const d of defenders)player(d.x,d.y,'#fb8170','X');
  player(keeper.x,48,'#ffca67','GK');
- player(mate.x,mate.y,'#70dceb','7');
+ // The squad Jozef builds is represented on the pitch, not just in menus.
+ const shirts={rookie:'11',goal:'9',explorer:'7',captain:'10',scholar:'8',super:'11',champion:'99'};
+ const teammateNo=shirts[squad.lineup.mid||squad.lineup.striker]||'7';
+ const defenderNo=shirts[squad.lineup.back]||'5';
+ const goalkeeperNo=shirts[squad.lineup.keeper]||'1';
+ player(210+(actor.x-210)*.12,535,'#7bb9e7',defenderNo);
+ player(210,560,'#eec875',goalkeeperNo);
+ player(mate.x,mate.y,'#70dceb',teammateNo);
  const identity=window.JozefWorld?.getProgress?.()||{};
  const jersey=/^#[0-9a-fA-F]{6}$/.test(identity.kit)?identity.kit:'#d4fb73';
  const number=Number.isInteger(identity.number)&&identity.number>=1&&identity.number<=99?identity.number:11;
