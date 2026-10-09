@@ -17,14 +17,20 @@
     { id: 'triple-threat', icon: '👑', title: 'Daily Hero', description: 'Complete all three daily missions', ready: s => Boolean(s.dailyHero) },
     { id: 'world-traveller', icon: '🌍', title: 'World Traveller', description: 'Win your first World Tour match', ready: s => s.tourWins >= 1 },
     { id: 'geography-star', icon: '🧭', title: 'Geography Star', description: 'Solve your first travel challenge', ready: s => s.geography >= 1 },
-    { id: 'world-champion', icon: '🥇', title: 'World Champion', description: 'Win the five-country cup', ready: s => s.championships >= 1 }
+    { id: 'world-champion', icon: '🥇', title: 'World Champion', description: 'Win the five-country cup', ready: s => s.championships >= 1 },
+    { id: 'league-debut', icon: '👟', title: 'League Debut', description: 'Finish your first Career match', ready: s => s.careerGames >= 1 },
+    { id: 'league-winner', icon: '🏅', title: 'Match Winner', description: 'Win a Career match', ready: s => s.careerWins >= 1 },
+    { id: 'training-star', icon: '🧮', title: 'Training Star', description: 'Solve a Career training challenge', ready: s => s.trainingSuccess >= 1 },
+    { id: 'league-champion', icon: '🏆', title: 'League Champion', description: 'Win the six-match Career league', ready: s => s.leagueTitles >= 1 }
   ];
   const defaultState = () => ({
     xp: 0, goals: 0, saves: 0, memory: 0, quizzes: 0, perfect: 0, scrambles: 0,
     keepyBest: 0, targetBest: 0, club: 'Jozef FC', avatar: '🦁', kit: COLORS[0],
     number: 10, day: dayKey(), daily: {}, dailyHero: '', earned: [],
     sound: false, tourWins: 0, championships: 0, geography: 0,
-    rewardedTours: [], rewardedGeography: [], rewardedTitles: []
+    careerGames: 0, careerWins: 0, trainingSuccess: 0, leagueTitles: 0,
+    rewardedTours: [], rewardedGeography: [], rewardedTitles: [],
+    rewardedCareer: [], rewardedTraining: [], rewardedLeague: []
   });
   function dayKey() {
     const d = new Date();
@@ -35,14 +41,14 @@
     try { value = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (_) {}
     const s = { ...defaultState(), ...value };
     s.xp = Math.max(0, Number(s.xp) || 0);
-    for (const name of ['goals', 'saves', 'memory', 'quizzes', 'perfect', 'keepyBest', 'targetBest', 'tourWins', 'championships', 'geography', 'scrambles']) {
+    for (const name of ['goals', 'saves', 'memory', 'quizzes', 'perfect', 'keepyBest', 'targetBest', 'tourWins', 'championships', 'geography', 'scrambles', 'careerGames', 'careerWins', 'trainingSuccess', 'leagueTitles']) {
       s[name] = Math.max(0, Number(s[name]) || 0);
     }
     if (!COLORS.includes(s.kit)) s.kit = COLORS[0];
     if (!AVATARS.includes(s.avatar)) s.avatar = AVATARS[0];
     s.number = Math.min(99, Math.max(1, Number(s.number) || 10));
     if (!Array.isArray(s.earned)) s.earned = [];
-    for (const key of ['rewardedTours', 'rewardedGeography', 'rewardedTitles']) {
+    for (const key of ['rewardedTours', 'rewardedGeography', 'rewardedTitles', 'rewardedCareer', 'rewardedTraining', 'rewardedLeague']) {
       if (!Array.isArray(s[key])) s[key] = [];
     }
     try { s.keepyBest = Math.max(s.keepyBest, Number(localStorage.getItem('jozefKeepyBest')) || 0); } catch (_) {}
@@ -89,19 +95,27 @@
   }
   function record(action, info = {}) {
     if (state.day !== dayKey()) { state.day = dayKey(); state.daily = {}; }
-    const rewards = { goal: 5, save: 8, memory: 30, quiz: 20, keepy: 15, target: 15, tournament: 60, geography: 15, championship: 120, scramble: 10 };
-    const caps = { goal: 10, save: 10, memory: 3, quiz: 3, keepy: 1, target: 3, tournament: 10, geography: 10, championship: 3, scramble: 5 };
+    const rewards = { goal: 5, save: 8, memory: 30, quiz: 20, keepy: 15, target: 15, tournament: 60, geography: 15, championship: 120, scramble: 10, career: 20, training: 10, leaguechamp: 120 };
+    const caps = { goal: 10, save: 10, memory: 3, quiz: 3, keepy: 1, target: 3, tournament: 10, geography: 10, championship: 3, scramble: 5, career: 10, training: 6, leaguechamp: 2 };
     if (!(action in rewards)) return;
-    const uniqueReward = { tournament: 'rewardedTours', geography: 'rewardedGeography', championship: 'rewardedTitles' }[action];
+    const uniqueReward = { tournament: 'rewardedTours', geography: 'rewardedGeography', championship: 'rewardedTitles', career: 'rewardedCareer', training: 'rewardedTraining', leaguechamp: 'rewardedLeague' }[action];
     if (uniqueReward) {
       const id = String(info.winId || '');
-      if (!/^season-[1-9][0-9]{0,4}-round-[0-4]$/.test(id)) return;
+      if (!/^season-[1-9][0-9]{0,4}-round-[0-5]$/.test(id)) return;
+      const round = Number(id.split('-').pop());
+      if (['tournament','geography','championship'].includes(action) && round > 4) return;
+      if (action === 'leaguechamp' && (round !== 5 || info.result !== 'win')) return;
+      if (action === 'training' && info.result !== 'correct') return;
+      if (action === 'career' && !['win','draw','loss'].includes(info.result)) return;
       if (state[uniqueReward].includes(id)) return; // Reloads cannot duplicate rewards.
       state[uniqueReward].push(id);
     }
     if (action === 'target' && (Number(info.score) || 0) <= 0) return;
     if (action === 'keepy' && (Number(info.count) || 0) < 10) return;
     if (action === 'goal') state.goals++;
+    if (action === 'career') { state.careerGames++; if (info.result === 'win') state.careerWins++; }
+    if (action === 'training') state.trainingSuccess++;
+    if (action === 'leaguechamp') state.leagueTitles++;
     if (action === 'scramble') state.scrambles++;
     if (action === 'tournament') state.tourWins++;
     if (action === 'geography') state.geography++;
@@ -116,7 +130,7 @@
     if (action === 'target') state.targetBest = Math.max(state.targetBest, Number(info.score) || 0);
     const count = Number(state.daily[action]) || 0;
     state.daily[action] = count + 1;
-    const xp = count < caps[action] ? rewards[action] : 0;
+    const xp = count < caps[action] ? (action === 'career' ? (info.result === 'win' ? 30 : info.result === 'draw' ? 20 : 10) : rewards[action]) : 0;
     if (xp) { state.xp += xp; ding(); }
     if (missionDone(state) && state.dailyHero !== state.day) {
       state.dailyHero = state.day;
@@ -138,6 +152,9 @@
     setAll('[data-jw-level]', level);
     setAll('[data-jw-goals]', state.goals);
     setAll('[data-jw-tourwins]', state.tourWins);
+    setAll('[data-jw-careergames]', state.careerGames);
+    setAll('[data-jw-careerwins]', state.careerWins);
+    setAll('[data-jw-leaguetitles]', state.leagueTitles);
     setAll('[data-jw-crowns]', state.championships);
     setAll('[data-jw-saves]', state.saves);
     setAll('[data-jw-badgecount]', state.earned.length + '/' + AWARDS.length);
