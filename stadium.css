@@ -378,3 +378,20 @@ footer{font-size:.82rem;letter-spacing:.08em;border-top:1px solid #eaffd323;colo
   }
   .studio-launcher { display: none; }
 }
+
+/* street-controls pinned above the phone dock */
+@media (max-width: 700px) {
+  #street.section.active .street-controls {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    bottom: calc(78px + env(safe-area-inset-bottom));
+    z-index: 88;
+    margin: 0;
+    background: rgba(8, 18, 22, 0.94);
+    padding: 8px;
+    border-radius: 14px;
+  }
+  #street.section.active .street-game-frame { padding-bottom: 92px; }
+  .street-controls button { min-height: 64px; font-size: 14px; touch-action: manipulation; }
+}

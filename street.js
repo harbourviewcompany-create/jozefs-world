@@ -193,9 +193,21 @@
     if(state==='ready'||state==='over')newRun();else pause();
     if(state!=='playing')draw();
   });
-  $('street-left')?.addEventListener('click',()=>move(-1));
-  $('street-right')?.addEventListener('click',()=>move(1));
+  function steer(id, dir){
+    const btn=$(id);
+    if(!btn)return;
+    btn.addEventListener('pointerdown',event=>{
+      event.preventDefault();
+      if(state==='ready'||state==='over')newRun();
+      move(dir);
+    });
+  }
+  steer('street-left',-1);
+  steer('street-right',1);
+  canvas.style.touchAction='none';
   canvas.addEventListener('pointerdown',event=>{
+    event.preventDefault();
+    if(state==='ready'||state==='over')newRun();
     const r=canvas.getBoundingClientRect();
     if(r.width<1)return;
     const x=clamp((event.clientX-r.left)/r.width*W,0,W-1);
