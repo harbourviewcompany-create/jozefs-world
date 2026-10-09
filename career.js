@@ -181,7 +181,7 @@
       const q=SCENARIOS[r][m.answers.length];
       txt('career-question-label','PLAY '+(m.answers.length+1)+' / 3 · '+q[0].toUpperCase());
       txt('career-question',q[1]);
-      answers(q,choose);return;
+      answers([null,q[2]],choose);return;
     }
     const i=m.answers.length-1,q=SCENARIOS[r][i],correct=q[3]===m.answers[i];
     txt('career-question-label','COACH FEEDBACK');
