@@ -30,7 +30,7 @@
 .tour-pitch::after { content: ""; position: absolute; inset: auto 35% -58px; height: 115px; border: 3px solid #ffffffad; border-radius: 50%; }
 .tour-pitch-lights { position: absolute; top: -3px; left: 0; right: 0; letter-spacing: 15px; text-align: center; font-size: 1.2rem; color: #f5ffb2; }
 .tour-net { position: absolute; left: 18%; right: 18%; top: 12px; height: 105px; border: 6px solid #e5fbff; border-bottom-width: 9px; border-radius: 7px 7px 0 0; background: repeating-linear-gradient(90deg,transparent 0,transparent 19px,#ffffff52 19px,#ffffff52 21px),repeating-linear-gradient(0deg,transparent 0,transparent 19px,#ffffff52 19px,#ffffff52 21px),#85b7e93f; box-shadow: 0 5px 14px #112b3470; display: flex; align-items: center; justify-content: center; }
-.tour-net-frame { font-size: 2.7rem; filter: drop-shadow(0 3px 3px #102e3a77); }
+.tour-net-frame { font-size: 2.7rem; filter: drop-shadow(0 3px 3px #102e3a77); transition: transform .26s ease-out; }
 .tour-penalty-spot { position: absolute; left: calc(50% - 6px); top: 69%; width: 12px; height: 12px; border-radius: 50%; background: #fff; }
 .tour-match-ball { --shot-x: 0px; position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); font-size: 3.7rem; line-height: 1; filter: drop-shadow(0 4px 3px #13442a); transform-origin: center; z-index: 2; }
 .tour-match-ball.tour-kick { animation: tour-kick 540ms cubic-bezier(.27,.57,.7,.99) both; }
