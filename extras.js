@@ -284,7 +284,7 @@
   window.JozefWorld = Object.freeze({ record, getProgress: () => ({
     xp: state.xp, level: Math.floor(state.xp / 100) + 1,
     goals: state.goals, saves: state.saves, badges: [...state.earned],
-    kit: state.kit, number: state.number, avatar: state.avatar
+    kit: state.kit, number: state.number, avatar: state.avatar, sound: Boolean(state.sound)
   })});
   render();
 })();
