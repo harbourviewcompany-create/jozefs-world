@@ -31,7 +31,7 @@
     }
     return out;
   }
-  let saved=load(),sport='hockey',round=0,points=0,phase='ready',turnStart=0,raf=0,indicator=50,lastMessage='',lastResult=null;
+  let saved=load(),sport='hockey',round=0,points=0,phase='ready',turnStart=0,raf=0,indicator=50,lastMessage='',lastResult=null,roundHistory=[];
   const button=(label,choice,extra='')=>{
     const b=document.createElement('button');
     b.type='button';b.textContent=label;b.dataset.choice=choice;
@@ -57,6 +57,43 @@
       label('multi-played-'+k,saved[k].played+' PLAYED');
       const tab=$('multi-tab-'+k);
       if(tab){tab.classList.toggle('selected',k===sport);tab.setAttribute('aria-pressed',String(k===sport))}
+    }
+  }
+  // A championship is earned entirely from the four existing local best scores.
+  // No extra profile, payments, countdowns, or new save key.
+  function getCupProgress(){
+    const qualified=Object.keys(GAMES).filter(id=>saved[id].best>=3);
+    return {qualified:qualified.length,total:4,champion:qualified.length===4};
+  }
+  function paintCup(){
+    const cup=getCupProgress(),finale=$('multi-cup-finale');
+    for(const id of Object.keys(GAMES)){
+      const won=saved[id].best>=3;
+      const stamp=$('multi-cup-'+id);
+      stamp?.classList.toggle('qualified',won);
+      label('multi-cup-'+id+'-state',won?'QUALIFIED ✓':saved[id].played?'BEST '+saved[id].best+'/5':'NOT YET');
+    }
+    const meter=$('multi-cup-meter');
+    if(meter)meter.style.width=(cup.qualified*25)+'%';
+    const track=$('multi-cup-progress');
+    track?.setAttribute('aria-valuenow',String(cup.qualified));
+    finale?.classList.toggle('champion',cup.champion);
+    label('multi-cup-status',cup.champion?'4 OF 4 / CHAMPION':cup.qualified+' OF 4 QUALIFIED');
+    label('multi-cup-title',cup.champion?'THE ALL-SPORT CUP IS YOURS.':'THE CUP AWAITS.');
+    const next=$('multi-cup-next');
+    if(next)next.textContent=cup.champion?'PLAY ANOTHER EVENT ↗':'PLAY FOR THE CUP ↗';
+  }
+  function paintRounds(){
+    const host=$('multi-round-markers');
+    if(!host)return;
+    host.replaceChildren();
+    for(let i=0;i<GAMES[sport].rounds;i++){
+      const mark=document.createElement('span');
+      const made=roundHistory[i];
+      mark.className='multi-turn-mark '+(made===true?'is-made':made===false?'is-missed':i===round&&phase==='ready'?'is-now':'');
+      mark.textContent=made===true?'✓':made===false?'×':String(i+1);
+      mark.setAttribute('aria-label','Turn '+(i+1)+': '+(made===true?'scored':made===false?'missed':i===round&&phase==='ready'?'up next':'not played'));
+      host.appendChild(mark);
     }
   }
   function drawControls(){
@@ -107,6 +144,8 @@
     if(instructions)instructions.textContent=sport==='wrestling'?'Original ring-show challenges and WWE superstar trivia. Unofficial fan activity, no risky wrestling moves to copy.':
       'Five turns. Have fun and chase your own personal best. No penalties for missing.';
     paintRecord();
+    paintCup();
+    paintRounds();
     drawControls();
     if(active&&config.kind==='timing')tick();
     else stopTick();
@@ -130,7 +169,7 @@
   }
   function start(kind){
     if(!GAMES[kind])return;
-    sport=kind;round=0;points=0;phase='ready';turnStart=Date.now();lastMessage='';
+    sport=kind;round=0;points=0;phase='ready';turnStart=Date.now();lastMessage='';roundHistory=[];
     scene();
   }
   function act(choice){
@@ -162,6 +201,7 @@
       remark=made?CHALLENGES[round].remark:'THE CROWD WANTS A DIFFERENT MOMENT. NEXT ROUND!';
     }
     if(made)points++;
+    roundHistory.push(made);
     round++;phase='result';lastMessage=remark;
     scene();
   }
@@ -193,7 +233,15 @@
       act('next');
     }
   }
+  function nextCupSport(){
+    const target=Object.keys(GAMES).find(id=>saved[id].best<3) ||
+      Object.keys(GAMES).reduce((lowest,id)=>saved[id].best<saved[lowest].best?id:lowest,'hockey');
+    start(target);
+    if(typeof window.showSection==='function')window.showSection('sports-arcade');
+    if(GAMES[target].kind==='timing')tick();
+  }
   function init(){
+    $('multi-cup-next')?.addEventListener('click',nextCupSport);
     for(const k of Object.keys(GAMES))$('multi-tab-'+k)?.addEventListener('click',()=>start(k));
     document.querySelectorAll('[data-multi-start]')?.forEach(btn=>btn.addEventListener('click',()=>{
       const selected=btn.dataset.multiStart;
@@ -211,5 +259,6 @@
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
   else init();
-  window.JozefMultiSport=Object.freeze({getProgress:()=>JSON.parse(JSON.stringify(saved)),getLastResult:()=>lastResult&&{...lastResult},evaluateTiming:accuracy});
+  window.JozefMultiSport=Object.freeze({getProgress:()=>JSON.parse(JSON.stringify(saved)),getCupProgress,
+    getLastResult:()=>lastResult&&{...lastResult},evaluateTiming:accuracy});
 })();
