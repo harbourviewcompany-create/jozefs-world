@@ -11,7 +11,7 @@ function context(){
  const events=[],window={};
  const draw=new Proxy({},{
   get(obj,key){
-    if(key==='createLinearGradient')return()=>({addColorStop(offset,color){events.push(['stop',offset,color])}});
+    if(key==='createLinearGradient'||key==='createRadialGradient')return()=>({addColorStop(offset,color){events.push(['stop',offset,color])}});
     if(key==='arc')return(...args)=>{events.push(['arc',...args])};
     if(key==='fillText')return(...args)=>{events.push(['text',...args])};
     if(key==='roundRect')return(...args)=>{events.push(['rounded',...args])};
