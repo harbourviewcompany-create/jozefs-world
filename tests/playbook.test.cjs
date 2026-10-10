@@ -1,3 +1,4 @@
+const bundled=require('./bundle-contract.cjs');
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -49,7 +50,8 @@ test('Coach Playbook has a deep-link route, home preview, accessible goals and o
  const js=fs.readFileSync(path.join(root,'stadium.js'),'utf8');
  const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
  assert.match(js,/'playbook'/);
- for(const name of ['playbook.js','playbook.css'])assert.ok(sw.includes("'./"+name+"'"));
+ assert.ok(sw.includes("'./playbook.js'"));
+ bundled.css(root,html,sw,'playbook.css');
  assert.match(css,/@media\(max-width:650px\)/);
  assert.match(css, /prefers-reduced-motion:reduce/);
  assert.match(css, /focus-visible/);
