@@ -42,6 +42,7 @@
   <link rel="stylesheet" href="street-powerups.css" />
   <link rel="stylesheet" href="hq.css" />
   <link rel="stylesheet" href="watch.css" />
+  <link rel="stylesheet" href="ui-refresh.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Lilita+One&family=Nunito:wght@400;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
@@ -91,6 +92,9 @@
       <button class="nav-btn" data-section="chronicle">Chronicle</button>
       <button class="nav-btn" data-section="fun">Locker Room</button>
     </div>
+    <button class="jw-explore" id="jw-explore" type="button" aria-haspopup="dialog" aria-controls="studio-command" aria-label="Explore all games and sections">
+      <span class="jw-explore-symbol" aria-hidden="true">☷</span><span>EXPLORE</span>
+    </button>
     <button class="jw-xp-pill" type="button" onclick="showSection('club')" aria-label="Open Jozef FC player club">
       <span>⭐ <b data-jw-xp>0</b> XP</span><span class="jw-level-chip">LVL <b data-jw-level>1</b></span>
     </button>
@@ -1275,12 +1279,12 @@
   </footer>
 
   
-  <nav class="phone-dock" aria-label="Phone shortcuts">
-    <button type="button" onclick="showSection('home')">HQ</button>
-    <button type="button" onclick="showSection('arena')">Arena</button>
-    <button type="button" onclick="showSection('street')">Street</button>
-    <button type="button" onclick="showSection('club')">Club</button>
-    <button type="button" onclick="showSection('notes')">Notes</button>
+  <nav class="phone-dock" aria-label="Primary phone navigation">
+    <button type="button" data-dock-section="home" onclick="showSection('home')"><span class="jw-dock-symbol" aria-hidden="true">⌂</span><span>HQ</span></button>
+    <button type="button" data-dock-section="arena" onclick="showSection('arena')"><span class="jw-dock-symbol" aria-hidden="true">⚽</span><span>Football</span></button>
+    <button type="button" data-dock-section="sports-arcade" onclick="showSection('sports-arcade')"><span class="jw-dock-symbol" aria-hidden="true">✦</span><span>Sports</span></button>
+    <button type="button" data-dock-section="playbook" onclick="showSection('playbook')"><span class="jw-dock-symbol" aria-hidden="true">◆</span><span>Playbook</span></button>
+    <button type="button" data-dock-section="club" onclick="showSection('club')"><span class="jw-dock-symbol" aria-hidden="true">★</span><span>Club</span></button>
   </nav>
 
   <div id="jw-toast" class="jw-toast" aria-live="polite" role="status"></div>
