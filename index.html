@@ -31,6 +31,7 @@
   <link rel="stylesheet" href="campaign-2026.css" />
   <link rel="stylesheet" href="mobile-qa-2026.css" />
   <link rel="stylesheet" href="broadcast.css" />
+  <link rel="stylesheet" href="album.css" />
   <link rel="stylesheet" href="club-hq.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -74,6 +75,7 @@
       <button class="nav-btn" data-section="matchday">Match Day</button>
       <button class="nav-btn" data-section="roblox">Roblox</button>
       <button class="nav-btn" data-section="notes">Notes <span id="note-dot" class="note-dot" hidden>●</span></button>
+      <button class="nav-btn" data-section="album">Stickers</button>
       <button class="nav-btn" data-section="fun">Locker Room</button>
     </div>
     <button class="jw-xp-pill" type="button" onclick="showSection('club')" aria-label="Open Jozef FC player club">
@@ -247,6 +249,11 @@
           </div>
         </div>
         <div class="arena-skill-strip"><button id="arena-skill" type="button" disabled>SKILL BURST <small>L</small></button><span id="arena-skill-status">SKILL READY</span><small>Accelerate past defenders. Recharges between moves.</small></div>
+        <aside id="scout-report" class="scout-report" hidden>
+      <h3>Scout report</h3>
+      <p id="scout-words">Brave. Fast. Ready.</p>
+      <p id="scout-tip">Finish a match to get your report.</p>
+    </aside>
         <button id="arena-start" type="button" class="arena-kickoff">KICK OFF →</button>
         <p id="arena-status" class="arena-status" role="status" aria-live="polite">Your pitch is ready.</p>
       </div>
@@ -973,6 +980,11 @@
       <div id="note-list" aria-live="polite"></div>
     </div>
   </section>
+<section id="album" class="section" tabindex="-1" aria-labelledby="album-title">
+    <h2 id="album-title" class="section-title">Sticker album</h2>
+    <p class="section-desc">Finish matches and Street runs to fill the book. <span id="album-count">0 / 8</span></p>
+    <div id="album-board" class="album-board"></div>
+  </section>
 <section id="fun" class="section">
     <h2 class="section-title">THE LOCKER ROOM</h2>
     <p class="section-desc">Off-pitch stories, jokes, and surprises. A place to relax between games.</p>
@@ -1039,6 +1051,7 @@
   <script src="stadium.js"></script>
   <script src="playmode.js"></script>
   <script src="broadcast.js"></script>
+  <script src="album.js"></script>
   <script src="arcade.js" defer></script>
   <script src="street.js"></script>
   <script src="roblox.js"></script>
