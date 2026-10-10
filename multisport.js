@@ -122,7 +122,7 @@
     const box=$('multi-stage');
     if(box)box.dataset.sport=sport;
     label('multi-name',config.label);
-    label('multi-round',phase==='finished'?'FULL TIME':(round+1)+' / '+config.rounds);
+    label('multi-round',phase==='finished'?'FULL TIME':Math.min(round+1,config.rounds)+' / '+config.rounds);
     label('multi-score',points+' / '+config.rounds+' '+config.unit);
     label('multi-stage-label',sport==='hockey'?'AIM FOR THE OPEN CORNER':sport==='baseball'?'TIME YOUR SWING':sport==='basketball'?'RELEASE NEAR THE SWEET SPOT':'THE SHOW MUST GO ON');
     label('multi-scene-text',sport==='hockey'?'':sport==='baseball'?'BATTER UP':sport==='basketball'?'FROM DOWNTOWN':'LIGHTS • CAMERA • ACTION');
