@@ -5,11 +5,17 @@ const vm=require('node:vm');
 const path=require('node:path');
 const arenaJs=fs.readFileSync(path.join(__dirname,'../arena.js'),'utf8');
 const squadJs=fs.readFileSync(path.join(__dirname,'../squad.js'),'utf8');
+const systemsJs=fs.readFileSync(path.join(__dirname,'../arena-systems.js'),'utf8');
+const experienceJs=fs.readFileSync(path.join(__dirname,'../arena-experience.js'),'utf8');
 class MockNode {
-constructor(){this.children=[];this.events={};this.textContent='';this.value='';this.className='';this.style={};this.tagName='DIV';this.classList={contains:()=>true,toggle(){},add(){},remove(){}};}
+constructor(){this.children=[];this.events={};this.textContent='';this.value='';this.className='';this.style={setProperty(){}};this.tagName='DIV';this.classList={contains:()=>true,toggle(){},add(){},remove(){}};}
  setAttribute(){}
  append(...items){this.children.push(...items)}
  appendChild(item){this.children.push(item);return item}
+ querySelector(){return new MockNode()}
+ getBoundingClientRect(){return {left:0,top:0,width:85,height:85}}
+ focus(){}
+
  replaceChildren(...items){this.children=items}
  addEventListener(name,fn){this.events[name]=fn}
  click(){this.events.click?.()}
@@ -28,6 +34,10 @@ function createDom(){
  const queue=[];
  const ctx={window,document,localStorage:storage,Event:class Event{},requestAnimationFrame(fn){queue.push(fn);return queue.length},cancelAnimationFrame(){},Math,Date};
  vm.createContext(ctx);
+ // Load actual Arena dependencies in the same order as the public HTML.
+ // Otherwise Arena intentionally fails closed before exposing its API.
+ vm.runInContext(systemsJs,ctx,{timeout:1500});
+ vm.runInContext(experienceJs,ctx,{timeout:1500});
  return {ctx,get,saved,events,handlers,window,record,queue};
 }
 test('squad builder starts with Jozef and upgrades skills through unlocked player cards',()=>{
