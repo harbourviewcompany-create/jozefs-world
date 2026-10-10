@@ -259,8 +259,15 @@ function render(c,s){
  const defensive=(s.defenders||[]);
  for(let i=0;i<defensive.length;i++){
   const d=defensive[i];
-  strokeCircle(c,d.x,d.y,22,'#ff9d8764',1);
-  athlete(c,d.x,d.y,'#f2786b',String(i+2),'opponent',phase,false,motion&&s.mode==='playing');
+  const carrying=s.ball?.owner==='rival'&&s.rivalCarrier===i;
+  strokeCircle(c,d.x,d.y,carrying?29:22,carrying?'#ffd18dda':'#ff9d8764',carrying?3:1);
+  if(carrying){
+   circle(c,d.x,d.y+2,31,'#ffbe5d1c');
+   rounded(c,d.x-31,d.y-47,62,12,6,'#38241fe6');
+   c.textAlign='center';c.font='900 8px system-ui';c.fillStyle='#ffe7ae';
+   c.fillText('RIVAL BALL',d.x,d.y-38);
+  }
+  athlete(c,d.x,d.y,'#f2786b',String(i+2),'opponent',phase,carrying,motion&&s.mode==='playing');
  }
  const keeper=s.keeper||{x:210,y:48};
  athlete(c,keeper.x,keeper.y,'#f0b75e','GK','keeper',phase,false,motion&&s.ball?.owner==='shot');
@@ -270,6 +277,12 @@ function render(c,s){
  const ax=s.actor||{x:210,y:495},mate=s.mate||{x:300,y:310};
  athlete(c,210+(ax.x-210)*.12,535,'#5db6d2',number(lineup.back)||'5','team',phase,false,false);
  athlete(c,210,558,'#e2bd71',number(lineup.keeper)||'1','keeper',phase,false,false);
+ if(s.counterTime>0&&s.ball?.owner!=='rival'){
+  strokeCircle(c,mate.x,mate.y,30,'#a2fff2ae',2);
+  rounded(c,mate.x-27,mate.y-46,54,12,5,'#0c4441ed');
+  c.font='900 9px system-ui';c.fillStyle='#bdfff0';c.textAlign='center';
+  c.fillText('RUN!',mate.x,mate.y-37);
+ }
  athlete(c,mate.x,mate.y,'#78e8dc',number(lineup.mid||lineup.striker)||'7','team',phase,s.ball?.owner==='mate',motion&&s.mode==='playing');
  const identity=s.identity||{};
  const color=/^#[\da-fA-F]{6}$/.test(identity.kit)?identity.kit:'#c8ff5a';
