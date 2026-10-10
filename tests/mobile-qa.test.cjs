@@ -12,7 +12,7 @@ test('iPhone repair overrides all existing themes last, with identical Pages HTM
  assert.equal(html,index);
  assert.equal((html.match(/href="mobile-qa-2026.css"/g)||[]).length,1);
  const sheets=[...html.matchAll(/<link rel="stylesheet" href="([^"]+)"\s*\/>/g)].map(x=>x[1]);
- assert.equal(sheets.at(-1),'club-hq.css');
+ assert.ok(sheets.indexOf('chronicle.css')>sheets.indexOf('club-hq.css'), 'feature styles must follow mobile repairs');
  assert.ok(sheets.indexOf('mobile-qa-2026.css')<sheets.indexOf('club-hq.css'));
  assert.ok(sheets.indexOf('arena-visual.css')<sheets.indexOf('mobile-qa-2026.css'));
  assert.ok(sheets.indexOf('campaign-2026.css')<sheets.indexOf('mobile-qa-2026.css'));
