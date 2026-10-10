@@ -42,8 +42,8 @@
   <link rel="stylesheet" href="street-powerups.css" />
   <link rel="stylesheet" href="hq.css" />
   <link rel="stylesheet" href="watch.css" />
-  <link rel="stylesheet" href="arena-compact.css" />
   <link rel="stylesheet" href="ui-refresh.css" />
+  <link rel="stylesheet" href="arena-compact.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Lilita+One&family=Nunito:wght@400;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
@@ -282,10 +282,15 @@
       <h2 id="arena-heading">THE <span>ARENA.</span></h2>
       <p>Control Jozef on the pitch. Dribble through defenders. Play one-twos with your teammate. Find the angle and bury the shot. Every result builds your club.</p>
     </div>
-    <button type="button" class="play-exit">Close game</button>
     <div class="arena-layout">
       <div class="arena-game">
-        <div class="arena-topbar"><span><span class="studio-status-dot"></span> JOZEF FC · LIVE FOOTBALL</span><span id="arena-venue">NEIGHBOURHOOD COURT</span></div>
+        <div class="arena-topbar">
+          <span class="arena-brand"><span class="studio-status-dot"></span> JOZEF FC <small id="arena-venue">NEIGHBOURHOOD COURT</small></span>
+          <div class="arena-header-actions">
+            <button id="arena-start" type="button" class="arena-kickoff">KICK OFF →</button>
+            <button type="button" class="play-exit" aria-label="Close game">×</button>
+          </div>
+        </div>
         <div class="arena-scoreboard"><div><small>JOZEF FC</small><strong id="arena-score">0 : 0</strong><small>RIVALS</small></div><div><small>MATCH CLOCK</small><strong id="arena-clock">75s</strong><small id="arena-tactic">BALANCED</small></div></div>
         <div class="arena-mini-ticker"><span>SHOTS <strong id="arena-shots">0</strong></span><span>KEEPER SAVES <strong id="arena-keeper-saves">0</strong></span><span>SET YOUR CORNER. OUTSMART THE KEEPER.</span></div>
         <div class="arena-pitch-frame"><canvas id="arena-canvas" width="420" height="600" tabindex="0" role="img" aria-label="Live football game. Move using the directional pad or arrow keys. Aim with 1 2 3, pass using J, shoot using K and skill burst with L."></canvas></div>
@@ -315,7 +320,6 @@
       <p id="scout-story"></p>
       <p id="scout-next"></p>
     </aside>
-        <button id="arena-start" type="button" class="arena-kickoff">KICK OFF →</button>
         <p id="arena-status" class="arena-status" role="status" aria-live="polite">Your pitch is ready.</p>
       </div>
       <aside class="arena-guide">
