@@ -61,4 +61,30 @@ test('match runs through completion and can restart without a browser crash',()=
  assert.ok(store.values['jozefs-world-arena-v1'],'career must save');
  events.get('arena-rematch:click')();
  assert.equal(window.JozefArena.getProgress().mode,'playing','rematch must start');
+ // The standard gamepad mapping must be wired to the live match, not just
+ // produce correct values in isolated pure-function tests.
+ const pad={
+  connected:true,axes:[0,-1],
+  buttons:Array.from({length:16},()=>({pressed:false,value:0}))
+ };
+ env.navigator.getGamepads=()=>[pad];
+ events.get('window:gamepadconnected')();
+ assert.equal(window.JozefArena.getProgress().controllerConnected,true);
+ let now=tick*36;
+ for(let i=0;i<44;i++){
+  const callback=frames.shift();assert.ok(callback,'gamepad and game frame scheduled');
+  callback(now+=16.7);
+ }
+ assert.ok(window.JozefArena.getProgress().playerY<493,'gamepad stick must move Jozef');
+ pad.axes=[0,0];pad.buttons[1].pressed=true;
+ for(let i=0;i<12;i++){
+  const callback=frames.shift();assert.ok(callback);callback(now+=16.7);
+ }
+ assert.equal(window.JozefArena.getProgress().shots,1,'gamepad B should fire a single shot');
+ pad.buttons[1].pressed=false;
+ for(let i=0;i<8;i++){const callback=frames.shift();assert.ok(callback);callback(now+=16.7);}
+ pad.buttons[9].pressed=true;
+ for(let i=0;i<8;i++){const callback=frames.shift();assert.ok(callback);callback(now+=16.7);}
+ assert.equal(window.JozefArena.getProgress().mode,'paused','gamepad Start should pause');
 });
+
