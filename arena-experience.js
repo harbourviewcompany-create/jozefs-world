@@ -41,7 +41,7 @@ function mount(api){
   document.querySelector('#arena .arena-controller')?.classList.toggle('swap-controls',prefs.handedness==='flipped');
   const arena=$('arena'),actions=document.querySelector('#arena .arena-actions');
   const skill=$('arena-skill'),originalStrip=document.querySelector('#arena .arena-skill-strip');
-  const immersive=prefs.mobileLayout==='immersive';
+  const immersive=prefs.mobileLayout==='immersive' && (window.matchMedia?.('(orientation: portrait) and (max-width: 1100px)')?.matches!==false);
   arena?.classList.toggle('mobile-immersive',immersive);
   if(skill&&actions&&originalStrip){
     if(immersive&&skill.parentElement!==actions&&typeof actions.appendChild==='function')actions.appendChild(skill);
@@ -192,6 +192,7 @@ function mount(api){
  window.addEventListener('blur',()=>clear());
  document.addEventListener('visibilitychange',()=>{if(document.hidden)clear();});
  document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&dialogOpen){ev.preventDefault();openSettings(false);}});
+ window.addEventListener('orientationchange',ui);
  ui();
  return Object.freeze({prefs,record,reset,finish,kitColor,haptic,ui,clearJoystick:clear,passCount:()=>passes});
 }
