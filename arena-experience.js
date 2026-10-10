@@ -50,6 +50,11 @@ function mount(api){
   if(button){button.disabled=(lifetime.coins||0)<3||level>=3;button.textContent=level>=3?'MAX LEVEL':'UPGRADE · 3 STARS · LV '+level+'/3';}
   const earn=$('arena-earnings');
   if(earn)earn.textContent=(lifetime.coins||0)+' stars · Level '+p.level+' · '+p.earned+' badges';
+  const challenges=$('arena-challenge-list');
+  if(challenges)challenges.innerHTML=S.CHALLENGES.map(c=>{
+   const count=Math.min(c.target,daily[c.id]),done=count>=c.target;
+   return '<div class="arena-challenge'+(done?' complete':'')+'"><span>'+c.label+'</span><b>'+count+'/'+c.target+'</b></div>';
+  }).join('');
  }
  function record(kind){
   const r=S.awardDaily(daily,kind);daily=r.state;
@@ -114,6 +119,7 @@ function mount(api){
   haptic([18,35,18]);ui();
  }
  $('arena-settings-toggle')?.addEventListener('click',()=>openSettings(!dialogOpen));
+ $('arena-daily-progress')?.addEventListener('click',()=>openSettings(true));
  $('arena-settings-close')?.addEventListener('click',()=>openSettings(false));
  $('arena-report-close')?.addEventListener('click',()=>{$('arena-match-report').hidden=true;});
  $('arena-rematch')?.addEventListener('click',()=>api.start());
