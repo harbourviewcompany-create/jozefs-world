@@ -22,7 +22,7 @@
   function safeBest(){
     try{return Math.max(0,Math.min(999999,Number(localStorage.getItem(bestKey))||0));}catch(_){return 0;}
   }
-  let best=safeBest(),state='ready',lane=1,targetLane=1,playerX=LANES[1],items=[],spawnIn=0,elapsed=0,score=0,hearts=3,combo=0,streak=0,pace=0,frame=0,raf=0,lastTime=0;
+  let best=safeBest(),state='ready',lane=1,targetLane=1,playerX=LANES[1],items=[],spawnIn=0,elapsed=0,score=0,hearts=3,combo=0,streak=0,pace=0,frame=0,raf=0,lastTime=0,shield=0,golden=0;
   let seed=0;
   function rand(){seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;}
   function text(id,value){const node=$(id);if(node)node.textContent=String(value);}
@@ -33,18 +33,19 @@
     text('street-hearts','♥'.repeat(hearts)+'♡'.repeat(3-hearts));
     text('street-time',Math.ceil(Math.max(0,DURATION-elapsed)));
     text('street-combo','×'+(1+Math.min(4,Math.floor(combo/3))));
-    text('street-stage',pace<1?'UNDERGROUND':pace<2?'CITY LIGHTS':'SUPERSONIC');
+    text('street-stage',(pace<1?'UNDERGROUND':pace<2?'CITY LIGHTS':'SUPERSONIC')+(shield?' / SHIELDED':''));
+    text('street-shield',shield?'SHIELD READY':'NO SHIELD');
   }
   function setPanel(){
     const button=$('street-start');
     if(button)button.textContent=state==='ready'?'START NIGHT RUN →':state==='playing'?'PAUSE RUN':state==='paused'?'RESUME RUN →':'PLAY AGAIN →';
-    canvas.setAttribute('aria-label','Night Run soccer game. '+state+'. Score '+score+'. '+hearts+' hearts. Use left and right buttons or arrow keys to change lanes.');
+    canvas.setAttribute('aria-label','Night Run soccer game. '+state+'. Score '+score+'. '+hearts+' hearts. '+(shield?'Shield ready. ':'')+'Use left and right buttons or arrow keys to change lanes.');
   }
   function newRun(){
     // Secure randomness isn't needed: randomness only determines harmless arcade obstacles.
     seed=(Math.floor(Math.random()*4294967296)||123456789)>>>0;
-    state='playing';lane=targetLane=1;playerX=LANES[1];items=[];spawnIn=.32;elapsed=0;score=0;hearts=3;combo=0;streak=0;pace=0;frame=0;lastTime=0;
-    announce('Kick-off! Dodge the red defenders. Collect neon stars. You have 55 seconds.');
+    state='playing';lane=targetLane=1;playerX=LANES[1];items=[];spawnIn=.32;elapsed=0;score=0;hearts=3;combo=0;streak=0;pace=0;frame=0;lastTime=0;shield=0;golden=0;
+    announce('Kick-off! Dodge red defenders, collect stars, grab golden bonuses and save a shield for trouble.');
     updateHUD();setPanel();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
   }
   function pause(){
@@ -63,7 +64,8 @@
   }
   function spawn(){
     const inLane=Math.floor(rand()*3);
-    const kind=rand()<.47?'star':'defender';
+    const roll=rand();
+    const kind=roll<.38?'star':roll<.80?'defender':roll<.89?'shield':'gold';
     items.push({lane:inLane,y:-38,kind,hit:false});
     if(rand()<.16 && kind==='defender'){
       let alternate=(inLane+1+Math.floor(rand()*2))%3;
@@ -101,18 +103,25 @@
       item.y+=speed*dt;
       if(!item.hit&&Math.abs(item.y-424)<27&&Math.abs(LANES[item.lane]-playerX)<37){
         item.hit=true;
-        if(item.kind==='star'){
-          combo++;
+        if(item.kind==='star'||item.kind==='gold'){
+          combo+=item.kind==='gold'?2:1;
           const mult=1+Math.min(4,Math.floor(combo/3));
-          score+=10*mult;
+          score+=(item.kind==='gold'?20:10)*mult;
+          if(item.kind==='gold')golden++;
           streak=.38;
+        }else if(item.kind==='shield'){
+          if(shield)score+=15;
+          else shield=1;
+          streak=.38;
+        }else if(shield){
+          shield=0;streak=.38;
         }else{
           hearts=Math.max(0,hearts-1);combo=0;streak=-.38;
         }
       }else if(!item.hit && item.y>450){
         item.hit=true;
         if(item.kind==='defender'){score+=2;} // Reward successful dodging.
-        else combo=0;
+        else if(item.kind==='star'||item.kind==='gold')combo=0;
       }
     }
     items=items.filter(x=>x.y<560);
@@ -141,9 +150,9 @@
     // Draw obstacles with shapes rather than remote image assets.
     for(const it of items){
       const x=LANES[it.lane],y=it.y;
-      if(it.kind==='star'){
-        ctx.shadowColor='#f9ff80';ctx.shadowBlur=20;
-        ctx.fillStyle='#e9ff75';ctx.beginPath();
+      if(it.kind==='star'||it.kind==='gold'){
+        ctx.shadowColor=it.kind==='gold'?'#ffbe5a':'#f9ff80';ctx.shadowBlur=20;
+        ctx.fillStyle=it.kind==='gold'?'#ffc56b':'#e9ff75';ctx.beginPath();
         for(let i=0;i<10;i++){
           const angle=i*Math.PI/5-Math.PI/2;
           const radius=i%2?10:20;
@@ -151,7 +160,14 @@
           if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
         }
         ctx.closePath();ctx.fill();ctx.shadowBlur=0;
-        ctx.fillStyle='#0a382b';ctx.font='bold 12px system-ui';ctx.textAlign='center';ctx.fillText('+',x,y+4);
+        ctx.fillStyle='#0a382b';ctx.font='bold 12px system-ui';ctx.textAlign='center';ctx.fillText(it.kind==='gold'?'2×':'+',x,y+4);
+      }else if(it.kind==='shield'){
+        ctx.shadowColor='#71e7e4';ctx.shadowBlur=19;
+        ctx.fillStyle='#90fff0';ctx.beginPath();
+        ctx.moveTo(x,y-25);ctx.lineTo(x+22,y-12);ctx.lineTo(x+18,y+15);
+        ctx.lineTo(x,y+26);ctx.lineTo(x-18,y+15);ctx.lineTo(x-22,y-12);
+        ctx.closePath();ctx.fill();ctx.shadowBlur=0;
+        ctx.fillStyle='#123c42';ctx.font='900 18px system-ui';ctx.textAlign='center';ctx.fillText('S',x,y+7);
       }else{
         ctx.shadowColor='#fc5d5d75';ctx.shadowBlur=14;
         fillRoundRect(x-24,y-26,48,52,15,'#ff5b60');
@@ -163,7 +179,9 @@
     }
     // Player with field shadow, responsive rotation and kinetic football effect.
     ctx.fillStyle='#020e15aa';ctx.beginPath();ctx.ellipse(playerX,461,34,10,0,0,Math.PI*2);ctx.fill();
-    ctx.shadowBlur=24;ctx.shadowColor=streak>0?'#eaff6e':'#36fcca';
+    if(shield){ctx.strokeStyle='#9af9ed';ctx.lineWidth=3;ctx.beginPath();
+      ctx.ellipse(playerX,430,34,43,0,0,Math.PI*2);ctx.stroke();}
+    ctx.shadowBlur=24;ctx.shadowColor=shield?'#71e7e4':streak>0?'#eaff6e':'#36fcca';
     fillRoundRect(playerX-23,395,46,58,16,'#d0ff60');
     ctx.shadowBlur=0;
     fillRoundRect(playerX-18,401,36,18,8,'#0a3a39');
@@ -227,7 +245,8 @@
   });
   document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='playing'){pause();draw();}});
   window.addEventListener('pagehide',()=>{if(state==='playing')pause();});
-  window.JozefStreet=Object.freeze({getProgress:()=>({best,state,score,timeRemaining:Math.ceil(Math.max(0,DURATION-elapsed))})});
+  window.JozefStreet=Object.freeze({getProgress:()=>({best,state,score,shield:Boolean(shield),goldenCollected:golden,
+    timeRemaining:Math.ceil(Math.max(0,DURATION-elapsed))})});
   announce('Slide into the night. Switch lanes to grab neon stars and dodge defenders.');
   updateHUD();setPanel();draw();
 })();
