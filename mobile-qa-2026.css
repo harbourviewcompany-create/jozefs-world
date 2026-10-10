@@ -156,7 +156,6 @@
     scroll-snap-type:x proximity;
   }
   .navbar .nav-btn{min-height:40px;padding:9px 13px;font-size:12px}
-  .navbar .nav-links .who-toggle{display:none}
   .phone-dock{padding:8px 8px calc(8px + env(safe-area-inset-bottom))}
   .phone-dock button{min-height:50px;padding:7px 4px}
   .phone-dock button:focus-visible{outline-offset:-3px}
