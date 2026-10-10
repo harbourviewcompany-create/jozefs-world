@@ -415,6 +415,8 @@ function mount(api){
  document.addEventListener('visibilitychange',()=>{if(document.hidden)clear();});
  document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&dialogOpen){ev.preventDefault();openSettings(false);}});
  window.addEventListener('orientationchange',ui);
+ // Embedded browsers often resize the viewport without an orientationchange event.
+ window.addEventListener('resize',ui,{passive:true});
  ui();
  return Object.freeze({prefs,record,reset,finish,kitColor,haptic,ui,clearJoystick:clear,passCount:()=>passes});
 }
