@@ -33,6 +33,12 @@ function navState(){
   else btn.removeAttribute('aria-current');
  });
  document.title=current==='home'?'Jozef FC // After Dark':(current==='street'?'Street//11':current[0].toUpperCase()+current.slice(1))+' | Jozef FC';
+ const explore=el('jw-explore');
+ if(explore){
+  const visible=['home','arena','sports-arcade','playbook','club'].includes(current);
+  explore.classList.toggle('is-active',!visible);
+  explore.setAttribute('aria-label',visible?'Explore all games and sections':'Explore all games and sections, currently '+current);
+ }
 }
 function navigation(){
  const prev=window.showSection;
@@ -68,10 +74,26 @@ function commandDeck(){
  const header=document.createElement('div');header.className='studio-command-header';
  header.innerHTML='<div><span class="studio-kicker">THE CONTROL ROOM</span><h2>WHERE TO, <em>CAPTAIN?</em></h2></div><button type="button" class="studio-command-close" aria-label="Close quick navigation">✕</button>';
  const links=document.createElement('div');links.className='studio-command-options';
+ // One complete menu, keeping the primary navigation compact on small screens.
  const options=[
-  ['arena','00','THE ARENA','LIVE FOOTBALL MATCH'],['street','01','STREET//11','THE NIGHT RUN'],['career','02','CAREER MODE','ROAD TO LEGEND'],
-  ['tour','03','WORLD TOUR','CHASE THE CUP'],['matchday','04','MATCHDAY','REAL-LIFE FIXTURE'],
-  ['games','05','TRAINING GAMES','ARCADE & SKILLS'],['club','06','MY PLAYER','CARDS & TROPHIES'],['learn','07','LEARN','FOOTBALL INTELLIGENCE']
+  ['home','00','CLUB HQ','BACK TO YOUR WORLD'],
+  ['arena','01','FOOTBALL ARENA','LIVE FOOTBALL MATCH'],
+  ['street','02','STREET//11','THE NIGHT RUN'],
+  ['sports-arcade','03','SPORTS ARCADE','HOCKEY · BASEBALL · BASKETBALL · WRESTLING'],
+  ['playbook','04','COACH PLAYBOOK','MISSIONS ACROSS EVERY SPORT'],
+  ['club','05','MY CLUB','SQUAD · KITS · TROPHIES'],
+  ['career','06','FOOTBALL CAREER','BUILD YOUR SEASONS'],
+  ['tour','07','WORLD TOUR','CHASE THE CUP'],
+  ['chronicle','08','CLUB CHRONICLE','MATCH HIGHLIGHTS · PRINT POSTER'],
+  ['games','09','FOOTBALL SKILLS','MINIGAMES · TARGETS'],
+  ['training','10','TRAINING','PRACTICE YOUR SKILLS'],
+  ['matchday','11','MATCHDAY','YOUR REAL-LIFE FIXTURE'],
+  ['sports','12','LIVE SPORTS','NHL · MLB · NBA'],
+  ['news','13','FOOTBALL SCORES','SCOREBOARD'],
+  ['learn','14','LEARN','FOOTBALL INTELLIGENCE'],
+  ['album','15','STICKER ALBUM','COLLECT YOUR REWARDS'],
+  ['fun','16','LOCKER ROOM','MATCHDAY EXTRAS'],
+  ['notes','17','CLUB NOTES','SHARED PRIVATE BOARD']
  ];
  const open=()=>dialog.showModal?dialog.showModal():dialog.setAttribute('open','');
  const close=()=>{if(dialog.close)dialog.close();else dialog.removeAttribute('open');button.focus()};
@@ -93,7 +115,9 @@ function commandDeck(){
 }
 function boot(){
  document.body.classList.add('studio-v2');
- navigation();commandDeck();updateHud();updateFixture();
+ navigation();commandDeck();
+ el('jw-explore')?.addEventListener('click',()=>el('studio-launcher')?.click());
+ updateHud();updateFixture();
  window.addEventListener('jozef:profile-updated',updateHud);
  window.addEventListener('jozef:progress',updateHud);
  document.addEventListener('click',e=>{
