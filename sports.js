@@ -10,7 +10,7 @@
         'https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard',
         'https://site.api.espn.com/apis/site/v2/sports/soccer/uefa.champions/scoreboard'
       ],
-      teams: ['Arsenal', 'Liverpool', 'Man City', 'Chelsea', 'Barcelona', 'Real Madrid', 'Inter Miami']
+      teams: ['Inter Miami', 'Arsenal', 'Liverpool', 'Man City', 'Chelsea', 'Barcelona', 'Real Madrid']
     },
     nba: {
       label: 'NBA',
@@ -84,7 +84,12 @@
         if (saved[id] && saved[id].team === team) option.selected = true;
         select.appendChild(option);
       });
-      if (!saved[id]) select.value = league.teams[0];
+      if (!saved[id]) {
+        select.value = league.teams[0];
+        const data = load();
+        data[id] = { team: league.teams[0] };
+        save(data);
+      }
       const game = document.createElement('p');
       game.className = 'sports-game';
       game.textContent = 'Loading the next game...';
