@@ -1,5 +1,5 @@
 /* Jozef FC offline shell: only same-origin public game assets. Never caches personal progress. */
-const CACHE='jozef-fc-app-shell-v33';
+const CACHE='jozef-fc-app-shell-v34';
 const CORE=[
  './','./index.html','./world.html','./favicon.svg','./manifest.webmanifest',
  './styles.css','./pitch.css','./extras.css','./tournament.css','./career.css',
@@ -12,8 +12,9 @@ const CORE=[
  './jersey-bingo.js','./matchday.js','./street.js','./stadium.js','./arcade.js',
  './roblox.js','./squad.js','./arena.js','./playmode.js','./notes.js',
  './visual-2026.js','./arena-renderer.js','./campaign-2026.js','./club-hq.js','./chronicle.js',
- './broadcast.js','./album.js','./sports.js','./watch.js','./sports-stage.js','./locker.js',
- './multisport.js','./playbook.css','./hq.css','./watch.css','./arena-compact.css','./playbook.js'
+ './broadcast.js','./album.js','./sports.js','./watch.js','./sports-stage.js',
+ './locker.js','./multisport.js','./playbook.css','./hq.css','./watch.css',
+ './arena-compact.css','./playbook.js','./street-powerups.css','./ui-refresh.css'
 ];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE)
