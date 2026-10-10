@@ -45,7 +45,7 @@ function updateTouchVector(){
  stick=len>1?{x:x/len,y:y/len}:{x,y};
 }
 let aim=0,skillCooldown=0,skillTime=0,keeperDestination=210,keeperReact=0,passRecipient=null,mateTime=0,shots=0,keeperSaves=0,lastHudTick=-1;
-let passChain=0,blockedShots=0;
+let passChain=0,blockedShots=0,looseBallElapsed=0;
 function getSquad(){
  const api=window.JozefSquad?.getSquad?.();
  const val=api?.bonuses||{};
@@ -100,7 +100,7 @@ function resetPositions(){
  defenders=[{x:144,y:260,speed:89},{x:279,y:205,speed:90},{x:204,y:143,speed:82}];
  keeper={x:210,y:48};
  shotCooldown=0;tackleCooldown=1.2;passCooldown=0;passRecipient=null;mateTime=0;
- keeperDestination=210;keeperReact=0;passChain=0;keys.clear();heldDirections.clear();stick={x:0,y:0};target=null;
+ keeperDestination=210;keeperReact=0;passChain=0;looseBallElapsed=0;keys.clear();heldDirections.clear();stick={x:0,y:0};target=null;
 }
 function ensureShotQualityUI(){
  if($('arena-shot-quality')||!document.createElement)return;
@@ -221,6 +221,10 @@ function shoot(){
   'SHOOTING AT THE '+SHOT_ZONES[aim].name+'! '+(quality.passBonus?'GREAT BUILDUP!':'FIND THE CORNER!'));
  hud();
 }
+function resetAfterMiss(){
+ resetPositions();shotCooldown=.8;flash=-.08;
+ msg('OFF TARGET! BRING THE BALL FORWARD AND TRY AGAIN.');hud();
+}
 function loseBall(){
  if(tackleCooldown>0)return;
  tackleCooldown=1.3;
@@ -338,16 +342,33 @@ function update(dt){
     cue('save');msg('SHOT BLOCKED! MOVE INTO SPACE AND TRY AGAIN.');
    }
   }
-  if(ball.owner==='free'){ball.vx*=Math.max(0,1-1.0*dt);ball.vy*=Math.max(0,1-1.0*dt);receive();}
+  if(ball.owner==='free'){
+   ball.vx*=Math.max(0,1-1.0*dt);ball.vy*=Math.max(0,1-1.0*dt);
+   receive();
+   if(ball.owner==='free'){
+    looseBallElapsed+=dt;
+    if(looseBallElapsed>3.25){
+     resetPositions();shotCooldown=.65;
+     msg('BALL RECOVERED! START A NEW ATTACK.');
+     hud();return;
+    }
+   }else looseBallElapsed=0;
+  }
   if(ball.owner==='shot'&&ball.y<64&&Math.abs(ball.x-keeper.x)<18*(systems.DIFFICULTIES[experience?.prefs.difficulty||'pro']?.keeper||1)){
     ball.owner='free';ball.vy=220;ball.vx=ball.x<keeper.x?-85:85;
     keeperSaves++;cue('save');msg('WHAT A SAVE! FOLLOW UP ON THE REBOUND!');flash=-.22;experience?.haptic([15,30,15]);startReplay('GREAT SAVE');
   }else if(ball.owner==='shot'&&ball.y<=22){
     if(ball.x>GOAL.left&&ball.x<GOAL.right){goal();return;}
-    ball.owner='free';ball.vx=0;ball.vy=150;msg('Just wide! Chase the loose ball.');
+    resetAfterMiss();return;
   }
   if(ball.x<14||ball.x>406){ball.x=clamp(ball.x,14,406);ball.vx*=-.55;}
-  if(ball.y>578){ball.y=578;ball.vy=-90;}
+  if(ball.y>578){
+   if(ball.owner==='free'){
+    resetPositions();shotCooldown=.65;
+    msg('OUT OF PLAY! RESTART AND BUILD AN ATTACK.');hud();return;
+   }
+   ball.y=578;ball.vy=-90;
+  }
  }
  if(time<=0){time=0;end();return;}
  if(Math.ceil(time*5)!==lastHudTick){lastHudTick=Math.ceil(time*5);hud();}
