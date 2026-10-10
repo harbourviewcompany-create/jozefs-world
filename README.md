@@ -7,6 +7,14 @@ Jozef FC // After Dark is a private football universe. Play an actual Arena matc
 
 ## The experience
 
+### One shared Club HQ (2026)
+- There is **one** Jozef FC experience for everyone using the device, with no Jozef/Dad mode, gated sections or separate profile data. Shared Notes, the full game menu, progress and save/restore are accessible together.
+- The homepage Club HQ shows two optional daily activities: **finish an Arena match** and **finish a STREET//11 run**. It updates only when each game ends, not when opening or pausing the game.
+- Today's two completion flags live only in `jozefs-world-club-today-v1` in the browser, reset on the device's local calendar day, and do **not** alter XP, existing achievements, match results or player saves.
+- The HQ also links to the shared notes board and shows the existing local Street best. Offline game assets include the HQ CSS and JS; no external accounts or activity tracking are added.
+
+
+
 ### Jozef FC // After Dark
 The signature interface is a premium, broadcast-style football universe rather than a generic children's site: floodlit stadium crest, custom J/11 identity, editorial type, neon-acid accents, responsive player HUD, real matchday indicator, cinematic motion, and a seven-destination quick navigation deck. Deep links and browser back/forward work between sections. Reduced-motion preferences are honoured.
 
