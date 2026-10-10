@@ -63,14 +63,13 @@
     const cycle=((ms%1900)+1900)%1900;
     return cycle<950?cycle/9.5:(1900-cycle)/9.5;
   };
-  const accuracy=(kind,pos,level='pro')=>{
-    const ranges={
-      rookie:{baseball:27,basketball:22},
-      pro:{baseball:17,basketball:12},
-      legend:{baseball:9,basketball:7}
-    };
-    return Math.abs(pos-55)<=(ranges[level]||ranges.pro)[kind==='baseball'?'baseball':'basketball'];
+  const TIMING_WINDOWS={
+    rookie:{baseball:27,basketball:22},
+    pro:{baseball:17,basketball:12},
+    legend:{baseball:9,basketball:7}
   };
+  const accuracy=(kind,pos,level='pro')=>
+    Math.abs(pos-55)<=(TIMING_WINDOWS[level]||TIMING_WINDOWS.pro)[kind==='baseball'?'baseball':'basketball'];
   function persist(){
     try{localStorage.setItem(KEY,JSON.stringify(saved))}catch(_){/* This run still works. */}
   }
@@ -187,6 +186,13 @@
     }
     label('multi-scene-text',sport==='hockey'?'':sport==='baseball'?'BATTER UP':sport==='basketball'?'FROM DOWNTOWN':'LIGHTS • CAMERA • ACTION');
     setHidden('multi-timing',GAMES[sport].kind!=='timing');
+    const meter=$('multi-meter');
+    if(meter && (sport==='baseball'||sport==='basketball')){
+      // The visible green zone exactly matches the selected difficulty's scoring tolerance.
+      const width=TIMING_WINDOWS[difficulty][sport],left=55-width,right=55+width;
+      meter.style.background='linear-gradient(90deg,#86514c 0 '+left+'%,#aedb6a '+left+'% '+right+'%,#86514c '+right+'% 100%)';
+      meter.setAttribute('aria-label',difficulty+' difficulty: scoring sweet spot from '+left+' to '+right+' percent');
+    }
     const active=phase!=='finished'&&phase!=='result';
     let prompt=lastMessage;
     if(!prompt){
@@ -258,7 +264,8 @@
     if(sport==='hockey'){
       if(!['left','centre','right'].includes(choice))return;
       shotIndex=['left','centre','right'].indexOf(choice);
-      goalieIndex=Math.floor(Math.random()*3);
+      const observed=stageView?.getGoalie?.();
+      goalieIndex=[0,1,2].includes(observed)?observed:Math.floor(Math.random()*3);
       if(difficulty==='rookie'&&goalieIndex===shotIndex&&Math.random()<.65){
         goalieIndex=(goalieIndex+1)%3;
       }else if(difficulty==='legend'&&goalieIndex!==shotIndex&&Math.random()<.45){
