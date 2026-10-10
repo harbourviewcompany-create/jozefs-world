@@ -1,3 +1,4 @@
+const bundled=require('./bundle-contract.cjs');
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -59,7 +60,8 @@ test('all four sports have complete game UI, accessible controls and offline res
  assert.ok(html.includes('data-section="sports"'),'existing Sports Scores stays available');
  assert.ok(fs.readFileSync(path.join(root,'stadium.js'),'utf8').includes("'sports-arcade'"));
  const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
- assert.ok(sw.includes("'./multisport.js'")&&sw.includes("'./multisport.css'"));
+ assert.ok(sw.includes("'./multisport.js'"));
+ bundled.css(root,html,sw,'multisport.css');
  assert.match(css,/@media\(max-width:680px\)/);
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
  assert.doesNotMatch(source,/\bfetch\s*\(|XMLHttpRequest|WebSocket|sendBeacon|speechSynthesis/);
