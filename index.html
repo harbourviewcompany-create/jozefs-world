@@ -34,6 +34,7 @@
   <link rel="stylesheet" href="album.css" />
   <link rel="stylesheet" href="sports.css" />
   <link rel="stylesheet" href="club-hq.css" />
+  <link rel="stylesheet" href="chronicle.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Lilita+One&family=Nunito:wght@400;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
@@ -78,6 +79,7 @@
       <button class="nav-btn" data-section="roblox">Roblox</button>
       <button class="nav-btn" data-section="notes">Notes <span id="note-dot" class="note-dot" hidden>●</span></button>
       <button class="nav-btn" data-section="album">Stickers</button>
+      <button class="nav-btn" data-section="chronicle">Chronicle</button>
       <button class="nav-btn" data-section="fun">Locker Room</button>
     </div>
     <button class="jw-xp-pill" type="button" onclick="showSection('club')" aria-label="Open Jozef FC player club">
@@ -135,6 +137,16 @@
         <button type="button" class="today-notes-open" onclick="showSection('notes')">CLUB NOTES ↗</button>
       </div>
     </section>
+
+
+    <aside class="chronicle-home" aria-label="Your Jozef FC story">
+      <div class="chronicle-home-copy">
+        <span class="studio-kicker">THE CLUB CHRONICLE / EVERY MATCH MATTERS</span>
+        <h2>MAKE <em>HISTORY.</em></h2>
+        <p id="chronicle-home-summary">The story of Jozef FC is waiting for its next chapter.</p>
+      </div>
+      <button type="button" onclick="showSection('chronicle')">OPEN YOUR STORY ↗</button>
+    </aside>
 
     <div class="studio-signal-row" aria-label="Your current progress">
       <div class="studio-signal"><span class="studio-signal-label">PLAYER RANK</span><strong>LVL <span data-jw-level>1</span></strong><small>ALWAYS EVOLVING</small></div>
@@ -988,6 +1000,53 @@
       <div id="note-list" aria-live="polite"></div>
     </div>
   </section>
+
+<section id="chronicle" class="section" tabindex="-1" aria-labelledby="chronicle-title">
+  <div class="chronicle-heading">
+    <div><p class="studio-kicker">JOZEF FC / CLUB HISTORY</p>
+      <h2 id="chronicle-title">YOUR <em>FOOTBALL STORY.</em></h2>
+      <p>A personal record of your matches, victories and big moments. Saved only on this device, shared by everyone here.</p>
+    </div>
+    <div class="chronicle-label">VOL. 01 <span>/</span> THE JOURNEY</div>
+  </div>
+  <div class="chronicle-dashboard" aria-label="Your current club record">
+    <div><span>ARENA MATCHES</span><strong id="chronicle-games">0</strong></div>
+    <div><span>ARENA WINS</span><strong id="chronicle-wins">0</strong></div>
+    <div><span>CAREER MATCHES</span><strong id="chronicle-career">0</strong></div>
+    <div><span>WORLD TOUR WINS</span><strong id="chronicle-tour">0</strong></div>
+  </div>
+  <div class="chronicle-layout">
+    <div class="chronicle-ledger">
+      <div class="chronicle-ledger-heading">
+        <h3>MATCHDAY ARCHIVE</h3>
+        <p>New chapters appear after games and milestones. Earlier progress is reflected in your club record above.</p>
+      </div>
+      <div id="chronicle-list" class="chronicle-list" aria-label="Saved football highlights"></div>
+      <p class="chronicle-storage-note">PRIVATE CLUB MEMORY · This archive is kept locally in this browser, not uploaded. Save a Club backup to keep it safe.</p>
+    </div>
+    <div class="chronicle-preview">
+      <div class="chronicle-preview-actions">
+        <span class="studio-kicker">YOUR MATCHDAY COVER</span>
+        <button type="button" id="chronicle-print">PRINT POSTER ↗</button>
+      </div>
+      <article class="chronicle-poster" id="chronicle-poster" aria-label="Print-ready Jozef FC matchday poster">
+        <div class="chronicle-poster-top"><span>JOZEF FC <b>// AFTER DARK</b></span><span>EST. THE FUTURE</span></div>
+        <div class="chronicle-poster-field" aria-hidden="true"><span class="chronicle-poster-shield">J <b>/ 11</b></span></div>
+        <div class="chronicle-poster-body">
+          <p id="chronicle-cover-category">THE CLUB CHRONICLE / ISSUE 01</p>
+          <h3 id="chronicle-cover-headline">THE STORY STARTS HERE.</h3>
+          <p id="chronicle-cover-story">Every football story begins with a first touch. Play a match to create your first highlight.</p>
+          <div class="chronicle-poster-stats">
+            <span>JFC <strong id="chronicle-cover-wins">00 WINS</strong></span>
+            <span>LEVEL <strong id="chronicle-cover-level">01</strong></span>
+          </div>
+        </div>
+        <div class="chronicle-poster-footer"><span>BUILT FOR JOZEF FC</span><span id="chronicle-cover-date">CLUB EDITION</span></div>
+      </article>
+      <p class="chronicle-print-help">Use Print Poster to print or save your cover as a PDF using your device’s print menu. No online sharing is required.</p>
+    </div>
+  </div>
+</section>
 <section id="album" class="section" tabindex="-1" aria-labelledby="album-title">
     <h2 id="album-title" class="section-title">Sticker album</h2>
     <p class="section-desc">Finish matches and Street runs to fill the book. <span id="album-count">0 / 8</span></p>
@@ -1067,5 +1126,6 @@
   <script src="visual-2026.js" defer></script>
   <script src="campaign-2026.js" defer></script>
   <script src="club-hq.js"></script>
+  <script src="chronicle.js" defer></script>
 </body>
 </html>
