@@ -239,3 +239,44 @@
  .multi-difficulty-options{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
  .multi-difficulty-options button{padding:10px 3px;font-size:10px}
 }
+
+/* Rival Circuit: 12 progressive, earned challenges across all four sports. */
+.multi-rivals{margin:23px 0 12px;padding:18px 15px;border:1px solid #8ccfeb71;
+ border-radius:15px;background:radial-gradient(ellipse at 95% 0%,#83dff539,transparent 67%),
+ linear-gradient(145deg,#173f49,#102634);box-shadow:0 12px 24px #04101b73}
+.multi-rivals-kicker{display:block;color:#8be9f6;font:900 10px var(--sf-ui);letter-spacing:.12em}
+.multi-rivals-intro h4{font:900 27px/.95 var(--sf-display);margin:8px 0;color:#effffa}
+.multi-rivals-intro h4 em{font-style:normal;color:#8be9f6}
+.multi-rivals-intro p{font:650 12px/1.55 var(--sf-ui);color:#c4ded7;margin:0 0 14px}
+.multi-rival-fixture{display:grid;gap:7px;padding:14px 12px;background:#0b2631;
+ border:1px solid #8be0eb70;border-radius:9px}
+.multi-rival-fixture>span{font:900 9px var(--sf-ui);letter-spacing:.12em;color:#9dcbd2}
+.multi-rival-fixture>strong{font:900 20px/1 var(--sf-display);color:#f2fffb}
+.multi-rival-fixture>small{font:800 11px var(--sf-ui);color:#aff3e2}
+.multi-rival-list{display:grid;gap:7px;margin:13px 0}
+.multi-rival-item{display:flex;justify-content:space-between;align-items:center;gap:8px;
+ padding:10px;border-radius:8px;background:#112a35;border:1px solid #a3d2c440}
+.multi-rival-item>span{display:grid;gap:4px;color:#a6cbcb;font:900 10px var(--sf-ui);letter-spacing:.07em}
+.multi-rival-item strong{color:#effef3;font:900 15px/.98 var(--sf-display);letter-spacing:0}
+.multi-rival-item small{color:#b7d3cc;font:850 10px var(--sf-ui);white-space:nowrap}
+.multi-rival-item.rival-selected{border-color:#8fe9f0;background:#1d3d46}
+.multi-rival-item.rival-champion{border-color:#e8d18c;background:#384532}
+.multi-rival-item.rival-champion small{color:#f9dfa2}
+.multi-rival-progress{height:10px;border-radius:30px;background:#071e2b;border:1px solid #86d9ed69;overflow:hidden}
+.multi-rival-progress>span{display:block;width:0;height:100%;
+ background:linear-gradient(90deg,#83dff3,#c8ff5a);border-radius:inherit;
+ transition:width .25s}
+.multi-rival-overall{font:850 10px/1.5 var(--sf-ui);letter-spacing:.07em;color:#c8eee8;text-align:center;margin:10px 0}
+.multi-rival-next{cursor:pointer;width:100%;min-height:47px;border-radius:9px;padding:11px;
+ background:#85dfe9;border:1px solid #bcf4ef;color:#102c37;
+ font:900 12px var(--sf-ui);letter-spacing:.055em}
+.multi-rival-next:hover{background:#b8f5ef}
+.multi-rival-next:focus-visible{outline:3px solid #c8ff5a;outline-offset:3px}
+.multi-rivals.rival-complete{border-color:#e7cd83;box-shadow:0 0 30px #e7cb7944}
+.multi-rivals.rival-complete .multi-rival-overall{color:#f5e4ac}
+@media(max-width:680px){.multi-rivals{padding:15px 11px}
+ .multi-rival-item{padding:9px 8px}
+ .multi-rival-item strong{font-size:14px}
+ .multi-rival-item small{font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){.multi-rival-progress>span{transition:none!important}}
