@@ -51,7 +51,7 @@ test('home progress tile, compact mobile navigation and small viewport layout st
  assert.doesNotMatch(css,/@import|url\(\s*https?:|display:none!important/);
  const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]);
  assert.equal(new Set(ids).size,ids.length);
- for(const id of ['arena-canvas','squad-grid','squad-field-striker','squad-field-mid','squad-field-back','squad-field-keeper','jw-number','jw-sound','who-input-phone']){
+ for(const id of ['arena-canvas','squad-grid','squad-field-striker','squad-field-mid','squad-field-back','squad-field-keeper','jw-number','jw-sound','note-text','note-list']){
   assert.ok(ids.includes(id),'must preserve playable/profile element '+id);
  }
 });
