@@ -212,3 +212,30 @@
  .multi-cup-progress>span{transition:none!important}
  .multi-stage.multi-result .multi-scene-art{animation:none!important}
 }
+
+/* Meaningful, optional arcade skill levels. Changing level restarts only the current five-turn event. */
+.multi-difficulty{
+ display:flex;justify-content:space-between;align-items:center;gap:15px;
+ flex-wrap:wrap;padding:15px 17px;margin:0 auto 14px;max-width:1130px;
+ border:1px solid #d4edbf50;border-radius:13px;
+ background:linear-gradient(145deg,#172e39,#0d2530);
+}
+.multi-difficulty>div:first-child{flex:1 1 250px;min-width:0;display:grid;gap:5px}
+.multi-difficulty strong{font:900 12px var(--sf-ui);letter-spacing:.09em;color:#e1ffb5}
+.multi-difficulty small{font:650 11px/1.45 var(--sf-ui);color:#bad8ca}
+.multi-difficulty-options{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.multi-difficulty-options button{
+ cursor:pointer;min-height:44px;padding:11px 14px;border-radius:9px;
+ color:#d9ebdf;background:#183d43;border:1px solid #afd5c164;
+ font:900 11px var(--sf-ui);letter-spacing:.07em;
+}
+.multi-difficulty-options button.selected,.multi-difficulty-options button[aria-pressed="true"]{
+ color:#16302a;background:#c8ff5a;border-color:#f3ffc0;
+ box-shadow:0 0 0 2px #c8ff5a2a;
+}
+.multi-difficulty-options button:focus-visible{outline:3px solid #c8ff5a;outline-offset:3px}
+@media(max-width:680px){
+ .multi-difficulty{padding:12px;gap:10px}
+ .multi-difficulty-options{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+ .multi-difficulty-options button{padding:10px 3px;font-size:10px}
+}
