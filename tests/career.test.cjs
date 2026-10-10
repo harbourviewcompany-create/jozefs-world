@@ -1,3 +1,4 @@
+const bundled=require('./bundle-contract.cjs');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -104,7 +105,7 @@ test('root HTML matches the publishing source and interactive panels are correct
   assert.ok(learn.includes('id="learn-positions"'), 'field positions must be in Learn');
   assert.ok(html.includes('id="career"'));
   assert.ok(html.includes('src="career.js"'));
-  assert.ok(html.includes('href="career.css"'));
+  bundled.css(root,html,fs.readFileSync(path.join(root,'sw.js'),'utf8'),'career.css');
 });
 
 test('unique navigation, game canvases and script entrypoints across a cinematic homepage',()=>{
@@ -119,11 +120,10 @@ test('unique navigation, game canvases and script entrypoints across a cinematic
   }
   const nav=[...html.matchAll(/data-section="street"/g)];
   assert.equal(nav.length,1,'one STREET//11 navigation entry');
-  for(const file of ['stadium.css','stadium.js','street.js','arcade.css','arcade.js']){
-    const escaped=file.replace(/\./g,'\\.');
-    const matches=[...html.matchAll(new RegExp('(?:src|href)="'+escaped+'"','g'))];
-    assert.equal(matches.length,1,'load '+file+' exactly once');
-  }
+  const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
+  for(const css of ['stadium.css','arcade.css'])bundled.css(root,html,sw,css);
+  for(const file of ['stadium.js','street.js','arcade.js'])
+    assert.equal((html.match(new RegExp('src="'+file.replace(/\./g,'\\.')+'"','g'))||[]).length,1,'load '+file+' exactly once');
   const pre=html.indexOf('<section id="street"');
   const games=html.indexOf('<section id="games"');
   assert.ok(pre>0&&pre<games,'street game must appear before training games');
