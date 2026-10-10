@@ -845,6 +845,7 @@
           <span class="multi-meter-marker" id="multi-meter-marker"></span>
         </div>
       </div>
+      <div id="multi-round-markers" class="multi-round-markers" role="group" aria-label="Five-turn match progress"></div>
       <div id="multi-controls" class="multi-controls" aria-label="Sport game controls"></div>
       <p class="multi-key-help" id="multi-keyhelp">Use 1, 2, 3 or tap a choice.</p>
     </div>
@@ -857,6 +858,28 @@
         <div class="multi-record"><div><strong>Basketball</strong><small id="multi-played-basketball">0 PLAYED</small></div><b id="multi-best-basketball">0/5</b></div>
         <div class="multi-record"><div><strong>Wrestling</strong><small id="multi-played-wrestling">0 PLAYED</small></div><b id="multi-best-wrestling">0/5</b></div>
       </div>
+      <section class="multi-cup" id="multi-cup" aria-labelledby="multi-cup-heading">
+        <div class="multi-cup-heading">
+          <span>JFC / ALL-SPORT CHAMPIONSHIP</span>
+          <h4 id="multi-cup-heading">FOUR SPORTS. <em>ONE CUP.</em></h4>
+          <p>Score at least 3 out of 5 in every sport to earn the All-Sport Cup. No deadline.</p>
+        </div>
+        <div class="multi-cup-progress" role="progressbar" id="multi-cup-progress" aria-label="Qualified sports for the All-Sport Cup" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0">
+          <span id="multi-cup-meter"></span>
+        </div>
+        <div class="multi-cup-stamps" role="list" aria-label="Sports Cup qualification">
+          <div role="listitem" class="multi-cup-stamp" id="multi-cup-hockey"><span>01 / HOCKEY</span><strong id="multi-cup-hockey-state">NOT YET</strong></div>
+          <div role="listitem" class="multi-cup-stamp" id="multi-cup-baseball"><span>02 / BASEBALL</span><strong id="multi-cup-baseball-state">NOT YET</strong></div>
+          <div role="listitem" class="multi-cup-stamp" id="multi-cup-basketball"><span>03 / BASKETBALL</span><strong id="multi-cup-basketball-state">NOT YET</strong></div>
+          <div role="listitem" class="multi-cup-stamp" id="multi-cup-wrestling"><span>04 / WRESTLING</span><strong id="multi-cup-wrestling-state">NOT YET</strong></div>
+        </div>
+        <div class="multi-cup-finale" id="multi-cup-finale">
+          <div class="multi-cup-medal" aria-hidden="true"><span>J11</span></div>
+          <p id="multi-cup-status" aria-live="polite">0 OF 4 QUALIFIED</p>
+          <strong id="multi-cup-title">THE CUP AWAITS.</strong>
+          <button type="button" class="multi-cup-next" id="multi-cup-next">PLAY FOR THE CUP ↗</button>
+        </div>
+      </section>
       <h4>HOW TO PLAY</h4>
       <p class="multi-instructions" id="multi-instructions">Choose a direction and shoot!</p>
       <p class="multi-unofficial">Wrestling Showdown is an original pretend sports-entertainment challenge inspired by wrestling shows. It is not affiliated with or endorsed by WWE. No contact moves to copy.</p>
