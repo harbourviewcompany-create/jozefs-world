@@ -159,6 +159,16 @@
     label('multi-round',phase==='finished'?'FULL TIME':Math.min(round+1,config.rounds)+' / '+config.rounds);
     label('multi-score',points+' / '+config.rounds+' '+config.unit);
     label('multi-stage-label',sport==='hockey'?'AIM FOR THE OPEN CORNER':sport==='baseball'?'TIME YOUR SWING':sport==='basketball'?'RELEASE NEAR THE SWEET SPOT':'THE SHOW MUST GO ON');
+    const canvas=$('multi-action-canvas');
+    if(canvas){
+      canvas.setAttribute('role',sport==='wrestling'?'img':'button');
+      canvas.setAttribute('aria-label',sport==='hockey'?
+        'Tap left, centre or right of the rink to aim your shot. Keyboard 1, 2 or 3 also works.':
+        sport==='baseball'?'Tap to swing when the pitch is right. Press Space to swing with keyboard.':
+        sport==='basketball'?'Tap to shoot at the hoop. Press Space to shoot with keyboard.':
+        'Wrestling stage. Choose a showmanship or trivia response using the buttons.');
+      canvas.tabIndex=sport==='wrestling'?-1:0;
+    }
     label('multi-scene-text',sport==='hockey'?'':sport==='baseball'?'BATTER UP':sport==='basketball'?'FROM DOWNTOWN':'LIGHTS • CAMERA • ACTION');
     setHidden('multi-timing',GAMES[sport].kind!=='timing');
     const active=phase!=='finished'&&phase!=='result';
@@ -262,10 +272,25 @@
     lastResult={sport,score:points};
     if(typeof Event==='function')window.dispatchEvent?.(new Event('jozef:multisport-completed'));
   }
+  function canvasAction(event){
+    if(phase!=='ready')return;
+    if(sport==='hockey'){
+      const rect=event.currentTarget?.getBoundingClientRect?.();
+      if(!rect||!Number.isFinite(rect.width)||rect.width<=0)return;
+      const ratio=(event.clientX-rect.left)/rect.width;
+      act(ratio<1/3?'left':ratio<2/3?'centre':'right');
+    }else if(sport==='baseball'||sport==='basketball'){
+      act('shoot');
+    }
+  }
   function onKey(e){
     if(!$('sports-arcade')?.classList.contains('active'))return;
     if(e.target?.matches?.('input,textarea,select,[contenteditable]'))return;
     const key=e.key;
+    if(e.target===$('multi-action-canvas')&&phase==='ready'&&
+      (key==='Enter'||(key===' '&&sport==='hockey'))){
+      e.preventDefault?.();act(sport==='hockey'?'centre':'shoot');return;
+    }
     if(key==='1'||key==='2'||key==='3'){
       if(sport!=='hockey'&&sport!=='wrestling')return;
       e.preventDefault?.();
@@ -287,6 +312,7 @@
   }
   function init(){
     stageView=window.JozefSportStage?.create?.()||null;
+    $('multi-action-canvas')?.addEventListener('click',canvasAction);
     $('multi-cup-next')?.addEventListener('click',nextCupSport);
     for(const k of Object.keys(GAMES))$('multi-tab-'+k)?.addEventListener('click',()=>start(k));
     document.querySelectorAll('[data-multi-start]')?.forEach(btn=>btn.addEventListener('click',()=>{
