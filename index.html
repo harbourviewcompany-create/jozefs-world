@@ -39,6 +39,7 @@
   <link rel="stylesheet" href="multisport.css" />
   <link rel="stylesheet" href="sports-stage.css" />
   <link rel="stylesheet" href="playbook.css" />
+  <link rel="stylesheet" href="street-powerups.css" />
   <link rel="stylesheet" href="hq.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -344,6 +345,10 @@
           <div><small>TIME LEFT</small><strong><span id="street-time">55</span><em>s</em></strong></div>
           <div><small>COMBO</small><strong id="street-combo">×1</strong></div>
         </div>
+        <div class="street-powerup-guide" aria-label="Street run power-up status">
+          <span class="street-powerup-shield" id="street-shield">NO SHIELD</span>
+          <span>GOLD STARS = BIG COMBO · CYAN SHIELDS = ONE SAFE HIT</span>
+        </div>
         <div class="street-canvas-shell">
           <canvas id="street-canvas" width="360" height="520" tabindex="0" aria-label="Night Run soccer game. Use arrow keys or touch controls to switch lanes." role="img"></canvas>
           <div class="street-side-note street-side-left" aria-hidden="true">EST. 11/JOZEF</div>
@@ -358,6 +363,7 @@
         <h3>MOVE FAST.<br><em>THINK FASTER.</em></h3>
         <div class="street-rule"><span class="street-rule-number">01</span><div><strong>CHASE THE LIGHT</strong><p>Collect neon stars to score big. Keep collecting to multiply your points.</p></div></div>
         <div class="street-rule"><span class="street-rule-number">02</span><div><strong>DODGE THE DEFENDERS</strong><p>Red shirts block your way. You only have three lives.</p></div></div>
+        <div class="street-rule"><span class="street-rule-number">04</span><div><strong>GRAB THE POWER-UPS</strong><p>Golden stars add a bigger combo. Cyan shields protect you from one defender collision.</p></div></div>
         <div class="street-rule"><span class="street-rule-number">03</span><div><strong>OWN YOUR RECORD</strong><p>Every run is different. Your best score stays on this device.</p></div></div>
         <div class="street-personal-best"><small>PERSONAL BEST / ALL TIME</small><strong id="street-best">000</strong><span>THE RECORD IS YOURS TO BREAK.</span></div>
         <div class="street-control-guide">KEYBOARD <kbd>←</kbd> <kbd>→</kbd> / <kbd>A</kbd> <kbd>D</kbd><span>OR TAP A LANE / USE THE BIG BUTTONS</span></div>
