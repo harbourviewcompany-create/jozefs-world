@@ -1,13 +1,13 @@
 /* Jozef FC offline shell: only same-origin public game assets. Never caches personal progress. */
-const CACHE='jozef-fc-app-shell-v24';
+const CACHE='jozef-fc-app-shell-v25';
 const CORE=[
  './','./index.html','./world.html','./favicon.svg','./manifest.webmanifest',
  './styles.css','./pitch.css','./extras.css','./tournament.css','./career.css',
- './clubhouse.css','./scramble-positions.css','./stadium.css','./arcade.css','./arena.css','./playmode.css','./notes.css','./visual-2026.css','./arena-visual.css','./campaign-2026.css','./broadcast.css','./album.css','./sports.css','./sports-stage.css','./club-hq.css','./chronicle.css','./locker.css','./multisport.css','./mobile-qa-2026.css',
+ './clubhouse.css','./scramble-positions.css','./stadium.css','./arcade.css','./arena.css','./playmode.css','./notes.css','./visual-2026.css','./arena-visual.css','./campaign-2026.css','./broadcast.css','./album.css','./sports.css','./sports-stage.css','./club-hq.css','./chronicle.css','./locker.css','./multisport.css','./sports-stage.css','./mobile-qa-2026.css',
  './matchday.css','./training.css','./jersey-bingo.css',
  './app.js','./extras.js','./tournament.js','./career.js','./clubhouse.js',
  './scramble-positions.js','./celebrate.js','./training.js',
- './jersey-bingo.js','./matchday.js','./street.js','./stadium.js','./arcade.js','./roblox.js','./squad.js','./arena.js','./playmode.js','./notes.js','./visual-2026.js','./arena-renderer.js','./campaign-2026.js','./club-hq.js','./chronicle.js','./broadcast.js','./album.js','./sports.js','./sports-stage.js','./locker.js','./multisport.js'
+ './jersey-bingo.js','./matchday.js','./street.js','./stadium.js','./arcade.js','./roblox.js','./squad.js','./arena.js','./playmode.js','./notes.js','./visual-2026.js','./arena-renderer.js','./campaign-2026.js','./club-hq.js','./chronicle.js','./broadcast.js','./album.js','./sports.js','./sports-stage.js','./locker.js','./sports-stage.js','./multisport.js'
 ];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE)
