@@ -5,6 +5,9 @@ on:
     paths:
       - 'arena*.js'
       - 'scripts/build-arena-bundle.cjs'
+      - 'scripts/build-site-css.cjs'
+      - '*.css'
+      - 'world.html'
       - 'playmode.js'
       - 'broadcast.js'
       - 'ui-refine-2026.css'
@@ -17,6 +20,9 @@ on:
     paths:
       - 'arena*.js'
       - 'scripts/build-arena-bundle.cjs'
+      - 'scripts/build-site-css.cjs'
+      - '*.css'
+      - 'world.html'
       - 'playmode.js'
       - 'broadcast.js'
       - 'ui-refine-2026.css'
@@ -47,6 +53,8 @@ jobs:
           node --check tests/arena-mobile-smoke.cjs
       - name: Verify deployed bundle matches game source
         run: node scripts/build-arena-bundle.cjs --check
+      - name: Verify source stylesheets match production bundles
+        run: node scripts/build-site-css.cjs --check
       - name: Logic regression tests
         run: node --test tests/arena-*.test.cjs
   arena-mobile:
