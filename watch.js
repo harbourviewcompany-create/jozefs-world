@@ -151,6 +151,14 @@
     });
     latest();
     document.getElementById('watch-refresh')?.addEventListener('click', latest);
+    if (!window.__jozefWatchTimer) {
+      window.__jozefWatchTimer = window.setInterval(() => {
+        if (document.hidden) return;
+        const room = document.getElementById('watch');
+        if (room && !room.classList.contains('active')) return;
+        latest();
+      }, 60000);
+    }
     document.querySelectorAll('[data-watch-out]').forEach(link => {
       link.addEventListener('click', event => {
         const ok = window.confirm('This opens an official league site, outside Jozef FC. Continue?');
