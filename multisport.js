@@ -39,7 +39,7 @@
   const $=id=>document.getElementById(id);
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const valid=(v)=>Number.isSafeInteger(v)&&v>=0&&v<=999999;
-  function fresh(){return Object.fromEntries(Object.keys(GAMES).map(sport=>[sport,{played:0,best:0,rivalTier:0}]));}
+  function fresh(){return Object.fromEntries(Object.keys(GAMES).map(sport=>[sport,{played:0,best:0,rivalTier:0,recent:[]}]));}
   function load(){
     let input;
     try{input=JSON.parse(localStorage.getItem(KEY)||'null')}catch(_){}
@@ -50,6 +50,9 @@
       if(valid(row.played))out[sport].played=row.played;
       if(valid(row.best))out[sport].best=Math.min(GAMES[sport].rounds,row.best);
       if(valid(row.rivalTier))out[sport].rivalTier=Math.min(RIVAL_TARGETS.length,row.rivalTier);
+      // Older saves have no recent array; ignore malformed or oversized imports.
+      if(Array.isArray(row.recent))
+        out[sport].recent=row.recent.filter(x=>Number.isInteger(x)&&x>=0&&x<=5).slice(-5);
     }
     if(valid(input?.wrestling?.careerWins))
       out.wrestling.careerWins=Math.min(input.wrestling.careerWins,out.wrestling.played);
@@ -99,6 +102,59 @@
   }
   // A championship is earned entirely from the four existing local best scores.
   // No extra profile, payments, countdowns, or new save key.
+  const COACH_TIPS={
+    hockey:[
+      'Watch the goalie before shooting. Aim into a corner the keeper is moving away from.',
+      'Mix left, centre and right. Varying your choices makes the shootout more interesting.',
+      'Try Legend difficulty: track the goalie movement and pick the open side.'
+    ],
+    baseball:[
+      'Watch the approaching pitch and swing when the marker crosses the green zone.',
+      'Aim for a consistent swing rhythm, not speed. Watch the middle of the power bar.',
+      'Try a narrower Legend timing window to practise your precision.'
+    ],
+    basketball:[
+      'Wait until the timing marker enters the green scoring zone before releasing.',
+      'Keep your eyes on the release marker and practise the same shooting rhythm.',
+      'Try Legend difficulty and see how often you can hit the tighter release window.'
+    ],
+    wrestling:[
+      'Read each crowd or trivia prompt all the way through before choosing.',
+      'Remember the signature entrances, teammate moments and superstar trivia.',
+      'Try Legend showmanship with new questions and more demanding challenges.'
+    ]
+  };
+  function getFormProgress(kind=sport){
+    if(!GAMES[kind])return null;
+    const recent=[...(saved[kind].recent||[])].slice(-5);
+    const average=recent.length?recent.reduce((n,x)=>n+x,0)/recent.length:null;
+    let trend='FIRST GAME AWAITS';
+    if(recent.length===1)trend='FIRST RESULT';
+    if(recent.length>1){
+      const previous=recent[recent.length-2],latest=recent[recent.length-1];
+      trend=latest>previous?'IMPROVING ↑':latest<previous?'KEEP PRACTISING':'HOLDING STEADY';
+    }
+    const tip=COACH_TIPS[kind][average===null||average<2.5?0:average<4?1:2];
+    return {sport:kind,recent,average,trend,tip};
+  }
+  function paintForm(){
+    const form=getFormProgress(),holder=$('multi-form-scores');
+    if(holder){
+      holder.replaceChildren();
+      const five=Array(5-form.recent.length).fill(null).concat(form.recent);
+      five.forEach((score,i)=>{
+        const item=document.createElement('span');
+        item.className='multi-form-score'+(score===null?' is-empty':score>=3?' is-good':'');
+        item.setAttribute('role','listitem');
+        item.setAttribute('aria-label',score===null?'No saved game':score+' of 5 points');
+        item.textContent=score===null?'—':score+'/5';
+        holder.append(item);
+      });
+    }
+    label('multi-form-average',form.average===null?'—':form.average.toFixed(1)+' / 5');
+    label('multi-form-trend',form.trend);
+    label('multi-form-tip',form.tip);
+  }
   function getCupProgress(){
     const qualified=Object.keys(GAMES).filter(id=>saved[id].best>=3);
     return {qualified:qualified.length,total:4,champion:qualified.length===4};
@@ -264,6 +320,7 @@
     if(instructions)instructions.textContent=sport==='wrestling'?'Original ring-show challenges and WWE superstar trivia. Unofficial fan activity, no risky wrestling moves to copy.':
       'Five turns. Have fun and chase your own personal best. No penalties for missing.';
     paintRecord();
+    paintForm();
     paintCup();
     paintRivals();
     paintWrestlingCareer();
@@ -345,6 +402,7 @@
     phase='finished';
     saved[sport].played=Math.min(999999,saved[sport].played+1);
     saved[sport].best=Math.max(points,saved[sport].best);
+    saved[sport].recent=(saved[sport].recent||[]).concat(points).slice(-5);
     const tier=saved[sport].rivalTier||0;
     const rivalWin=tier<RIVAL_TARGETS.length&&points>=RIVAL_TARGETS[tier];
     if(rivalWin)saved[sport].rivalTier=tier+1;
@@ -413,6 +471,7 @@
   }
   function init(){
     stageView=window.JozefSportStage?.create?.()||null;
+    $('multi-form-replay')?.addEventListener('click',()=>start(sport));
     $('multi-action-canvas')?.addEventListener('click',canvasAction);
     $('multi-cup-next')?.addEventListener('click',nextCupSport);
     $('multi-rival-next')?.addEventListener('click',nextRivalSport);
@@ -437,7 +496,7 @@
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
   else init();
-  window.JozefMultiSport=Object.freeze({getProgress:()=>JSON.parse(JSON.stringify(saved)),getCupProgress,getWrestlingCareer,getRivalProgress,
+  window.JozefMultiSport=Object.freeze({getProgress:()=>JSON.parse(JSON.stringify(saved)),getFormProgress,getCupProgress,getWrestlingCareer,getRivalProgress,
     getLastResult:()=>lastResult&&{...lastResult},evaluateTiming:accuracy,
     getDifficulty:()=>difficulty,playSport:kind=>{if(!GAMES[kind])return false;start(kind);window.requestAnimationFrame?.(()=>stageView?.refresh());return true}});
 })();
