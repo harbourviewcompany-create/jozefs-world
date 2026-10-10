@@ -54,12 +54,11 @@
     try { best = String(localStorage.getItem(BEST) || '000').padStart(3, '0'); } catch (err) { best = '000'; }
     if (street) street.textContent = 'Street best: ' + best;
     if (club) club.textContent = best;
-    if (note) {
-      const latest = load()[0];
-      note.textContent = unread() && latest
-        ? 'New club note: ' + latest.text
-        : 'No new notes.';
-    }
+    const card = document.getElementById('today-card');
+    const latest = load()[0];
+    const fresh = Boolean(unread() && latest);
+    if (note) note.textContent = fresh ? 'New club note: ' + latest.text : 'No new notes.';
+    if (card) card.className = fresh ? 'today-card has-note' : 'today-card';
     paintDot();
   }
 
