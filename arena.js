@@ -145,6 +145,7 @@ function end(){
  if(won)cue('victory');
  const result=won?'VICTORY!':us===them?'A HARD-FOUGHT DRAW.':'FULL TIME. REMATCH?';
  msg(result+' '+us+'–'+them+'. '+(unlocked?'NEW STADIUM UNLOCKED!':won?'Your club has earned a win!':'Every match builds your skills.'));
+ finishReplay();
  window.dispatchEvent?.(new Event('jozef:progress'));
  // A fully finished match counts toward today's shared HQ activities.
  window.dispatchEvent?.(new Event('jozef:arena-completed'));
@@ -213,6 +214,26 @@ function loseBall(){
  msg(conceded?'RIVALS SCORE ON THE BREAK! RESET AND GO AGAIN.':'YOUR TEAMMATES STOP THE COUNTER! RECOVER YOUR SHAPE!');
  if(them>=4){resetPositions();end();return;}
  resetPositions();
+}
+function startReplay(title){
+ if(mode!=='playing'||replayHistory.length<6||window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches)return;
+ replay={title,frames:replayHistory.slice(-27),elapsed:0,duration:1.25};
+ const banner=$('arena-replay-banner');if(banner){banner.hidden=false;banner.textContent=title+' · REPLAY';}
+}
+function captureHistory(dt){
+ replayWait+=dt;if(replayWait<.057)return;
+ replayWait=0;
+ replayHistory.push({
+  actor:{...actor},mate:{...mate},ball:{...ball},
+  defenders:defenders.map(d=>({...d})),keeper:{...keeper},
+  camera:{...camera},phase:MATCH_LENGTH-time,
+  aim,skillTime,flash
+ });
+ if(replayHistory.length>37)replayHistory.shift();
+}
+function finishReplay(){
+ replay=null;
+ const banner=$('arena-replay-banner');if(banner)banner.hidden=true;
 }
 function goal(){
  us+=1;flash=.75;cue('goal');experience?.haptic([40,40,40]);experience?.record('goals');startReplay('GOAL');msg('GOOOOOAL! JOZEF FC SCORES! '+us+'–'+them);
@@ -298,14 +319,22 @@ function player(x,y,color,number){
  ctx.fillStyle='#06171d';ctx.font='800 13px system-ui';ctx.textAlign='center';ctx.fillText(String(number),x,y+5);
 }
 function draw(){
+ const sample=replay&&replay.frames.length?
+   replay.frames[Math.min(replay.frames.length-1,Math.floor(replay.elapsed/replay.duration*replay.frames.length))]:null;
  // Presentation layer is isolated from the physics. If graphics are blocked by
  // an older device, fall back to the original playable canvas renderer.
  if(window.JozefArenaGraphics?.render){
   try{
    window.JozefArenaGraphics.render(ctx,{
     venue:venues[Math.min(lifetime.stadium,2)].name,stadium:lifetime.stadium,
-    actor,mate,ball,defenders,keeper,squad,identity:window.JozefWorld?.getProgress?.()||{},
-    shotZones:SHOT_ZONES,aim,phase:MATCH_LENGTH-time,skillTime,flash,streak,time,us,them,mode,
+    actor:sample?.actor||actor,mate:sample?.mate||mate,ball:sample?.ball||ball,
+    defenders:sample?.defenders||defenders,keeper:sample?.keeper||keeper,
+    squad,identity:{
+      ...(window.JozefWorld?.getProgress?.()||{}),
+      ...(experience?.kitColor()?{kit:experience.kitColor()}:{})
+    },camera:sample?.camera||camera,
+    shotZones:SHOT_ZONES,aim:sample?.aim??aim,phase:sample?.phase??(MATCH_LENGTH-time),
+    skillTime:sample?.skillTime??skillTime,flash:sample?.flash??flash,streak,time,us,them,mode:replay?'playing':mode,
     reducedMotion:Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches)
    });
    return;
@@ -379,7 +408,14 @@ function loop(t){
  if(mode!=='playing')return;
  if($('arena')?.classList?.contains('active')===false){pause();draw();return;}
  const dt=last?clamp((t-last)/1000,0,.037):0;last=t;
- if(dt)update(dt);
+ if(replay){
+  replay.elapsed+=dt;
+  if(replay.elapsed>=replay.duration)finishReplay();
+ }else if(dt){
+  captureHistory(dt);update(dt);
+  camera=systems.cameraFor(actor,ball,mode,camera,dt,
+   Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches),experience?.prefs.camera!==false);
+ }
  draw();
  if(mode==='playing')raf=requestAnimationFrame(loop);
 }
@@ -417,7 +453,8 @@ $('arena-start')?.addEventListener('click',()=>{if(mode==='ready'||mode==='over'
 function aimMovementAtPointer(ev){
  const r=canvas.getBoundingClientRect();
  if(r.width<1||r.height<1)return;
- target={x:clamp((ev.clientX-r.left)/r.width*W,24,396),y:clamp((ev.clientY-r.top)/r.height*H,102,565)};
+ const point=systems.screenToWorld((ev.clientX-r.left)/r.width*W,(ev.clientY-r.top)/r.height*H,camera);
+ target={x:clamp(point.x,24,396),y:clamp(point.y,102,565)};
 }
 canvas.addEventListener('pointerdown',ev=>{
  if(mode==='ready'){start();return;}
@@ -446,8 +483,15 @@ document.addEventListener('keyup',ev=>{
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode==='playing'){pause();draw();}});
 window.addEventListener('pagehide',()=>{if(mode==='playing')pause();});
 window.addEventListener('jozef:squad-updated',()=>{squad=getSquad();hud();});
+experience=window.JozefArenaExperience?.mount({
+ lifetime,getMode:()=>mode,pause,start,
+ saveLifetime:()=>{try{localStorage.setItem(KEY,JSON.stringify(lifetime));}catch(_){}},
+ setJoystick:(x,y)=>{joystick={x,y};if(x||y)target=null;},
+ refreshSquad:()=>{squad=getSquad();hud();}
+})||null;
 window.JozefArena=Object.freeze({getProgress:()=>({...lifetime,score:us+'-'+them,mode,
   matchGoals:us,opponentGoals:them,shots,saves:keeperSaves,aim:SHOT_ZONES[aim].name,
-  playerX:actor.x,playerY:actor.y,ballOwner:ball.owner,skillReady:skillCooldown<=0})});
+  playerX:actor.x,playerY:actor.y,ballOwner:ball.owner,skillReady:skillCooldown<=0,
+  difficulty:experience?.prefs.difficulty||'pro',coins:lifetime.coins,level:systems.progression(lifetime).level})});
 hud();draw();
 })();
