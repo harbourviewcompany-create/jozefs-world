@@ -24,7 +24,7 @@ function boot({store=new Map(),stats={}}={}){
   append(...xs){this.children.push(...xs)}
   replaceChildren(...xs){this.children=xs}
   addEventListener(name,fn){this.events[name]=fn}
-  click(){this.events.click?.()}
+  click(){this.events.click?.();this.onclick?.()}
  }
  const get=id=>{if(!nodes.has(id))nodes.set(id,new Node());return nodes.get(id)};
  const document={readyState:'complete',hidden:false,
