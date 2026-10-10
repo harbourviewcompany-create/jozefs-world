@@ -214,6 +214,14 @@ function matchScreen(c,s){
 function render(c,s){
  const phase=Math.max(0,Number(s.phase)||0);
  const motion=s.reducedMotion!==true;
+ const cam=s.camera||{x:210,y:300,zoom:1};
+ const zoom=clip(Number(cam.zoom)||1,1,1.34);
+ const boundX=210-210/zoom,boundY=300-300/zoom;
+ const focusX=clip(Number(cam.x)||210,210-boundX,210+boundX);
+ const focusY=clip(Number(cam.y)||300,300-boundY,300+boundY);
+ c.save();
+ c.fillStyle='#061e25';c.fillRect(0,0,420,600);
+ c.translate(210,300);c.scale(zoom,zoom);c.translate(-focusX,-focusY);
  const p=stadium(c,s);
  aimLine(c,s);
  const defensive=(s.defenders||[]);
@@ -237,6 +245,7 @@ function render(c,s){
  athlete(c,ax.x,ax.y,color,n,'captain',phase,true,motion&&s.mode==='playing');
  ball(c,s,phase,motion);
  fx(c,s,p,phase,motion);
+ c.restore();
  matchScreen(c,s);
 }
 window.JozefArenaGraphics=Object.freeze({render});
