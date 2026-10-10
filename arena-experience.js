@@ -18,7 +18,9 @@ function mount(api){
   controls:['joystick','arrows'].includes(prev.controls)?prev.controls:defaultControls,
   camera:prev.camera!==false,haptics:prev.haptics!==false,
   kit:['club','night','gold'].includes(prev.kit)?prev.kit:'club',
-  handedness:prev.handedness==='flipped'?'flipped':'standard'
+  handedness:prev.handedness==='flipped'?'flipped':'standard',
+  mobileLayout:['immersive','classic'].includes(prev.mobileLayout)?prev.mobileLayout:(defaultControls==='joystick'?'immersive':'classic'),
+  graphics:['auto','quality','battery'].includes(prev.graphics)?prev.graphics:'auto'
  };
  let daily=S.normalizeDaily(saved(DAY_KEY,null));
  let passes=0,earned=0,stickPointer=null,dialogOpen=false;
@@ -37,6 +39,18 @@ function mount(api){
   const dir=document.querySelector('#arena .arena-direction');
   dir?.classList.toggle('is-joystick',prefs.controls==='joystick');
   document.querySelector('#arena .arena-controller')?.classList.toggle('swap-controls',prefs.handedness==='flipped');
+  const arena=$('arena'),actions=document.querySelector('#arena .arena-actions');
+  const skill=$('arena-skill'),originalStrip=document.querySelector('#arena .arena-skill-strip');
+  const immersive=prefs.mobileLayout==='immersive';
+  arena?.classList.toggle('mobile-immersive',immersive);
+  if(skill&&actions&&originalStrip){
+    if(immersive&&skill.parentElement!==actions)actions.appendChild(skill);
+    if(!immersive&&skill.parentElement!==originalStrip)originalStrip.insertBefore(skill,originalStrip.firstChild);
+  }
+  const layout=$('arena-mobile-layout'),graphics=$('arena-graphics-mode');
+  if(layout)layout.value=prefs.mobileLayout;
+  if(graphics)graphics.value=prefs.graphics;
+  arena?.setAttribute('data-graphics-mode',prefs.graphics);
   const v=$('arena-difficulty'),c=$('arena-control-mode'),cam=$('arena-camera-toggle'),hap=$('arena-haptics-toggle'),kit=$('arena-kit-select');
   if($('arena-handedness'))$('arena-handedness').value=prefs.handedness;
   if(v)v.value=prefs.difficulty;if(c)c.value=prefs.controls;
@@ -128,9 +142,9 @@ function mount(api){
  $('arena-rematch')?.addEventListener('click',()=>api.start());
  $('arena-upgrade-type')?.addEventListener('change',ui);
  $('arena-buy-upgrade')?.addEventListener('click',purchase);
- const options={difficulty:'arena-difficulty',controls:'arena-control-mode',kit:'arena-kit-select',handedness:'arena-handedness'};
+ const options={difficulty:'arena-difficulty',controls:'arena-control-mode',kit:'arena-kit-select',handedness:'arena-handedness',mobileLayout:'arena-mobile-layout',graphics:'arena-graphics-mode'};
  for(const [key,id] of Object.entries(options)){
-  $(id)?.addEventListener('change',e=>{prefs[key]=e.target.value;save();ui();});
+  $(id)?.addEventListener('change',e=>{prefs[key]=e.target.value;save();ui();api.refreshGraphics?.();});
  }
  for(const [key,id] of [['camera','arena-camera-toggle'],['haptics','arena-haptics-toggle']]){
   $(id)?.addEventListener('change',e=>{prefs[key]=e.target.checked;save();ui();});
