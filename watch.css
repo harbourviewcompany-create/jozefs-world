@@ -3,3 +3,5 @@
 .watch-frame { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 14px; background: black; margin-top: 12px; }
 .watch-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .watch-links a { min-height: 44px; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 999px; background: rgba(255,255,255,0.08); color: white; text-decoration: none; }
+
+#sens-radio { width: 100%; margin: 8px 0 12px; }
