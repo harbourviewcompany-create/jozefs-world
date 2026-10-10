@@ -9,3 +9,11 @@
 .today-card h2 { font-family: "Lilita One", "Nunito", sans-serif; font-size: 1.8rem; margin: 4px 0 8px; }
 .note-dot { color: #67e25a; margin-left: 4px; }
 .note-delete { margin-top: 6px; min-height: 36px; border: 0; border-radius: 10px; background: rgba(255,255,255,0.08); color: white; }
+
+/* One shared board. Every entry uses the same appearance and touch target. */
+.note.club{border-left:4px solid #c8ff5a;color:#ebfff3}
+.note.club strong{color:#d7ffab}
+.note.club p{color:#d2e8de;overflow-wrap:anywhere}
+.note-delete{min-height:44px;padding:10px 14px;border:1px solid rgba(200,255,90,.45);cursor:pointer}
+.note-delete:focus-visible{outline:3px solid #c8ff5a;outline-offset:3px}
+@media(max-width:700px){.notes-card{width:100%;margin:12px auto;padding:17px}}
