@@ -70,6 +70,9 @@ const close=()=>new Promise(resolve=>server.close(resolve));
      }
      let game=await page.evaluate(()=>window.JozefArena?.getProgress?.());
      assert.equal(game?.mode,'playing','Kickoff must start');
+     const shotQuality=await page.locator('#arena-shot-quality').textContent();
+     assert.match(shotQuality,/^\d+%$/,'Aiming HUD must show the shot-on-target estimate');
+     assert.ok(game.shotChance<.12,'Shooting from kickoff must be low probability');
      await page.locator('#arena-shoot').click();
      game=await page.evaluate(()=>window.JozefArena?.getProgress?.());
      assert.ok(game.shots>=1,'Shoot button must fire shot');
