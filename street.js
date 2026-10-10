@@ -82,6 +82,8 @@
     const message=hearts===0?'Full-time! Great effort, captain.':
       'Full-time! '+score+' points. The stadium is cheering for you!';
     announce(message+(xp>0?' +'+xp+' XP earned!':eligible?' Your record still counts. Daily XP limit reached.':' Try collecting more stars to earn XP.'));
+    // Only a completed run counts. Pausing or opening Street does not.
+    if(typeof Event==='function')window.dispatchEvent?.(new Event('jozef:street-completed'));
     updateHUD();setPanel();
   }
   function update(dt){
