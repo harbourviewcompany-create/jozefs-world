@@ -1,0 +1,19 @@
+#home.section { display: flex; flex-direction: column; }
+#home .today-card { order: 1; }
+#home .locker-card { order: 2; }
+#home #season-diary, #home #hq-parent-line { order: 3; }
+#home .studio-signal-row { order: 4; }
+#home .visual-rival-card { order: 5; }
+#home .studio-hero { order: 6; }
+@media (max-width: 800px) {
+  #home .studio-hero { min-height: 0; padding: 12px; }
+  #home .studio-hero-art, #home .hero-subtitle, #home .studio-hero-foot, #home .studio-hero-noise { display: none; }
+  #home .studio-hero h1 { font-size: 2rem; line-height: 0.95; margin: 4px 0; }
+  #home .hero-buttons { display: none; }
+  #home .today-card { margin-top: 8px; }
+  #home .studio-signal-row { display: grid; grid-template-columns: 1fr 1fr; }
+}
+.team-fact { color: #d7e7df; margin: 6px 0 10px; }
+.team-directory { width: min(860px, calc(100% - 20px)); margin: 8px auto 16px; display: grid; gap: 8px; }
+.team-directory article { padding: 12px; border-radius: 14px; background: rgba(255,255,255,0.05); }
+.team-directory strong { display: block; }

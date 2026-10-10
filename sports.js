@@ -34,6 +34,36 @@
     }
   };
 
+
+  const FACTS = {
+    'Inter Miami': 'Miami. MLS. The club Messi joined.',
+    'Arsenal': 'London. Premier League. A passing team in red and white.',
+    'Liverpool': 'Liverpool. Premier League. The song is You\'ll Never Walk Alone.',
+    'Man City': 'Manchester. Premier League. Sky blue.',
+    'Chelsea': 'London. Premier League. The Blues.',
+    'Barcelona': 'Barcelona. La Liga. Famous for its academy.',
+    'Real Madrid': 'Madrid. La Liga. White shirts, big European nights.',
+    'Raptors': 'Toronto. Canada\'s NBA team.',
+    'Lakers': 'Los Angeles. Purple and gold.',
+    'Celtics': 'Boston. Green, and one of the oldest NBA clubs.',
+    'Warriors': 'San Francisco. Known for the three-point shot.',
+    'Heat': 'Miami. Red and yellow.',
+    'Bills': 'Buffalo. The closest NFL team to Ottawa.',
+    'Chiefs': 'Kansas City. Red and yellow, Arrowhead Stadium.',
+    '49ers': 'San Francisco. Red and gold.',
+    'Eagles': 'Philadelphia. Midnight green.',
+    'Cowboys': 'Dallas. The star on the helmet.',
+    'Ottawa Senators': 'Ottawa. His city\'s NHL team.',
+    'Toronto Maple Leafs': 'Toronto. Blue and white.',
+    'Montreal Canadiens': 'Montreal. The Habs. Red, white, and blue.',
+    'Edmonton Oilers': 'Edmonton. Orange and blue.',
+    'Vancouver Canucks': 'Vancouver. Blue and green.',
+    'Toronto Blue Jays': 'Toronto. Canada\'s MLB team.',
+    'New York Yankees': 'New York. Navy pinstripes.',
+    'Los Angeles Dodgers': 'Los Angeles. Blue script.',
+    'New York Mets': 'New York. Orange and blue.',
+    'Boston Red Sox': 'Boston. Red socks, Fenway Park.'
+  };
   function load() {
     try {
       const data = JSON.parse(localStorage.getItem(KEY) || '{}');
@@ -90,6 +120,10 @@
         data[id] = { team: league.teams[0] };
         save(data);
       }
+      const fact = document.createElement('p');
+      fact.className = 'team-fact';
+      fact.textContent = FACTS[select.value] || league.label;
+      select.addEventListener('change', () => { fact.textContent = FACTS[select.value] || league.label; });
       const game = document.createElement('p');
       game.className = 'sports-game';
       game.textContent = 'Loading the next game...';
@@ -126,7 +160,7 @@
         save(data);
         paint();
       });
-      card.append(title, select, game, calls);
+      card.append(title, select, fact, game, calls);
       root.appendChild(card);
       const team = select.value;
       Promise.any(league.urls.map(url => fetch(url).then(res => res.json()).then(data => {
@@ -154,9 +188,26 @@
     });
   }
 
+  function directory() {
+    const box = document.getElementById('team-directory');
+    if (!box) return;
+    box.replaceChildren();
+    Object.keys(LEAGUES).forEach(id => {
+      LEAGUES[id].teams.forEach(team => {
+        const card = document.createElement('article');
+        const name = document.createElement('strong');
+        name.textContent = team;
+        const info = document.createElement('p');
+        info.textContent = FACTS[team] || LEAGUES[id].label;
+        card.append(name, info);
+        box.appendChild(card);
+      });
+    });
+  }
   function boot() {
     if (!document.getElementById('sports-board')) return;
     paint();
+    directory();
     const log = document.getElementById('sports-log');
     if (log) {
       const calls = load().calls || [];
