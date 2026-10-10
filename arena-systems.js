@@ -50,6 +50,24 @@
     const alternative=(aimIndex+1+(Math.floor((random-readChance)/(1-readChance)*2)%2))%3;
     return zones[alternative].x;
   }
+  // Standard Gamepad mapping: left stick / D-pad for movement, A to pass,
+  // B to shoot, X to skill, shoulders to aim, Start to pause/resume.
+  function readGamepad(pad) {
+    const blank={x:0,y:0,pass:false,shoot:false,skill:false,aimLeft:false,aimRight:false,toggle:false};
+    if(!pad||pad.connected===false)return blank;
+    const pressed=id=>Boolean(pad.buttons?.[id]?.pressed||(Number(pad.buttons?.[id]?.value)||0)>.55);
+    const ax=clamp(Number(pad.axes?.[0])||0,-1,1),ay=clamp(Number(pad.axes?.[1])||0,-1,1);
+    const analog=joystickVector(ax*42,ay*42,42);
+    const x=pressed(15)?1:pressed(14)?-1:analog.x;
+    const y=pressed(13)?1:pressed(12)?-1:analog.y;
+    const norm=Math.max(1,Math.hypot(x,y));
+    return {
+      x:x/norm,y:y/norm,pass:pressed(0),shoot:pressed(1),
+      skill:pressed(2),aimLeft:pressed(4),aimRight:pressed(5),
+      toggle:pressed(9)
+    };
+  }
+
   function cameraFor(actor, ball, mode, oldCamera, dt, reduceMotion=false, enabled=true) {
     if(!enabled||reduceMotion) return {x:210,y:300,zoom:1};
     const carrier=ball?.owner==='mate'?ball:actor;
@@ -115,7 +133,7 @@
   }
   return Object.freeze({
     clamp,distance,DIFFICULTIES,joystickVector,
-    defenderDestination,teammateDestination,shotAccuracy,keeperCommit,
+    defenderDestination,teammateDestination,shotAccuracy,keeperCommit,readGamepad,
     cameraFor,screenToWorld,dailyKey,CHALLENGES,freshDaily,normalizeDaily,awardDaily,progression
   });
 });
