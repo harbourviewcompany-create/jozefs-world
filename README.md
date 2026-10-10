@@ -41,6 +41,12 @@ Jozef FC // After Dark is a private football universe. Play an actual Arena matc
 
 
 
+### Rival Circuit — four sports, twelve challenges
+- Face original fictional rivals in hockey (**Frost Wolves**), baseball (**Diamond Comets**), basketball (**Skyline Five**), and wrestling (**Shadow Showmen**). Each sport has three sequential five-turn goals: score **2/5**, then **3/5**, then **4/5**.
+- Completing a real game at or above the current threshold earns one stage (not multiple, even with a perfect 5/5). A missed threshold has no penalty, timer or daily streak. A **Face Next Rival** shortcut opens the first unfinished sport.
+- The circuit adds only a bounded `rivalTier` (0–3) inside each sport's existing `jozefs-world-multisport-v1` record, so older game saves and Club backups still load. The All-Sport Cup, wrestling career and existing XP caps remain intact.
+- Real fictional rival victories become Club Chronicle highlights. Completing the full 12 stages unlocks the **Rival Circuit Legend** badge; no extra XP is issued by merely opening the page.
+
 ### Sports Arcade — Hockey, Baseball, Basketball & Wrestling (2026)
 - Four original, five-turn minigames live in the **Sports Arcade** section. Hockey: choose a goal corner. Baseball: time a swing. Basketball: release in the timing zone. Wrestling Showdown: make stage/crowd choices and answer two family-friendly WWE superstar questions.
 - Wrestling is an **unofficial original fan challenge** inspired by the spectacle of WWE, with no WWE logos, licensed images, unsafe moves, violence or claim of endorsement.
