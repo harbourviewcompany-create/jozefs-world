@@ -26,7 +26,9 @@
     { id: 'night-legend', icon: '⚡', title: 'Night Legend', description: 'Reach 150 points in STREET//11', ready: s => s.streetBest >= 150 },
     { id: 'arena-debut', icon: '🎮', title: 'Arena Debut', description: 'Finish your first playable football match', ready: s => s.arenaGames >= 1 },
     { id: 'arena-victory', icon: '🥇', title: 'Arena Winner', description: 'Win a football Arena match', ready: s => s.arenaWins >= 1 },
-    { id: 'arena-legend', icon: '🏟️', title: 'Arena Legend', description: 'Win five football Arena matches', ready: s => s.arenaWins >= 5 }
+    { id: 'arena-legend', icon: '🏟️', title: 'Arena Legend', description: 'Win five football Arena matches', ready: s => s.arenaWins >= 5 },
+    { id: 'all-sport-debut', icon: '🏅', title: 'All-Sport Debut', description: 'Finish a hockey, baseball, basketball or wrestling challenge', ready: s => s.multisportGames >= 1 },
+    { id: 'all-sport-champion', icon: '🏆', title: 'Four-Sport Star', description: 'Play every sport in the Sports Arcade', ready: s => s.multiSports.length >= 4 }
   ];
   const defaultState = () => ({
     xp: 0, goals: 0, saves: 0, memory: 0, quizzes: 0, perfect: 0, scrambles: 0,
@@ -34,6 +36,7 @@
     number: 10, day: dayKey(), daily: {}, dailyHero: '', earned: [],
     sound: false, tourWins: 0, championships: 0, geography: 0,
     careerGames: 0, careerWins: 0, trainingSuccess: 0, leagueTitles: 0, streetRuns: 0, streetBest: 0, arenaGames: 0, arenaWins: 0, arenaGoals: 0,
+    multisportGames: 0, multiSports: [],
     rewardedTours: [], rewardedGeography: [], rewardedTitles: [],
     rewardedCareer: [], rewardedTraining: [], rewardedLeague: []
   });
@@ -46,13 +49,15 @@
     try { value = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (_) {}
     const s = { ...defaultState(), ...value };
     s.xp = Math.max(0, Number(s.xp) || 0);
-    for (const name of ['goals', 'saves', 'memory', 'quizzes', 'perfect', 'keepyBest', 'targetBest', 'tourWins', 'championships', 'geography', 'scrambles', 'careerGames', 'careerWins', 'trainingSuccess', 'leagueTitles', 'streetRuns', 'streetBest', 'arenaGames', 'arenaWins', 'arenaGoals']) {
+    for (const name of ['goals', 'saves', 'memory', 'quizzes', 'perfect', 'keepyBest', 'targetBest', 'tourWins', 'championships', 'geography', 'scrambles', 'careerGames', 'careerWins', 'trainingSuccess', 'leagueTitles', 'streetRuns', 'streetBest', 'arenaGames', 'arenaWins', 'arenaGoals', 'multisportGames']) {
       s[name] = Math.max(0, Number(s[name]) || 0);
     }
     if (!COLORS.includes(s.kit)) s.kit = COLORS[0];
     if (!AVATARS.includes(s.avatar)) s.avatar = AVATARS[0];
     s.number = Math.min(99, Math.max(1, Number(s.number) || 10));
     if (!Array.isArray(s.earned)) s.earned = [];
+    s.multiSports = Array.isArray(s.multiSports)
+      ? [...new Set(s.multiSports.filter(x=>['hockey','baseball','basketball','wrestling'].includes(x)))] : [];
     for (const key of ['rewardedTours', 'rewardedGeography', 'rewardedTitles', 'rewardedCareer', 'rewardedTraining', 'rewardedLeague']) {
       if (!Array.isArray(s[key])) s[key] = [];
     }
@@ -101,8 +106,8 @@
   }
   function record(action, info = {}) {
     if (state.day !== dayKey()) { state.day = dayKey(); state.daily = {}; }
-    const rewards = { goal: 5, save: 8, memory: 30, quiz: 20, keepy: 15, target: 15, tournament: 60, geography: 15, championship: 120, scramble: 10, career: 20, training: 10, leaguechamp: 120, street: 40, arena: 35 };
-    const caps = { goal: 10, save: 10, memory: 3, quiz: 3, keepy: 1, target: 3, tournament: 10, geography: 10, championship: 3, scramble: 5, career: 10, training: 6, leaguechamp: 2, street: 2, arena: 3 };
+    const rewards = { goal: 5, save: 8, memory: 30, quiz: 20, keepy: 15, target: 15, tournament: 60, geography: 15, championship: 120, scramble: 10, career: 20, training: 10, leaguechamp: 120, street: 40, arena: 35, multisport: 20 };
+    const caps = { goal: 10, save: 10, memory: 3, quiz: 3, keepy: 1, target: 3, tournament: 10, geography: 10, championship: 3, scramble: 5, career: 10, training: 6, leaguechamp: 2, street: 2, arena: 3, multisport: 4 };
     if (!(action in rewards)) return;
     const uniqueReward = { tournament: 'rewardedTours', geography: 'rewardedGeography', championship: 'rewardedTitles', career: 'rewardedCareer', training: 'rewardedTraining', leaguechamp: 'rewardedLeague' }[action];
     if (uniqueReward) {
@@ -116,12 +121,19 @@
       if (state[uniqueReward].includes(id)) return; // Reloads cannot duplicate rewards.
       state[uniqueReward].push(id);
     }
+    if (action === 'multisport' && (
+      !['hockey','baseball','basketball','wrestling'].includes(info.sport) ||
+      !Number.isInteger(info.score) || info.score < 0 || info.score > 5)) return;
     if (action === 'target' && (Number(info.score) || 0) <= 0) return;
     if (action === 'street' && (!Number.isFinite(Number(info.score)) || Number(info.score) < 20 || Number(info.score) > 1000000)) return;
     if (action === 'arena' && (!['win','draw','loss'].includes(info.result) || !Number.isInteger(Number(info.goals)) || Number(info.goals) < 0 || Number(info.goals) > 5)) return;
     if (action === 'keepy' && (Number(info.count) || 0) < 10) return;
     if (action === 'goal') state.goals++;
     if (action === 'street') { state.streetRuns++; state.streetBest = Math.max(state.streetBest, Math.floor(Number(info.score))); }
+    if (action === 'multisport') {
+      state.multisportGames++;
+      if (!state.multiSports.includes(info.sport)) state.multiSports.push(info.sport);
+    }
     if (action === 'arena') { state.arenaGames++; if (info.result === 'win') state.arenaWins++; state.arenaGoals += Number(info.goals); state.goals += Number(info.goals); }
     if (action === 'career') { state.careerGames++; if (info.result === 'win') state.careerWins++; }
     if (action === 'training') state.trainingSuccess++;
