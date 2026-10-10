@@ -75,7 +75,9 @@
   const state=load();
   const round=()=>state.results.length;
   const points=()=>state.results.reduce((total,r)=>total+(r.outcome==='win'?3:r.outcome==='draw'?1:0),0);
-  function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(_){txt('career-save','This browser cannot save your progress. You can still play.')}}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(_){txt('career-save','This browser cannot save your progress. You can still play.')}
+    if(typeof window.dispatchEvent==='function'&&typeof Event==='function')window.dispatchEvent(new Event('jozef:chronicle-sync'));
+  }
   function reward(action,index,result){window.JozefWorld?.record(action,{winId:'season-'+state.season+'-round-'+index,result})}
   function begin(){
     if(round()===6||state.match)return;
