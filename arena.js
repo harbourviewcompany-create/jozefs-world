@@ -102,7 +102,17 @@ function resetPositions(){
  shotCooldown=0;tackleCooldown=1.2;passCooldown=0;passRecipient=null;mateTime=0;
  keeperDestination=210;keeperReact=0;passChain=0;keys.clear();heldDirections.clear();stick={x:0,y:0};target=null;
 }
+function ensureShotQualityUI(){
+ if($('arena-shot-quality')||!document.createElement)return;
+ const c=document.querySelector('#arena .arena-aim-caption');
+ const label=c?.querySelector('#arena-aim-label');
+ if(!label)return;
+ const span=document.createElement('span'),odds=document.createElement('b');
+ odds.id='arena-shot-quality';odds.textContent='9%';
+ span.append('SHOT ',odds);c.replaceChildren(span,label);
+}
 function hud(){
+ ensureShotQualityUI();
  put('arena-score',us+' : '+them);put('arena-clock',String(Math.ceil(Math.max(0,time))).padStart(2,'0')+'s');
  const venue=venues[Math.min(venues.length-1,lifetime.stadium)];
  put('arena-venue',venue.name);put('arena-rival',venue.rival);put('arena-story',venue.story);
