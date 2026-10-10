@@ -51,7 +51,7 @@ const close=()=>new Promise(resolve=>server.close(resolve));
       // It is asynchronous; the DOM need not be active in the same microtask.
       await page.waitForFunction(
        ()=>document.querySelector('#sports-arcade.section.active')!==null,
-       {timeout:5000}
+       null,{timeout:5000}
       );
       const nav=await page.evaluate(()=>({
        sports:typeof window.JozefMultiSport,stage:typeof window.JozefSportStage
@@ -62,7 +62,7 @@ const close=()=>new Promise(resolve=>server.close(resolve));
      await page.evaluate(()=>window.showSection('arena'));
      await page.waitForFunction(
       ()=>document.querySelector('#arena.section.active')!==null,
-      {timeout:5000}
+      null,{timeout:5000}
      );
      await page.waitForTimeout(150);
      // Match entry offers an intentional walkout intro on the first visit.
