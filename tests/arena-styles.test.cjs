@@ -14,7 +14,7 @@ test('both entry points use exactly two ordered local CSS bundles',()=>{
 test('bundles retain cascade and do not introduce remote CSS dependencies',()=>{
  const foundation=read('site-foundation.css'),experience=read('site-experience.css');
  const first=['styles.css','pitch.css','extras.css','tournament.css','career.css','clubhouse.css','scramble-positions.css','stadium.css','arcade.css','arena.css','playmode.css','notes.css','visual-2026.css','arena-visual.css','campaign-2026.css'];
- const second=['mobile-qa-2026.css','broadcast.css','album.css','sports.css','club-hq.css','chronicle.css','locker.css','multisport.css','sports-stage.css','playbook.css','street-powerups.css','hq.css','watch.css','ui-refresh.css','arena-compact.css','ui-refine-2026.css'];
+ const second=['training.css','jersey-bingo.css','matchday.css','mobile-qa-2026.css','broadcast.css','album.css','sports.css','club-hq.css','chronicle.css','locker.css','multisport.css','sports-stage.css','playbook.css','street-powerups.css','hq.css','watch.css','ui-refresh.css','arena-compact.css','ui-refine-2026.css'];
  for(const [css,names] of [[foundation,first],[experience,second]]){
   let pos=0;
   for(const name of names){
