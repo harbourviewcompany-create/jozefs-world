@@ -7,6 +7,16 @@ Jozef FC // After Dark is a private football universe. Play an actual Arena matc
 
 ## The experience
 
+### The Coach's Playbook — deeper progression across the entire world (2026)
+- The **Playbook** is a unified, optional 15-challenge journey spanning Arena match wins/goals, STREET//11, league fixtures, World Tour, squad building, badges, the Chronicle, all four Sports Arcade games, and the All-Sport Cup.
+- Challenges read existing saved game statistics and achievement records; previous real progress counts automatically. No invented win history, deadline, streak penalties or separate Jozef/Dad profile. Five earned Playbook ranks range from Academy Rookie to Club Legend.
+- An adaptive Coach's Pick identifies an achievable next objective from the selected Football, All Sports, My Club or All Challenges view. The challenge button deep-links directly to the relevant game and chooses the correct sport.
+- The only new Playbook storage is a shared local focus preference at `jozefs-world-playbook-v1`, included in the existing Club backup. Playbook milestones do not duplicate XP or change any saved scores.
+- Sports Arcade adds **Rookie, Pro and Legend** challenge difficulty: different goalie behaviour, batting and basketball accuracy windows, and alternate wrestling questions. Changing difficulty restarts the current five-turn event, while recorded best scores and the Cup remain compatible. Pro is the original classic game; reduced-motion untimed play remains available.
+- All challenge layouts are touch-friendly, keyboard-operable, readable on iPhone-sized screens and cached for offline use.
+
+
+
 ### Sports Arcade — Hockey, Baseball, Basketball & Wrestling (2026)
 - Four original, five-turn minigames live in the **Sports Arcade** section. Hockey: choose a goal corner. Baseball: time a swing. Basketball: release in the timing zone. Wrestling Showdown: make stage/crowd choices and answer two family-friendly WWE superstar questions.
 - Wrestling is an **unofficial original fan challenge** inspired by the spectacle of WWE, with no WWE logos, licensed images, unsafe moves, violence or claim of endorsement.
