@@ -32,3 +32,12 @@ test('offline shell caches only the new consolidated site styles',()=>{
  }
  assert.ok(!sw.includes("'./arena-compact.css'"),'old standalone styles should not be precached');
 });
+
+test('both entrypoints retain the mobile layout and graphics settings',()=>{
+ for(const entry of ['index.html','world.html']){
+  const html=read(entry);
+  for(const id of ['arena-mobile-layout','arena-graphics-mode','arena-control-mode','arena-handedness']){
+   assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,entry+' lost '+id);
+  }
+ }
+});
