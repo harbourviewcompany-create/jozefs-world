@@ -93,7 +93,7 @@
       mark.className='multi-turn-mark '+(made===true?'is-made':made===false?'is-missed':i===round&&phase==='ready'?'is-now':'');
       mark.textContent=made===true?'✓':made===false?'×':String(i+1);
       mark.setAttribute('aria-label','Turn '+(i+1)+': '+(made===true?'scored':made===false?'missed':i===round&&phase==='ready'?'up next':'not played'));
-      host.appendChild(mark);
+      host.append(mark);
     }
   }
   function drawControls(){
