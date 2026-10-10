@@ -69,20 +69,27 @@
   }
 
   function cameraFor(actor, ball, mode, oldCamera, dt, reduceMotion=false, enabled=true) {
-    if(!enabled||reduceMotion) return {x:210,y:300,zoom:1};
+    if(!enabled||reduceMotion||mode!=='playing') return {x:210,y:300,zoom:1};
     const carrier=ball?.owner==='mate'?ball:actor;
-    const attack=clamp((390-carrier.y)/320,0,1);
-    const targetZoom=mode==='playing'?1.10+attack*.22:1;
-    const maxX=210-210/targetZoom,maxY=300-300/targetZoom;
-    const desiredX=clamp(210+(carrier.x-210)*.40,210-maxX,210+maxX);
-    const desiredY=clamp(300+(carrier.y-300)*.35,300-maxY,300+maxY);
-    const prior=oldCamera||{x:210,y:300,zoom:1};
+    const actorY=clamp(actor?.y??495,0,600);
+    // Keep the entire goal visible while zooming in only on attacking runs.
+    // The kickoff view remains wide; the zoom grows as Jozef approaches goal.
+    const attacking=clamp((440-carrier.y)/350,0,1);
+    const requestedZoom=1+attacking*.23;
+    // Avoid cutting Jozef off when his teammate is further up the pitch.
+    const safeZoom=clamp(600/(actorY+30),1,1.23);
+    const targetZoom=Math.min(requestedZoom,safeZoom);
+    const previous=oldCamera||{x:210,y:300,zoom:1};
     const k=clamp((dt||.016)*5,0,1);
-    return {
-      x:prior.x+(desiredX-prior.x)*k,
-      y:prior.y+(desiredY-prior.y)*k,
-      zoom:prior.zoom+(targetZoom-prior.zoom)*k
-    };
+    const zoom=clamp(previous.zoom+(targetZoom-previous.zoom)*k,1,1.23);
+    const horizontalRange=210-210/zoom;
+    const requestedX=210+(carrier.x-210)*.55;
+    const x=clamp(previous.x+(requestedX-previous.x)*k,
+      210-horizontalRange,210+horizontalRange);
+    // Anchor the top of the camera to the goal line. The goalkeeper, target
+    // marker and crossbar must never disappear above the visible canvas.
+    const y=300/zoom;
+    return {x,y,zoom};
   }
   function screenToWorld(x,y,camera) {
     const zoom=clamp(camera?.zoom||1,.5,2.5);
