@@ -1,3 +1,4 @@
+const bundled=require('./bundle-contract.cjs');
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -44,8 +45,8 @@ test('graphical action canvas is optional, bundled offline, and has reduced-moti
  assert.equal(page,fs.readFileSync(path.join(root,'index.html'),'utf8'));
  assert.equal((page.match(/id="multi-action-canvas"/g)||[]).length,1);
  assert.ok(page.indexOf('src="sports-stage.js"')<page.indexOf('src="multisport.js"'));
- assert.ok(page.includes('href="sports-stage.css"'));
- for(const asset of ['sports-stage.js','sports-stage.css'])assert.ok(sw.includes("'./"+asset+"'"));
+ bundled.css(root,page,sw,'sports-stage.css');
+ assert.ok(sw.includes("'./sports-stage.js'"));
  assert.match(css,/@media\(max-width:680px\)/);
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
  assert.match(css,/\.multi-stage\.has-canvas/);
