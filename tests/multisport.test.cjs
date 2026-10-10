@@ -338,3 +338,91 @@ test('poster launchers and Sports Arcade event passes reflect the real saved per
  assert.equal(b.get('multi-home-record-hockey').textContent,'CUP QUALIFIED · 4/5');
  assert.equal(b.scores.length,0,'browsing a sport cannot invent XP');
 });
+
+test('new Rival Circuit offers a distinct, progressively harder challenge in every sport',()=>{
+ const b=boot({random:()=>0});
+ const api=b.window.JozefMultiSport;
+ const initial=api.getRivalProgress();
+ assert.equal(initial.beaten,0);
+ assert.equal(initial.total,12);
+ assert.equal(initial.sports.hockey.opponent,'FROST WOLVES');
+ assert.equal(initial.sports.baseball.opponent,'DIAMOND COMETS');
+ assert.equal(initial.sports.basketball.opponent,'SKYLINE FIVE');
+ assert.equal(initial.sports.wrestling.opponent,'SHADOW SHOWMEN');
+ assert.equal(initial.sports.hockey.target,2);
+ assert.equal(b.get('multi-rival-progress').attrs['aria-valuenow'],'0');
+ // Playing through a five-turn match counts once, even for a perfect score.
+ function hockeyWin(){
+  for(let i=0;i<5;i++){b.choose('right');b.choose('next')}
+ }
+ hockeyWin();
+ assert.equal(api.getRivalProgress().sports.hockey.tier,1);
+ assert.equal(api.getRivalProgress().sports.hockey.target,3);
+ assert.equal(b.get('multi-rival-hockey-status').textContent,'1 / 3 BEATEN');
+ assert.equal(b.get('multi-rival-progress').attrs['aria-valuenow'],'1');
+ assert.match(b.get('multi-message').textContent,/RIVAL BEATEN/);
+ const last=api.getLastResult();
+ assert.equal(last.rivalWin,true);
+ assert.equal(last.rival,'FROST WOLVES');
+ assert.equal(last.rivalTier,1);
+ b.choose('again');
+ hockeyWin();
+ assert.equal(api.getRivalProgress().sports.hockey.tier,2);
+ b.choose('again');
+ hockeyWin();
+ assert.equal(api.getRivalProgress().sports.hockey.tier,3);
+ assert.equal(api.getRivalProgress().sports.hockey.complete,true);
+ assert.equal(b.get('multi-rival-hockey-status').textContent,'RIVAL DEFEATED ✓');
+ assert.equal(b.get('multi-rival-meter').style.width,'25%');
+ b.choose('again');
+ hockeyWin();
+ assert.equal(api.getRivalProgress().sports.hockey.tier,3,'defeated rival never exceeds third stage');
+ assert.equal(api.getLastResult().rivalWin,false);
+ assert.equal(b.get('multi-rival-meter').style.width,'25%');
+ const saved=JSON.parse(b.store.get('jozefs-world-multisport-v1'));
+ assert.equal(saved.hockey.rivalTier,3);
+ assert.equal(Object.keys(saved).length,4,'old four-sport save format remains compatible');
+ const reload=boot({store:b.store});
+ assert.equal(reload.window.JozefMultiSport.getRivalProgress().sports.hockey.tier,3);
+});
+test('past bests and Cup progress survive Rival Circuit upgrade without fabricated wins',()=>{
+ const store=new Map([['jozefs-world-multisport-v1',JSON.stringify({
+  hockey:{best:5,played:12},baseball:{best:3,played:2},
+  basketball:{best:4,played:5},wrestling:{best:5,played:10,careerWins:6}
+ })]]);
+ const b=boot({store});
+ const api=b.window.JozefMultiSport;
+ assert.equal(api.getRivalProgress().beaten,0,'old high scores are not fictional rival match results');
+ assert.equal(api.getCupProgress().champion,true,'old All-Sport Cup survives unchanged');
+ assert.equal(api.getWrestlingCareer().name,'CHAMPION','wrestling title survives');
+ assert.equal(b.get('multi-cup-title').textContent,'THE ALL-SPORT CUP IS YOURS.');
+ assert.equal(b.scores.length,0,'opening the Rival Circuit cannot grant XP');
+ b.get('multi-rival-next').click();
+ assert.equal(b.get('multi-name').textContent,'HOCKEY SHOOTOUT');
+ assert.equal(b.get('multi-score').textContent,'0 / 5 GOALS');
+ assert.equal(api.getRivalProgress().beaten,0,'a shortcut cannot win a rivalry');
+});
+test('all twelve rival stages can be earned legitimately and never penalize failed matches',()=>{
+ const store=new Map([['jozefs-world-multisport-v1',JSON.stringify({
+  hockey:{best:3,played:5,rivalTier:3},
+  baseball:{best:4,played:6,rivalTier:3},
+  basketball:{best:5,played:7,rivalTier:3},
+  wrestling:{best:2,played:3,rivalTier:2,careerWins:0}
+ })]]);
+ const b=boot({store});
+ const api=b.window.JozefMultiSport;
+ b.get('multi-tab-wrestling').click();
+ // This run is unsuccessful for the last tier (4 points required).
+ for(let i=0;i<5;i++){b.choose('pose');b.choose('next')}
+ assert.equal(api.getRivalProgress().sports.wrestling.tier,2);
+ assert.equal(api.getRivalProgress().champion,false);
+ b.choose('again');
+ for(const action of ['entrance','pose','teamwork','entrance','pose']){
+   b.choose(action);b.choose('next');
+ }
+ assert.equal(api.getRivalProgress().beaten,12);
+ assert.equal(api.getRivalProgress().champion,true);
+ assert.equal(b.get('multi-rival-progress').attrs['aria-valuenow'],'12');
+ assert.equal(b.get('multi-rival-meter').style.width,'100%');
+ assert.ok(b.get('multi-rivals').classSet.has('rival-complete'));
+});
