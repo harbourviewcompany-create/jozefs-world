@@ -6,6 +6,8 @@ on:
       - 'arena*.js'
       - 'scripts/build-arena-bundle.cjs'
       - 'scripts/build-site-css.cjs'
+      - 'scripts/build-site-js.cjs'
+      - '*.js'
       - '*.css'
       - 'world.html'
       - 'playmode.js'
@@ -24,6 +26,8 @@ on:
       - 'arena*.js'
       - 'scripts/build-arena-bundle.cjs'
       - 'scripts/build-site-css.cjs'
+      - 'scripts/build-site-js.cjs'
+      - '*.js'
       - '*.css'
       - 'world.html'
       - 'playmode.js'
@@ -56,9 +60,13 @@ jobs:
           node --check arena-systems.js
           node --check arena-experience.js
           node --check arena-bundle.js
+          node --check site-core.js
+          node --check site-features.js
           node --check tests/arena-mobile-smoke.cjs
       - name: Verify deployed bundle matches game source
         run: node scripts/build-arena-bundle.cjs --check
+      - name: Verify site script bundles match ordered source files
+        run: node scripts/build-site-js.cjs --check
       - name: Verify source stylesheets match production bundles
         run: node scripts/build-site-css.cjs --check
       - name: Logic regression tests
