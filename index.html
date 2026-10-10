@@ -293,7 +293,7 @@
           </div>
         </div>
         <div class="arena-scoreboard"><div><small>JOZEF FC</small><strong id="arena-score">0 : 0</strong><small>RIVALS</small></div><div><small>MATCH CLOCK</small><strong id="arena-clock">75s</strong><small id="arena-tactic">BALANCED</small></div></div>
-        <div class="arena-mini-ticker"><span>SHOTS <strong id="arena-shots">0</strong></span><span>SAVES <strong id="arena-keeper-saves">0</strong></span><span id="arena-daily-progress" aria-label="Daily challenge progress">DAILY 0/4</span></div>
+        <div class="arena-mini-ticker"><span>SHOTS <strong id="arena-shots">0</strong></span><span>SAVES <strong id="arena-keeper-saves">0</strong></span><button id="arena-daily-progress" type="button" aria-label="Open daily Arena challenges">DAILY 0/4</button></div>
         <div class="arena-pitch-frame"><canvas id="arena-canvas" width="420" height="600" tabindex="0" role="img" aria-label="Live football game. Move using the directional pad or arrow keys. Aim with 1 2 3, pass using J, shoot using K and skill burst with L."></canvas></div>
         <div class="arena-aim-bar" role="group" aria-label="Choose a shot target">
           <div class="arena-aim-caption">AIM YOUR SHOT <strong id="arena-aim-label">LEFT POST</strong></div>
@@ -335,6 +335,7 @@
             <button type="button" id="arena-buy-upgrade">UPGRADE · 3 STARS</button>
           </div>
           <p id="arena-earnings">0 stars · Level 1</p>
+          <div id="arena-challenge-list" class="arena-challenge-list" aria-label="Daily challenges"></div>
           <p>Sound is controlled from My Club. Keyboard movement, passing, shooting and aim remain available.</p>
         </section>
         <section id="arena-match-report" class="arena-overlay arena-report" role="dialog" aria-label="Match results" aria-modal="false" hidden>
