@@ -54,7 +54,7 @@ test('repeated stationary deep shots cannot produce guaranteed goals or endless 
   const state=window.JozefArena.getProgress();
   if(i>75&&state.ballOwner==='actor'){recovered=true;break;}
  }
- assert.equal(window.JozefArena.getProgress().us,0,'a missed deep shot does not count as a goal');
+ assert.equal(window.JozefArena.getProgress().matchGoals,0,'a missed deep shot does not count as a goal');
  assert.ok(recovered,'the ball returns to a playable state within seconds');
  assert.equal(window.JozefArena.getProgress().mode,'playing','match continues');
 });
