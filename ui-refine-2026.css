@@ -43,6 +43,14 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{
 .navbar .nav-links>.nav-btn:not([data-section="home"]):not([data-section="arena"]):not([data-section="street"]):not([data-section="sports-arcade"]):not([data-section="playbook"]):not([data-section="club"]){
  display:none;
 }
+.navbar .nav-links>.nav-btn[data-section="home"],
+.navbar .nav-links>.nav-btn[data-section="arena"],
+.navbar .nav-links>.nav-btn[data-section="street"],
+.navbar .nav-links>.nav-btn[data-section="sports-arcade"],
+.navbar .nav-links>.nav-btn[data-section="playbook"],
+.navbar .nav-links>.nav-btn[data-section="club"]{
+ display:inline-flex;align-items:center;justify-content:center;
+}
 .navbar .nav-btn{
  font:850 12px/1.1 var(--sf-ui);padding:11px 12px;min-height:44px;
  border:1px solid transparent;border-radius:10px;color:#d0e6d9;
