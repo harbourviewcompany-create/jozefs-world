@@ -1,3 +1,4 @@
+const bundled=require('./bundle-contract.cjs');
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -74,7 +75,9 @@ test('canonical homepage uses the latest stadium and loads exactly one STREET//1
  const world=fs.readFileSync(path.join(root,'world.html'),'utf8');
  assert.equal(html,world);
  for(const id of ['home','games','club','tour','career','street'])assert.ok(html.includes('id="'+id+'"'),'missing '+id);
- for(const file of ['stadium.css','stadium.js','street.js','app.js','extras.js','career.js'])assert.ok(html.includes('"'+file+'"'),'missing '+file);
+ const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
+ bundled.css(root,html,sw,'stadium.css');
+ for(const file of ['stadium.js','street.js','app.js','extras.js','career.js'])assert.ok(html.includes('"'+file+'"'),'missing '+file);
  assert.equal((html.match(/src="street\.js"/g)||[]).length,1);
  assert.ok(html.includes('class="hero studio-hero"'));
  assert.ok(html.includes('id="street-canvas"'));
@@ -103,9 +106,8 @@ test('Street powerups preserve the 55-second run, profile, accessibility and ori
  const page=fs.readFileSync(path.join(root,'world.html'),'utf8');
  assert.equal((page.match(/id="street-shield"/g)||[]).length,1);
  assert.match(page,/Golden stars add a bigger combo/);
- assert.ok(page.includes('href="street-powerups.css"'));
  const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
- assert.ok(sw.includes("'./street-powerups.css'"));
+ bundled.css(root,page,sw,'street-powerups.css');
  assert.match(game,/kind==='shield'/);
  assert.match(game,/kind==='gold'/);
  assert.match(game,/shield=0;streak=\.38;announce/);
