@@ -54,7 +54,7 @@ test('every permanent navigation destination is accepted by the stadium router',
  for(const id of menu)assert.ok(allowed.has(id),'stadium route blocks navigation to '+id);
  assert.ok(allowed.has('arena'));
  assert.ok(allowed.has('training'));
- assert.ok(allowed.has('roblox'));
+ assert.equal(menu.includes('roblox'), false);
 });
 test('external Roblox leaves the site only after guardian confirmation',()=>{
  const script=fs.readFileSync(path.join(root,'roblox.js'),'utf8');

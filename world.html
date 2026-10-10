@@ -80,7 +80,6 @@
       <button class="nav-btn" data-section="learn">Learn</button>
       <button class="nav-btn" data-section="training">Training</button>
       <button class="nav-btn" data-section="matchday">Match Day</button>
-      <button class="nav-btn" data-section="roblox">Roblox</button>
       <button class="nav-btn" data-section="notes">Notes <span id="note-dot" class="note-dot" hidden>●</span></button>
       <button class="nav-btn" data-section="album">Stickers</button>
       <button class="nav-btn" data-section="chronicle">Chronicle</button>
@@ -103,7 +102,6 @@
         <div class="hero-buttons">
           <button type="button" class="studio-button-primary" onclick="showSection('arena')"><span class="studio-button-icon">▶</span> PLAY FOOTBALL <span aria-hidden="true">↗</span></button>
           <button type="button" class="studio-button-outline" onclick="showSection('career')">ENTER CAREER <span aria-hidden="true">↗</span></button>
-          <button type="button" class="game-launch" onclick="showSection('roblox')"><span class="game-launch-play" aria-hidden="true"></span><span class="game-launch-copy"><strong>Play</strong><small>Roblox</small></span></button>
         </div>
         <div class="studio-hero-foot"><span>01 / YOUR STORY STARTS HERE</span><span>OFFLINE-FIRST • NO ACCOUNTS • ALL YOU</span></div>
       </div>
@@ -1089,21 +1087,6 @@
 
   <!-- FUN ZONE SECTION -->
   
-<section id="roblox" class="section" tabindex="-1" aria-labelledby="roblox-title">
-    <div class="roblox-card">
-      <p class="eyebrow-live">Leaves this clubhouse</p>
-      <h2 id="roblox-title">Play in Roblox</h2>
-      <p>The Roblox game opens in Roblox, not inside this page. Paste the experience link once. No Roblox login is stored here.</p>
-      <img id="roblox-thumb" alt="" width="150" height="150" hidden />
-      <label for="roblox-link">Experience link or place id</label>
-      <input id="roblox-link" type="text" inputmode="url" maxlength="180" placeholder="https://www.roblox.com/games/…" autocomplete="off" />
-      <div class="arcade-actions">
-        <button type="button" class="action-btn" id="roblox-save">Save link</button>
-        <button type="button" class="game-launch" id="roblox-play" disabled><span class="game-launch-play" aria-hidden="true"></span><span class="game-launch-copy"><strong>Play</strong><small>Roblox</small></span></button>
-      </div>
-      <p id="roblox-status" class="jw-shot-feedback" aria-live="polite">No Roblox place yet. Paste the game link once and Play will open it. It stays on this browser.</p>
-    </div>
-  </section>
 <section id="notes" class="section" tabindex="-1" aria-labelledby="notes-title">
     <div class="notes-card">
       <h2 id="notes-title">Family notes</h2>
@@ -1241,7 +1224,6 @@
   <script src="multisport.js"></script>
   <script src="arcade.js" defer></script>
   <script src="street.js"></script>
-  <script src="roblox.js"></script>
   <script src="visual-2026.js" defer></script>
   <script src="campaign-2026.js" defer></script>
   <script src="club-hq.js"></script>

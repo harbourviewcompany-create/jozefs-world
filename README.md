@@ -77,7 +77,6 @@ A 55-second neon street-football lane-runner with animated defenders, star colle
 - **Training arcade:** Penalty Shootout, Memory Match, Soccer Quiz, Keepy-Uppy, Goalie Reaction, Target Practice, Word Scramble, plus the extra Gate Pass, Header Hero and Spot the Ball challenges.
 - **Real Match Day:** parent-set opponent/kickoff, checklist, and a soccer formation builder.
 - **Football learning:** positions, rules, players, geography, maths and vocabulary, plus lighthearted locker-room activities.
-- **Roblox handoff:** an optional link to a user-supplied Roblox experience. That game runs on Roblox, outside this site, and no Roblox credentials are stored here.
 
 ### Modern app capabilities
 - **Installable progressive web app:** web manifest, home-screen identity and a service worker that prefers fresh assets online, with a saved game shell available offline after the initial installation/cache.
@@ -103,7 +102,7 @@ A 55-second neon street-football lane-runner with animated defenders, star colle
 
 ## Child privacy
 
-No public chatrooms, public profiles, ads, payments or first-party analytics. Progress is stored on-device using `localStorage` and is not synchronized across devices. Clearing site data resets progress. Google Fonts and the optional external score and Roblox thumbnail/game providers can receive normal browser requests. Roblox opens only after the user chooses an experience and presses Play. External sports information should be reviewed for child suitability before adding any new feed.
+No public chatrooms, public profiles, ads, payments or first-party analytics. Progress is stored on-device using `localStorage` and is not synchronized across devices. Clearing site data resets progress. Google Fonts and the optional external score provider can receive normal browser requests. External sports information should be reviewed for child suitability before adding any new feed.
 
 ## Verified October 9, 2026
 
