@@ -187,3 +187,47 @@ test('All-Sport Cup unlocks only after four qualified 3/5 bests',()=>{
  assert.ok(profile.includes("'four-sport-cup'"));
  assert.ok(profile.includes("state.allSportCup = true"));
 });
+
+test('wrestling career progresses from opening act to champion, without changing old save keys',()=>{
+ const b=boot();
+ const career=()=>b.window.JozefMultiSport.getWrestlingCareer();
+ assert.equal(career().rank,0);
+ assert.equal(career().rival,'NEON TITAN');
+ assert.equal(b.get('multi-wrestling-career').hidden,true);
+ b.get('multi-tab-wrestling').click();
+ assert.equal(b.get('multi-wrestling-career').hidden,false);
+ const show=()=>{
+  for(const choice of ['entrance','pose','teamwork','entrance','pose']){b.choose(choice);b.choose('next')}
+ };
+ show();
+ assert.equal(career().rank,1);
+ assert.equal(career().wins,1);
+ assert.equal(b.get('multi-wrestling-rank').textContent,'RISING STAR');
+ b.choose('again');show();b.choose('again');show();
+ assert.equal(career().rank,2);
+ assert.equal(career().rival,'GOLDEN PANTHER');
+ for(let i=0;i<3;i++){b.choose('again');show()}
+ assert.equal(career().rank,3);
+ assert.equal(career().name,'CHAMPION');
+ assert.equal(career().remaining,0);
+ assert.ok(b.get('multi-wrestling-career').classSet.has('is-champion'));
+ assert.equal(b.get('multi-wrestling-meter').style.width,'100%');
+ const saved=JSON.parse(b.store.get('jozefs-world-multisport-v1'));
+ assert.equal(saved.wrestling.careerWins,6);
+ const replay=boot({store:b.store});
+ assert.equal(replay.window.JozefMultiSport.getWrestlingCareer().name,'CHAMPION');
+ assert.equal(Object.keys(saved).length,4);
+});
+test('existing wrestling records migrate safely and only 3+ crowd pops advance a career',()=>{
+ const store=new Map([['jozefs-world-multisport-v1',JSON.stringify({
+  hockey:{best:1,played:2},baseball:{best:2,played:3},
+  basketball:{best:0,played:0},wrestling:{best:4,played:8}
+ })]]);
+ const b=boot({store});
+ assert.equal(b.window.JozefMultiSport.getWrestlingCareer().wins,0);
+ b.get('multi-tab-wrestling').click();
+ // Wrong choice on all five rounds (including WWE trivia).
+ for(let i=0;i<5;i++){b.choose(i===0?'pose':'entrance');b.choose('next')}
+ assert.equal(b.window.JozefMultiSport.getWrestlingCareer().wins,0);
+ assert.equal(JSON.parse(b.store.get('jozefs-world-multisport-v1')).wrestling.best,4);
+});
