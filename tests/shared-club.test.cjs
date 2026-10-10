@@ -1,3 +1,4 @@
+const bundled=require('./bundle-contract.cjs');
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -52,8 +53,7 @@ test('both people enter one shared site with no role gate, toggle or locked back
  assert.equal((dock.match(/<button\b/g)||[]).length,5);
  assert.match(html,/data-section="notes"/);
  assert.match(fs.readFileSync(path.join(root,'stadium.js'),'utf8'),/\['notes',/);
- assert.match(html,/href="notes\.css"/);
- assert.match(sw,/'\.\/notes\.css'/);
+ bundled.css(root,html,sw,'notes.css');
  assert.doesNotMatch(sw,/who\.css|who\.js/);
  assert.ok(!fs.existsSync(path.join(root,'who.js')));
  assert.ok(!fs.existsSync(path.join(root,'who.css')));
