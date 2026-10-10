@@ -134,3 +134,56 @@ test('saved records, profile XP, Chronicle and Club backups include multisport w
  assert.ok(history.includes("'jozef:multisport-completed'"));
  assert.doesNotMatch(source,/login|signup|accountId|userId|password/i);
 });
+
+
+test('All-Sport Cup requires 3 out of 5 in every sport, with no added save key',()=>{
+ const b=boot({random:()=>0});
+ assert.equal(b.window.JozefMultiSport.getCupProgress().qualified,0);
+ assert.equal(b.get('multi-cup-status').textContent,'0 OF 4 QUALIFIED');
+ assert.equal(b.get('multi-cup-progress').attrs['aria-valuenow'],'0');
+ // Shoot 5 successful hockey goals and inspect the individual turn markers.
+ for(let i=0;i<5;i++){b.choose('right');if(i<4)b.choose('next')}
+ const marks=b.get('multi-round-markers').children;
+ assert.equal(marks.length,5);
+ assert.ok(marks.every(x=>x.textContent==='✓'));
+ assert.equal(b.get('multi-round').textContent,'5 / 5','final attempt must not render 6/5');
+ b.choose('next');
+ assert.equal(b.window.JozefMultiSport.getCupProgress().qualified,1);
+ assert.equal(b.get('multi-cup-progress').attrs['aria-valuenow'],'1');
+ assert.equal(b.get('multi-cup-meter').style.width,'25%');
+ assert.ok(b.get('multi-cup-hockey').classSet.has('qualified'));
+ assert.equal(b.get('multi-cup-hockey-state').textContent,'QUALIFIED ✓');
+ // CTA automatically leads to the first unqualified sport.
+ b.get('multi-cup-next').click();
+ assert.equal(b.get('multi-name').textContent,'BASEBALL HOME RUN DERBY');
+ assert.equal(b.get('multi-round-markers').children.length,5);
+ assert.ok(b.get('multi-round-markers').children.every(x=>x.textContent!=='✓'));
+ // Cup doesn't create a new progress key; it derives from sport records.
+ const recorded=JSON.parse(b.store.get('jozefs-world-multisport-v1'));
+ assert.equal(Object.keys(recorded).length,4);
+});
+test('All-Sport Cup unlocks only after four qualified 3/5 bests',()=>{
+ const pre=new Map([['jozefs-world-multisport-v1',JSON.stringify({
+  hockey:{best:3,played:3},baseball:{best:4,played:2},
+  basketball:{best:5,played:1},wrestling:{best:2,played:1}
+ })]]);
+ const b=boot({store:pre});
+ assert.equal(b.window.JozefMultiSport.getCupProgress().champion,false);
+ assert.equal(b.window.JozefMultiSport.getCupProgress().qualified,3);
+ assert.equal(b.get('multi-cup-meter').style.width,'75%');
+ b.get('multi-cup-next').click();
+ assert.equal(b.get('multi-name').textContent,'WRESTLING SHOWDOWN');
+ // The last five showmanship challenges are deterministic and safe.
+ for(const choice of ['entrance','pose','teamwork','entrance','pose']){b.choose(choice);b.choose('next')}
+ assert.equal(b.window.JozefMultiSport.getCupProgress().qualified,4);
+ assert.equal(b.window.JozefMultiSport.getCupProgress().champion,true);
+ assert.ok(b.get('multi-cup-finale').classSet.has('champion'));
+ assert.equal(b.get('multi-cup-title').textContent,'THE ALL-SPORT CUP IS YOURS.');
+ assert.equal(b.get('multi-cup-progress').attrs['aria-valuenow'],'4');
+ assert.equal(b.scores.length,1,'one actual completion grants one capped XP attempt');
+ const replay=boot({store:b.store});
+ assert.equal(replay.window.JozefMultiSport.getCupProgress().champion,true,'Cup persists from saved best scores');
+ const profile=fs.readFileSync(path.join(root,'extras.js'),'utf8');
+ assert.ok(profile.includes("'four-sport-cup'"));
+ assert.ok(profile.includes("state.allSportCup = true"));
+});
