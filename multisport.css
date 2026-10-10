@@ -145,3 +145,70 @@
 }
 @media(max-width:380px){.multi-mode strong{font-size:22px}.multi-action{font-size:9px;padding:10px 5px}}
 @media(prefers-reduced-motion:reduce){.multi-mode,.multi-action{transition:none!important;transform:none!important}}
+
+/* The earned Four-Sport Cup / derived from each game’s local personal best. */
+.multi-cup{margin:23px 0 0;padding:18px 15px;border:1px solid #dab86777;border-radius:15px;
+ background:radial-gradient(ellipse at 54% 100%,#f6c56b1a,transparent 73%),
+ linear-gradient(155deg,#253431,#101f2c);box-shadow:inset 0 1px #fffaee22}
+.multi-cup-heading>span{display:block;color:#f9cf88;letter-spacing:.12em;font:900 9px var(--sf-ui)}
+.multi-cup-heading h4{font:900 26px/.96 var(--sf-display);color:#f5fff0;letter-spacing:0;margin:7px 0 10px}
+.multi-cup-heading em{font-style:normal;color:#f6c56b}
+.multi-cup-heading p{color:#d2e7d8;font:650 12px/1.5 var(--sf-ui);margin:0}
+.multi-cup-progress{width:100%;height:9px;margin:18px 0 13px;background:#092b30;
+ border:1px solid #edd3a744;border-radius:30px;overflow:hidden}
+.multi-cup-progress>span{display:block;width:0;height:100%;border-radius:inherit;
+ background:linear-gradient(90deg,#71e7e4,#f6c56b);
+ transition:width .3s ease}
+.multi-cup-stamps{display:grid;gap:7px}
+.multi-cup-stamp{display:flex;align-items:center;justify-content:space-between;gap:5px;min-width:0;
+ padding:10px 11px;border-radius:8px;background:#102b34;border:1px dashed #90c0ab50;
+ color:#c6ded2}
+.multi-cup-stamp>span{font:850 10px var(--sf-ui);letter-spacing:.055em}
+.multi-cup-stamp>strong{font:900 10px var(--sf-ui);color:#b2c6bc;white-space:nowrap}
+.multi-cup-stamp.qualified{border-style:solid;border-color:#f6c56b9d;
+ background:linear-gradient(120deg,#324735,#223733)}
+.multi-cup-stamp.qualified>strong{color:#ffdb96}
+.multi-cup-finale{text-align:center;display:grid;justify-items:center;gap:7px;margin:18px 0 0}
+.multi-cup-medal{position:relative;display:grid;place-items:center;width:100px;height:110px;margin:2px auto 4px;
+ color:#223b34;font:900 27px var(--sf-display);
+ background:linear-gradient(135deg,#b2c4b2,#546765 55%,#2c4853);
+ clip-path:polygon(14% 0,86% 0,100% 36%,86% 78%,50% 100%,14% 78%,0 36%);
+ box-shadow:inset 0 0 0 9px #ffffff18;filter:grayscale(.55);opacity:.55}
+.multi-cup-medal>span{display:grid;place-items:center;width:79px;height:79px;border:2px solid #ffffff47;
+ border-radius:50%}
+.multi-cup-finale.champion .multi-cup-medal{
+ background:linear-gradient(135deg,#fff6c3 0%,#e5bb61 42%,#b87a39 78%,#fce4a2);
+ filter:none;opacity:1;box-shadow:0 14px 30px #eec97f3b}
+.multi-cup-finale p{font:850 11px var(--sf-ui);letter-spacing:.11em;color:#b3d5c6;margin:0}
+.multi-cup-finale strong{font:900 23px/1.1 var(--sf-display);color:#f4fbe9}
+.multi-cup-finale.champion strong{color:#f6d999}
+.multi-cup-next{width:100%;min-height:48px;margin-top:9px;padding:11px;
+ background:#e3c379;color:#192f2a;border:1px solid #ffe7b9;border-radius:9px;cursor:pointer;
+ font:900 12px var(--sf-ui);letter-spacing:.065em}
+.multi-cup-next:hover{background:#ffe09c}
+.multi-cup-next:focus-visible,.multi-mode:focus-visible,.multi-action:focus-visible{
+ outline:3px solid #d5ff74;outline-offset:3px}
+.multi-round-markers{display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 12px;
+ background:#102c36;border-bottom:1px solid #b6d4c624}
+.multi-turn-mark{display:grid;place-items:center;min-width:36px;min-height:36px;padding:3px;
+ border:1px solid #aac7c359;border-radius:50%;color:#bedbd0;background:#1e3741;
+ font:900 15px var(--sf-ui)}
+.multi-turn-mark.is-now{background:#3d5b3e;border-color:#c8ff5a;color:#e8ffcf;
+ box-shadow:0 0 0 3px #c8ff5a1b}
+.multi-turn-mark.is-made{background:#2c6b50;border-color:#91ffc9;color:#ecfff1}
+.multi-turn-mark.is-missed{background:#623939;border-color:#ed9e9e;color:#ffe6de}
+.multi-stage.multi-result .multi-scene-art{
+ animation:multi-score-pop .34s ease-out both}
+@keyframes multi-score-pop{0%{transform:scale(.91)}55%{transform:scale(1.05)}100%{transform:scale(1)}}
+.multi-stage.multi-finished .multi-scene-art{box-shadow:0 0 45px #c8ff5a4a,0 19px 42px #00121eb3}
+@media(max-width:680px){
+ .multi-cup{padding:15px 12px}
+ .multi-cup-heading h4{font-size:25px}
+ .multi-cup-stamp{padding:10px}
+ .multi-round-markers{gap:6px}
+ .multi-turn-mark{min-width:34px;min-height:34px}
+}
+@media(prefers-reduced-motion:reduce){
+ .multi-cup-progress>span{transition:none!important}
+ .multi-stage.multi-result .multi-scene-art{animation:none!important}
+}
