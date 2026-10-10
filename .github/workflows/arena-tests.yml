@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'arena*.js'
+      - 'scripts/build-arena-bundle.cjs'
       - 'playmode.js'
       - 'broadcast.js'
       - 'ui-refine-2026.css'
@@ -15,6 +16,7 @@ on:
   pull_request:
     paths:
       - 'arena*.js'
+      - 'scripts/build-arena-bundle.cjs'
       - 'playmode.js'
       - 'broadcast.js'
       - 'ui-refine-2026.css'
@@ -41,7 +43,10 @@ jobs:
           node --check arena-renderer.js
           node --check arena-systems.js
           node --check arena-experience.js
+          node --check arena-bundle.js
           node --check tests/arena-mobile-smoke.cjs
+      - name: Verify deployed bundle matches game source
+        run: node scripts/build-arena-bundle.cjs --check
       - name: Logic regression tests
         run: node --test tests/arena-*.test.cjs
   arena-mobile:
