@@ -13,6 +13,7 @@ Jozef FC // After Dark is a private football universe. Play an actual Arena matc
 - An adaptive Coach's Pick identifies an achievable next objective from the selected Football, All Sports, My Club or All Challenges view. The challenge button deep-links directly to the relevant game and chooses the correct sport.
 - The only new Playbook storage is a shared local focus preference at `jozefs-world-playbook-v1`, included in the existing Club backup. Playbook milestones do not duplicate XP or change any saved scores.
 - Sports Arcade adds **Rookie, Pro and Legend** challenge difficulty: different goalie behaviour, batting and basketball accuracy windows, and alternate wrestling questions. Changing difficulty restarts the current five-turn event, while recorded best scores and the Cup remain compatible. Pro is the original classic game; reduced-motion untimed play remains available.
+- Hockey shot outcomes take the goalkeeper's **visible lane** from the animated ice scene when Canvas is available; fallback scoring still works on devices without Canvas. Baseball and basketball show a green timing window that changes with the selected difficulty so the visual feedback matches the actual scoring rules.
 - All challenge layouts are touch-friendly, keyboard-operable, readable on iPhone-sized screens and cached for offline use.
 
 
