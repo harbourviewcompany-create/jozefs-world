@@ -47,7 +47,7 @@
     }
     const total=$('clubhouse-card-count');if(total)total.textContent=count+' / '+cardDefs.length;
   }
-  const KEYS=['jozefs-world-player-v1','jozefs-world-tour-v1','jozefs-world-career-v1','jozefKeepyBest','jozefs-world-street-best-v1','jozefs-world-notes-v1','jozefs-world-album-v1','jozefs-world-chronicle-v1',
+  const KEYS=['jozefs-world-player-v1','jozefs-world-tour-v1','jozefs-world-career-v1','jozefKeepyBest','jozefs-world-street-best-v1','jozefs-world-notes-v1','jozefs-world-album-v1','jozefs-world-chronicle-v1','jozefs-world-multisport-v1',
     'jozefs-world-matchday-v1','jozefs-world-formation-v1','jozefs-world-training-v1','jozefs-world-jersey-v1','jozefs-world-bingo-v1','jozefs-world-missions-v1','jozefs-world-squad-v1','jozefs-world-arena-v1'];
   const status=message=>{const el=$('clubhouse-backup-status');if(el)el.textContent=message};
   function read(key) {
