@@ -207,7 +207,7 @@ function loseBall(){
  tackleCooldown=1.3;
  // A tackle is not automatically a goal: only some recoveries lead to a scoring counter.
  const teamCover=Math.min(.58,squad.defence*.75+squad.keeper*.9);
- const conceded=Math.random()<Math.max(.04,(actor.y>360?.14:.07)*(1-teamCover));
+ const conceded=Math.random()<Math.max(.035,(actor.y>360?.14:.07)*(1-teamCover)*(systems.DIFFICULTIES[experience?.prefs.difficulty||'pro']?.pressure||1));
  if(conceded)them++;
  flash=conceded?-.65:-.18;cue('tackle');
  msg(conceded?'RIVALS SCORE ON THE BREAK! RESET AND GO AGAIN.':'YOUR TEAMMATES STOP THE COUNTER! RECOVER YOUR SHAPE!');
@@ -225,8 +225,8 @@ function update(dt){
  keeperReact=Math.max(0,keeperReact-dt);
  shotCooldown=Math.max(0,shotCooldown-dt);passCooldown=Math.max(0,passCooldown-dt);
  tackleCooldown=Math.max(0,tackleCooldown-dt);
- let dx=stick.x+(keys.has('ArrowRight')||keys.has('d')?1:0)-(keys.has('ArrowLeft')||keys.has('a')?1:0);
- let dy=stick.y+(keys.has('ArrowDown')||keys.has('s')?1:0)-(keys.has('ArrowUp')||keys.has('w')?1:0);
+ let dx=stick.x+joystick.x+(keys.has('ArrowRight')||keys.has('d')?1:0)-(keys.has('ArrowLeft')||keys.has('a')?1:0);
+ let dy=stick.y+joystick.y+(keys.has('ArrowDown')||keys.has('s')?1:0)-(keys.has('ArrowUp')||keys.has('w')?1:0);
  if(target){
   const td=dist(actor,target);
   if(td>10){dx=target.x-actor.x;dy=target.y-actor.y;}else target=null;
@@ -234,7 +234,7 @@ function update(dt){
  move(dx,dy,dt);
  if(ball.owner==='actor'){ball.x=actor.x;ball.y=actor.y-15;}
  if(ball.owner==='mate'){ball.x=mate.x;ball.y=mate.y-12;mateTime+=dt;}
- const wanted={x:clamp(actor.x+(squad.tactic==='attack'?24:-35),40,380),y:clamp(actor.y-(squad.tactic==='defence'?105:175),115,495)};
+ const wanted=systems.teammateDestination(actor,mate,squad.tactic,defenders);
  const dir=dist(wanted,mate);
  if(dir>5){mate.x+=(wanted.x-mate.x)/dir*Math.min(dir,(squad.tactic==='attack'?125:96)*dt);mate.y+=(wanted.y-mate.y)/dir*Math.min(dir,112*dt);}
  // Hold possession long enough for the player to request a return pass.
@@ -244,20 +244,23 @@ function update(dt){
   if(mateTime>1.7&&mate.y<330&&shotCooldown<=0)shoot();
  }
  const leader=ball.owner==='mate'?mate:actor;
- for(const d of defenders){
-  const distance=dist(d,leader);
+ const difficulty=systems.DIFFICULTIES[experience?.prefs.difficulty||'pro']||systems.DIFFICULTIES.pro;
+ for(let i=0;i<defenders.length;i++){
+  const d=defenders[i];
+  const dest=systems.defenderDestination(i,d,actor,mate,ball);
+  const distance=dist(d,dest);
   if(distance>3){
-   const movement=Math.min(distance,d.speed*(1+Math.max(0,lifetime.wins)*.035)*dt);
-   d.x=clamp(d.x+(leader.x-d.x)/distance*movement,22,398);
-   d.y=clamp(d.y+(leader.y-d.y)/distance*movement,80,535);
+   const movement=Math.min(distance,d.speed*difficulty.speed*(1+Math.max(0,lifetime.wins)*.012)*dt);
+   d.x=clamp(d.x+(dest.x-d.x)/distance*movement,22,398);
+   d.y=clamp(d.y+(dest.y-d.y)/distance*movement,80,535);
   }
-  if((ball.owner==='actor'||ball.owner==='mate')&&dist(d,leader)<23&&tackleCooldown<=0&&skillTime<=0){
-    loseBall();break;
+  if((ball.owner==='actor'||ball.owner==='mate')&&dist(d,leader)<22*difficulty.pressure&&tackleCooldown<=0&&skillTime<=0){
+   loseBall();break;
   }
  }
  // The goalkeeper commits toward the chosen post after a realistic reaction delay.
  const keeperAim=ball.owner==='shot'?keeperDestination:210;
- const keeperSpeed=ball.owner==='shot'&&keeperReact<=0?138:ball.owner==='shot'?0:72;
+ const keeperSpeed=(ball.owner==='shot'&&keeperReact<=0?138:ball.owner==='shot'?0:72)*(systems.DIFFICULTIES[experience?.prefs.difficulty||'pro']?.keeper||1);
  keeper.x+=clamp(keeperAim-keeper.x,-keeperSpeed*dt,keeperSpeed*dt);
  if(ball.owner==='pass'){
   const receiving=passRecipient==='mate'?mate:actor;
@@ -275,7 +278,7 @@ function update(dt){
  if(ball.owner==='shot'||ball.owner==='free'){
   ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;
   if(ball.owner==='free'){ball.vx*=Math.max(0,1-1.0*dt);ball.vy*=Math.max(0,1-1.0*dt);receive();}
-  if(ball.owner==='shot'&&ball.y<64&&Math.abs(ball.x-keeper.x)<18){
+  if(ball.owner==='shot'&&ball.y<64&&Math.abs(ball.x-keeper.x)<18*(systems.DIFFICULTIES[experience?.prefs.difficulty||'pro']?.keeper||1)){
     ball.owner='free';ball.vy=220;ball.vx=ball.x<keeper.x?-85:85;
     keeperSaves++;cue('save');msg('WHAT A SAVE! FOLLOW UP ON THE REBOUND!');flash=-.22;experience?.haptic([15,30,15]);startReplay('GREAT SAVE');
   }else if(ball.owner==='shot'&&ball.y<=22){
