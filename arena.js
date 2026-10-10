@@ -323,6 +323,7 @@ function goal(){
 function update(dt){
  time-=dt;flash=flash>0?Math.max(0,flash-dt):Math.min(0,flash+dt);
  skillCooldown=Math.max(0,skillCooldown-dt);skillTime=Math.max(0,skillTime-dt);
+ counterTime=Math.max(0,counterTime-dt);
  keeperReact=Math.max(0,keeperReact-dt);
  shotCooldown=Math.max(0,shotCooldown-dt);passCooldown=Math.max(0,passCooldown-dt);
  tackleCooldown=Math.max(0,tackleCooldown-dt);
@@ -333,11 +334,18 @@ function update(dt){
   if(td>10){dx=target.x-actor.x;dy=target.y-actor.y;}else target=null;
  }
  move(dx,dy,dt);
+ const difficulty=systems.DIFFICULTIES[experience?.prefs.difficulty||'pro']||systems.DIFFICULTIES.pro;
+ if(ball.owner==='rival'){
+  updateRivalBreak(dt,difficulty);
+  if(time<=0){time=0;end();return;}
+  if(Math.ceil(time*5)!==lastHudTick){lastHudTick=Math.ceil(time*5);hud();}
+  return;
+ }
  if(ball.owner==='actor'){ball.x=actor.x;ball.y=actor.y-15;}
  if(ball.owner==='mate'){ball.x=mate.x;ball.y=mate.y-12;mateTime+=dt;}
- const wanted=systems.teammateDestination(actor,mate,squad.tactic,defenders);
+ const wanted=counterTime>0?systems.counterSupportTarget(actor,mate,defenders,counterTime):systems.teammateDestination(actor,mate,squad.tactic,defenders);
  const dir=dist(wanted,mate);
- if(dir>5){mate.x+=(wanted.x-mate.x)/dir*Math.min(dir,(squad.tactic==='attack'?125:96)*dt);mate.y+=(wanted.y-mate.y)/dir*Math.min(dir,112*dt);}
+ if(dir>5){mate.x+=(wanted.x-mate.x)/dir*Math.min(dir,(counterTime>0?160:squad.tactic==='attack'?125:96)*dt);mate.y+=(wanted.y-mate.y)/dir*Math.min(dir,(counterTime>0?165:112)*dt);}
  // Hold possession long enough for the player to request a return pass.
  // Teammates make a shot of their own after a brief window.
  if(ball.owner==='mate'){
@@ -345,7 +353,6 @@ function update(dt){
   if(mateTime>1.7&&mate.y<330&&shotCooldown<=0)shoot();
  }
  const leader=ball.owner==='mate'?mate:actor;
- const difficulty=systems.DIFFICULTIES[experience?.prefs.difficulty||'pro']||systems.DIFFICULTIES.pro;
  for(let i=0;i<defenders.length;i++){
   const d=defenders[i];
   const dest=systems.defenderDestination(i,d,actor,mate,ball);
@@ -356,7 +363,7 @@ function update(dt){
    d.y=clamp(d.y+(dest.y-d.y)/distance*movement,80,535);
   }
   if((ball.owner==='actor'||ball.owner==='mate')&&dist(d,leader)<22*difficulty.pressure&&tackleCooldown<=0&&skillTime<=0){
-   loseBall();break;
+   loseBall(i);return;
   }
  }
  // The goalkeeper commits toward the chosen post after a realistic reaction delay.
@@ -382,10 +389,8 @@ function update(dt){
  if(ball.owner==='pass'&&tackleCooldown<=0){
   const interceptor=defenders.find(d=>dist(d,ball)<17*difficulty.pressure);
   if(interceptor){
-   ball.owner='free';passRecipient=null;passChain=0;
-   ball.vx=(ball.x-interceptor.x)*5;ball.vy=150;
-   passCooldown=.6;flash=-.12;cue('tackle');
-   msg('PASS INTERCEPTED! Chase the loose ball!');
+   rivalTakeover(defenders.indexOf(interceptor),'PASS INTERCEPTED! PRESS THE CARRIER!');
+   return;
   }
  }
  if(ball.owner==='shot'||ball.owner==='free'){
@@ -395,12 +400,17 @@ function update(dt){
   if(ball.owner==='shot'){
    const blocker=defenders.find(d=>dist(d,ball)<18*difficulty.pressure);
    if(blocker){
-    ball.owner='free';ball.vx=(ball.x-blocker.x)*6;
+    ball.owner='free';looseBallElapsed=0;ball.vx=(ball.x-blocker.x)*6;
     ball.vy=175;blockedShots++;flash=-.15;
     cue('save');msg('SHOT BLOCKED! MOVE INTO SPACE AND TRY AGAIN.');
    }
   }
   if(ball.owner==='free'){
+   // Rivals can collect a rebound if Jozef does not win the race.
+   if(looseBallElapsed>.45){
+    const winner=defenders.findIndex(d=>dist(d,ball)<22*difficulty.pressure);
+    if(winner>=0){rivalTakeover(winner,'RIVAL COLLECTS THE REBOUND! CHASE HIM!');return;}
+   }
    ball.vx*=Math.max(0,1-1.0*dt);ball.vy*=Math.max(0,1-1.0*dt);
    receive();
    if(ball.owner==='free'){
@@ -413,7 +423,7 @@ function update(dt){
    }else looseBallElapsed=0;
   }
   if(ball.owner==='shot'&&ball.y<64&&Math.abs(ball.x-keeper.x)<18*(systems.DIFFICULTIES[experience?.prefs.difficulty||'pro']?.keeper||1)){
-    ball.owner='free';ball.vy=220;ball.vx=ball.x<keeper.x?-85:85;
+    ball.owner='free';looseBallElapsed=0;ball.vy=220;ball.vx=ball.x<keeper.x?-85:85;
     keeperSaves++;cue('save');msg('WHAT A SAVE! FOLLOW UP ON THE REBOUND!');flash=-.22;experience?.haptic([15,30,15]);startReplay('GREAT SAVE');
   }else if(ball.owner==='shot'&&ball.y<=22){
     if(ball.x>GOAL.left&&ball.x<GOAL.right){goal();return;}
@@ -680,7 +690,8 @@ experience=window.JozefArenaExperience?.mount({
 window.JozefArena=Object.freeze({getProgress:()=>({...lifetime,score:us+'-'+them,mode,
   matchGoals:us,opponentGoals:them,shots,saves:keeperSaves,aim:SHOT_ZONES[aim].name,
   playerX:actor.x,playerY:actor.y,ballOwner:ball.owner,skillReady:skillCooldown<=0,
-  passChain,blockedShots,shotChance:systems.shotProfile((ball.owner==='mate'?mate:actor).y,passChain,squad.shot,experience?.prefs.difficulty||'pro').onTarget,
+  passChain,blockedShots,counterRecoveries,rivalAttacks,counterSeconds:counterTime,
+  shotChance:systems.shotProfile((ball.owner==='mate'?mate:actor).y,passChain,squad.shot+Math.min(.18,counterTime*.033),experience?.prefs.difficulty||'pro').onTarget,
   difficulty:experience?.prefs.difficulty||'pro',coins:lifetime.coins,level:systems.progression(lifetime).level,
   controllerConnected:padConnected})});
 hud();draw();
