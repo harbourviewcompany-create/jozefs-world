@@ -7,7 +7,7 @@ const root=path.resolve(__dirname,'..');
 const html=fs.readFileSync(path.join(root,'world.html'),'utf8');
 const source=fs.readFileSync(path.join(root,'multisport.js'),'utf8');
 const css=fs.readFileSync(path.join(root,'multisport.css'),'utf8');
-function boot({store=new Map(),random=()=>0,reduce=false}={}){
+function boot({store=new Map(),random=()=>0,reduce=false,goalieLane=null}={}){
  let now=0;
  const nodes=new Map(),listeners={},events=[],scores=[];
  class N{
@@ -30,6 +30,9 @@ function boot({store=new Map(),random=()=>0,reduce=false}={}){
    requestAnimationFrame:()=>7,cancelAnimationFrame:()=>{},
    matchMedia:()=>({matches:reduce}),
    JozefWorld:{record:(action,details)=>{scores.push({action,details});return 20}},
+   ...(goalieLane===null?{}:{JozefSportStage:{create:()=>({
+     begin(){},shoot(){},refresh(){},getGoalie:()=>goalieLane
+   })}}),
    dispatchEvent:e=>{events.push(e.type)},
    addEventListener:(type,fn)=>{listeners[type]=fn},
    showSection:()=>{}
@@ -297,4 +300,23 @@ test('Playbook can launch a specific sport without opening a separate profile',(
  const html=fs.readFileSync(path.join(root,'world.html'),'utf8');
  for(const level of ['rookie','pro','legend'])
   assert.equal((html.match(new RegExp('id="multi-difficulty-'+level+'"','g'))||[]).length,1);
+});
+
+test('scoring zone visuals match Rookie, Pro and Legend timing, and the shown goalie can save',()=>{
+ const b=boot({random:()=>0,goalieLane:2});
+ b.get('multi-tab-baseball').click();
+ assert.match(b.get('multi-meter').style.background,/38% 72%/);
+ b.get('multi-difficulty-legend').click();
+ assert.match(b.get('multi-meter').style.background,/46% 64%/);
+ b.get('multi-difficulty-rookie').click();
+ assert.match(b.get('multi-meter').style.background,/28% 82%/);
+ b.get('multi-tab-basketball').click();
+ assert.match(b.get('multi-meter').style.background,/33% 77%/);
+ b.get('multi-difficulty-pro').click();
+ b.get('multi-tab-hockey').click();
+ b.choose('right');
+ assert.equal(b.get('multi-score').textContent,'0 / 5 GOALS','goalie visible on right makes a right shot a save');
+ b.choose('next');
+ b.choose('left');
+ assert.equal(b.get('multi-score').textContent,'1 / 5 GOALS','left shot beats right-side keeper');
 });
