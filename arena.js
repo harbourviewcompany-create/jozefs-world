@@ -45,6 +45,7 @@ function updateTouchVector(){
  stick=len>1?{x:x/len,y:y/len}:{x,y};
 }
 let aim=0,skillCooldown=0,skillTime=0,keeperDestination=210,keeperReact=0,passRecipient=null,mateTime=0,shots=0,keeperSaves=0,lastHudTick=-1;
+let passChain=0,blockedShots=0;
 function getSquad(){
  const api=window.JozefSquad?.getSquad?.();
  const val=api?.bonuses||{};
@@ -99,7 +100,7 @@ function resetPositions(){
  defenders=[{x:144,y:260,speed:89},{x:279,y:205,speed:90},{x:204,y:143,speed:82}];
  keeper={x:210,y:48};
  shotCooldown=0;tackleCooldown=1.2;passCooldown=0;passRecipient=null;mateTime=0;
- keeperDestination=210;keeperReact=0;keys.clear();heldDirections.clear();stick={x:0,y:0};target=null;
+ keeperDestination=210;keeperReact=0;passChain=0;keys.clear();heldDirections.clear();stick={x:0,y:0};target=null;
 }
 function hud(){
  put('arena-score',us+' : '+them);put('arena-clock',String(Math.ceil(Math.max(0,time))).padStart(2,'0')+'s');
@@ -109,6 +110,10 @@ function hud(){
  put('arena-matches',lifetime.games);put('arena-tactic',squad.tactic.toUpperCase());
  put('arena-shots',shots);put('arena-keeper-saves',keeperSaves);
  put('arena-aim-label',SHOT_ZONES[aim].name);
+ const shooter=ball.owner==='mate'?mate:actor;
+ const chance=systems.shotProfile(shooter.y,passChain,squad.shot,experience?.prefs.difficulty||'pro');
+ put('arena-shot-quality',Math.round(chance.onTarget*100)+'%');
+ const chanceLabel=$('arena-shot-quality');if(chanceLabel)chanceLabel.title=chance.label+' · Pass and move forward to improve your shooting chance.';
  put('arena-skill-status',skillCooldown>0?'READY IN '+Math.ceil(skillCooldown)+'s':'SKILL READY');
  const skillButton=$('arena-skill');if(skillButton)skillButton.disabled=mode!=='playing'||skillCooldown>0;
  for(let i=0;i<3;i++){const b=$('arena-aim-'+i);if(b){b.setAttribute('aria-pressed',String(aim===i));b.classList.toggle('selected',aim===i);}}
@@ -118,7 +123,7 @@ function hud(){
 }
 function start(){
  mode='playing';time=MATCH_LENGTH;us=0;them=0;streak=0;flash=0;last=0;
- shots=0;keeperSaves=0;skillCooldown=0;skillTime=0;lastHudTick=-1;
+ shots=0;keeperSaves=0;blockedShots=0;skillCooldown=0;skillTime=0;lastHudTick=-1;
  camera={x:210,y:300,zoom:1};replay=null;replayHistory=[];replayWait=0;joystick={x:0,y:0};padVector={x:0,y:0};experience?.reset();
  squad=getSquad();resetPositions();hud();cue('start');
  msg('KICK OFF! Move, pass to your teammate, and shoot into the top goal.');
@@ -161,8 +166,8 @@ function move(deltaX,deltaY,dt){
 }
 function receive(){
  if(ball.owner!=='free')return;
- if(dist(ball,actor)<25){ball.owner='actor';msg('POSSESSION! Pass or shoot.');}
- else if(dist(ball,mate)<24){ball.owner='mate';msg('Great pass. Your teammate is on the ball!');}
+ if(dist(ball,actor)<25){ball.owner='actor';passChain=0;msg('POSSESSION! Advance or pass to find a better shot.');}
+ else if(dist(ball,mate)<24){ball.owner='mate';passChain=0;msg('Great recovery! Get closer to goal for the shot.');}
 }
 function setAim(i){
  if(!Number.isInteger(i)||i<0||i>=SHOT_ZONES.length)return;
@@ -193,15 +198,17 @@ function shoot(){
  const p=ball.owner==='mate'?mate:actor;
  // Intentional corner aiming beats random, unstoppable goalkeeper animations.
  // Short-range attempts have tighter accuracy. Squad strength helps long shots.
- const spread=systems.shotAccuracy(p.y,squad.shot,experience?.prefs.difficulty||'pro');
- const goalX=SHOT_ZONES[aim].x+(Math.random()-.5)*2*spread;
+ const quality=systems.shotProfile(p.y,passChain,squad.shot,experience?.prefs.difficulty||'pro');
+ const placement=systems.shotTarget(aim,SHOT_ZONES,quality,Math.random(),Math.random(),GOAL.left,GOAL.right);
+ const goalX=placement.x;
  const dy=GOAL.top-p.y,dx=goalX-p.x,div=Math.max(1,Math.hypot(dx,dy));
  const power=490+110*squad.shot;
  ball={x:p.x,y:p.y-7,vx:dx/div*power,vy:dy/div*power,owner:'shot'};
  // Keeper has to guess and commit. A save is earned, not guaranteed.
  keeperDestination=systems.keeperCommit(aim,SHOT_ZONES,experience?.prefs.difficulty||'pro',Math.random());
  keeperReact=.16/(systems.DIFFICULTIES[experience?.prefs.difficulty||'pro']?.keeper||1);shotCooldown=.65;mateTime=0;shots++;streak=.45;cue('shot');experience?.haptic(22);experience?.record('shots');
- msg('SHOOTING AT THE '+SHOT_ZONES[aim].name+'! '+(p.y>360?'LONG-RANGE STRIKE!':'ONE ON ONE!'));
+ msg(p.y>360?'LONG SHOT! Get closer or pass for a better chance.':
+  'SHOOTING AT THE '+SHOT_ZONES[aim].name+'! '+(quality.passBonus?'GREAT BUILDUP!':'FIND THE CORNER!'));
  hud();
 }
 function loseBall(){
@@ -290,15 +297,37 @@ function update(dt){
   if(remaining<=step+17){
    ball.owner=passRecipient;passRecipient=null;mateTime=0;
    ball.x=receiving.x;ball.y=receiving.y-13;
+   passChain=Math.min(3,passChain+1);
    experience?.record('passes');
+   hud();
    msg(ball.owner==='mate'?'PASS COMPLETE! Press PASS again for the one-two.':'ONE-TWO COMPLETE! SHOOT!');
   }else{
    ball.x+=(receiving.x-ball.x)/remaining*step;
    ball.y+=(receiving.y-ball.y)/remaining*step;
   }
  }
+ // Defenders can cut out passing lanes instead of only tackling Jozef.
+ if(ball.owner==='pass'&&tackleCooldown<=0){
+  const interceptor=defenders.find(d=>dist(d,ball)<17*difficulty.pressure);
+  if(interceptor){
+   ball.owner='free';passRecipient=null;passChain=0;
+   ball.vx=(ball.x-interceptor.x)*5;ball.vy=150;
+   passCooldown=.6;flash=-.12;cue('tackle');
+   msg('PASS INTERCEPTED! Chase the loose ball!');
+  }
+ }
  if(ball.owner==='shot'||ball.owner==='free'){
   ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;
+  // Shots travel through the actual defenders. A clear passing or dribbling
+  // lane earns the chance to test the goalkeeper.
+  if(ball.owner==='shot'){
+   const blocker=defenders.find(d=>dist(d,ball)<18*difficulty.pressure);
+   if(blocker){
+    ball.owner='free';ball.vx=(ball.x-blocker.x)*6;
+    ball.vy=175;blockedShots++;flash=-.15;
+    cue('save');msg('SHOT BLOCKED! MOVE INTO SPACE AND TRY AGAIN.');
+   }
+  }
   if(ball.owner==='free'){ball.vx*=Math.max(0,1-1.0*dt);ball.vy*=Math.max(0,1-1.0*dt);receive();}
   if(ball.owner==='shot'&&ball.y<64&&Math.abs(ball.x-keeper.x)<18*(systems.DIFFICULTIES[experience?.prefs.difficulty||'pro']?.keeper||1)){
     ball.owner='free';ball.vy=220;ball.vx=ball.x<keeper.x?-85:85;
@@ -562,6 +591,7 @@ experience=window.JozefArenaExperience?.mount({
 window.JozefArena=Object.freeze({getProgress:()=>({...lifetime,score:us+'-'+them,mode,
   matchGoals:us,opponentGoals:them,shots,saves:keeperSaves,aim:SHOT_ZONES[aim].name,
   playerX:actor.x,playerY:actor.y,ballOwner:ball.owner,skillReady:skillCooldown<=0,
+  passChain,blockedShots,shotChance:systems.shotProfile((ball.owner==='mate'?mate:actor).y,passChain,squad.shot,experience?.prefs.difficulty||'pro').onTarget,
   difficulty:experience?.prefs.difficulty||'pro',coins:lifetime.coins,level:systems.progression(lifetime).level,
   controllerConnected:padConnected})});
 hud();draw();
