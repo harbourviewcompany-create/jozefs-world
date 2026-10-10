@@ -134,6 +134,8 @@ function end(){
  const result=won?'VICTORY!':us===them?'A HARD-FOUGHT DRAW.':'FULL TIME. REMATCH?';
  msg(result+' '+us+'–'+them+'. '+(unlocked?'NEW STADIUM UNLOCKED!':won?'Your club has earned a win!':'Every match builds your skills.'));
  window.dispatchEvent?.(new Event('jozef:progress'));
+ // A fully finished match counts toward today's shared HQ activities.
+ window.dispatchEvent?.(new Event('jozef:arena-completed'));
  hud();draw();
 }
 function move(deltaX,deltaY,dt){
