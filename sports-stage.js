@@ -180,6 +180,14 @@
       draw();
       if(!reduced()&&visible()&&!raf)raf=window.requestAnimationFrame?.(frame)||0;
     }
+    // The visible goalie, not a hidden roll, determines the Pro shot lane.
+    // Keep a fallback for reduced-motion and old browsers.
+    function getGoalie(){
+      if(activeSport!=='hockey')return null;
+      if(reduced())return 1;
+      const x=320+Math.sin((Date.now()-turnStart)/460)*78;
+      return x<291?0:x>349?2:1;
+    }
     function begin(s,opts={}){
       if(!sports.includes(s))return;
       activeSport=s;round=opts.round||0;rank=opts.rank||0;action=null;turnStart=Date.now();
@@ -196,7 +204,7 @@
     window.addEventListener?.('pageshow',refresh);
     document.addEventListener?.('visibilitychange',()=>{if(document.hidden)suspend();else refresh()});
     document.querySelector?.('[data-section="sports-arcade"]')?.addEventListener?.('click',refresh);
-    return Object.freeze({begin,shoot,refresh,suspend});
+    return Object.freeze({begin,shoot,refresh,suspend,getGoalie});
   }
   window.JozefSportStage=Object.freeze({create});
 })();
