@@ -124,13 +124,13 @@ function start(){
  cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
 }
 function pause(){
- if(mode==='playing'){mode='paused';cancelAnimationFrame(raf);keys.clear();heldDirections.clear();stick={x:0,y:0};last=0;msg('Half-time breather. Your score is safe.');}
+ if(mode==='playing'){mode='paused';cancelAnimationFrame(raf);keys.clear();heldDirections.clear();stick={x:0,y:0};joystick={x:0,y:0};experience?.clearJoystick();last=0;msg('Half-time breather. Your score is safe.');}
  else if(mode==='paused'){mode='playing';last=0;msg('Back on the ball!');raf=requestAnimationFrame(loop);}
  hud();
 }
 function end(){
  if(mode!=='playing')return;
- mode='over';cancelAnimationFrame(raf);keys.clear();heldDirections.clear();stick={x:0,y:0};
+ mode='over';cancelAnimationFrame(raf);keys.clear();heldDirections.clear();stick={x:0,y:0};joystick={x:0,y:0};experience?.clearJoystick();
  lifetime.games=Math.min(99999,lifetime.games+1);
  lifetime.goals=Math.min(99999,lifetime.goals+us);
  lifetime.best=Math.max(lifetime.best,us);
@@ -481,6 +481,7 @@ document.addEventListener('keyup',ev=>{
  keys.delete(k.startsWith('arrow')?'Arrow'+k.slice(5)[0].toUpperCase()+k.slice(6):k);
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode==='playing'){pause();draw();}});
+window.addEventListener('blur',()=>{if(mode==='playing'){pause();draw();}});
 window.addEventListener('pagehide',()=>{if(mode==='playing')pause();});
 window.addEventListener('jozef:squad-updated',()=>{squad=getSquad();hud();});
 experience=window.JozefArenaExperience?.mount({
