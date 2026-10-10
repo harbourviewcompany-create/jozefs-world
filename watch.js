@@ -83,6 +83,54 @@
     if (status) status.textContent = url ? 'Use a YouTube, Vimeo, or Twitch link. League games are not available through a public embed API.' : 'Paste a YouTube, Vimeo, or Twitch link. No pirate feeds.';
   }
 
+
+  const FEEDS = [
+    { label: 'Senators', url: 'https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/news?limit=20', words: ['senator', 'ottawa'] },
+    { label: 'Soccer', url: 'https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/news?limit=15', words: ['inter miami', 'miami', 'messi'] },
+    { label: 'Raptors', url: 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/news?limit=15', words: ['raptor', 'toronto'] },
+    { label: 'Bills', url: 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/news?limit=15', words: ['bill', 'buffalo'] }
+  ];
+
+  function articleLink(article) {
+    return article.links && article.links.web && article.links.web.href || '';
+  }
+
+  function latest() {
+    const board = document.getElementById('watch-latest');
+    if (!board) return;
+    board.textContent = 'Loading the latest...';
+    Promise.all(FEEDS.map(feed => fetch(feed.url).then(res => res.json()).then(data => {
+      const articles = data.articles || [];
+      const hits = articles.filter(article => {
+        const text = (article.headline + ' ' + (article.description || '')).toLowerCase();
+        return feed.words.some(word => text.includes(word));
+      });
+      return (hits.length ? hits : articles).slice(0, 3).map(article => ({
+        label: feed.label,
+        title: article.headline,
+        link: articleLink(article)
+      }));
+    }).catch(() => []))).then(groups => {
+      board.replaceChildren();
+      const rows = groups.flat();
+      if (!rows.length) {
+        board.textContent = 'Latest news is not available right now.';
+        return;
+      }
+      rows.forEach(row => {
+        const item = document.createElement('article');
+        const tag = document.createElement('strong');
+        tag.textContent = row.label;
+        const link = document.createElement('a');
+        link.href = row.link || 'https://www.espn.com/';
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.textContent = row.title;
+        item.append(tag, link);
+        board.appendChild(item);
+      });
+    });
+  }
   function boot() {
     const input = document.getElementById('watch-link');
     if (!input) return;
@@ -101,6 +149,8 @@
         paint(url);
       });
     });
+    latest();
+    document.getElementById('watch-refresh')?.addEventListener('click', latest);
     document.querySelectorAll('[data-watch-out]').forEach(link => {
       link.addEventListener('click', event => {
         const ok = window.confirm('This opens an official league site, outside Jozef FC. Continue?');

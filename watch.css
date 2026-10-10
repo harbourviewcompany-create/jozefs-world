@@ -5,3 +5,8 @@
 .watch-links a { min-height: 44px; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 999px; background: rgba(255,255,255,0.08); color: white; text-decoration: none; }
 
 #sens-radio { width: 100%; margin: 8px 0 12px; }
+
+.watch-latest { display: grid; gap: 8px; margin: 10px 0 14px; }
+.watch-latest article { padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,0.05); }
+.watch-latest strong { display: block; color: #cafa60; }
+.watch-latest a { color: white; }
