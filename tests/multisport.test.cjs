@@ -89,12 +89,13 @@ test('baseball and basketball swing/release through the real timing window',()=>
  b.get('multi-tab-baseball').click();
  assert.equal(b.get('multi-name').textContent,'BASEBALL HOME RUN DERBY');
  assert.equal(b.get('multi-timing').hidden,false);
- for(let i=0;i<5;i++){b.setNow(i*2000+523);b.choose('shoot');if(i!==4){b.choose('next');}}
+ let now=0;
+ for(let i=0;i<5;i++){now+=523;b.setNow(now);b.choose('shoot');if(i!==4){b.choose('next');}}
  b.choose('next');
  assert.equal(b.get('multi-best-baseball').textContent,'5/5');
  b.get('multi-tab-basketball').click();
  assert.equal(b.get('multi-name').textContent,'BASKETBALL THREE-POINT CHALLENGE');
- for(let i=0;i<5;i++){b.setNow(11000+i*2000+523);b.choose('shoot');if(i!==4)b.choose('next');}
+ for(let i=0;i<5;i++){now+=523;b.setNow(now);b.choose('shoot');if(i!==4)b.choose('next');}
  b.choose('next');
  assert.equal(b.get('multi-best-basketball').textContent,'5/5');
  assert.equal(b.scores.length,2);
