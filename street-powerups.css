@@ -1,0 +1,22 @@
+/* STREET//11: earned short-run powerups — cyan safe hit, gold combo chance. */
+.street-powerup-guide{
+ display:flex;gap:9px;align-items:center;justify-content:space-between;
+ padding:10px 14px;border-top:1px solid #a4ddc744;
+ background:#0e2d38;color:#cce7d6;
+ font:800 10px/1.4 var(--sf-ui);letter-spacing:.04em;
+}
+.street-powerup-shield{
+ display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;
+ min-width:113px;min-height:30px;padding:6px 9px;border:1px solid #8ec4ce66;
+ border-radius:7px;background:#163d47;color:#c3ebec;
+ font:900 10px var(--sf-ui);letter-spacing:.07em;
+}
+.street-powerup-shield:not(:empty){font-variant-numeric:tabular-nums}
+.street-powerup-guide:has(.street-powerup-shield){border-radius:0}
+.street-powerup-shield:where(:not([hidden])){transition:background .18s}
+.street-powerup-shield[data-active="true"]{background:#236e70;color:#effffa;border-color:#9af9ed}
+@media(max-width:680px){
+ .street-powerup-guide{padding:9px 10px;gap:8px;font-size:9px}
+ .street-powerup-shield{min-width:97px;font-size:9px;padding:5px}
+}
+@media(prefers-reduced-motion:reduce){.street-powerup-shield{transition:none}}
