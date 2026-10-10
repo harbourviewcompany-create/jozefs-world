@@ -523,3 +523,197 @@
   #arena.section.active .arena-game,
   #arena.section.active .arena-pitch-frame { animation: none !important; transition: none !important; }
 }
+
+/* Arena 3: a broadcast-style game screen instead of stacked web cards. */
+@media (max-width: 1100px) {
+  #arena.section.active {
+    background:
+      radial-gradient(ellipse 90% 48% at 50% 3%, #25514655, transparent 80%),
+      #05171e;
+  }
+  #arena.section.active .arena-game {
+    background: linear-gradient(180deg, #0c282d 0%, #071f25 52%, #051920 100%);
+    border-color: #6b9f8554;
+    box-shadow: 0 8px 30px #00151c88, inset 0 1px 0 #c9ffe622;
+  }
+  #arena.section.active .arena-topbar {
+    font-size: clamp(12px, 2.9vw, 15px);
+    letter-spacing: .015em;
+  }
+  #arena.section.active .arena-brand {
+    gap: 7px;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+  #arena.section.active .arena-brand .studio-status-dot {
+    width: 7px; height: 7px; box-shadow: 0 0 0 3px #c8ff5a16, 0 0 11px #c8ff5a66;
+  }
+  #arena.section.active .arena-brand small {
+    font-size: clamp(8px, 2.15vw, 10px);
+    font-weight: 800;
+    letter-spacing: .015em;
+    opacity: .82;
+  }
+  #arena.section.active .arena-header-actions #arena-start {
+    color: #092521;
+    background: linear-gradient(155deg, #dcff88, #bdff54);
+    border: 1px solid #eaffb57a;
+    box-shadow: 0 2px 0 #577d3860;
+  }
+  #arena.section.active .arena-header-actions .play-exit {
+    background: #17343a;
+    border: 1px solid #7494885c;
+    color: #d6eee4;
+    font-family: "Outfit", sans-serif;
+    font-size: 21px;
+  }
+  #arena.section.active .arena-scoreboard {
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, .9fr);
+    border-radius: 8px;
+    gap: 1px;
+    background: #96cfb532;
+    border: 1px solid #d1ffb338;
+    padding: 1px;
+  }
+  #arena.section.active .arena-scoreboard > div {
+    background: #0b292e;
+    border-radius: 5px;
+    gap: clamp(4px, 1.7vw, 10px);
+    box-shadow: inset 0 1px 0 #ffffff08;
+  }
+  #arena.section.active .arena-scoreboard small {
+    color: #bfd7c7;
+    text-transform: uppercase;
+    font-size: clamp(8px, 2.05vw, 10px);
+    letter-spacing: -.01em;
+  }
+  #arena.section.active .arena-scoreboard strong {
+    color: #d7ff80;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 16px #beff6923;
+  }
+  #arena.section.active #arena-clock {
+    color: #efffc5;
+    text-shadow: none;
+  }
+  #arena.section.active #arena-tactic { display: none; }
+  #arena.section.active .arena-mini-ticker {
+    justify-content: flex-start;
+    gap: 10px;
+    letter-spacing: .01em;
+    color: #9ecbbb;
+  }
+  #arena.section.active .arena-mini-ticker span {
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
+  }
+  #arena.section.active .arena-mini-ticker strong {
+    color: #e8ffdc;
+    font-size: 13px;
+  }
+  #arena.section.active .arena-pitch-frame {
+    background:
+      linear-gradient(90deg,#061e25 0%,#153a32 6%,#1a5a42 13%,#124b3e 17%,#124b3e 83%,#1a5a42 87%,#153a32 94%,#061e25 100%);
+    border: 1px solid #5fb38b8a;
+    box-shadow: inset 0 0 0 2px #011d232e, inset 0 0 31px #001719a2;
+  }
+  #arena.section.active .arena-pitch-frame::after {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(90deg,#c8ff5a2b 0 2px,transparent 2px calc(100% - 2px),#c8ff5a2b calc(100% - 2px)),
+      radial-gradient(ellipse at 50% -8%,#d8ffb622, transparent 43%);
+    opacity: .75;
+  }
+  #arena.section.active #arena-canvas {
+    filter: saturate(1.1) contrast(1.035);
+  }
+  #arena.section.active .arena-aim-bar {
+    gap: 5px;
+  }
+  #arena.section.active .arena-aim-caption {
+    color: #a0cabe;
+    font-weight: 850;
+  }
+  #arena.section.active .arena-aim-caption strong {
+    font-size: clamp(11px, 2.75vw, 14px);
+  }
+  #arena.section.active .arena-aim-bar button {
+    border: 1px solid #87bba176;
+    background: #12383a;
+    color: #e9fae8;
+    font-weight: 900;
+    font-size: clamp(10px, 2.6vw, 13px);
+    box-shadow: inset 0 1px 0 #ffffff0e;
+  }
+  #arena.section.active .arena-aim-bar button[aria-pressed="true"] {
+    background: #cafa60;
+    border-color: #e1ffa4;
+    color: #062825;
+    box-shadow: inset 0 2px 0 #ffffff55;
+  }
+  #arena.section.active .arena-controller {
+    background: #091c23;
+    border: 1px solid #6d9c8d52;
+    border-radius: 11px;
+    box-shadow: inset 0 1px 0 #ffffff0b;
+  }
+  #arena.section.active .arena-direction button {
+    border: 1px solid #7fa5a06e;
+    color: #e9fced;
+    background: linear-gradient(165deg, #234b4d, #1a3a40);
+    box-shadow: inset 0 1px 0 #d5fff020;
+    font-family: "Outfit", sans-serif;
+    font-weight: 900;
+  }
+  #arena.section.active .arena-direction button:active {
+    background: #cafa60;
+    color: #092c29;
+  }
+  #arena.section.active .arena-actions button,
+  #arena.section.active .arena-actions .arena-shoot {
+    border: 1px solid #c7ffe280;
+    border-radius: clamp(12px, 2.7vw, 17px);
+    font-size: clamp(16px, 4.1vw, 21px);
+    text-shadow: none;
+  }
+  #arena.section.active .arena-actions .arena-shoot {
+    border-color: #dcff8d;
+    box-shadow: inset 0 1px 0 #ffffff9c, 0 0 0 2px #d9ff5a12;
+  }
+  #arena.section.active .arena-actions .arena-pass {
+    border-color: #befff0;
+  }
+  #arena.section.active .arena-actions button:active {
+    transform: scale(.97);
+    filter: brightness(.9);
+  }
+  #arena.section.active .arena-skill-strip {
+    border-color: #74a98f65;
+    background: #103036;
+    gap: 10px;
+  }
+  #arena.section.active .arena-skill-strip button {
+    background: #78ebdf;
+    border: 1px solid #b9fff0;
+    color: #082b2d;
+  }
+  #arena.section.active .arena-skill-strip button:disabled {
+    opacity: .43;
+    filter: saturate(.5);
+  }
+  #arena.section.active .arena-skill-strip > span { color: #d1ff80; }
+  #arena.section.active .arena-status {
+    color: #e3f0e3;
+    text-transform: none;
+  }
+  #arena.section.active #arena-canvas:focus-visible,
+  #arena.section.active button:focus-visible {
+    outline: 2px solid #e6ffa1;
+    outline-offset: 1px;
+  }
+}
