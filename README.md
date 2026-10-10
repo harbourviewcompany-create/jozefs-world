@@ -7,6 +7,16 @@ Jozef FC // After Dark is a private football universe. Play an actual Arena matc
 
 ## The experience
 
+### Sports Arcade — Hockey, Baseball, Basketball & Wrestling (2026)
+- Four original, five-turn minigames live in the **Sports Arcade** section. Hockey: choose a goal corner. Baseball: time a swing. Basketball: release in the timing zone. Wrestling Showdown: make stage/crowd choices and answer two family-friendly WWE superstar questions.
+- Wrestling is an **unofficial original fan challenge** inspired by the spectacle of WWE, with no WWE logos, licensed images, unsafe moves, violence or claim of endorsement.
+- Keyboard controls (1–3 and Space) and mobile touch buttons work across modes. The baseball/basketball minigames offer untimed accessible attempts when reduced motion is preferred.
+- Best scores and play counts are saved locally in `jozefs-world-multisport-v1`. Valid completed games can earn **20 XP**, capped at four rewarded games per day across all sports; All-Sport Debut and Four-Sport Star badges join the shared player profile.
+- Existing football and single shared Club progress is preserved. Sports Arcade results appear in the local Chronicle and are included in the device-only Club backup.
+- Sports Scores remains separate, with additional NHL/Ottawa Senators and MLB/Toronto Blue Jays team selectors (live/recent results depend on ESPN network availability); the four arcade games work offline.
+
+
+
 ### The Club Chronicle — football history you can keep (2026)
 - A new **Chronicle** section transforms *completed* Arena matches, STREET//11 runs, and new Career/World Tour milestones into original Jozef FC story covers. Your current career totals are shown, but the site never invents scores or dates for games played before this feature was installed.
 - Browse up to 40 recent highlights, select a chapter to feature, and use **Print Poster** to print or save a personal Jozef FC matchday cover through your browser or device print menu.
