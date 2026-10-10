@@ -33,6 +33,13 @@ function navState(){
   else btn.removeAttribute('aria-current');
  });
  document.title=current==='home'?'Jozef FC // After Dark':(current==='street'?'Street//11':current[0].toUpperCase()+current.slice(1))+' | Jozef FC';
+ // Keep the phone dock in sync with regular navigation, deep links and Back.
+ document.querySelectorAll('[data-dock-section]').forEach(button=>{
+  const active=button.dataset.dockSection===current;
+  button.classList.toggle('is-active',active);
+  if(active)button.setAttribute('aria-current','page');
+  else button.removeAttribute('aria-current');
+ });
  const explore=el('jw-explore');
  if(explore){
   const visible=['home','arena','sports-arcade','playbook','club'].includes(current);
@@ -89,6 +96,7 @@ function commandDeck(){
   ['training','10','TRAINING','PRACTICE YOUR SKILLS'],
   ['matchday','11','MATCHDAY','YOUR REAL-LIFE FIXTURE'],
   ['sports','12','LIVE SPORTS','NHL · MLB · NBA'],
+  ['watch','12A','WATCH','CLUB VIDEO AND HIGHLIGHTS'],
   ['news','13','FOOTBALL SCORES','SCOREBOARD'],
   ['learn','14','LEARN','FOOTBALL INTELLIGENCE'],
   ['album','15','STICKER ALBUM','COLLECT YOUR REWARDS'],
