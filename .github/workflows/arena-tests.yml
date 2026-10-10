@@ -34,7 +34,7 @@ jobs:
           node --check arena-experience.js
           node --check tests/arena-mobile-smoke.cjs
       - name: Logic regression tests
-        run: node --test tests/arena-systems.test.cjs
+        run: node --test tests/arena-systems.test.cjs tests/arena-runtime.test.cjs
   arena-mobile:
     runs-on: ubuntu-latest
     timeout-minutes: 12
