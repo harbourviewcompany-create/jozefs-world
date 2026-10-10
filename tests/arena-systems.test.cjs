@@ -89,3 +89,34 @@ test('gamepad dead zone and D-pad override analog',()=>{
  assert.equal(S.readGamepad(null).shoot,false);
  assert.equal(S.readGamepad({connected:false,axes:[1,1]}).x,0);
 });
+
+
+test('kickoff camera starts wide and keeps the entire top goal in view',()=>{
+ let cam={x:210,y:300,zoom:1};
+ const jozef={x:210,y:493};
+ for(let i=0;i<100;i++)cam=S.cameraFor(jozef,{x:210,y:480,owner:'actor'},'playing',cam,.016);
+ assert.ok(cam.zoom<=1.005,'Kickoff must show the full football pitch');
+ assert.ok(Math.abs(cam.x-210)<.01,'Kickoff must be centered');
+ assert.ok(S.screenToWorld(210,0,cam).y<=1,'Top goal remains visible at kickoff');
+});
+test('attack zoom keeps both Jozef and goalkeeper inside the drawn field',()=>{
+ let cam={x:210,y:300,zoom:1};
+ const jozef={x:378,y:170};
+ for(let i=0;i<115;i++){
+  cam=S.cameraFor(jozef,{x:jozef.x,y:jozef.y-15,owner:'actor'},'playing',cam,.016);
+ }
+ assert.ok(cam.zoom>1.15,'Camera should zoom during a forward attack');
+ const top=S.screenToWorld(210,0,cam),bottom=S.screenToWorld(210,600,cam);
+ const left=S.screenToWorld(0,300,cam),right=S.screenToWorld(420,300,cam);
+ assert.ok(top.y<=1,'Goal crossbar at y=15 must remain on screen');
+ assert.ok(bottom.y>=jozef.y+20,'Captain must remain onscreen');
+ assert.ok(left.x<=jozef.x&&right.x>=jozef.x,'Player on wing must stay in frame');
+});
+test('camera widens immediately when Jozef returns near the defensive end',()=>{
+ const old={x:220,y:250,zoom:1.22};
+ const jozef={x:210,y:563};
+ const cam=S.cameraFor(jozef,{x:210,y:80,owner:'mate'},'playing',old,.016);
+ assert.ok(cam.zoom<=600/(jozef.y+30)+1e-7,'No player loss on sudden counter');
+ assert.ok(S.screenToWorld(210,600,cam).y>=jozef.y+29.99);
+ assert.ok(S.screenToWorld(210,0,cam).y<=1);
+});
