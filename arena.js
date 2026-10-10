@@ -33,6 +33,7 @@ const venues=[
   {name:'LEGEND ARENA',accent:'#ffd180',need:5,rival:'THE NEON ROYALS',story:'The final gates are open. You face the city champions. Keep winning to write your own legend.'}
 ];
 let mode='ready',time=MATCH_LENGTH,us=0,them=0,streak=0,flash=0,last=0,raf=0;
+let lastFrameTick=0,rawFrameTick=0,slowFrameCount=0,stableFrameCount=0,autoBattery=false;
 let actor={x:210,y:494},mate={x:298,y:320},ball={x:210,y:482,owner:'actor',vx:0,vy:0};
 let defenders=[],keeper={x:210,y:48},keys=new Set(),stick={x:0,y:0},target=null,shotCooldown=0,tackleCooldown=0,passCooldown=0;
 const SHOT_ZONES=[{name:'LEFT POST',x:171},{name:'CENTRE',x:210},{name:'RIGHT POST',x:249}];
@@ -89,12 +90,19 @@ function cue(event){
   });
  }catch(_){/* Audio is strictly optional. Gameplay never depends on it. */}
 }
-function resize(){
- const dpr=Math.min(window.devicePixelRatio||1,2);
- canvas.width=W*dpr;canvas.height=H*dpr;
+function refreshGraphics(){
+ const quality=experience?.prefs?.graphics||'auto';
+ const cap=quality==='battery'?1:quality==='quality'?2:1.5;
+ const dpr=Math.max(1,Math.min(window.devicePixelRatio||1,cap));
+ const width=Math.round(W*dpr),height=Math.round(H*dpr);
+ if(canvas.width!==width||canvas.height!==height){
+  canvas.width=width;canvas.height=height;
+ }
  ctx.setTransform(dpr,0,0,dpr,0,0);
+ lastFrameTick=0;
 }
-resize();
+refreshGraphics();
+window.addEventListener('resize',refreshGraphics,{passive:true});
 function resetPositions(){
  actor={x:210,y:493};mate={x:301,y:310};
  ball={x:actor.x,y:actor.y-14,owner:'actor',vx:0,vy:0};
@@ -127,7 +135,7 @@ function hud(){
  put('arena-shot-quality',ball.owner==='rival'?'DEFEND':Math.round(chance.onTarget*100)+'%');
  const chanceLabel=$('arena-shot-quality');if(chanceLabel)chanceLabel.title=chance.label+' · Pass and move forward to improve your shooting chance.';
  put('arena-skill-status',skillCooldown>0?'READY IN '+Math.ceil(skillCooldown)+'s':'SKILL READY');
- const skillButton=$('arena-skill');if(skillButton){skillButton.disabled=mode!=='playing'||skillCooldown>0;skillButton.textContent=ball.owner==='rival'?'TACKLE BURST L':'SKILL BURST L';}
+ const skillButton=$('arena-skill');if(skillButton){skillButton.disabled=mode!=='playing'||skillCooldown>0;skillButton.textContent=experience?.prefs.mobileLayout==='immersive'?(ball.owner==='rival'?'TACKLE':'BOOST'):(ball.owner==='rival'?'TACKLE BURST L':'SKILL BURST L');}
  for(let i=0;i<3;i++){const b=$('arena-aim-'+i);if(b){b.setAttribute('aria-pressed',String(aim===i));b.classList.toggle('selected',aim===i);}}
 
  const b=$('arena-start');if(b)b.textContent=mode==='ready'?'KICK OFF →':mode==='playing'?'PAUSE':mode==='paused'?'RESUME →':'PLAY AGAIN →';
@@ -139,6 +147,7 @@ function start(){
  camera={x:210,y:300,zoom:1};replay=null;replayHistory=[];replayWait=0;joystick={x:0,y:0};padVector={x:0,y:0};experience?.reset();
  squad=getSquad();resetPositions();hud();cue('start');
  msg('KICK OFF! Move, pass to your teammate, and shoot into the top goal.');
+ last=0;lastFrameTick=0;rawFrameTick=0;
  cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
 }
 function pause(){
@@ -204,17 +213,17 @@ function pass(){
  passCooldown=.48;cue('pass');experience?.haptic(12);
  msg(passRecipient==='mate'?'PERFECT WEIGHT! The ball is heading to your teammate.':'ONE-TWO! Jozef is getting the return pass.');
 }
-function shoot(){
+function shoot(holdCharge=0){
  if(mode!=='playing'||replay||shotCooldown>0)return;
  if(ball.owner!=='actor'&&ball.owner!=='mate'){msg('Get possession first!');return;}
  const p=ball.owner==='mate'?mate:actor;
  // Intentional corner aiming beats random, unstoppable goalkeeper animations.
  // Short-range attempts have tighter accuracy. Squad strength helps long shots.
- const quality=systems.shotProfile(p.y,passChain,squad.shot+Math.min(.18,counterTime*.033),experience?.prefs.difficulty||'pro');
+ const quality=systems.shotProfile(p.y,passChain,squad.shot+Math.min(.18,counterTime*.033)+Math.min(.06,holdCharge*.06),experience?.prefs.difficulty||'pro');
  const placement=systems.shotTarget(aim,SHOT_ZONES,quality,Math.random(),Math.random(),GOAL.left,GOAL.right);
  const goalX=placement.x;
  const dy=GOAL.top-p.y,dx=goalX-p.x,div=Math.max(1,Math.hypot(dx,dy));
- const power=490+110*squad.shot;
+ const power=490+110*squad.shot+Math.min(1,Math.max(0,holdCharge))*100;
  ball={x:p.x,y:p.y-7,vx:dx/div*power,vy:dy/div*power,owner:'shot'};
  // Keeper has to guess and commit. A save is earned, not guaranteed.
  keeperDestination=systems.keeperCommit(aim,SHOT_ZONES,experience?.prefs.difficulty||'pro',Math.random());
@@ -537,6 +546,21 @@ function draw(){
 function loop(t){
  if(mode!=='playing')return;
  if($('arena')?.classList?.contains('active')===false){pause();draw();return;}
+ const graphics=experience?.prefs?.graphics||'auto';
+ const rawDelta=rawFrameTick?Math.max(0,t-rawFrameTick):16.667;
+ rawFrameTick=t;
+ if(graphics==='auto'){
+  if(rawDelta>23){slowFrameCount=Math.min(90,slowFrameCount+1);stableFrameCount=0;}
+  else {slowFrameCount=Math.max(0,slowFrameCount-2);if(autoBattery&&rawDelta<19)stableFrameCount++;else stableFrameCount=0;}
+  if(slowFrameCount>35)autoBattery=true;
+  if(stableFrameCount>200){autoBattery=false;slowFrameCount=0;stableFrameCount=0;}
+ }
+ const fps=graphics==='battery'||(graphics==='auto'&&autoBattery)?30:60;
+ if(lastFrameTick&&t-lastFrameTick<(1000/fps)-.7){
+  raf=requestAnimationFrame(loop);
+  return;
+ }
+ lastFrameTick=t;
  const dt=last?clamp((t-last)/1000,0,.037):0;last=t;
  if(replay){
   replay.elapsed+=dt;
@@ -578,7 +602,51 @@ bindMove('arena-up',0,-1);bindMove('arena-down',0,1);bindMove('arena-left',-1,0)
 for(let i=0;i<3;i++)$('arena-aim-'+i)?.addEventListener('click',()=>setAim(i));
 $('arena-skill')?.addEventListener('click',skillMove);
 $('arena-pass')?.addEventListener('click',pass);
-$('arena-shoot')?.addEventListener('click',shoot);
+// Swipe left/right on SHOOT for the target corner. Holding briefly charges
+// a modest power bonus. Classic clicks, keyboard and gamepads still shoot.
+let shootTouch=null,suppressShootClickUntil=0;
+const shootButton=$('arena-shoot');
+shootButton?.addEventListener('pointerdown',ev=>{
+ if(experience?.prefs.mobileLayout!=='immersive'||mode!=='playing'||replay)return;
+ if(ev.pointerType==='mouse'&&!window.matchMedia?.('(pointer:coarse)')?.matches)return;
+ ev.preventDefault();
+ shootTouch={id:ev.pointerId,x:ev.clientX,at:Date.now()};
+ shootButton.classList.add('is-charging');
+ shootButton.style.setProperty('--arena-charge','0%');
+ try{shootButton.setPointerCapture(ev.pointerId);}catch(_){}
+});
+shootButton?.addEventListener('pointermove',ev=>{
+ if(!shootTouch||shootTouch.id!==ev.pointerId)return;
+ ev.preventDefault();
+ const dx=ev.clientX-shootTouch.x;
+ if(dx<-19&&aim!==0)setAim(0);
+ else if(dx>19&&aim!==2)setAim(2);
+ else if(Math.abs(dx)<10&&aim!==1)setAim(1);
+ const charge=Math.min(1,(Date.now()-shootTouch.at)/900);
+ shootButton.style.setProperty('--arena-charge',Math.round(charge*88)+'%');
+});
+function clearCharge(){
+ shootTouch=null;
+ shootButton?.classList.remove('is-charging');
+ shootButton?.style.setProperty('--arena-charge','0%');
+}
+shootButton?.addEventListener('pointerup',ev=>{
+ if(!shootTouch||shootTouch.id!==ev.pointerId)return;
+ ev.preventDefault();
+ const dx=ev.clientX-shootTouch.x;
+ if(dx<-19)setAim(0);
+ else if(dx>19)setAim(2);
+ else setAim(1);
+ const charge=Math.min(1,(Date.now()-shootTouch.at)/900);
+ suppressShootClickUntil=Date.now()+450;
+ clearCharge();shoot(charge);
+});
+shootButton?.addEventListener('pointercancel',clearCharge);
+shootButton?.addEventListener('lostpointercapture',clearCharge);
+shootButton?.addEventListener('click',ev=>{
+ if(ev.detail>0&&Date.now()<suppressShootClickUntil)return;
+ shoot();
+});
 $('arena-start')?.addEventListener('click',()=>{if(mode==='ready'||mode==='over')start();else pause();if(mode!=='playing')draw();});
 function aimMovementAtPointer(ev){
  const r=canvas.getBoundingClientRect();
@@ -686,6 +754,7 @@ experience=window.JozefArenaExperience?.mount({
  lifetime,getMode:()=>mode,pause,start,
  saveLifetime:()=>{try{localStorage.setItem(KEY,JSON.stringify(lifetime));}catch(_){}},
  setJoystick:(x,y)=>{joystick={x,y};if(x||y)target=null;},
+ refreshGraphics,
  refreshSquad:()=>{squad=getSquad();hud();}
 })||null;
 window.JozefArena=Object.freeze({getProgress:()=>({...lifetime,score:us+'-'+them,mode,
