@@ -257,6 +257,7 @@
     let made=false,remark='',goalieIndex=1,shotIndex=1;
     if(sport==='hockey'){
       if(!['left','centre','right'].includes(choice))return;
+      shotIndex=['left','centre','right'].indexOf(choice);
       goalieIndex=Math.floor(Math.random()*3);
       if(difficulty==='rookie'&&goalieIndex===shotIndex&&Math.random()<.65){
         goalieIndex=(goalieIndex+1)%3;
@@ -264,7 +265,6 @@
         goalieIndex=shotIndex;
       }
       const goalie=['left','centre','right'][goalieIndex];
-      shotIndex=['left','centre','right'].indexOf(choice);
       made=goalie!==choice;
       remark=made?'GOAL! THE PUCK FINDS THE '+choice.toUpperCase()+' CORNER.':'BIG SAVE! THE KEEPER WAS READY IN '+goalie.toUpperCase()+'.';
     }else if(sport==='baseball'||sport==='basketball'){
