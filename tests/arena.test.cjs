@@ -92,7 +92,7 @@ test('Arena and squad remain private and do not use external network calls',()=>
 });
 
 
-test('chosen corner shot scores a real goal past a guessing goalkeeper',()=>{
+test('kickoff long-shot respects distance and misses despite choosing a far corner',()=>{
  const x=createDom();
  const mockMath=Object.create(Math);mockMath.random=()=>.9;
  x.ctx.Math=mockMath;
@@ -112,9 +112,10 @@ test('chosen corner shot scores a real goal past a guessing goalkeeper',()=>{
   assert.equal(typeof fn,'function');
   t+=37;fn(t);
  }
- assert.equal(x.window.JozefArena.getProgress().matchGoals,1,'controlled far-post shot should beat the wrong-footed keeper');
+ assert.equal(x.window.JozefArena.getProgress().matchGoals,0,
+  'aiming should not guarantee goals from the kickoff half of the pitch');
  assert.equal(x.window.JozefArena.getProgress().mode,'playing');
- assert.match(x.get('arena-status').textContent,/GOOOOOAL!/);
+ assert.ok(x.window.JozefArena.getProgress().shots===1,'attempt remains recorded even if off target');
 });
 
 test('the teammate receives a pass and can return a one-two on request',()=>{
