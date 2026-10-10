@@ -231,3 +231,27 @@ test('existing wrestling records migrate safely and only 3+ crowd pops advance a
  assert.equal(b.window.JozefMultiSport.getWrestlingCareer().wins,0);
  assert.equal(JSON.parse(b.store.get('jozefs-world-multisport-v1')).wrestling.best,4);
 });
+
+test('iPhone touch aims directly on hockey rink and taps baseball/basketball action canvas',()=>{
+ const b=boot({random:()=>0});
+ const canvas=b.get('multi-action-canvas');
+ const tap=x=>canvas.events.click({currentTarget:{
+  getBoundingClientRect:()=>({left:10,width:300})},clientX:x});
+ assert.equal(canvas.attrs.role,'button');
+ assert.match(canvas.attrs['aria-label'],/Tap left, centre or right/);
+ tap(280); // right wing beats left-moving goalie
+ assert.equal(b.get('multi-score').textContent,'1 / 5 GOALS');
+ tap(280); // no double actions during result
+ assert.equal(b.get('multi-score').textContent,'1 / 5 GOALS');
+ b.get('multi-tab-baseball').click();
+ assert.match(canvas.attrs['aria-label'],/Tap to swing/);
+ b.setNow(523);tap(160);
+ assert.equal(b.get('multi-score').textContent,'1 / 5 HITS');
+ b.get('multi-tab-basketball').click();
+ b.setNow(1046);tap(160);
+ assert.equal(b.get('multi-score').textContent,'1 / 5 BUCKETS');
+ b.get('multi-tab-wrestling').click();
+ assert.equal(canvas.attrs.role,'img');
+ const before=b.get('multi-score').textContent;tap(160);
+ assert.equal(b.get('multi-score').textContent,before,'wrestling scene does not fake contact moves');
+});
