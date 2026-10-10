@@ -282,6 +282,7 @@
       Object.keys(GAMES).reduce((lowest,id)=>saved[id].best<saved[lowest].best?id:lowest,'hockey');
     start(target);
     if(typeof window.showSection==='function')window.showSection('sports-arcade');
+    window.requestAnimationFrame?.(()=>stageView?.refresh());
     if(GAMES[target].kind==='timing')tick();
   }
   function init(){
@@ -293,10 +294,12 @@
       if(!GAMES[selected])return;
       start(selected);
       if(typeof window.showSection==='function')window.showSection('sports-arcade');
+      window.requestAnimationFrame?.(()=>stageView?.refresh());
       if(GAMES[selected].kind==='timing')tick();
     }));
     document.addEventListener('keydown',onKey);
     document.querySelector('[data-section="sports-arcade"]')?.addEventListener('click',()=>{
+      window.requestAnimationFrame?.(()=>stageView?.refresh());
       if(GAMES[sport].kind==='timing'&&phase==='ready')tick();
     });
     window.addEventListener('pageshow',()=>{paintRecord();if(phase==='ready'&&GAMES[sport].kind==='timing')tick()});
