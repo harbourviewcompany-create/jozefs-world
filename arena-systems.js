@@ -81,7 +81,7 @@
     const targetZoom=Math.min(requestedZoom,safeZoom);
     const previous=oldCamera||{x:210,y:300,zoom:1};
     const k=clamp((dt||.016)*5,0,1);
-    const zoom=clamp(previous.zoom+(targetZoom-previous.zoom)*k,1,1.23);
+    const zoom=Math.min(safeZoom,clamp(previous.zoom+(targetZoom-previous.zoom)*k,1,1.23));
     const horizontalRange=210-210/zoom;
     const requestedX=210+(carrier.x-210)*.55;
     const x=clamp(previous.x+(requestedX-previous.x)*k,
