@@ -1,3 +1,4 @@
+const bundled=require('./bundle-contract.cjs');
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -162,7 +163,7 @@ test('Arena and squad are integrated into the published document only once',()=>
  for(const id of ['arena-aim-0','arena-aim-1','arena-aim-2','arena-skill','arena-aim-label','squad-grid']){
   assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,id+' must have one control');
  }
- assert.equal((html.match(/src="arena.js"/g)||[]).length,1);
+ bundled.arena(path.join(__dirname,'..'),html,fs.readFileSync(path.join(__dirname,'../sw.js'),'utf8'));
  assert.equal((html.match(/src="squad.js"/g)||[]).length,1);
 });
 
