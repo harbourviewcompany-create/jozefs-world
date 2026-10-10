@@ -4,6 +4,9 @@ on:
     branches: [main]
     paths:
       - 'arena*.js'
+      - 'playmode.js'
+      - 'broadcast.js'
+      - 'ui-refine-2026.css'
       - 'arena*.css'
       - 'index.html'
       - 'sw.js'
@@ -18,12 +21,15 @@ on:
       - 'tests/arena-*.cjs'
       - '.github/workflows/arena-tests.yml'
   workflow_dispatch:
+concurrency:
+  group: arena-mobile-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   arena-unit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
       - name: JavaScript syntax
@@ -40,8 +46,8 @@ jobs:
     timeout-minutes: 12
     needs: arena-unit
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
       - name: Install Playwright browser engines
