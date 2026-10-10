@@ -83,3 +83,31 @@ test('canonical homepage uses the latest stadium and loads exactly one STREET//1
  assert.ok(html.includes('<section id="fun" class="section">'), 'Locker Room section exists');
  assert.ok(html.includes('>THE LOCKER ROOM</h2>'), 'Locker Room destination has the expected heading');
 });
+
+test('Street powerups preserve the 55-second run, profile, accessibility and original score record',()=>{
+ const stage=setup();
+ assert.equal(stage.progress().shield,false);
+ assert.equal(stage.progress().goldenCollected,0);
+ assert.equal(stage.node('street-shield').textContent,'NO SHIELD');
+ assert.equal(stage.node('street-shield').dataset.active,'false');
+ stage.node('street-start').click();
+ let ticks=0;
+ while(stage.progress().state==='playing'&&ticks<2200){stage.step(16+ticks*35);ticks++}
+ assert.ok(ticks<2200);
+ assert.ok(typeof stage.progress().shield==='boolean');
+ assert.ok(Number.isInteger(stage.progress().goldenCollected));
+ assert.ok(stage.progress().goldenCollected>=0);
+ stage.node('street-start').click();
+ assert.equal(stage.progress().shield,false);
+ assert.equal(stage.progress().goldenCollected,0);
+ const page=fs.readFileSync(path.join(root,'world.html'),'utf8');
+ assert.equal((page.match(/id="street-shield"/g)||[]).length,1);
+ assert.match(page,/Golden stars add a bigger combo/);
+ assert.ok(page.includes('href="street-powerups.css"'));
+ const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
+ assert.ok(sw.includes("'./street-powerups.css'"));
+ assert.match(game,/kind==='shield'/);
+ assert.match(game,/kind==='gold'/);
+ assert.match(game,/shield=0;streak=\.38;announce/);
+ assert.doesNotMatch(game,/\bfetch\s*\(|XMLHttpRequest|WebSocket|sendBeacon/);
+});
