@@ -35,13 +35,20 @@ function stadium(c,s){
  for(let y=30;y<580;y+=56){
   c.fillStyle=y%112===30?'#ffffff0c':'#061a1a12';c.fillRect(15,y,390,56);
  }
- // Fine mowing texture. Sparse and deterministic, so no random flicker.
+ // Fine mowing texture and subtle floodlight reflections. Sparse and deterministic.
+
  c.strokeStyle='#c6fff508';c.lineWidth=.7;
  for(let x=22;x<405;x+=13){c.beginPath();c.moveTo(x,29);c.lineTo(x-6,574);c.stroke()}
  // Floodlight beams: no image downloads; inexpensive linear gradients.
  const beam=c.createLinearGradient(0,35,420,565);
  beam.addColorStop(0,'#ddffe10d');beam.addColorStop(.38,'#ffffff01');beam.addColorStop(1,'#07111526');
  c.fillStyle=beam;c.fillRect(15,27,390,546);
+ // Light pools on the turf make the pitch feel like a lit arena, not a flat graphic.
+ const pool=c.createRadialGradient(210,125,10,210,125,290);
+ pool.addColorStop(0,'#d7ffd910');
+ pool.addColorStop(.63,'#f1ffde05');
+ pool.addColorStop(1,'#00000000');
+ c.fillStyle=pool;c.fillRect(15,27,390,546);
  c.restore();
  // Stadium pitch markings and technical zones.
  c.strokeStyle='#edfff2aa';c.lineWidth=1.5;
@@ -64,13 +71,18 @@ function stadium(c,s){
  // LED boards and floodlights along the sideline
  c.fillStyle=p.glow;c.fillRect(15,27,390,2);
  c.fillStyle=p.fog+'8a';c.fillRect(15,571,390,2);
- c.fillStyle='#07151e';c.fillRect(16,578,388,21);
+ // Glowing touchlines and a restrained spectator glow for depth.
+ c.fillStyle='#c0fb8060';c.fillRect(12,28,2,542);c.fillRect(406,28,2,542);
+ c.fillStyle='#0a2d2d';c.fillRect(16,578,388,21);
  c.textAlign='center';c.font='900 12px system-ui';c.fillStyle='#c6e9dc';
  c.fillText('JOZEF FC     //     '+(s.venue||'NIGHT STADIUM'),210,592);
  return p;
 }
 function athlete(c,x,y,jersey,num,kind,phase,active,moving){
  c.save();c.translate(x,y);
+ // Enlarge the captain and ball-carriers so he is recognizable on a phone.
+ const scale=kind==='captain'?1.15:active?1.1:kind==='opponent'?1.05:1.04;
+ c.scale(scale,scale);
  // Realistic direction and run cycle without affecting hitboxes.
  const bob=moving?Math.sin(phase*13+(x+y)*.02)*1.2:0;
  const stride=moving?Math.sin(phase*13+(x+y)*.02)*3:0;
@@ -78,8 +90,9 @@ function athlete(c,x,y,jersey,num,kind,phase,active,moving){
  c.fillStyle='#0010157a';c.beginPath();c.ellipse(0,13,18,6,0,0,TAU);c.fill();
  c.shadowBlur=0;
  if(active){
-  strokeCircle(c,0,2,23,'#d2ff73ca',2);
-  strokeCircle(c,0,2,27,'#d2ff734a',1);
+  circle(c,0,3,27,'#a8ff5b13');
+  strokeCircle(c,0,3,23,'#d2ff73e3',2.3);
+  strokeCircle(c,0,3,28,'#d2ff735a',1);
  }
  // Legs and boots: angled toward the goal.
  rounded(c,-10,3+stride,8,13,3,'#102a33');
@@ -96,16 +109,26 @@ function athlete(c,x,y,jersey,num,kind,phase,active,moving){
  c.beginPath();c.roundRect(-13,-13+bob,26,27,7);
  c.fillStyle=g;c.fill();
  c.strokeStyle='#faffef66';c.lineWidth=1;c.stroke();
- c.fillStyle='#fff9e8';c.font='900 12px system-ui';
+ // Shirt striping, collar and readable jersey number.
+ c.fillStyle='#ffffff36';c.fillRect(-10,-10+bob,4,19);
+ c.fillStyle='#ffffff1b';c.fillRect(6,-10+bob,2,19);
+ rounded(c,-6,-13+bob,12,4,2,'#102b2f');
+ c.fillStyle='#faffee';c.font='900 12px system-ui';
  c.textAlign='center';c.fillText(String(num),0,7+bob);
- // Head and dark athletic hair.
+ // Head, defined hairline and face direction.
  circle(c,0,-18+bob,9,kind==='opponent'?'#dfaa88':'#c99670');
  c.beginPath();c.arc(0,-20+bob,9,Math.PI*1.05,Math.PI*1.98);
  c.fillStyle=kind==='keeper'?'#26373a':'#1b282b';c.fill();
+ circle(c,-3,-15+bob,1,'#24312b');
+ circle(c,3,-15+bob,1,'#24312b');
  // Captain insignia and keeper gloves.
  if(kind==='captain'){
   circle(c,15,-11+bob,3,'#cfff66');
   c.fillStyle='#071821';c.font='900 6px system-ui';c.fillText('C',15,-9+bob);
+  // A small captain callout separates Jozef from the other numbered shirts.
+  rounded(c,-21,-43,42,12,5,'#08272dea');
+  c.fillStyle='#d9ff84';c.font='900 9px system-ui';
+  c.fillText('JOZEF',0,-34);
  }
  if(kind==='keeper'){
   circle(c,-18,1+bob,4,'#eafffa');circle(c,18,1+bob,4,'#eafffa');
@@ -124,9 +147,9 @@ function ball(c,s,phase,motion){
   }
  }
  circle(c,b.x+2,b.y+5,9,'#001e206a');
- c.shadowColor='#cffff4';c.shadowBlur=14;
- circle(c,b.x,b.y,7.9,'#fff9e9');c.shadowBlur=0;
- circle(c,b.x-2,b.y-2,3.8,'#d0dfdf');
+ c.shadowColor='#d4fff4';c.shadowBlur=16;
+ circle(c,b.x,b.y,9.2,'#fff9e9');c.shadowBlur=0;
+ circle(c,b.x-2,b.y-2,4,'#d0dfdf');
  c.beginPath();c.moveTo(b.x-1,b.y-4);c.lineTo(b.x+4,b.y-1);c.lineTo(b.x+2,b.y+3);
  c.closePath();c.fillStyle='#1c5457';c.fill();
  c.restore();
@@ -170,13 +193,23 @@ function fx(c,s,p,phase,motion){
 }
 function matchScreen(c,s){
  if(s.mode==='playing')return;
- c.fillStyle='#041a20d6';c.fillRect(20,214,380,164);
- rounded(c,25,219,370,154,13,'#081f29f3');
- c.strokeStyle='#ceff7a70';c.lineWidth=1;c.strokeRect(36,229,348,133);
- c.textAlign='center';c.fillStyle='#d4ff77';c.font='900 39px Impact,system-ui';
- c.fillText(s.mode==='ready'?'YOUR PITCH. YOUR RULES.':s.mode==='paused'?'PAUSED':'FULL TIME',210,274);
- c.fillStyle='#efffee';c.font='700 15px system-ui';
- c.fillText(s.mode==='ready'?'MOVE   /   PASS   /   SHOOT':s.mode==='paused'?'RESUME WHEN READY':s.us+' : '+s.them+'  /  PLAY AGAIN',210,313);
+ c.save();
+ // Floating game-state panel: field and players remain visible at kickoff.
+ const x=37,y=231,w=346,h=122;
+ rounded(c,x,y,w,h,14,'#061b24ea');
+ c.strokeStyle='#b3ff8180';c.lineWidth=1.5;
+ c.strokeRect(x+6,y+6,w-12,h-12);
+ c.fillStyle='#cafa60';c.fillRect(x+16,y+17,28,3);
+ c.fillStyle='#82ebdb';c.fillRect(x+47,y+17,12,3);
+ c.textAlign='center';
+ c.fillStyle='#e4ff9a';c.font='900 30px Impact,system-ui';
+ const heading=s.mode==='ready'?'OWN THE PITCH':s.mode==='paused'?'MATCH PAUSED':'FULL TIME';
+ c.fillText(heading,210,y+56);
+ c.fillStyle='#e4f7ed';c.font='800 12px system-ui';
+ const subtitle=s.mode==='ready'?'MOVE   •   PASS   •   SHOOT':
+  s.mode==='paused'?'TAP RESUME TO KEEP PLAYING':s.us+'  :  '+s.them+'   •   PLAY AGAIN';
+ c.fillText(subtitle,210,y+85);
+ c.restore();
 }
 function render(c,s){
  const phase=Math.max(0,Number(s.phase)||0);
