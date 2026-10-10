@@ -45,6 +45,7 @@ const close=()=>new Promise(resolve=>server.close(resolve));
       return {active:!!section,gameBottom:gameRect.bottom,gameTop:gameRect.top,gameHeight:gameRect.height,
         sectionBottom:sectionRect.bottom,sectionTop:sectionRect.top,screenHeight:innerHeight,
         viewportWidth:innerWidth,visualHeight:window.visualViewport?.height,
+        pitchTouchAction:getComputedStyle(document.getElementById('arena-canvas')).touchAction,
         bodyScrollHeight:document.body.scrollHeight,elements,scroll:section.scrollHeight-section.clientHeight};
      });
      console.log('Arena viewport metrics',engine.name(),JSON.stringify(viewport),JSON.stringify({...result,elements:undefined}));
@@ -53,8 +54,20 @@ const close=()=>new Promise(resolve=>server.close(resolve));
      for(const [id,data] of Object.entries(result.elements))
        assert.ok(data.found&&data.visible,id+' should be visible at '+JSON.stringify(viewport));
      assert.ok(result.scroll<=2,'game view must not vertically overflow');
+     assert.equal(result.pitchTouchAction,'none','Touch pitch must not trigger browser panning');
      await page.locator('#arena-start').click();
      await page.waitForTimeout(60);
+     if(engine===chromium&&viewport.width===390){
+      const pitch=await page.locator('#arena-canvas').boundingBox();
+      assert.ok(pitch&&pitch.height>120,'Playable pitch must have a touch target');
+      await page.mouse.move(pitch.x+pitch.width/2,pitch.y+pitch.height*.85);
+      await page.mouse.down();
+      await page.mouse.move(pitch.x+pitch.width/2,pitch.y+pitch.height*.3,{steps:5});
+      await page.waitForTimeout(200);
+      await page.mouse.up();
+      assert.ok((await page.evaluate(()=>window.JozefArena.getProgress().playerY))<485,
+       'Drag on the pitch must move Jozef toward the finger');
+     }
      let game=await page.evaluate(()=>window.JozefArena?.getProgress?.());
      assert.equal(game?.mode,'playing','Kickoff must start');
      await page.locator('#arena-shoot').click();
