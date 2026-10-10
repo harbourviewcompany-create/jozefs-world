@@ -1,0 +1,387 @@
+/* JOZEF'S WORLD // VISUAL UX REFINEMENT 2026
+ * Last-loaded design layer. Navigation and controls remain semantic HTML.
+ * Goal: one clear action, small-screen legibility, game-first hierarchy.
+ */
+:root{
+ --ux-ink:#071721;
+ --ux-panel:#102a32;
+ --ux-panel-up:#193b42;
+ --ux-lime:#caff6a;
+ --ux-sky:#8ee8e5;
+ --ux-cream:#f4fff5;
+ --ux-muted:#bfd9d0;
+ --ux-gold:#f3cf8d;
+ --ux-outline:rgba(176,236,204,.24);
+ --ux-shadow:0 18px 42px rgba(1,9,18,.32);
+ --ux-radius:17px;
+}
+html{scroll-padding-top:90px}
+body{color:var(--ux-cream);background:
+ radial-gradient(ellipse 65% 48% at 88% -6%,rgba(93,194,151,.10),transparent 80%),
+ radial-gradient(ellipse 80% 40% at 0 50%,rgba(60,137,158,.055),transparent 76%),
+ #06171e}
+.section{min-width:0}
+.section:not(.active){pointer-events:none}
+.section.active{pointer-events:auto}
+.section h1,.section h2,.section h3{overflow-wrap:normal;text-wrap:balance}
+.section p{overflow-wrap:break-word}
+button{touch-action:manipulation}
+a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{
+ outline:3px solid #d3ff83;outline-offset:3px
+}
+/* Navigation: six important sections + one full, accessible Explore dialog.
+   Existing 19 routes still exist inside the command navigation menu. */
+.navbar{
+ gap:10px;min-height:70px;align-items:center;
+ background:rgba(7,23,30,.96);
+ border:1px solid rgba(183,240,207,.28);
+ box-shadow:0 12px 36px rgba(0,7,14,.42),inset 0 1px rgba(237,255,241,.08);
+}
+.navbar .nav-links{
+ display:flex;align-items:center;justify-content:center;gap:4px;overflow:visible;
+}
+.navbar .nav-links>.nav-btn:not([data-section="home"]):not([data-section="arena"]):not([data-section="street"]):not([data-section="sports-arcade"]):not([data-section="playbook"]):not([data-section="club"]){
+ display:none;
+}
+.navbar .nav-btn{
+ font:850 12px/1.1 var(--sf-ui);padding:11px 12px;min-height:44px;
+ border:1px solid transparent;border-radius:10px;color:#d0e6d9;
+ background:transparent;letter-spacing:.02em;
+}
+.navbar .nav-btn[aria-current="page"],.navbar .nav-btn.active{
+ background:#caff6a;color:#103026;border-color:#eaffab;
+ box-shadow:0 5px 20px rgba(167,249,104,.18)
+}
+.navbar .jw-explore{
+ display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;gap:8px;
+ min-height:45px;padding:8px 14px;border-radius:11px;
+ border:1px solid rgba(146,224,221,.52);
+ background:linear-gradient(145deg,#19434a,#113039);
+ color:#e9fff8;font:900 11px/1 var(--sf-ui);letter-spacing:.06em;
+ cursor:pointer;
+}
+.navbar .jw-explore:hover,.navbar .jw-explore:focus-visible{
+ background:linear-gradient(145deg,#265a58,#173c42);border-color:var(--ux-lime)
+}
+.jw-explore-symbol{font:900 22px/1 var(--sf-ui);color:var(--ux-lime)}
+.navbar .jw-xp-pill{
+ flex:0 0 auto;white-space:nowrap;min-height:45px;
+ border-radius:11px;border:1px solid rgba(199,255,112,.42);
+ background:rgba(29,64,51,.8);color:#efffcf;
+}
+.studio-command{
+ border-radius:21px;border-color:rgba(207,251,166,.65);
+ background:#0b212d;box-shadow:0 40px 100px rgba(0,5,11,.81)
+}
+.studio-command .studio-command-options{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ padding:14px;gap:8px
+}
+.studio-command-option{
+ min-width:0;min-height:73px;border:1px solid var(--ux-outline);
+ border-radius:11px;background:#17323b;color:var(--ux-cream)
+}
+.studio-command-option:focus-visible,.studio-command-option:hover{
+ border-color:var(--ux-lime);background:#23483f
+}
+.studio-command-header{padding:23px}
+.studio-command-header h2{font-size:clamp(35px,6vw,58px)}
+/* Fixed quick launcher duplicates Explore in the header; preserve its
+   functionality but avoid a second floating navigation control. */
+.studio-launcher{display:none!important}
+/* Home: meaningful play options first, featured challenges side-by-side. */
+#home .studio-hero{
+ min-height:440px;border-radius:21px;
+ border:1px solid rgba(199,255,181,.29);
+ box-shadow:0 24px 55px rgba(0,7,15,.38);
+}
+#home .studio-hero-copy{padding:clamp(22px,3vw,44px);position:relative;z-index:2}
+#home .studio-hero h1{
+ font-size:clamp(52px,6.8vw,105px);
+ letter-spacing:-.025em;line-height:.88;margin:22px 0 17px
+}
+#home .studio-hero .hero-subtitle{
+ font-size:clamp(14px,1.3vw,18px);line-height:1.49;max-width:39ch;
+ color:#c6e5d7;
+}
+#home .studio-hero .hero-buttons{gap:10px}
+#home .studio-hero .hero-buttons button{
+ min-height:55px;border-radius:11px;font-weight:900
+}
+#home .studio-hero .studio-button-outline{border-color:rgba(171,231,216,.6);background:rgba(17,51,59,.72)}
+#home .studio-hero-art{position:relative;overflow:hidden}
+#home .studio-hero-art::before{
+ content:"";position:absolute;inset:0;pointer-events:none;
+ background:radial-gradient(circle at 50% 53%,rgba(210,255,144,.13),transparent 62%);
+}
+#home .studio-hero-crest{filter:drop-shadow(0 0 17px rgba(186,255,124,.12))}
+#home .today-card{
+ margin:15px 0 18px;padding:clamp(16px,2vw,23px);
+ border-radius:var(--ux-radius);box-shadow:var(--ux-shadow)
+}
+#home .today-card h2{font-size:clamp(34px,3.6vw,49px);margin:6px 0}
+#home .today-tasks{gap:10px}
+#home .today-task{border-radius:12px;gap:10px;min-height:88px}
+#home .today-task:focus-within{border-color:var(--ux-lime)}
+#home .today-task-info strong{font-size:clamp(20px,2.1vw,27px)}
+#home .today-task>button{min-height:46px;border-radius:9px}
+#home .today-clubline{margin-top:14px;padding-top:14px}
+.ui-feature-duo{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;
+ margin:0 0 18px;align-items:stretch
+}
+#home .ui-feature-duo>.playbook-home,#home .ui-feature-duo>.chronicle-home{
+ display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;
+ width:100%;min-width:0;min-height:192px;gap:14px;
+ margin:0;padding:22px 22px 19px;border-radius:var(--ux-radius);
+ box-shadow:var(--ux-shadow);overflow:hidden
+}
+#home .ui-feature-duo h2{font:900 clamp(27px,3vw,43px)/.92 var(--sf-display);margin:9px 0}
+#home .ui-feature-duo .studio-kicker{font-size:10px;line-height:1.35}
+#home .ui-feature-duo p{font-size:12px;line-height:1.45;color:#d4e8db}
+#home .ui-feature-duo button{
+ align-self:stretch;min-height:46px;width:100%;max-width:350px;
+ border-radius:9px;font-size:11px
+}
+#home .studio-signal-row{gap:8px;background:transparent;border:0;overflow:visible;margin:16px 0 29px}
+#home .studio-signal{
+ border:1px solid var(--ux-outline);border-radius:12px;
+ background:linear-gradient(155deg,#16333c,#0d232c);padding:14px 15px
+}
+#home .studio-signal-label{letter-spacing:.09em;font-size:9px;color:#a9d5c5}
+#home .studio-signal strong{font-size:clamp(29px,3.1vw,40px)}
+#home .studio-signal small{font-size:10px;line-height:1.35;letter-spacing:.025em}
+#home .visual-rival-card{border-radius:var(--ux-radius)}
+#home .studio-section-heading{gap:14px}
+#home .studio-section-heading h2{letter-spacing:-.02em}
+#home .studio-mode-grid{gap:12px}
+#home .studio-mode{
+ border-radius:var(--ux-radius);min-height:330px;
+ box-shadow:var(--ux-shadow);border-color:rgba(178,229,196,.26)
+}
+#home .studio-mode>strong{font-size:clamp(37px,3.9vw,55px)}
+#home .studio-mode>small{letter-spacing:.035em;color:#cee6db;line-height:1.4}
+#home .multi-home{gap:11px}
+#home .multi-home-card{
+ border-radius:14px;min-height:115px;
+ border-width:1px;box-shadow:0 8px 22px rgba(0,9,18,.22)
+}
+#home .multi-home-card strong{line-height:1;letter-spacing:-.01em}
+#home .multi-home-card small{color:#d4e4cf;font-weight:800}
+/* Cohesive subpage headers and panels. */
+#playbook .playbook-hero,#sports-arcade .multi-header,#chronicle .chronicle-heading{
+ margin-top:7px;margin-bottom:20px
+}
+#playbook .playbook-missions{gap:11px}
+#playbook .playbook-mission{
+ min-height:225px;border-radius:15px;padding:17px;
+ box-shadow:var(--ux-shadow)
+}
+#playbook .playbook-mission h4{line-height:1.02}
+#playbook .playbook-mission-track{height:10px}
+#playbook .playbook-filter button{border-radius:9px}
+#sports-arcade .multi-tabs{gap:10px}
+#sports-arcade .multi-mode{
+ border-radius:14px;min-height:106px;gap:6px;padding:15px;
+ box-shadow:var(--ux-shadow)
+}
+#sports-arcade .multi-mode strong{font-size:clamp(24px,2.6vw,33px)}
+#sports-arcade .multi-mode small{font-size:10px;color:#d3ecdb}
+#sports-arcade .multi-difficulty{border-radius:13px}
+#sports-arcade .multi-game,#sports-arcade .multi-sidebar{border-radius:16px}
+#sports-arcade .multi-stage.has-canvas{border-radius:0;min-height:360px}
+#sports-arcade .multi-hud strong{font-size:clamp(21px,2.4vw,31px)}
+#sports-arcade .multi-action{border-radius:10px}
+#sports-arcade .multi-sidebar{box-shadow:var(--ux-shadow)}
+#sports-arcade .multi-cup{border-radius:14px}
+#arena .arena-game,#arena .arena-layout>aside{
+ box-shadow:0 15px 34px rgba(0,10,20,.31)
+}
+#arena .arena-aim-bar button,#arena .arena-actions button,
+#arena .arena-header-actions button{min-height:44px}
+#club .jw-club-options>.jw-card,#club .jw-progress-card,
+#club .jw-collectibles{border-radius:16px}
+#chronicle .chronicle-entry{min-height:105px}
+#chronicle .chronicle-poster{box-shadow:0 23px 56px rgba(1,7,13,.55)}
+@media(max-width:1180px){
+ .navbar .nav-btn{padding:10px 9px;font-size:11px}
+ .navbar .nav-brand{min-width:155px}
+ .navbar .jw-explore{padding:9px 10px}
+}
+@media(max-width:965px) and (min-width:701px){
+ .navbar .nav-links>.nav-btn[data-section="street"],
+ .navbar .nav-links>.nav-btn[data-section="playbook"]{display:none}
+ .navbar{width:calc(100% - 15px);gap:7px}
+ .navbar .nav-brand{min-width:135px}
+ .navbar .studio-brand-title{font-size:19px}
+ .navbar .jw-xp-pill{padding:7px}
+}
+@media(max-width:820px){
+ .ui-feature-duo{grid-template-columns:1fr;gap:10px}
+ #home .ui-feature-duo>.playbook-home,#home .ui-feature-duo>.chronicle-home{
+  min-height:0;padding:19px;gap:8px
+ }
+ #home .ui-feature-duo button{max-width:none}
+ #home .studio-signal-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:700px){
+ html{scroll-padding-top:64px}
+ body{padding-bottom:calc(83px + env(safe-area-inset-bottom))}
+ .navbar{
+  position:sticky;top:0;z-index:110;
+  width:100%;min-height:62px;margin:0;
+  display:grid;grid-template-columns:minmax(0,1fr) auto auto;
+  gap:7px;align-items:center;padding:8px 11px;
+  border-radius:0;border-left:0;border-right:0;
+  box-shadow:0 10px 28px rgba(0,5,13,.45)
+ }
+ .navbar::after{inset:auto 0 0;height:1px}
+ .navbar .nav-brand{
+  grid-column:1;grid-row:1;
+  width:auto;min-width:0;justify-self:start;gap:6px
+ }
+ .navbar .studio-brand-mark{width:38px;height:41px;min-width:38px}
+ .navbar .studio-brand-title{font-size:19px;line-height:.9}
+ .navbar .studio-brand-title small{font-size:7px;letter-spacing:.07em}
+ .navbar .nav-links{display:none!important}
+ .navbar .jw-explore{
+  grid-column:2;grid-row:1;
+  min-height:42px;padding:8px 10px;gap:5px;font-size:10px
+ }
+ .navbar .jw-explore-symbol{font-size:19px}
+ .navbar .jw-xp-pill{
+  grid-column:3;grid-row:1;min-height:42px;
+  padding:7px 9px;justify-self:end;font-size:10px;margin:0
+ }
+ .navbar .jw-level-chip{font-size:10px;white-space:nowrap}
+ .phone-dock{
+  z-index:109;gap:5px;
+  padding:7px 8px calc(7px + env(safe-area-inset-bottom));
+  border-top:1px solid rgba(185,244,182,.42);
+  background:rgba(6,21,29,.97);
+  box-shadow:0 -12px 35px rgba(0,6,13,.56);
+  -webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)
+ }
+ .phone-dock button{
+  display:flex;flex-direction:column;justify-content:center;
+  align-items:center;gap:3px;min-width:0;min-height:54px;
+  padding:5px 2px;border-radius:11px;
+  border:1px solid transparent;
+  background:transparent;color:#afcfc4;
+  font:900 10px/1 var(--sf-ui);
+  letter-spacing:.035em;text-transform:none
+ }
+ .phone-dock .jw-dock-symbol{
+  display:block;font:900 22px/1 var(--sf-display);
+  color:#c6ead3;height:24px
+ }
+ .phone-dock button.is-active,.phone-dock button[aria-current="page"]{
+  background:rgba(202,255,106,.15);
+  border-color:rgba(202,255,106,.34);
+  color:#e7ffac
+ }
+ .phone-dock button.is-active .jw-dock-symbol,
+ .phone-dock button[aria-current="page"] .jw-dock-symbol{color:#caff6a}
+ .phone-dock button:active{transform:scale(.97)}
+ .studio-command{width:calc(100% - 15px);max-height:calc(100dvh - 110px);
+  margin:10px auto calc(86px + env(safe-area-inset-bottom));
+  border-radius:16px}
+ .studio-command .studio-command-options{grid-template-columns:1fr;gap:7px;padding:11px}
+ .studio-command-header{padding:17px 18px}
+ .studio-command-header h2{font-size:39px}
+ .studio-command-option{min-height:59px;padding:10px 14px}
+ #home.section{padding:11px 11px calc(102px + env(safe-area-inset-bottom))}
+ #home .studio-hero{
+  display:grid;grid-template-columns:1fr;min-height:0;
+  border-radius:15px;margin:0 0 13px
+ }
+ #home .studio-hero-copy{padding:20px 18px 15px}
+ #home .studio-hero h1{
+  font-size:clamp(43px,12vw,62px);
+  line-height:.9;margin:16px 0 13px
+ }
+ #home .studio-hero .hero-subtitle{font-size:14px;line-height:1.42;margin:8px 0 15px}
+ #home .studio-hero .hero-buttons{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+ #home .studio-hero .hero-buttons button{
+  min-height:49px;padding:10px 7px;font-size:11px;text-align:center
+ }
+ #home .studio-hero .hero-buttons .studio-button-icon{display:none}
+ #home .studio-hero-art{min-height:154px;max-height:154px;overflow:hidden}
+ #home .studio-hero-crest{width:min(136px,39%);top:50%}
+ #home .studio-crest-j{font-size:79px}
+ #home .studio-crest-11{font-size:19px}
+ #home .studio-crest-top{font-size:7px}
+ #home .studio-crest-bottom{font-size:6px}
+ #home .studio-art-number{font-size:70px}
+ #home .studio-art-ticker{font-size:7px;right:9px}
+ #home .studio-hero-foot{font-size:9px;line-height:1.2}
+ #home .today-card{padding:15px;margin:12px 0 14px}
+ #home .today-card h2{font-size:36px}
+ #home .today-head{gap:7px}
+ #home .today-counter{min-width:0;min-height:33px;font-size:10px;padding:7px 11px}
+ #home .today-progress{margin:12px 0}
+ #home .today-tasks{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+ #home .today-task{
+  display:flex;flex-direction:column;align-items:stretch;
+  gap:10px;min-width:0;min-height:146px;padding:12px
+ }
+ #home .today-task-info{flex:1 1 auto}
+ #home .today-task-number{font-size:8px}
+ #home .today-task-info strong{font-size:22px}
+ #home .today-task-info small{font-size:10px}
+ #home .today-task>button{width:100%;min-height:43px;padding:8px 5px;font-size:10px}
+ #home .today-clubline{gap:8px}
+ #home .today-notes-open{min-height:43px}
+ #home .ui-feature-duo{gap:9px;margin-bottom:12px}
+ #home .ui-feature-duo>.playbook-home,#home .ui-feature-duo>.chronicle-home{
+  padding:16px;min-height:0;border-radius:13px;gap:11px
+ }
+ #home .ui-feature-duo h2{font-size:30px;margin:5px 0}
+ #home .ui-feature-duo p{font-size:11px}
+ #home .ui-feature-duo button{min-height:44px}
+ #home .studio-signal-row{gap:7px;margin:13px 0 22px}
+ #home .studio-signal{padding:10px 11px}
+ #home .studio-signal strong{font-size:31px}
+ #home .studio-signal small{font-size:9px}
+ #home .studio-mode-grid{grid-template-columns:1fr;gap:9px}
+ #home .studio-mode,#home .studio-mode:last-child{
+  grid-column:auto;min-height:250px;max-height:none;
+  padding:16px
+ }
+ #home .studio-mode-graphic{min-height:100px;max-height:125px}
+ #home .studio-mode>strong{font-size:43px}
+ #home .multi-home{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ #home .multi-home-card{min-height:109px;padding:12px}
+ #home .multi-home-card strong{font-size:clamp(19px,6vw,27px)}
+ #home .multi-home-card span,#home .multi-home-card small{font-size:9px}
+ #playbook .playbook-hero h2{font-size:clamp(45px,11vw,62px)}
+ #playbook .playbook-mission{min-height:185px}
+ #playbook .playbook-mission p{min-height:0}
+ #sports-arcade .multi-stage.has-canvas{min-height:0;padding:11px 7px}
+ #sports-arcade .multi-hud{gap:5px}
+ #sports-arcade .multi-hud strong{font-size:clamp(19px,5.4vw,24px)}
+ #sports-arcade .multi-action{min-height:50px}
+ #club.section,#chronicle.section{padding-bottom:calc(103px + env(safe-area-inset-bottom))}
+}
+@media(max-width:390px){
+ .navbar{gap:4px;padding:7px 7px}
+ .navbar .studio-brand-title{font-size:17px}
+ .navbar .studio-brand-mark{width:35px;height:37px;min-width:35px}
+ .navbar .jw-explore{padding:7px 7px}
+ .navbar .jw-xp-pill{padding:6px 6px;font-size:9px}
+ .navbar .jw-level-chip{font-size:9px}
+ #home .studio-hero h1{font-size:43px}
+ #home .today-tasks{gap:6px}
+ #home .today-task{padding:10px}
+ #home .today-task-info strong{font-size:20px}
+ .phone-dock{gap:2px;padding-left:5px;padding-right:5px}
+ .phone-dock button{font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){
+ #home .studio-mode:hover,#home .studio-hero-crest,
+ .ui-feature-duo button,.phone-dock button{animation:none!important;transition:none!important}
+}
+/* Print the Chronicle without navigation or decorative UI. */
+@media print{
+ .navbar,.phone-dock,.jw-explore,.studio-launcher{display:none!important}
+}
