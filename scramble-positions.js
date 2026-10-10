@@ -149,7 +149,7 @@ document.querySelectorAll('.pitch-pos').forEach(btn => {
     s.dataset.jwExtra = src;
     document.body.appendChild(s);
   });
-  ['training.css', 'jersey-bingo.css', 'matchday.css'].forEach(function (href) {
+  if (!document.querySelector('link[href$="site-experience.css"]')) ['training.css', 'jersey-bingo.css', 'matchday.css'].forEach(function (href) {
     if (document.querySelector('link[data-jw-extra="' + href + '"]')) return;
     var l = document.createElement('link');
     l.rel = 'stylesheet';
