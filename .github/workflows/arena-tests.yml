@@ -1,0 +1,52 @@
+name: Arena mobile quality
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'arena*.js'
+      - 'arena*.css'
+      - 'index.html'
+      - 'sw.js'
+      - 'tests/arena-*.cjs'
+      - '.github/workflows/arena-tests.yml'
+  pull_request:
+    paths:
+      - 'arena*.js'
+      - 'arena*.css'
+      - 'index.html'
+      - 'sw.js'
+      - 'tests/arena-*.cjs'
+      - '.github/workflows/arena-tests.yml'
+  workflow_dispatch:
+jobs:
+  arena-unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: JavaScript syntax
+        run: |
+          node --check arena.js
+          node --check arena-renderer.js
+          node --check arena-systems.js
+          node --check arena-experience.js
+          node --check tests/arena-mobile-smoke.cjs
+      - name: Logic regression tests
+        run: node --test tests/arena-systems.test.cjs
+  arena-mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    needs: arena-unit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright browser engines
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium webkit
+      - name: Four mobile viewport tests in Chromium and WebKit
+        run: node tests/arena-mobile-smoke.cjs
