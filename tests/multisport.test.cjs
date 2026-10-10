@@ -428,3 +428,74 @@ test('all twelve rival stages can be earned legitimately and never penalize fail
  assert.equal(b.get('multi-rival-meter').style.width,'100%');
  assert.ok(b.get('multi-rivals').classSet.has('rival-complete'));
 });
+
+test('Form Guide starts empty, follows each sport and uses only completed results',()=>{
+ const b=boot({random:()=>0});
+ assert.equal(b.window.JozefMultiSport.getFormProgress().recent.length,0);
+ assert.equal(b.get('multi-form-average').textContent,'—');
+ assert.equal(b.get('multi-form-trend').textContent,'FIRST GAME AWAITS');
+ assert.equal(b.get('multi-form-scores').children.length,5);
+ b.choose('right'); // one hockey goal, but no finished game yet
+ assert.equal(b.window.JozefMultiSport.getFormProgress().recent.length,0);
+ assert.equal(b.store.has('jozefs-world-multisport-v1'),false);
+ for(let i=1;i<5;i++){b.choose('next');b.choose('right')}
+ b.choose('next'); // now a full 5/5 event
+ assert.equal(b.window.JozefMultiSport.getFormProgress().recent.join(','),'5');
+ assert.equal(b.get('multi-form-average').textContent,'5.0 / 5');
+ assert.equal(b.get('multi-form-trend').textContent,'FIRST RESULT');
+ assert.equal(b.get('multi-form-scores').children.at(-1).textContent,'5/5');
+ b.get('multi-tab-basketball').click();
+ assert.equal(b.window.JozefMultiSport.getFormProgress().recent.length,0);
+ assert.equal(b.get('multi-form-average').textContent,'—');
+ b.get('multi-tab-hockey').click();
+ assert.equal(b.window.JozefMultiSport.getFormProgress().recent[0],5);
+});
+test('Form Guide retains five recent completed scores, accurate average and replay without extra XP',()=>{
+ const b=boot({random:()=>0});
+ // Alternating results are deliberate, with three latest increasing.
+ const scores=[0,1,2,3,4,5];
+ for(const count of scores){
+  for(let i=0;i<5;i++){
+   b.choose(i<count?'right':'left'); // goalie always left
+   b.choose('next');
+  }
+  if(count!==scores.at(-1))b.get('multi-form-replay').click();
+ }
+ const form=b.window.JozefMultiSport.getFormProgress();
+ assert.equal(form.recent.join(','),'1,2,3,4,5');
+ assert.equal(form.average,3);
+ assert.equal(form.trend,'IMPROVING ↑');
+ assert.equal(b.get('multi-form-average').textContent,'3.0 / 5');
+ assert.equal(b.get('multi-form-trend').textContent,'IMPROVING ↑');
+ assert.equal(b.get('multi-form-scores').children.length,5);
+ assert.equal(b.get('multi-form-scores').children[0].textContent,'1/5');
+ assert.equal(b.get('multi-form-scores').children[4].textContent,'5/5');
+ const persisted=JSON.parse(b.store.get('jozefs-world-multisport-v1'));
+ assert.equal(persisted.hockey.recent.join(','),'1,2,3,4,5');
+ assert.equal(Object.keys(persisted).length,4,'shared club keeps existing four-sport save');
+ assert.equal(b.scores.length,6,'each completed event makes exactly one existing XP attempt');
+ const restored=boot({store:b.store});
+ assert.equal(restored.window.JozefMultiSport.getFormProgress('hockey').recent.join(','),'1,2,3,4,5');
+});
+test('Form Guide accepts old and corrupted imported saves without fabricating records',()=>{
+ const store=new Map([['jozefs-world-multisport-v1',JSON.stringify({
+  hockey:{best:5,played:12},
+  baseball:{best:4,played:11,recent:[-1,7,'5',2,3,4,5,0,1]},
+  basketball:{best:2,played:3,recent:'not an array'},
+  wrestling:{best:5,played:6,careerWins:6}
+ })]]);
+ const b=boot({store});
+ const api=b.window.JozefMultiSport;
+ assert.equal(api.getFormProgress('hockey').recent.length,0,'old best scores are not invented as historic matches');
+ assert.equal(api.getFormProgress('baseball').recent.join(','),'2,3,4,5,0,1'.split(',').slice(-5).join(','));
+ assert.equal(api.getFormProgress('basketball').recent.length,0);
+ assert.equal(api.getFormProgress('unknown'),null);
+ assert.equal(api.getCupProgress().champion,false);
+ assert.equal(api.getWrestlingCareer().name,'CHAMPION');
+ const styles=fs.readFileSync(path.join(root,'site-experience.css'),'utf8');
+ assert.ok(styles.includes('/* BEGIN multisport.css */'));
+ assert.ok(styles.includes('.multi-form-results'),'actual loaded CSS bundle styles the form');
+ const page=fs.readFileSync(path.join(root,'world.html'),'utf8');
+ for(const id of ['multi-form-scores','multi-form-average','multi-form-trend','multi-form-tip','multi-form-replay'])
+  assert.equal((page.match(new RegExp('id="'+id+'"','g'))||[]).length,1);
+});
