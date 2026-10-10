@@ -44,6 +44,8 @@ test('match runs through completion and can restart without a browser crash',()=
  assert.equal(window.JozefArena.getProgress().mode,'ready');
  events.get('arena-start:click')();
  assert.equal(window.JozefArena.getProgress().mode,'playing');
+ assert.ok(window.JozefArena.getProgress().shotChance<.12,
+  'kickoff must not award nearly certain goals from Jozef’s own goal');
  events.get('arena-shoot:click')();
  assert.equal(window.JozefArena.getProgress().shots,1);
  events.get('arena-settings-toggle:click')();
