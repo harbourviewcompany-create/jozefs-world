@@ -7,6 +7,14 @@ Jozef FC // After Dark is a private football universe. Play an actual Arena matc
 
 ## The experience
 
+### The Club Chronicle — football history you can keep (2026)
+- A new **Chronicle** section transforms *completed* Arena matches, STREET//11 runs, and new Career/World Tour milestones into original Jozef FC story covers. Your current career totals are shown, but the site never invents scores or dates for games played before this feature was installed.
+- Browse up to 40 recent highlights, select a chapter to feature, and use **Print Poster** to print or save a personal Jozef FC matchday cover through your browser or device print menu.
+- The Chronicle is one shared club experience, with private browser-only storage and **no uploads, public profiles, prompts to share, tracking or paid rewards**.
+- The existing Club **Save This Season / Restore From Backup** flow includes the Chronicle journal. The stylesheet and renderer are cached for offline use. Reduced-motion and phone-sized screens are supported.
+
+
+
 ### One shared Club HQ (2026)
 - There is **one** Jozef FC experience for everyone using the device, with no Jozef/Dad mode, gated sections or separate profile data. Shared Notes, the full game menu, progress and save/restore are accessible together.
 - The homepage Club HQ shows two optional daily activities: **finish an Arena match** and **finish a STREET//11 run**. It updates only when each game ends, not when opening or pausing the game.
