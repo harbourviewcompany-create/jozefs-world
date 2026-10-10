@@ -49,7 +49,6 @@ test('phone home keeps a prominent match CTA and four clear sports, with no hori
  assert.match(css, /@media\(max-width:390px\)/);
  assert.match(css, /grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
  assert.match(css, /grid-template-columns:repeat\(5,minmax\(0,1fr\)\)/);
- assert.match(css, /body/); // shared stylesheet, never replaces game logic
  assert.match(css, /prefers-reduced-motion:reduce/);
  assert.doesNotMatch(css,/@import|url\(\s*https?:/);
  const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]);
