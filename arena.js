@@ -644,7 +644,7 @@ shootButton?.addEventListener('pointerup',ev=>{
 shootButton?.addEventListener('pointercancel',clearCharge);
 shootButton?.addEventListener('lostpointercapture',clearCharge);
 shootButton?.addEventListener('click',ev=>{
- if(ev.detail>0&&Date.now()<suppressShootClickUntil)return;
+ if((ev?.detail||0)>0&&Date.now()<suppressShootClickUntil)return;
  shoot();
 });
 $('arena-start')?.addEventListener('click',()=>{if(mode==='ready'||mode==='over')start();else pause();if(mode!=='playing')draw();});
