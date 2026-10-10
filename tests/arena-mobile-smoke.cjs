@@ -28,6 +28,16 @@ const close=()=>new Promise(resolve=>server.close(resolve));
      const errors=[];
      page.on('pageerror',e=>errors.push(e.message));
      await page.goto(url,{waitUntil:'domcontentloaded'});
+     const assets=await page.evaluate(()=>{
+      const styles=[...document.querySelectorAll('link[rel="stylesheet"]')]
+       .map(x=>x.getAttribute('href')||'').filter(x=>x.endsWith('.css'));
+      const scripts=[...document.querySelectorAll('script[src]')]
+       .map(x=>x.getAttribute('src')||'');
+      return {styles,gameBundle:scripts.filter(x=>x==='arena-bundle.js').length};
+     });
+     assert.deepEqual(assets.styles,['site-foundation.css','site-experience.css'],
+      'Only two ordered local CSS bundles should block first render');
+     assert.equal(assets.gameBundle,1,'Arena runtime must download once');
      await page.evaluate(()=>window.showSection('arena'));
      await page.waitForTimeout(150);
      // Match entry offers an intentional walkout intro on the first visit.
