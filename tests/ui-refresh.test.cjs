@@ -15,8 +15,10 @@ test('both entry points show one consistent compact header and a complete access
  assert.match(html,/<button class="jw-explore"[^>]*aria-haspopup="dialog"[^>]*aria-controls="studio-command"/);
  assert.equal((html.match(/href="ui-refresh.css"/g)||[]).length,1);
  const styles=[...html.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(x=>x[1]);
- assert.equal(styles.at(-1),'ui-refresh.css');
- assert.ok(styles.indexOf('arena-compact.css')<styles.indexOf('ui-refresh.css'));
+ assert.ok(styles.indexOf('ui-refresh.css')>styles.indexOf('watch.css'));
+ assert.ok(styles.indexOf('arena-compact.css')>styles.indexOf('ui-refresh.css'),
+  'gameplay-only Arena compact overrides are intentionally last');
+
  assert.ok(styles.indexOf('mobile-qa-2026.css')<styles.indexOf('ui-refresh.css'));
  assert.ok(sw.includes("'./ui-refresh.css'"));
  assert.match(css,/--jw-ui-lime:#c8ff5a/);
