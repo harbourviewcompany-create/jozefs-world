@@ -22,6 +22,13 @@
     {cue:"WWE FAN QUIZ: WHO IS KNOWN FOR 'YOU CAN'T SEE ME'?",choices:['JOHN CENA','REY MYSTERIO','ROMAN REIGNS'],answer:0,remark:'JOHN CENA! THE CROWD KNOWS THAT LINE!'},
     {cue:'WWE FAN QUIZ: WHO IS FAMOUS FOR THE 619?',choices:['CODY RHODES','REY MYSTERIO','JOHN CENA'],answer:1,remark:'REY MYSTERIO! YOU KNOW YOUR WRESTLING!'}
   ];
+  const LEGEND_SHOW=[
+    {cue:'WWE FAN QUIZ: WHO IS KNOWN AS THE AMERICAN NIGHTMARE?',choices:['JOHN CENA','ROMAN REIGNS','CODY RHODES'],answer:2,remark:'CODY RHODES! BIG MATCH ENERGY!'},
+    {cue:'YOUR TEAM NEEDS A BIG MOMENT TO OPEN THE SHOW!',choices:['LOOK AWAY','ENTRANCE POSE','LEAVE THE STAGE'],answer:1,remark:'THE CROWD IS READY FOR THE MAIN EVENT!'},
+    {cue:'WWE FAN QUIZ: WHO HAS USED THE TRIBAL CHIEF NICKNAME?',choices:['ROMAN REIGNS','REY MYSTERIO','JOHN CENA'],answer:0,remark:'ROMAN REIGNS! YOU KNOW YOUR WWE!'},
+    {cue:'A FRIENDLY TAG TEAM NEEDS A WAY TO CELEBRATE!',choices:['IGNORE YOUR PARTNER','TURN AWAY','TEAM HIGH FIVE'],answer:2,remark:'TEAMWORK GETS THE BIGGEST CHEERS!'},
+    {cue:'YOUR LAST APPEARANCE IS ABOUT TO BEGIN!',choices:['SIGNATURE POSE','HIDE BACKSTAGE','FORGET THE FANS'],answer:0,remark:'THE NIGHT BELONGS TO YOUR TEAM!'}
+  ];
   const $=id=>document.getElementById(id);
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const valid=(v)=>Number.isSafeInteger(v)&&v>=0&&v<=999999;
@@ -40,7 +47,7 @@
       out.wrestling.careerWins=Math.min(input.wrestling.careerWins,out.wrestling.played);
     return out;
   }
-  let saved=load(),sport='hockey',round=0,points=0,phase='ready',turnStart=0,raf=0,indicator=50,lastMessage='',lastResult=null,roundHistory=[],stageView=null;
+  let saved=load(),sport='hockey',difficulty='pro',round=0,points=0,phase='ready',turnStart=0,raf=0,indicator=50,lastMessage='',lastResult=null,roundHistory=[],stageView=null;
   const button=(label,choice,extra='')=>{
     const b=document.createElement('button');
     b.type='button';b.textContent=label;b.dataset.choice=choice;
@@ -56,7 +63,14 @@
     const cycle=((ms%1900)+1900)%1900;
     return cycle<950?cycle/9.5:(1900-cycle)/9.5;
   };
-  const accuracy=(kind,pos)=>kind==='baseball'?Math.abs(pos-55)<=17:Math.abs(pos-55)<=12;
+  const accuracy=(kind,pos,level='pro')=>{
+    const ranges={
+      rookie:{baseball:27,basketball:22},
+      pro:{baseball:17,basketball:12},
+      legend:{baseball:9,basketball:7}
+    };
+    return Math.abs(pos-55)<=(ranges[level]||ranges.pro)[kind==='baseball'?'baseball':'basketball'];
+  };
   function persist(){
     try{localStorage.setItem(KEY,JSON.stringify(saved))}catch(_){/* This run still works. */}
   }
@@ -145,8 +159,10 @@
     if(sport==='hockey'){
       controls.append(button('1 / LEFT','left'),button('2 / CENTRE','centre'),button('3 / RIGHT','right'));
     }else if(sport==='wrestling'){
-      const names=CHALLENGES[round]?.choices||['ENTRANCE','SIGNATURE POSE','TEAMWORK'];
-      controls.append(button('1 / '+names[0],'entrance'),button('2 / '+names[1],'pose'),button('3 / '+names[2],'teamwork'));
+      const challenge=(difficulty==='legend'?LEGEND_SHOW:CHALLENGES)[round];
+      const names=challenge?.choices||['ENTRANCE','SIGNATURE POSE','TEAMWORK'];
+      const labels=names.map((name,i)=>difficulty==='rookie'&&i===challenge.answer?name+' / COACH PICK':name);
+      controls.append(button('1 / '+labels[0],'entrance'),button('2 / '+labels[1],'pose'),button('3 / '+labels[2],'teamwork'));
     }else{
       controls.append(button(sport==='baseball'?'SWING BAT ↗':'RELEASE SHOT ↗','shoot','multi-primary'));
     }
@@ -177,9 +193,19 @@
       prompt=sport==='hockey'?'Choose LEFT, CENTRE or RIGHT to beat the keeper.':
       sport==='baseball'?'Press SWING when the marker crosses the centre zone.':
       sport==='basketball'?'Release when the marker is near the centre zone.':
-      CHALLENGES[round].cue;
+      (difficulty==='legend'?LEGEND_SHOW:CHALLENGES)[round].cue;
     }
     label('multi-message',prompt);
+    const descriptions={
+      rookie:'ROOKIE / Wider timing windows and helpful hints. Start here.',
+      pro:'PRO / Classic timing and competition. Change difficulty to restart this event.',
+      legend:'LEGEND / Tougher goalies, precise timing, new wrestling questions.'
+    };
+    label('multi-difficulty-note',descriptions[difficulty]);
+    for(const id of ['rookie','pro','legend']){
+      const tab=$('multi-difficulty-'+id);
+      if(tab){tab.setAttribute('aria-pressed',String(id===difficulty));tab.classList.toggle('selected',id===difficulty)}
+    }
     const stage=$('multi-stage');
     stage?.classList.toggle('multi-finished',phase==='finished');
     stage?.classList.toggle('multi-result',phase==='result');
@@ -232,6 +258,11 @@
     if(sport==='hockey'){
       if(!['left','centre','right'].includes(choice))return;
       goalieIndex=Math.floor(Math.random()*3);
+      if(difficulty==='rookie'&&goalieIndex===shotIndex&&Math.random()<.65){
+        goalieIndex=(goalieIndex+1)%3;
+      }else if(difficulty==='legend'&&goalieIndex!==shotIndex&&Math.random()<.45){
+        goalieIndex=shotIndex;
+      }
       const goalie=['left','centre','right'][goalieIndex];
       shotIndex=['left','centre','right'].indexOf(choice);
       made=goalie!==choice;
@@ -241,14 +272,15 @@
       const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
       // Reduced motion uses untimed accessible attempts, no moving target.
       const pos=reduced?50:position(Date.now()-turnStart,sport);
-      made=reduced?Math.random()<.75:accuracy(sport,pos);
+      made=reduced?Math.random()<(difficulty==='rookie'?.9:difficulty==='legend'?.55:.75):accuracy(sport,pos,difficulty);
       remark=made?(sport==='baseball'?'CRACK! THAT IS A CLEAN BASE HIT!':'SWISH! NOTHING BUT NET!'):
         (sport==='baseball'?'FOUL BALL! NEXT PITCH!':'OFF THE RIM! KEEP SHOOTING!');
     }else if(sport==='wrestling'){
       if(!['entrance','pose','teamwork'].includes(choice))return;
-      const needed=['entrance','pose','teamwork'][CHALLENGES[round].answer];
+      const challenge=(difficulty==='legend'?LEGEND_SHOW:CHALLENGES)[round];
+      const needed=['entrance','pose','teamwork'][challenge.answer];
       made=choice===needed;
-      remark=made?CHALLENGES[round].remark:'THE CROWD WANTS A DIFFERENT MOMENT. NEXT ROUND!';
+      remark=made?challenge.remark:'THE CROWD WANTS A DIFFERENT MOMENT. NEXT ROUND!';
     }
     if(made)points++;
     roundHistory.push(made);
@@ -302,6 +334,11 @@
       act('next');
     }
   }
+  function selectDifficulty(level){
+    if(!['rookie','pro','legend'].includes(level)||difficulty===level)return;
+    difficulty=level;
+    start(sport);
+  }
   function nextCupSport(){
     const target=Object.keys(GAMES).find(id=>saved[id].best<3) ||
       Object.keys(GAMES).reduce((lowest,id)=>saved[id].best<saved[lowest].best?id:lowest,'hockey');
@@ -314,6 +351,8 @@
     stageView=window.JozefSportStage?.create?.()||null;
     $('multi-action-canvas')?.addEventListener('click',canvasAction);
     $('multi-cup-next')?.addEventListener('click',nextCupSport);
+    for(const level of ['rookie','pro','legend'])
+      $('multi-difficulty-'+level)?.addEventListener('click',()=>selectDifficulty(level));
     for(const k of Object.keys(GAMES))$('multi-tab-'+k)?.addEventListener('click',()=>start(k));
     document.querySelectorAll('[data-multi-start]')?.forEach(btn=>btn.addEventListener('click',()=>{
       const selected=btn.dataset.multiStart;
@@ -334,5 +373,6 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
   else init();
   window.JozefMultiSport=Object.freeze({getProgress:()=>JSON.parse(JSON.stringify(saved)),getCupProgress,getWrestlingCareer,
-    getLastResult:()=>lastResult&&{...lastResult},evaluateTiming:accuracy});
+    getLastResult:()=>lastResult&&{...lastResult},evaluateTiming:accuracy,
+    getDifficulty:()=>difficulty,playSport:kind=>{if(!GAMES[kind])return false;start(kind);window.requestAnimationFrame?.(()=>stageView?.refresh());return true}});
 })();
