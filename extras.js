@@ -30,7 +30,7 @@
     { id: 'all-sport-debut', icon: '🏅', title: 'All-Sport Debut', description: 'Finish a hockey, baseball, basketball or wrestling challenge', ready: s => s.multisportGames >= 1 },
     { id: 'all-sport-champion', icon: '🏆', title: 'Four-Sport Star', description: 'Play every sport in the Sports Arcade', ready: s => s.multiSports.length >= 4 },
     { id: 'four-sport-cup', icon: '🥇', title: 'All-Sport Cup Winner', description: 'Score 3 or more in hockey, baseball, basketball, and wrestling', ready: s => Boolean(s.allSportCup) },
-    { id: 'rival-circuit-legend', icon: '🏅', title: 'Rival Circuit Legend', description: 'Beat all three fictional rivals in all four sports', ready: s => Boolean(s.rivalCircuitChampion) }
+    { id: 'rival-circuit-legend', icon: '🏅', title: 'Rival Circuit Legend', description: 'Complete three escalating rival challenges in each of the four sports', ready: s => Boolean(s.rivalCircuitChampion) }
   ];
   const defaultState = () => ({
     xp: 0, goals: 0, saves: 0, memory: 0, quizzes: 0, perfect: 0, scrambles: 0,
