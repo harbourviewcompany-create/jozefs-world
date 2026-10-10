@@ -46,16 +46,24 @@ const close=()=>new Promise(resolve=>server.close(resolve));
      assert.equal(assets.legacyPresent,false,'Bundled source files must not be requested separately');
      assert.equal(await page.evaluate(()=>typeof window.showSection),'function','Site navigation must start');
      if(viewport.width===390){
-      const nav=await page.evaluate(()=>{
-       window.showSection('sports-arcade');
-       const active=document.querySelector('#sports-arcade.section.active')!==null;
-       return {active,sports:typeof window.JozefMultiSport,stage:typeof window.JozefSportStage};
-      });
-      assert.equal(nav.active,true,'Bundled navigation must reach Sports Arcade');
+      await page.evaluate(()=>window.showSection('sports-arcade'));
+      // Site navigation uses document.startViewTransition where supported.
+      // It is asynchronous; the DOM need not be active in the same microtask.
+      await page.waitForFunction(
+       ()=>document.querySelector('#sports-arcade.section.active')!==null,
+       {timeout:5000}
+      );
+      const nav=await page.evaluate(()=>({
+       sports:typeof window.JozefMultiSport,stage:typeof window.JozefSportStage
+      }));
       assert.equal(nav.sports,'object','Bundled multisport engine must initialize');
       assert.equal(nav.stage,'object','Bundled sports canvas must initialize');
      }
      await page.evaluate(()=>window.showSection('arena'));
+     await page.waitForFunction(
+      ()=>document.querySelector('#arena.section.active')!==null,
+      {timeout:5000}
+     );
      await page.waitForTimeout(150);
      // Match entry offers an intentional walkout intro on the first visit.
      // Complete or skip it before interacting with the controls behind it.
