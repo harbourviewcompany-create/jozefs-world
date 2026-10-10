@@ -136,7 +136,7 @@
       }else if(activeSport==='baseball'){
         // Ball approaches home plate over each 1.9-second cycle; swing outcome is authoritative in multisport.js.
         const cycle=clamp((elapsed%1900)/1900,0,1);
-        const p=inFlight?easeOut(t):motion?cycle:.5;
+        const p=inFlight?easeOut(t):motion?clamp((cycle<.5?cycle:1-cycle)*2,0,1):.55;
         const ballX=lerp(320,360,p),ballY=lerp(115,240,p),radius=lerp(6,22,p);
         baseball(c,ballX,ballY,radius);
         line(c,440,155,390,245,'#e4bf7c',14);
