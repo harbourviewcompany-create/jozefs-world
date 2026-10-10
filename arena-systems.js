@@ -43,6 +43,39 @@
     const factor=DIFFICULTIES[difficulty]||DIFFICULTIES.pro;
     return clamp(Math.max(1,(y-122)/23)*(1-clamp(shotBonus,0,.4))*factor.pressure,1,26);
   }
+  // Probability that a shot is actually on target. Deep strikes remain possible,
+  // but advancing upfield and completing a pass creates much better chances.
+  // Goalkeeper saves and interceptions still apply separately.
+  function shotProfile(y, passChain=0, shotBonus=0, difficulty='pro') {
+    const progress=clamp((495-y)/350,0,1);
+    const combos=clamp(passChain,0,3);
+    const upgrades=clamp(shotBonus,0,.4);
+    const rival=DIFFICULTIES[difficulty]||DIFFICULTIES.pro;
+    const onTarget=clamp(.085+.72*Math.pow(progress,1.75)+
+      .10*Math.min(1,combos)+.05*Math.max(0,combos-1)+
+      .12*upgrades-(rival.pressure-1)*.18,.06,.94);
+    return {
+      onTarget,
+      label:onTarget<.25?'LONG SHOT':onTarget<.55?'BUILD ATTACK':'GOOD CHANCE',
+      progress,
+      passBonus:combos>0
+    };
+  }
+  function shotTarget(aimIndex, zones, profile, random=.5, missRandom=.5, goalLeft=148, goalRight=272) {
+    const index=Math.max(0,Math.min(zones.length-1,Math.floor(Number(aimIndex)||0)));
+    const x=zones[index].x;
+    const success=clamp(profile?.onTarget??0,0,1);
+    if(random<success) {
+      // Even good shots retain a little variation. At the end of an attack,
+      // the selected corner remains reliable, unlike a deep speculative shot.
+      const spread=5+(1-success)*12;
+      return {x:clamp(x+(missRandom-.5)*2*spread,goalLeft+5,goalRight-5),onTarget:true};
+    }
+    const direction=index===0?-1:index===zones.length-1?1:(missRandom<.5?-1:1);
+    const excess=20+Math.abs(missRandom-.5)*52;
+    return {x:direction<0?goalLeft-excess:goalRight+excess,onTarget:false};
+  }
+
   function keeperCommit(aimIndex, zones, difficulty='pro', random=.5) {
     const d=DIFFICULTIES[difficulty]||DIFFICULTIES.pro;
     const readChance=clamp(.22*d.keeper,.12,.45);
@@ -140,7 +173,7 @@
   }
   return Object.freeze({
     clamp,distance,DIFFICULTIES,joystickVector,
-    defenderDestination,teammateDestination,shotAccuracy,keeperCommit,readGamepad,
+    defenderDestination,teammateDestination,shotAccuracy,shotProfile,shotTarget,keeperCommit,readGamepad,
     cameraFor,screenToWorld,dailyKey,CHALLENGES,freshDaily,normalizeDaily,awardDaily,progression
   });
 });
