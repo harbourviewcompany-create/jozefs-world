@@ -1,3 +1,4 @@
+const bundled=require('./bundle-contract.cjs');
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -10,9 +11,10 @@ const css=fs.readFileSync(path.join(root,'visual-2026.css'),'utf8');
 const script=fs.readFileSync(path.join(root,'visual-2026.js'),'utf8');
 test('2026 visual foundation is loaded once and both pages stay canonical',()=>{
  assert.equal(html,index);
- assert.equal((html.match(/href="visual-2026.css"/g)||[]).length,1);
+ const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
+ bundled.css(root,html,sw,'visual-2026.css');
+ bundled.order(root,html,sw,'notes.css','visual-2026.css');
  assert.equal((html.match(/src="visual-2026.js"/g)||[]).length,1);
- assert.ok(html.indexOf('href="visual-2026.css"')>html.indexOf('href="who.css"'));
  for(const id of ['visual-rival-heading','visual-rival-name','visual-rival-play','visual-rival-story','visual-rival-meter','visual-rival-chapter']){
   assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,id+' must be unique');
  }
