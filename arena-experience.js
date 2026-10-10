@@ -166,22 +166,10 @@ function mount(api){
   stickPointer=null;api.setJoystick(0,0);
   joystick?.classList.remove('engaged');
   knob?.style.setProperty('--stick-x','0px');knob?.style.setProperty('--stick-y','0px');
-  joystick?.style.setProperty('--float-x','0px');
-  joystick?.style.setProperty('--float-y','0px');
  }
  joystick?.addEventListener('pointerdown',ev=>{
   if(api.getMode()!=='playing'||stickPointer!==null)return;
   ev.preventDefault();stickPointer=ev.pointerId;
-  // Nudge the centre towards the player's thumb inside the existing
-  // reserved movement zone, without overlapping the playable pitch.
-  if(prefs.mobileLayout==='immersive'){
-   const box=joystick.getBoundingClientRect();
-   const limit=Math.min(15,box.width*.16);
-   const fx=S.clamp(ev.clientX-box.left-box.width/2,-limit,limit);
-   const fy=S.clamp(ev.clientY-box.top-box.height/2,-limit,limit);
-   joystick.style.setProperty('--float-x',fx+'px');
-   joystick.style.setProperty('--float-y',fy+'px');
-  }
   joystick.classList.add('engaged');relative(ev);
   try{joystick.setPointerCapture(ev.pointerId);}catch(_){}
  });
