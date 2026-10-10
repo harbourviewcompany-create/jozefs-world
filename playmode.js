@@ -20,6 +20,25 @@
     window.showSection = next;
   }
 
+  // iPhone browser chrome changes the actual visible viewport while scrolling
+  // or when an in-app browser expands its controls. Use visualViewport height
+  // only for the active game, without resizing other site sections.
+  let viewportHeight=0;
+  function syncArenaViewport(){
+    const arena=document.getElementById('arena');
+    if(!arena)return;
+    const visual=window.visualViewport;
+    const next=Math.round(visual?.height||window.innerHeight||0);
+    if(next>0&&next!==viewportHeight){
+      viewportHeight=next;
+      arena.style.setProperty('--arena-visual-height',next+'px');
+    }
+  }
+  window.addEventListener('resize',syncArenaViewport,{passive:true});
+  window.addEventListener('orientationchange',syncArenaViewport,{passive:true});
+  window.visualViewport?.addEventListener('resize',syncArenaViewport,{passive:true});
+  window.visualViewport?.addEventListener('scroll',syncArenaViewport,{passive:true});
+
   function boot() {
     // Other site-wide UI updates may add stylesheets after Arena CSS.
     // Reattach its link last to keep the game's viewport sizing deterministic.
@@ -29,6 +48,7 @@
       arenaSheet.parentElement.appendChild(arenaSheet);
     }
     wrap();
+    syncArenaViewport();
     document.querySelectorAll('.play-exit').forEach(button => {
       button.addEventListener('click', () => {
         if (typeof window.showSection === 'function') window.showSection('home');
