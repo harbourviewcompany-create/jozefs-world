@@ -113,3 +113,34 @@ test('fully earned game progress yields Club Legend, with no fabricated challeng
  assert.equal(b.get('playbook-meter').style.width,'100%');
  assert.ok(b.get('playbook-missions').children.every(c=>c.className.includes('is-done')));
 });
+
+test('unfinished-only Playbook filter hides earned challenges without changing progress',()=>{
+ const b=boot();
+ assert.equal(b.get('playbook-missions').children.length,15);
+ const first=b.get('playbook-missions').children.find(x=>x.attrs['data-mission']==='basketball');
+ assert.ok(first?.className.includes('is-done'));
+ b.get('playbook-toggle-open').click();
+ assert.equal(b.get('playbook-toggle-open').attrs['aria-pressed'],'true');
+ assert.equal(b.get('playbook-toggle-open').textContent,'SHOW ALL MISSIONS');
+ assert.equal(b.get('playbook-missions').children.length,14);
+ assert.ok(b.get('playbook-missions').children.every(x=>!x.className.includes('is-done')));
+ assert.match(b.get('playbook-home-next').textContent,/NEXT UP/);
+ assert.equal(b.window.JozefPlaybook.getProgress().completed,1);
+ assert.equal(b.store.size,0,'display filter must not write a second source of progress');
+ b.get('playbook-toggle-open').click();
+ assert.equal(b.get('playbook-missions').children.length,15);
+ assert.equal(b.get('playbook-toggle-open').attrs['aria-pressed'],'false');
+});
+test('completed category has a useful replay empty state when filtering unfinished missions',()=>{
+ const b=boot({stats:{
+  arena:{games:9,wins:8,goals:34},street:{best:100},career:{season:2,played:0},
+  tour:{wins:4}
+ }});
+ b.get('playbook-filter-football').click();
+ b.get('playbook-toggle-open').click();
+ const cards=b.get('playbook-missions').children;
+ assert.equal(cards.length,1);
+ assert.equal(cards[0].className,'playbook-all-done');
+ assert.match(cards[0].children[0].textContent,/EVERY CHALLENGE COMPLETE/);
+ assert.equal(b.get('playbook-coach-go').textContent,'REPLAY A CHALLENGE ↗');
+});
