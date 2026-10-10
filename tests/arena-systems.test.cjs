@@ -66,3 +66,26 @@ test('progression unlocks earned badges, higher level and cosmetic milestones',(
  assert.ok(grown.level>initial.level);
  assert.ok(grown.earned>=4);
 });
+
+test('standard Bluetooth gamepad maps analog stick, buttons and pause',()=>{
+ const buttons=Array.from({length:16},()=>({pressed:false,value:0}));
+ buttons[0].pressed=true;buttons[2].pressed=true;buttons[9].pressed=true;
+ const input=S.readGamepad({connected:true,axes:[.65,-.85],buttons});
+ assert.ok(input.x>0&&input.y<0);
+ assert.ok(Math.hypot(input.x,input.y)<=1.001);
+ assert.equal(input.pass,true);
+ assert.equal(input.skill,true);
+ assert.equal(input.shoot,false);
+ assert.equal(input.toggle,true);
+});
+test('gamepad dead zone and D-pad override analog',()=>{
+ const buttons=Array.from({length:16},()=>({pressed:false,value:0}));
+ const idle=S.readGamepad({connected:true,axes:[.025,-.03],buttons});
+ assert.equal(idle.x,0);
+ assert.equal(idle.y,0);
+ buttons[12].pressed=true;buttons[15].pressed=true;
+ const dpad=S.readGamepad({connected:true,axes:[-.8,.6],buttons});
+ assert.ok(dpad.x>.7&&dpad.y<-.7);
+ assert.equal(S.readGamepad(null).shoot,false);
+ assert.equal(S.readGamepad({connected:false,axes:[1,1]}).x,0);
+});
