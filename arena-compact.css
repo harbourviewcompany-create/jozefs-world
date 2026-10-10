@@ -1,3 +1,30 @@
+/* Keep the match controls aligned on larger screens, too. */
+#arena .arena-header-actions {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+#arena .arena-header-actions #arena-start {
+  width: auto;
+  min-height: 40px;
+  margin: 0;
+  padding: 8px 14px;
+  font-size: 13px;
+  line-height: 1;
+  white-space: nowrap;
+}
+#arena .arena-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+#arena .arena-brand small {
+  color: #a8d4c5;
+  font: 800 10px/1 "Outfit", sans-serif;
+}
+
 /* Jozef FC / Arena: one-screen, mobile-first match HUD.
    Loaded last to override older mobile canvas height and controller rules. */
 @media (max-width: 1100px) {
