@@ -866,3 +866,19 @@
   #arena #arena-joystick-knob{transition:none}
   #arena .arena-overlay{scroll-behavior:auto}
 }
+
+/* Compact daily mission drawer: progress without another gameplay screen. */
+#arena .arena-challenge-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+#arena .arena-challenge{
+  display:flex;align-items:center;justify-content:space-between;min-width:0;gap:5px;
+  padding:9px 8px;border:1px solid #94cabc4c;border-radius:8px;
+  background:#0a2b33;color:#d3e8dc;font:800 11px/1.15 "Outfit",sans-serif;
+}
+#arena .arena-challenge.complete{border-color:#bdff8180;background:#8ce86613;color:#e1ffbc}
+#arena .arena-challenge b{color:#d4ff83;white-space:nowrap}
+#arena .arena-upgrade-row{display:flex;flex-direction:column;gap:6px;padding:10px;border:1px solid #a5d5b753;border-radius:10px;background:#092c34}
+#arena .arena-upgrade-row label{width:100%}
+#arena .arena-upgrade-row button{min-height:43px;border:1px solid #dcff9799;border-radius:8px;background:#cafa60;color:#0d292b;font:900 13px "Barlow Condensed","Outfit",sans-serif}
+#arena .arena-upgrade-row button:disabled{background:#45665d;color:#abc3b4;opacity:.75;border-color:#84a594}
+#arena #arena-daily-progress{cursor:pointer;font:900 9px/1 "Outfit",sans-serif;min-height:18px;touch-action:manipulation}
+#arena .arena-settings input:focus-visible,#arena .arena-settings select:focus-visible,#arena .arena-upgrade-row button:focus-visible{outline:2px solid #eaffac;outline-offset:1px}
