@@ -329,6 +329,12 @@
           <label>Touch controls <select id="arena-control-mode"><option value="joystick">Virtual joystick</option><option value="arrows">Arrow buttons</option></select></label>
           <label><input id="arena-camera-toggle" type="checkbox" checked> Dynamic camera</label>
           <label><input id="arena-haptics-toggle" type="checkbox" checked> Haptic feedback (where supported)</label>
+          <label>Player kit <select id="arena-kit-select"><option value="club">My Club kit</option><option value="night">Neon City kit · 2 wins</option><option value="gold">Legend kit · 5 wins</option></select></label>
+          <div class="arena-upgrade-row">
+            <label>Train Jozef <select id="arena-upgrade-type"><option value="speed">Speed</option><option value="shot">Finishing</option><option value="pass">Passing</option></select></label>
+            <button type="button" id="arena-buy-upgrade">UPGRADE · 3 STARS</button>
+          </div>
+          <p id="arena-earnings">0 stars · Level 1</p>
           <p>Sound is controlled from My Club. Keyboard movement, passing, shooting and aim remain available.</p>
         </section>
         <section id="arena-match-report" class="arena-overlay arena-report" role="dialog" aria-label="Match results" aria-modal="false" hidden>
