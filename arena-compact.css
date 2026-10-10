@@ -888,3 +888,14 @@
  #arena.section.active .arena-controller.swap-controls .arena-direction{order:2}
  #arena.section.active .arena-controller.swap-controls{grid-template-columns:1fr .92fr}
 }
+
+/* An active fixed match must never inherit the section entrance translateY animation.
+   At short phone heights that animation shifts the complete viewport down by 1–7px,
+   defeating one-screen sizing and temporarily moving controls during taps. */
+@media (max-width: 1100px) {
+  #arena.section.active {
+    animation: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
