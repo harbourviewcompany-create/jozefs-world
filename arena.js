@@ -32,6 +32,14 @@ let mode='ready',time=MATCH_LENGTH,us=0,them=0,streak=0,flash=0,last=0,raf=0;
 let actor={x:210,y:494},mate={x:298,y:320},ball={x:210,y:482,owner:'actor',vx:0,vy:0};
 let defenders=[],keeper={x:210,y:48},keys=new Set(),stick={x:0,y:0},target=null,shotCooldown=0,tackleCooldown=0,passCooldown=0;
 const SHOT_ZONES=[{name:'LEFT POST',x:171},{name:'CENTRE',x:210},{name:'RIGHT POST',x:249}];
+// Track individual touches: two directional buttons may be held together for diagonal runs.
+const heldDirections=new Map();
+function updateTouchVector(){
+ let x=0,y=0;
+ for(const dir of heldDirections.values()){x+=dir.x;y+=dir.y;}
+ const len=Math.hypot(x,y);
+ stick=len>1?{x:x/len,y:y/len}:{x,y};
+}
 let aim=0,skillCooldown=0,skillTime=0,keeperDestination=210,keeperReact=0,passRecipient=null,mateTime=0,shots=0,keeperSaves=0,lastHudTick=-1;
 function getSquad(){
  const api=window.JozefSquad?.getSquad?.();
@@ -87,7 +95,7 @@ function resetPositions(){
  defenders=[{x:144,y:260,speed:89},{x:279,y:205,speed:90},{x:204,y:143,speed:82}];
  keeper={x:210,y:48};
  shotCooldown=0;tackleCooldown=1.2;passCooldown=0;passRecipient=null;mateTime=0;
- keeperDestination=210;keeperReact=0;keys.clear();stick={x:0,y:0};target=null;
+ keeperDestination=210;keeperReact=0;keys.clear();heldDirections.clear();stick={x:0,y:0};target=null;
 }
 function hud(){
  put('arena-score',us+' : '+them);put('arena-clock',String(Math.ceil(Math.max(0,time))).padStart(2,'0')+'s');
@@ -112,13 +120,13 @@ function start(){
  cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
 }
 function pause(){
- if(mode==='playing'){mode='paused';cancelAnimationFrame(raf);keys.clear();stick={x:0,y:0};last=0;msg('Half-time breather. Your score is safe.');}
+ if(mode==='playing'){mode='paused';cancelAnimationFrame(raf);keys.clear();heldDirections.clear();stick={x:0,y:0};last=0;msg('Half-time breather. Your score is safe.');}
  else if(mode==='paused'){mode='playing';last=0;msg('Back on the ball!');raf=requestAnimationFrame(loop);}
  hud();
 }
 function end(){
  if(mode!=='playing')return;
- mode='over';cancelAnimationFrame(raf);keys.clear();stick={x:0,y:0};
+ mode='over';cancelAnimationFrame(raf);keys.clear();heldDirections.clear();stick={x:0,y:0};
  lifetime.games=Math.min(99999,lifetime.games+1);
  lifetime.goals=Math.min(99999,lifetime.goals+us);
  lifetime.best=Math.max(lifetime.best,us);
@@ -370,10 +378,27 @@ function loop(t){
 }
 function bindMove(id,x,y){
  const b=$(id);if(!b)return;
- function down(ev){if(mode!=='playing')return;ev.preventDefault();stick={x,y};if(b.setPointerCapture&&ev.pointerId!=null)b.setPointerCapture(ev.pointerId);}
- function up(){stick={x:0,y:0};}
- b.addEventListener('pointerdown',down);b.addEventListener('pointerup',up);
- b.addEventListener('pointercancel',up);b.addEventListener('lostpointercapture',up);
+ function down(ev){
+  if(mode!=='playing')return;
+  ev.preventDefault();
+  // Separate pointer IDs allow iPhone players to hold up+left, up+right, etc.
+  const key=ev.pointerId==null?id:ev.pointerId;
+  heldDirections.set(key,{x,y});
+  updateTouchVector();target=null;
+  b.classList.add('is-pressed');
+  if(b.setPointerCapture&&ev.pointerId!=null){
+   try{b.setPointerCapture(ev.pointerId);}catch(_){}
+  }
+ }
+ function up(ev){
+  heldDirections.delete(ev.pointerId==null?id:ev.pointerId);
+  updateTouchVector();
+  if(![...heldDirections.values()].some(d=>d.x===x&&d.y===y))b.classList.remove('is-pressed');
+ }
+ b.addEventListener('pointerdown',down);
+ b.addEventListener('pointerup',up);
+ b.addEventListener('pointercancel',up);
+ b.addEventListener('lostpointercapture',up);
  b.addEventListener('click',()=>{if(mode!=='playing')return;move(x,y,.13);});
 }
 bindMove('arena-up',0,-1);bindMove('arena-down',0,1);bindMove('arena-left',-1,0);bindMove('arena-right',1,0);
@@ -382,10 +407,19 @@ $('arena-skill')?.addEventListener('click',skillMove);
 $('arena-pass')?.addEventListener('click',pass);
 $('arena-shoot')?.addEventListener('click',shoot);
 $('arena-start')?.addEventListener('click',()=>{if(mode==='ready'||mode==='over')start();else pause();if(mode!=='playing')draw();});
-canvas.addEventListener('pointerdown',ev=>{
- if(mode!=='playing')return;
- const r=canvas.getBoundingClientRect();if(r.width<1)return;
+function aimMovementAtPointer(ev){
+ const r=canvas.getBoundingClientRect();
+ if(r.width<1||r.height<1)return;
  target={x:clamp((ev.clientX-r.left)/r.width*W,24,396),y:clamp((ev.clientY-r.top)/r.height*H,102,565)};
+}
+canvas.addEventListener('pointerdown',ev=>{
+ if(mode==='ready'){start();return;}
+ if(mode!=='playing')return;
+ aimMovementAtPointer(ev);
+});
+canvas.addEventListener('pointermove',ev=>{
+ // Drag across the pitch to redirect a player without extra taps.
+ if(mode==='playing'&&(ev.buttons&1)===1)aimMovementAtPointer(ev);
 });
 document.addEventListener('keydown',ev=>{
  if(!$('arena')?.classList.contains('active'))return;
