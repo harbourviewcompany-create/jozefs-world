@@ -8,7 +8,7 @@ const clip=(n,a,b)=>Math.max(a,Math.min(b,n));
 const circle=(c,x,y,r,fill)=>{c.beginPath();c.arc(x,y,r,0,TAU);c.fillStyle=fill;c.fill()};
 const strokeCircle=(c,x,y,r,color,width=1)=>{c.beginPath();c.arc(x,y,r,0,TAU);c.lineWidth=width;c.strokeStyle=color;c.stroke()};
 const rounded=(c,x,y,w,h,r,fill)=>{c.beginPath();c.roundRect(x,y,w,h,r);c.fillStyle=fill;c.fill()};
-function stadium(c,s){
+function paintStadium(c,s){
  const level=clip(s.stadium||0,0,2);
  const palettes=[
   {grass:'#125342',alt:'#104a3c',light:'#275e4a',fog:'#77ddaa',glow:'#c8ff5a',stand:'#102d35'},
@@ -78,6 +78,38 @@ function stadium(c,s){
  c.fillText('JOZEF FC     //     '+(s.venue||'NIGHT STADIUM'),210,592);
  return p;
 }
+// Painting the static crowd, net, mowing lines and lighting every frame is
+// wasteful on iPhones. Cache one retina stadium surface and only redraw actors.
+let stadiumCache=null;
+function stadium(c,s){
+ const venue=String(s.venue||'NIGHT STADIUM'),level=clip(s.stadium||0,0,2);
+ const scale=Math.min(2,Math.max(1,Number(window.devicePixelRatio)||1));
+ const key=level+'|'+venue+'|'+scale;
+ if(stadiumCache?.key===key){
+  c.drawImage(stadiumCache.canvas,0,0,420,600);
+  return stadiumCache.palette;
+ }
+ let sheet=null;
+ try{
+  if(typeof document!=='undefined'&&typeof document.createElement==='function'){
+   sheet=document.createElement('canvas');
+   sheet.width=Math.round(420*scale);
+   sheet.height=Math.round(600*scale);
+   const buffer=sheet.getContext('2d');
+   if(buffer){
+    buffer.scale(scale,scale);
+    const palette=paintStadium(buffer,s);
+    // drawImage is fast on repeat frames and keeps antialiasing at phone DPR.
+    c.drawImage(sheet,0,0,420,600);
+    stadiumCache={key,canvas:sheet,palette};
+    return palette;
+   }
+  }
+ }catch(_){stadiumCache=null;}
+ // Browsers that reject an offscreen buffer still render normally.
+ return paintStadium(c,s);
+}
+
 function athlete(c,x,y,jersey,num,kind,phase,active,moving){
  c.save();c.translate(x,y);
  // Enlarge the captain and ball-carriers so he is recognizable on a phone.
