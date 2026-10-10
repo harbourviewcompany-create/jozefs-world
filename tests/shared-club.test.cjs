@@ -50,7 +50,8 @@ test('both people enter one shared site with no role gate, toggle or locked back
  const dock=html.match(/<nav class="phone-dock"[^>]*>([\s\S]*?)<\/nav>/)?.[1];
  assert.ok(dock,'phone dock must exist');
  assert.equal((dock.match(/<button\b/g)||[]).length,5);
- assert.match(dock,/showSection\('notes'\)/);
+ assert.match(html,/data-section="notes"/);
+ assert.match(fs.readFileSync(path.join(root,'stadium.js'),'utf8'),/\['notes',/);
  assert.match(html,/href="notes\.css"/);
  assert.match(sw,/'\.\/notes\.css'/);
  assert.doesNotMatch(sw,/who\.css|who\.js/);
