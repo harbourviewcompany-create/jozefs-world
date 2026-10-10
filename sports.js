@@ -21,6 +21,16 @@
       label: 'NFL',
       urls: ['https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard'],
       teams: ['Bills', 'Chiefs', '49ers', 'Eagles', 'Cowboys']
+    },
+    nhl: {
+      label: 'NHL / Hockey',
+      urls: ['https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard'],
+      teams: ['Ottawa Senators', 'Toronto Maple Leafs', 'Montreal Canadiens', 'Edmonton Oilers', 'Vancouver Canucks']
+    },
+    mlb: {
+      label: 'MLB / Baseball',
+      urls: ['https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard'],
+      teams: ['Toronto Blue Jays', 'New York Yankees', 'Los Angeles Dodgers', 'New York Mets', 'Boston Red Sox']
     }
   };
 
@@ -80,7 +90,7 @@
       game.textContent = 'Loading the next game...';
       const calls = document.createElement('div');
       calls.className = 'sports-calls';
-      ['Home', 'Draw', 'Away'].forEach(call => {
+      (['nba','nhl','mlb'].includes(id)?['Home','Away']:['Home','Draw','Away']).forEach(call => {
         const button = document.createElement('button');
         button.type = 'button';
         button.textContent = call;
