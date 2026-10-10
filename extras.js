@@ -28,7 +28,8 @@
     { id: 'arena-victory', icon: '🥇', title: 'Arena Winner', description: 'Win a football Arena match', ready: s => s.arenaWins >= 1 },
     { id: 'arena-legend', icon: '🏟️', title: 'Arena Legend', description: 'Win five football Arena matches', ready: s => s.arenaWins >= 5 },
     { id: 'all-sport-debut', icon: '🏅', title: 'All-Sport Debut', description: 'Finish a hockey, baseball, basketball or wrestling challenge', ready: s => s.multisportGames >= 1 },
-    { id: 'all-sport-champion', icon: '🏆', title: 'Four-Sport Star', description: 'Play every sport in the Sports Arcade', ready: s => s.multiSports.length >= 4 }
+    { id: 'all-sport-champion', icon: '🏆', title: 'Four-Sport Star', description: 'Play every sport in the Sports Arcade', ready: s => s.multiSports.length >= 4 },
+    { id: 'four-sport-cup', icon: '🥇', title: 'All-Sport Cup Winner', description: 'Score 3 or more in hockey, baseball, basketball, and wrestling', ready: s => Boolean(s.allSportCup) }
   ];
   const defaultState = () => ({
     xp: 0, goals: 0, saves: 0, memory: 0, quizzes: 0, perfect: 0, scrambles: 0,
@@ -36,7 +37,7 @@
     number: 10, day: dayKey(), daily: {}, dailyHero: '', earned: [],
     sound: false, tourWins: 0, championships: 0, geography: 0,
     careerGames: 0, careerWins: 0, trainingSuccess: 0, leagueTitles: 0, streetRuns: 0, streetBest: 0, arenaGames: 0, arenaWins: 0, arenaGoals: 0,
-    multisportGames: 0, multiSports: [],
+    multisportGames: 0, multiSports: [], allSportCup: false,
     rewardedTours: [], rewardedGeography: [], rewardedTitles: [],
     rewardedCareer: [], rewardedTraining: [], rewardedLeague: []
   });
@@ -58,6 +59,7 @@
     if (!Array.isArray(s.earned)) s.earned = [];
     s.multiSports = Array.isArray(s.multiSports)
       ? [...new Set(s.multiSports.filter(x=>['hockey','baseball','basketball','wrestling'].includes(x)))] : [];
+    s.allSportCup = s.allSportCup === true;
     for (const key of ['rewardedTours', 'rewardedGeography', 'rewardedTitles', 'rewardedCareer', 'rewardedTraining', 'rewardedLeague']) {
       if (!Array.isArray(s[key])) s[key] = [];
     }
@@ -133,6 +135,9 @@
     if (action === 'multisport') {
       state.multisportGames++;
       if (!state.multiSports.includes(info.sport)) state.multiSports.push(info.sport);
+      // A trophy can only be earned from four persisted best scores.
+      const cup = window.JozefMultiSport?.getCupProgress?.();
+      if (cup?.champion && cup.qualified === 4) state.allSportCup = true;
     }
     if (action === 'arena') { state.arenaGames++; if (info.result === 'win') state.arenaWins++; state.arenaGoals += Number(info.goals); state.goals += Number(info.goals); }
     if (action === 'career') { state.careerGames++; if (info.result === 'win') state.careerWins++; }
