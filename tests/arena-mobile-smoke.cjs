@@ -33,11 +33,28 @@ const close=()=>new Promise(resolve=>server.close(resolve));
        .map(x=>x.getAttribute('href')||'').filter(x=>x.endsWith('.css'));
       const scripts=[...document.querySelectorAll('script[src]')]
        .map(x=>x.getAttribute('src')||'');
-      return {styles,gameBundle:scripts.filter(x=>x==='arena-bundle.js').length};
+      return {styles,gameBundle:scripts.filter(x=>x==='arena-bundle.js').length,
+       coreBundle:scripts.filter(x=>x==='site-core.js').length,
+       featuresBundle:scripts.filter(x=>x==='site-features.js').length,
+       legacyPresent:scripts.some(x=>['notes.js','app.js','extras.js','stadium.js','playmode.js','broadcast.js','album.js','sports.js','watch.js','locker.js','sports-stage.js','multisport.js'].includes(x))};
      });
      assert.deepEqual(assets.styles,['site-foundation.css','site-experience.css'],
       'Only two ordered local CSS bundles should block first render');
      assert.equal(assets.gameBundle,1,'Arena runtime must download once');
+     assert.equal(assets.coreBundle,1,'Core startup runtime must download once');
+     assert.equal(assets.featuresBundle,1,'Sports and navigation runtime must download once');
+     assert.equal(assets.legacyPresent,false,'Bundled source files must not be requested separately');
+     assert.equal(await page.evaluate(()=>typeof window.showSection),'function','Site navigation must start');
+     if(viewport.width===390){
+      const nav=await page.evaluate(()=>{
+       window.showSection('sports-arcade');
+       const active=document.querySelector('#sports-arcade.section.active')!==null;
+       return {active,sports:typeof window.JozefMultiSport,stage:typeof window.JozefSportStage};
+      });
+      assert.equal(nav.active,true,'Bundled navigation must reach Sports Arcade');
+      assert.equal(nav.sports,'object','Bundled multisport engine must initialize');
+      assert.equal(nav.stage,'object','Bundled sports canvas must initialize');
+     }
      await page.evaluate(()=>window.showSection('arena'));
      await page.waitForTimeout(150);
      // Match entry offers an intentional walkout intro on the first visit.
