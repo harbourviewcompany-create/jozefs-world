@@ -8,11 +8,14 @@ const ctx=canvas.getContext('2d');
 if(!ctx){$('arena-status').textContent='A newer browser with Canvas support is needed.';return;}
 const W=420,H=600,GOAL={left:148,right:272,top:16},MATCH_LENGTH=75;
 const KEY='jozefs-world-arena-v1';
+const systems=window.JozefArenaSystems;
+if(!systems){$('arena-status').textContent='Arena game systems unavailable. Refresh to retry.';return;}
+let experience=null, camera={x:210,y:300,zoom:1},replay=null,replayHistory=[],replayWait=0,joystick={x:0,y:0};
 const clamp=(n,lo,hi)=>Math.max(lo,Math.min(hi,n));
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const msg=s=>{const t=$('arena-status');if(t)t.textContent=s;};
 const put=(id,s)=>{const e=$(id);if(e)e.textContent=String(s);};
-const fresh=()=>({games:0,wins:0,draws:0,goals:0,best:0,stadium:0});
+const fresh=()=>({games:0,wins:0,draws:0,goals:0,best:0,stadium:0,coins:0,upgradeSpeed:0,upgradeShot:0,upgradePass:0});
 function load(){
  try{
   const d=JSON.parse(localStorage.getItem(KEY)||'null');
@@ -45,9 +48,9 @@ function getSquad(){
  const api=window.JozefSquad?.getSquad?.();
  const val=api?.bonuses||{};
  return {
-  speed:clamp(Number(val.speed)||0,0,.3),
-  pass:clamp(Number(val.pass)||0,0,.3),
-  shot:clamp(Number(val.shot)||0,0,.3),
+  speed:clamp((Number(val.speed)||0)+lifetime.upgradeSpeed*.035,0,.4),
+  pass:clamp((Number(val.pass)||0)+lifetime.upgradePass*.035,0,.4),
+  shot:clamp((Number(val.shot)||0)+lifetime.upgradeShot*.035,0,.4),
   defence:clamp(Number(val.defence)||0,0,.35),
   keeper:clamp(Number(val.keeper)||0,0,.35),
   lineup:{...(api?.slots||{})},
@@ -115,6 +118,7 @@ function hud(){
 function start(){
  mode='playing';time=MATCH_LENGTH;us=0;them=0;streak=0;flash=0;last=0;
  shots=0;keeperSaves=0;skillCooldown=0;skillTime=0;lastHudTick=-1;
+ camera={x:210,y:300,zoom:1};replay=null;replayHistory=[];replayWait=0;joystick={x:0,y:0};experience?.reset();
  squad=getSquad();resetPositions();hud();cue('start');
  msg('KICK OFF! Move, pass to your teammate, and shoot into the top goal.');
  cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
@@ -144,7 +148,7 @@ function end(){
  window.dispatchEvent?.(new Event('jozef:progress'));
  // A fully finished match counts toward today's shared HQ activities.
  window.dispatchEvent?.(new Event('jozef:arena-completed'));
- hud();draw();
+ hud();draw();experience?.finish({won,us,them,shots,saves:keeperSaves});
 }
 function move(deltaX,deltaY,dt){
  const len=Math.hypot(deltaX,deltaY);
@@ -165,7 +169,7 @@ function setAim(i){
 }
 function skillMove(){
  if(mode!=='playing'||skillCooldown>0)return;
- skillCooldown=5.5;skillTime=.66;
+ skillCooldown=5.5;skillTime=.66;experience?.haptic(20);
  msg('SKILL MOVE! Burst past the press!');
  hud();
 }
@@ -178,7 +182,7 @@ function pass(){
  if(gap>345){msg('Your teammate is too far away. Move closer!');return;}
  passRecipient=ball.owner==='actor'?'mate':'actor';
  ball={x:sender.x,y:sender.y-8,vx:0,vy:0,owner:'pass'};
- passCooldown=.48;cue('pass');
+ passCooldown=.48;cue('pass');experience?.haptic(12);
  msg(passRecipient==='mate'?'PERFECT WEIGHT! The ball is heading to your teammate.':'ONE-TWO! Jozef is getting the return pass.');
 }
 function shoot(){
@@ -187,15 +191,14 @@ function shoot(){
  const p=ball.owner==='mate'?mate:actor;
  // Intentional corner aiming beats random, unstoppable goalkeeper animations.
  // Short-range attempts have tighter accuracy. Squad strength helps long shots.
- const spread=Math.max(0,Math.min(16,(p.y-135)/28))*(1-squad.shot);
+ const spread=systems.shotAccuracy(p.y,squad.shot,experience?.prefs.difficulty||'pro');
  const goalX=SHOT_ZONES[aim].x+(Math.random()-.5)*2*spread;
  const dy=GOAL.top-p.y,dx=goalX-p.x,div=Math.max(1,Math.hypot(dx,dy));
  const power=490+110*squad.shot;
  ball={x:p.x,y:p.y-7,vx:dx/div*power,vy:dy/div*power,owner:'shot'};
  // Keeper has to guess and commit. A save is earned, not guaranteed.
- const rightGuess=Math.random()<(.26+.04*Math.min(5,lifetime.wins));
- keeperDestination=rightGuess?SHOT_ZONES[aim].x:SHOT_ZONES[(aim+1+Math.floor(Math.random()*2))%3].x;
- keeperReact=.16;shotCooldown=.65;mateTime=0;shots++;streak=.45;cue('shot');
+ keeperDestination=systems.keeperCommit(aim,SHOT_ZONES,experience?.prefs.difficulty||'pro',Math.random());
+ keeperReact=.16/(systems.DIFFICULTIES[experience?.prefs.difficulty||'pro']?.keeper||1);shotCooldown=.65;mateTime=0;shots++;streak=.45;cue('shot');experience?.haptic(22);experience?.record('shots');
  msg('SHOOTING AT THE '+SHOT_ZONES[aim].name+'! '+(p.y>360?'LONG-RANGE STRIKE!':'ONE ON ONE!'));
  hud();
 }
@@ -212,7 +215,7 @@ function loseBall(){
  resetPositions();
 }
 function goal(){
- us+=1;flash=.75;cue('goal');msg('GOOOOOAL! JOZEF FC SCORES! '+us+'–'+them);
+ us+=1;flash=.75;cue('goal');experience?.haptic([40,40,40]);experience?.record('goals');startReplay('GOAL');msg('GOOOOOAL! JOZEF FC SCORES! '+us+'–'+them);
  if(us>=5){resetPositions();end();return;}
  resetPositions();
 }
@@ -262,6 +265,7 @@ function update(dt){
   if(remaining<=step+17){
    ball.owner=passRecipient;passRecipient=null;mateTime=0;
    ball.x=receiving.x;ball.y=receiving.y-13;
+   experience?.record('passes');
    msg(ball.owner==='mate'?'PASS COMPLETE! Press PASS again for the one-two.':'ONE-TWO COMPLETE! SHOOT!');
   }else{
    ball.x+=(receiving.x-ball.x)/remaining*step;
@@ -273,7 +277,7 @@ function update(dt){
   if(ball.owner==='free'){ball.vx*=Math.max(0,1-1.0*dt);ball.vy*=Math.max(0,1-1.0*dt);receive();}
   if(ball.owner==='shot'&&ball.y<64&&Math.abs(ball.x-keeper.x)<18){
     ball.owner='free';ball.vy=220;ball.vx=ball.x<keeper.x?-85:85;
-    keeperSaves++;cue('save');msg('WHAT A SAVE! FOLLOW UP ON THE REBOUND!');flash=-.22;
+    keeperSaves++;cue('save');msg('WHAT A SAVE! FOLLOW UP ON THE REBOUND!');flash=-.22;experience?.haptic([15,30,15]);startReplay('GREAT SAVE');
   }else if(ball.owner==='shot'&&ball.y<=22){
     if(ball.x>GOAL.left&&ball.x<GOAL.right){goal();return;}
     ball.owner='free';ball.vx=0;ball.vy=150;msg('Just wide! Chase the loose ball.');
