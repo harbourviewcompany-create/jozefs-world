@@ -909,3 +909,47 @@
     user-select: none;
   }
 }
+
+
+/* Arena 4.3: scoreboard and controls tuned for in-app phone browsers.
+   The venue is already printed on the pitch, so avoid truncating it twice. */
+@media (max-width: 1100px) and (orientation: portrait) {
+  #arena.section.active .arena-brand small { display:none !important; }
+  #arena.section.active .arena-topbar {gap:4px;}
+  #arena.section.active .arena-header-actions {gap:5px;}
+  #arena.section.active .arena-header-actions #arena-settings-toggle {
+    width:clamp(33px,5.1dvh,40px);
+    min-width:33px;
+    padding:0;
+  }
+  #arena.section.active .arena-header-actions .play-exit {
+    width:clamp(33px,5.1dvh,40px);
+    min-width:33px;
+  }
+  #arena.section.active .arena-scoreboard > div:last-child {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    align-items:center;
+    justify-content:stretch;
+    column-gap:clamp(4px,1.3vw,8px);
+    padding:2px clamp(5px,1.55vw,9px);
+  }
+  #arena.section.active .arena-scoreboard > div:last-child small:first-child {
+    text-align:left;
+    font-size:clamp(9px,2.45vw,12px);
+    white-space:nowrap;
+    letter-spacing:.06em;
+    color:#aec8bb;
+  }
+  #arena.section.active .arena-scoreboard > div:last-child #arena-clock {
+    text-align:right;
+    font-size:clamp(26px,7.7vw,38px) !important;
+    line-height:1;
+    letter-spacing:-.025em;
+    white-space:nowrap;
+    color:#ddff94;
+  }
+  #arena.section.active .arena-scoreboard > div:first-child {
+    justify-content:space-evenly;
+  }
+}
