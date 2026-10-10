@@ -8,6 +8,12 @@ Jozef FC // After Dark is a private football universe. Play an actual Arena matc
 ## The experience
 
 ### The Coach's Playbook — deeper progression across the entire world (2026)
+
+### STREET//11 — extra run strategy (2026)
+- The original 55-second, three-life lane runner gains two locally drawn pickups: **gold stars** increase combo faster and award a larger score bonus; **cyan shields** absorb one defender hit without losing a heart or combo. Picking up an extra shield while already protected awards a small bonus.
+- Shield state is shown in an accessible status line and on the player; pickups use the existing local run and personal-best format. No new saved user data, internet requests or unlimited XP awards.
+
+
 - The **Playbook** is a unified, optional 15-challenge journey spanning Arena match wins/goals, STREET//11, league fixtures, World Tour, squad building, badges, the Chronicle, all four Sports Arcade games, and the All-Sport Cup.
 - Challenges read existing saved game statistics and achievement records; previous real progress counts automatically. No invented win history, deadline, streak penalties or separate Jozef/Dad profile. Five earned Playbook ranks range from Academy Rookie to Club Legend.
 - An adaptive Coach's Pick identifies an achievable next objective from the selected Football, All Sports, My Club or All Challenges view. The challenge button deep-links directly to the relevant game and chooses the correct sport.
