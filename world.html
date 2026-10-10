@@ -30,6 +30,7 @@
   <link rel="stylesheet" href="arena-visual.css" />
   <link rel="stylesheet" href="campaign-2026.css" />
   <link rel="stylesheet" href="mobile-qa-2026.css" />
+  <link rel="stylesheet" href="club-hq.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Lilita+One&family=Nunito:wght@400;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
@@ -86,13 +87,31 @@
     </div>
 
 
-    <div class="today-card" id="today-card">
-      <p class="eyebrow-live">Today</p>
-      <h2>One Arena match. One Street run.</h2>
-      <p id="today-note">No new notes.</p>
-      <p id="today-street">Street best: 000</p>
-      <button type="button" class="studio-button-primary" onclick="showSection('arena')">Play today's match</button>
-    </div>
+    <section class="today-card" id="today-card" aria-labelledby="today-heading">
+      <div class="today-head">
+        <div>
+          <p class="eyebrow-live">YOUR SHARED CLUB / TODAY</p>
+          <h2 id="today-heading">TWO WAYS TO PLAY.</h2>
+          <p class="today-intro">Enjoy a match and a street run whenever you feel like it. Your progress updates after each game.</p>
+        </div>
+        <span class="today-counter" id="today-counter" aria-live="polite">0 / 2 PLAYED</span>
+      </div>
+      <div class="today-progress" role="progressbar" aria-label="Today's two club activities" aria-valuemin="0" aria-valuemax="2" aria-valuenow="0"><span id="today-meter"></span></div>
+      <div class="today-tasks" aria-label="Today's activity options">
+        <div class="today-task" id="today-task-arena">
+          <div class="today-task-info"><span class="today-task-number">01 / MATCHDAY</span><strong>PLAY THE ARENA</strong><small id="today-arena-status">Not played today</small></div>
+          <button type="button" id="today-play-arena" onclick="showSection('arena')">PLAY MATCH ↗</button>
+        </div>
+        <div class="today-task" id="today-task-street">
+          <div class="today-task-info"><span class="today-task-number">02 / NIGHT RUN</span><strong>TAKE THE STREETS</strong><small id="today-street-status">Not played today</small></div>
+          <button type="button" id="today-play-street" onclick="showSection('street')">RUN STREET ↗</button>
+        </div>
+      </div>
+      <div class="today-clubline">
+        <div><p id="today-note">No new club notes.</p><p id="today-street">Street best: 000</p></div>
+        <button type="button" class="today-notes-open" onclick="showSection('notes')">CLUB NOTES ↗</button>
+      </div>
+    </section>
 
     <div class="studio-signal-row" aria-label="Your current progress">
       <div class="studio-signal"><span class="studio-signal-label">PLAYER RANK</span><strong>LVL <span data-jw-level>1</span></strong><small>ALWAYS EVOLVING</small></div>
@@ -1005,5 +1024,6 @@
   <script src="roblox.js"></script>
   <script src="visual-2026.js"></script>
   <script src="campaign-2026.js"></script>
+  <script src="club-hq.js"></script>
 </body>
 </html>
