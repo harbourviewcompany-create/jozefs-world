@@ -473,3 +473,317 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{
  #home>.studio-hero .studio-crest-j{font-size:52px}
  #home>.studio-hero .hero-buttons>button{font-size:9px}
 }
+
+
+/* ============================================================
+   THE PLAYABLE SPORT COLLECTION // FINAL ART PASS
+   Original illustrated sport identities, live personal bests,
+   tactile game selection, and a focused Coach Playbook.
+   Pure CSS artwork, no remote images or logo licensing.
+   ============================================================ */
+:root{
+ --sport-hockey:#88eefa;
+ --sport-baseball:#f5bf8c;
+ --sport-basketball:#ffae77;
+ --sport-wrestling:#c9a7ff;
+}
+/* Four sport posters, each with its own physical game prop. */
+#home .multi-home-card{
+ --sport-accent:var(--sport-hockey);--sport-glow:rgba(136,238,250,.16);
+ position:relative;display:flex;flex-direction:column;justify-content:space-between;
+ align-items:flex-start;gap:6px;isolation:isolate;min-height:214px;
+ padding:17px;border:1px solid color-mix(in srgb,var(--sport-accent) 54%,transparent);
+ border-radius:17px;background:
+ radial-gradient(ellipse at 85% 9%,var(--sport-glow),transparent 62%),
+ linear-gradient(145deg,#1d3c41,#0b222d);
+ box-shadow:0 13px 32px #03121daf,inset 0 1px #ffffff1c;
+ overflow:hidden;
+}
+#home .multi-home-card::before{
+ content:"";position:absolute;z-index:-1;right:-55px;top:-55px;
+ width:185px;height:185px;border:1px solid var(--sport-glow);
+ border-radius:50%;box-shadow:0 0 0 29px #ffffff05,0 0 0 59px #ffffff03;
+ transform:none;pointer-events:none;
+}
+#home .multi-home-card[data-multi-start="baseball"]{
+ --sport-accent:var(--sport-baseball);--sport-glow:rgba(245,191,140,.19);
+ background:radial-gradient(ellipse at 92% 0%,var(--sport-glow),transparent 60%),
+ linear-gradient(135deg,#3a3630,#182934 90%);
+}
+#home .multi-home-card[data-multi-start="basketball"]{
+ --sport-accent:var(--sport-basketball);--sport-glow:rgba(255,174,119,.18);
+ background:radial-gradient(ellipse at 92% 0%,var(--sport-glow),transparent 62%),
+ linear-gradient(135deg,#452f31,#142b35 91%);
+}
+#home .multi-home-card[data-multi-start="wrestling"]{
+ --sport-accent:var(--sport-wrestling);--sport-glow:rgba(201,167,255,.19);
+ background:radial-gradient(ellipse at 92% 0%,var(--sport-glow),transparent 60%),
+ linear-gradient(132deg,#352e52,#182839 89%);
+}
+#home .multi-home-card .multi-home-card-label{
+ position:relative;z-index:3;color:var(--sport-accent);
+ font:850 10px/1.1 var(--sf-ui);letter-spacing:.12em;
+}
+#home .multi-home-card>strong{
+ position:relative;z-index:3;color:#f6fff6;
+ font:900 clamp(23px,2.65vw,34px)/.9 var(--sf-display);
+ text-wrap:balance;max-width:12ch;margin:8px 0 1px;
+}
+#home .multi-home-card .multi-home-record{
+ position:relative;z-index:3;display:inline-flex;align-items:center;gap:7px;
+ min-height:22px;max-width:100%;padding:3px 0;
+ color:#d9eadd;font:900 10px/1.3 var(--sf-ui);letter-spacing:.035em;
+ text-align:left;overflow-wrap:anywhere;
+}
+#home .multi-home-card .multi-home-record::before{
+ content:"";display:block;flex:0 0 auto;width:6px;height:6px;
+ border-radius:50%;background:var(--sport-accent);
+ box-shadow:0 0 10px var(--sport-accent);
+}
+#home .multi-home-card .multi-home-record.is-qualified{color:#edff9b}
+#home .multi-home-card>small{
+ position:relative;z-index:3;margin-top:auto;display:block;
+ color:var(--sport-accent);font:900 10px/1.15 var(--sf-ui);
+ letter-spacing:.07em;
+}
+#home .multi-home-card:is(:hover,:focus-visible){
+ transform:translateY(-3px);border-color:var(--sport-accent);
+ box-shadow:0 20px 40px #020f1fb7,0 0 0 2px var(--sport-glow);
+}
+/* Illustrated gear — a puck, a stitched baseball + bat,
+   the basketball seam and an original fantasy title belt. */
+#home .multi-home-illustration{
+ position:absolute;z-index:1;display:block;top:26px;right:9px;
+ width:105px;height:94px;opacity:.9;pointer-events:none;
+ filter:drop-shadow(0 12px 14px #030c1d7c);
+}
+#home .multi-home-illustration::before,
+#home .multi-home-illustration::after,
+#home .multi-home-illustration i,
+#home .multi-home-illustration i::before,
+#home .multi-home-illustration i::after{
+ content:"";position:absolute;display:block;box-sizing:border-box;
+}
+#home .multi-art-hockey::before{
+ width:83px;height:28px;left:13px;top:44px;
+ background:linear-gradient(160deg,#1a3744,#071923 69%);
+ border:4px solid #84d9e8;border-radius:50%;
+ box-shadow:0 8px #07141c,0 10px 18px #0009;
+ transform:rotate(-13deg);
+}
+#home .multi-art-hockey::after{
+ left:14px;top:7px;width:91px;height:4px;background:#e9fff1;
+ transform:rotate(-34deg);border-radius:8px;box-shadow:0 3px #7ee5ec;
+}
+#home .multi-art-hockey i{
+ top:58px;left:-5px;width:37px;height:5px;background:#82e8ef;
+ transform:rotate(-16deg);border-radius:100px;opacity:.76
+}
+#home .multi-art-baseball::before{
+ width:69px;height:69px;left:18px;top:5px;border-radius:50%;
+ background:radial-gradient(circle at 27% 20%,#fff9ee,#e9e1d9 72%,#bcaea1);
+ box-shadow:inset -5px -7px 9px #b0a9a080,0 14px 24px #0007;
+ border:1px solid #fffaf1;
+}
+#home .multi-art-baseball::after{
+ left:30px;top:10px;width:44px;height:55px;border-left:3px dashed #ce7068;
+ border-right:3px dashed #ce7068;border-radius:50%;transform:rotate(-28deg)
+}
+#home .multi-art-baseball i{
+ width:94px;height:11px;left:18px;top:76px;border-radius:40px;
+ background:linear-gradient(90deg,#9c6336,#f6cb8b);
+ transform:rotate(-37deg);box-shadow:0 4px 10px #0005;
+}
+#home .multi-art-basketball::before{
+ width:80px;height:80px;left:11px;top:5px;border-radius:50%;
+ background:radial-gradient(circle at 30% 24%,#ffb66e,#d97639 65%,#914826);
+ border:3px solid #63371f;box-shadow:inset -7px -10px 11px #893a1f88,0 12px 23px #0007
+}
+#home .multi-art-basketball::after{
+ left:13px;top:44px;width:79px;height:3px;background:#65371e;transform:rotate(-13deg);
+}
+#home .multi-art-basketball i{
+ left:48px;top:5px;width:3px;height:79px;background:#65371e;
+ transform:rotate(-13deg)
+}
+#home .multi-art-basketball i::before{
+ left:-26px;top:8px;width:51px;height:61px;border:3px solid #63371f;border-radius:50%;
+ transform:rotate(20deg)
+}
+#home .multi-art-wrestling::before{
+ width:104px;height:56px;left:0;top:24px;
+ clip-path:polygon(0 21%,24% 21%,32% 0,68% 0,76% 21%,100% 21%,100% 79%,76% 79%,68% 100%,32% 100%,24% 79%,0 79%);
+ background:linear-gradient(145deg,#fce0a4,#c38d48 55%,#8c6936);
+ border-radius:9px;box-shadow:0 10px 25px #0008;
+}
+#home .multi-art-wrestling::after{
+ left:31px;top:31px;width:42px;height:40px;border-radius:50%;
+ background:linear-gradient(150deg,#493657,#151e32);
+ border:4px solid #f0d199;box-shadow:inset 0 0 0 2px #c2a1f9;
+}
+#home .multi-art-wrestling i::before{
+ content:"J11";left:40px;top:43px;width:26px;height:22px;
+ color:#fce6b0;font:900 19px/.9 var(--sf-display);
+ letter-spacing:-.04em;z-index:1
+}
+/* Rich tabs read like event passes, with truthful unlocked records. */
+#sports-arcade .multi-mode{
+ --sport-accent:var(--sport-hockey);
+ position:relative;isolation:isolate;min-height:130px;padding:17px;
+ border-radius:15px;overflow:hidden;box-shadow:0 12px 28px #03101cab;
+ background:radial-gradient(ellipse at 100% -30%,rgba(138,232,255,.16),transparent 70%),
+ linear-gradient(147deg,#193c43,#0d2631);
+}
+#sports-arcade .multi-mode[data-theme="baseball"]{--sport-accent:var(--sport-baseball)}
+#sports-arcade .multi-mode[data-theme="basketball"]{--sport-accent:var(--sport-basketball)}
+#sports-arcade .multi-mode[data-theme="wrestling"]{--sport-accent:var(--sport-wrestling)}
+#sports-arcade .multi-mode::after{
+ content:"";position:absolute;right:-30px;top:8px;width:90px;height:90px;
+ border:13px solid color-mix(in srgb,var(--sport-accent) 16%,transparent);
+ border-radius:50%;pointer-events:none
+}
+#sports-arcade .multi-mode.selected{
+ background:linear-gradient(145deg,#264b46,#132d39);
+ border:1px solid var(--sport-accent);box-shadow:
+ inset 0 0 0 1px color-mix(in srgb,var(--sport-accent) 25%,transparent),
+ 0 15px 32px #020e20aa;
+}
+#sports-arcade .multi-mode .multi-mode-tag{color:var(--sport-accent)}
+#sports-arcade .multi-mode strong{position:relative;z-index:1;line-height:.93}
+#sports-arcade .multi-mode .multi-mode-record{
+ position:relative;z-index:2;margin-top:auto;display:block;max-width:100%;
+ padding-top:6px;border-top:1px solid #f3ffef19;
+ font:900 10px/1.3 var(--sf-ui);letter-spacing:.06em;
+ color:#eff3e3;
+}
+#sports-arcade .multi-mode.selected .multi-mode-record{color:#e5ffb8}
+/* Highlight the timing meter and the main choice controls as a real console. */
+#sports-arcade .multi-game{
+ border-color:#b7e6c25e;background:linear-gradient(140deg,#132f3b,#091d2a);
+ box-shadow:0 25px 52px #000b16b5;
+}
+#sports-arcade .multi-stage.has-canvas .multi-action-canvas{
+ border:2px solid #d2f4de5e;box-shadow:0 16px 32px #0008,
+ inset 0 0 0 3px #071b2338;
+}
+#sports-arcade .multi-hud{
+ border-bottom:1px solid #c9fdba4a;background:#071f2b;
+}
+#sports-arcade .multi-hud strong{letter-spacing:.01em}
+#sports-arcade .multi-hud #multi-round{color:#f9cf93}
+#sports-arcade .multi-controls{
+ padding:15px;gap:9px;background:linear-gradient(150deg,#102d36,#071c2b)
+}
+#sports-arcade .multi-action{
+ min-height:56px;border:1px solid #91d6c496;
+ box-shadow:inset 0 1px #fff1,0 6px 12px #0005;
+ font:900 12px/1.2 var(--sf-ui);
+}
+#sports-arcade .multi-action.multi-primary{
+ border-color:#e9ffb2;background:#ceff6a;color:#102921
+}
+#sports-arcade .multi-round-markers{
+ background:#0b2834;border-top:1px solid #c9ffbf2f;
+}
+#sports-arcade .multi-turn-mark.is-made{box-shadow:0 0 0 2px #61f6b622}
+/* Playbook: card categories have a clear visual language, not
+   indistinguishable repeated grey boxes. */
+#playbook .playbook-coach{position:relative;overflow:hidden;border-color:#f4d090b0}
+#playbook .playbook-coach::after{
+ content:"";position:absolute;right:-25px;bottom:-36px;width:140px;height:140px;
+ border:25px solid #ffdf8c10;border-radius:50%;pointer-events:none
+}
+#playbook .playbook-mission{
+ position:relative;overflow:hidden;min-height:242px;
+ border-color:#a4ddc450;box-shadow:0 12px 27px #020f19a5;
+}
+#playbook .playbook-mission::before{
+ content:"";position:absolute;pointer-events:none;right:-15px;top:-18px;
+ width:95px;height:95px;border:15px solid #a4f1d50f;border-radius:50%;
+}
+#playbook .playbook-mission[data-group="sports"]{
+ border-color:#cbb4ef66;background:linear-gradient(155deg,#293448,#101f30);
+}
+#playbook .playbook-mission[data-group="football"]{
+ background:linear-gradient(150deg,#203c37,#0c2833)
+}
+#playbook .playbook-mission[data-group="club"]{
+ border-color:#e3cc996b;background:linear-gradient(150deg,#32382f,#112834)
+}
+#playbook .playbook-mission.is-done{
+ background:linear-gradient(146deg,#274d3c,#142f30);border-color:#ceff99a6;
+}
+#playbook .playbook-mission-meta{position:relative;z-index:1}
+#playbook .playbook-mission-meta span:first-child{
+ background:#c3ffab13;border:1px solid #c3ffab40;padding:5px 8px;
+ border-radius:100px;color:#c8eeda;
+}
+#playbook .playbook-mission[data-group="sports"] .playbook-mission-meta span:first-child{
+ color:#e4caff;background:#e4caff12;border-color:#dab2ff55
+}
+#playbook .playbook-mission[data-group="club"] .playbook-mission-meta span:first-child{
+ color:#ffe0a1;background:#ffd58d12;border-color:#ffdc8b44
+}
+#playbook .playbook-mission h4{position:relative;z-index:1;line-height:1.01}
+#playbook .playbook-mission .playbook-mission-track{
+ height:11px;background:#071d29;border-color:#a6e8b04d
+}
+#playbook .playbook-mission button{
+ border-color:#cbf7b981;min-height:47px;border-radius:9px
+}
+#playbook .playbook-open-filter{
+ margin-left:auto;color:#f6dfab;background:#372f2b;border-color:#f2c78988;
+}
+#playbook .playbook-open-filter[aria-pressed="true"]{
+ background:#f4d28c;color:#172724;border-color:#ffe6b5
+}
+#playbook .playbook-all-done{
+ grid-column:1/-1;display:grid;gap:10px;justify-items:center;
+ text-align:center;padding:38px 24px;min-height:160px;
+ border:1px dashed #d4f59d74;border-radius:13px;
+ background:linear-gradient(145deg,#183a39,#0b222d)
+}
+#playbook .playbook-all-done strong{font:900 29px/1 var(--sf-display);color:#d9ffac}
+#playbook .playbook-all-done p{color:#c3dfd1;font:600 13px/1.5 var(--sf-ui)}
+#home .playbook-home-next{
+ display:block;max-width:100%;padding:6px 9px;
+ border-left:3px solid #c8ff5a;color:#f5ffcf!important;
+ background:#081c2280;font:850 11px/1.35 var(--sf-ui);
+ letter-spacing:.035em;overflow-wrap:anywhere
+}
+/* Consistent mobile size rhythm without sacrificing tap targets. */
+@media(max-width:700px){
+ #home .multi-home{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ #home .multi-home-card{min-height:167px;padding:13px 12px;gap:5px;border-radius:13px}
+ #home .multi-home-card>strong{font-size:clamp(20px,5.3vw,26px);
+  max-width:10ch;line-height:.93;margin:16px 0 0}
+ #home .multi-home-illustration{
+  width:77px;height:78px;transform:scale(.72);
+  transform-origin:top right;top:13px;right:7px;opacity:.81;
+ }
+ #home .multi-home-card .multi-home-card-label{font-size:8px;letter-spacing:.06em}
+ #home .multi-home-card .multi-home-record{font-size:9px;min-height:27px;line-height:1.22}
+ #home .multi-home-card>small{font-size:9px;line-height:1.14}
+ #sports-arcade .multi-tabs{gap:8px}
+ #sports-arcade .multi-mode{min-height:113px;padding:12px}
+ #sports-arcade .multi-mode strong{font-size:24px}
+ #sports-arcade .multi-mode .multi-mode-record{font-size:9px}
+ #sports-arcade .multi-controls{gap:7px;padding:11px}
+ #sports-arcade .multi-action{min-height:54px;font-size:11px}
+ #playbook .playbook-open-filter{margin-left:0}
+ #playbook .playbook-mission{min-height:210px}
+}
+@media(max-width:375px){
+ #home .multi-home-card{padding:10px;min-height:164px}
+ #home .multi-home-card>strong{font-size:19px}
+ #sports-arcade .multi-mode strong{font-size:21px}
+ #playbook .playbook-open-filter{font-size:10px}
+}
+@media(hover:none){
+ #home .multi-home-card:hover{transform:none}
+}
+@media(prefers-reduced-motion:reduce){
+ #home .multi-home-card{transition:none!important}
+ #sports-arcade .multi-mode{transition:none!important}
+ #playbook .playbook-mission{transition:none!important}
+}
