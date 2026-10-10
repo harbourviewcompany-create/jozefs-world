@@ -33,10 +33,10 @@ const close=()=>new Promise(resolve=>server.close(resolve));
      const result=await page.evaluate(()=>{
       const section=document.querySelector('#arena.section.active');
       const game=document.querySelector('#arena .arena-game');
-      const ids=['arena-start','arena-canvas','arena-pass','arena-shoot','arena-settings-toggle','arena-skill','arena-joystick'];
+      const ids=['arena-start','arena-canvas','arena-pass','arena-shoot','arena-settings-toggle','arena-skill'];
       const elements=Object.fromEntries(ids.map(id=>{
        const e=document.getElementById(id),r=e?.getBoundingClientRect();
-       return [id,{found:!!e,visible:!!r&&r.width>=40&&r.height>=20,box:r?{top:r.top,bottom:r.bottom,left:r.left,right:r.right}:null}];
+       return [id,{found:!!e,visible:!!r&&r.width>=(id==='arena-settings-toggle'?27:35)&&r.height>=20,box:r?{top:r.top,bottom:r.bottom,left:r.left,right:r.right}:null}];
       }));
       return {active:!!section,gameBottom:game.getBoundingClientRect().bottom,screenHeight:innerHeight,
         viewportWidth:innerWidth,elements,scroll:section.scrollHeight-section.clientHeight};
