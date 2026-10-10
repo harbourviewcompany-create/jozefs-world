@@ -1112,3 +1112,15 @@
     font-size:12px;
   }
 }
+
+/* Thumb-following joystick origin within its fixed accessible control zone. */
+
+@media (max-width:1100px) and (orientation:portrait) {
+ #arena.section.active.mobile-immersive .arena-direction.is-joystick .arena-joystick {
+   transform:translate(var(--float-x,0px),var(--float-y,0px));
+   transition:transform 110ms ease-out;
+ }
+ #arena.section.active.mobile-immersive .arena-direction.is-joystick .arena-joystick.engaged {
+   transition:none;
+ }
+}
