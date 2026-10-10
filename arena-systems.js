@@ -39,6 +39,35 @@
     }
     return {x:clamp(x,44,376),y:clamp(actor.y-(tactic==='attack'?150:tactic==='defence'?105:127),122,494)};
   }
+  // A visible defensive phase: the rival advances toward Jozef's goal.
+  // The bot cannot teleport or score immediately after a tackle.
+  function rivalRunTarget(carrier, actor, elapsed=0, difficulty='pro') {
+    const pressure=DIFFICULTIES[difficulty]||DIFFICULTIES.pro;
+    const drift=Math.sin(clamp(elapsed,0,8)*1.15)*30;
+    return {
+      x:clamp(carrier.x*.76+210*.24+drift,35,385),
+      y:clamp(carrier.y+120*pressure.speed,70,545)
+    };
+  }
+  // The supporting player helps press in defence, then makes a wide run
+  // into space when Jozef wins possession. No random position jumps.
+  function counterSupportTarget(actor, mate, defenders, advantage=0) {
+    const ahead=advantage>0?146:112;
+    const marker=Array.isArray(defenders)?defenders.find(d=>distance(d,mate)<80):null;
+    const wing=actor.x<210?1:-1;
+    const flank=marker?wing*42:wing*8;
+    return {
+      x:clamp(actor.x+wing*82+flank,40,380),
+      y:clamp(actor.y-ahead,105,505)
+    };
+  }
+  function rivalThreatChance(y, difficulty='pro', cover=0, teammateDistance=100) {
+    const d=DIFFICULTIES[difficulty]||DIFFICULTIES.pro;
+    const advance=clamp((y-315)/210,0,1);
+    const pressureBonus=teammateDistance<42?.12:0;
+    return clamp((.08+.25*advance+.07*(d.pressure-1)-.23*clamp(cover,0,1)-pressureBonus),.025,.42);
+  }
+
   function shotAccuracy(y,shotBonus,difficulty='pro') {
     const factor=DIFFICULTIES[difficulty]||DIFFICULTIES.pro;
     return clamp(Math.max(1,(y-122)/23)*(1-clamp(shotBonus,0,.4))*factor.pressure,1,26);
@@ -173,7 +202,7 @@
   }
   return Object.freeze({
     clamp,distance,DIFFICULTIES,joystickVector,
-    defenderDestination,teammateDestination,shotAccuracy,shotProfile,shotTarget,keeperCommit,readGamepad,
+    defenderDestination,teammateDestination,rivalRunTarget,counterSupportTarget,rivalThreatChance,shotAccuracy,shotProfile,shotTarget,keeperCommit,readGamepad,
     cameraFor,screenToWorld,dailyKey,CHALLENGES,freshDaily,normalizeDaily,awardDaily,progression
   });
 });
