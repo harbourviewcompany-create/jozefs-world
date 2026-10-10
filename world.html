@@ -37,6 +37,7 @@
   <link rel="stylesheet" href="chronicle.css" />
   <link rel="stylesheet" href="locker.css" />
   <link rel="stylesheet" href="multisport.css" />
+  <link rel="stylesheet" href="sports-stage.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Lilita+One&family=Nunito:wght@400;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
@@ -836,6 +837,7 @@
       </div>
       <div class="multi-stage" id="multi-stage" data-sport="hockey">
         <div class="multi-scene-art" aria-hidden="true"></div>
+        <canvas id="multi-action-canvas" class="multi-action-canvas" width="640" height="320" role="img" aria-label="Animated rink, ballpark, basketball court, or wrestling ring during play"></canvas>
         <strong class="multi-stage-title" id="multi-stage-label">AIM FOR THE OPEN CORNER</strong>
         <span id="multi-scene-text" aria-hidden="true"></span>
         <p id="multi-message" class="multi-commentary" role="status" aria-live="polite">Choose LEFT, CENTRE or RIGHT to beat the keeper.</p>
@@ -880,6 +882,18 @@
           <strong id="multi-cup-title">THE CUP AWAITS.</strong>
           <button type="button" class="multi-cup-next" id="multi-cup-next">PLAY FOR THE CUP ↗</button>
         </div>
+      </section>
+      <section class="multi-wrestling-career" id="multi-wrestling-career" aria-labelledby="multi-wrestling-heading" hidden>
+        <span class="multi-career-kicker">WRESTLING / MY CAREER</span>
+        <h4 id="multi-wrestling-heading">THE ROAD TO <em>THE MAIN EVENT.</em></h4>
+        <div class="multi-career-belt" aria-hidden="true"><span>J11</span></div>
+        <div class="multi-career-fixture">
+          <div><small>CURRENT RANK</small><strong id="multi-wrestling-rank">OPENING ACT</strong></div>
+          <div><small>FICTIONAL RIVAL</small><strong id="multi-wrestling-rival">NEON TITAN</strong></div>
+        </div>
+        <div class="multi-career-progress" role="progressbar" id="multi-wrestling-progress" aria-label="Progress to next wrestling show rank" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="multi-wrestling-meter"></span></div>
+        <p id="multi-wrestling-wins" class="multi-career-wins">0 SHOW WINS</p>
+        <p id="multi-wrestling-story" class="multi-career-story">Win your opening show with 3 or more crowd pops to move up the card.</p>
       </section>
       <h4>HOW TO PLAY</h4>
       <p class="multi-instructions" id="multi-instructions">Choose a direction and shoot!</p>
@@ -1223,6 +1237,7 @@
   <script src="album.js"></script>
   <script src="sports.js"></script>
   <script src="locker.js"></script>
+  <script src="sports-stage.js"></script>
   <script src="multisport.js"></script>
   <script src="arcade.js" defer></script>
   <script src="street.js"></script>
