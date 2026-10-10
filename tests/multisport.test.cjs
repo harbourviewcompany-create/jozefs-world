@@ -320,3 +320,21 @@ test('scoring zone visuals match Rookie, Pro and Legend timing, and the shown go
  b.choose('left');
  assert.equal(b.get('multi-score').textContent,'1 / 5 GOALS','left shot beats right-side keeper');
 });
+
+test('poster launchers and Sports Arcade event passes reflect the real saved personal bests',()=>{
+ const store=new Map([['jozefs-world-multisport-v1',JSON.stringify({
+  hockey:{best:4,played:3},baseball:{best:2,played:1},
+  basketball:{best:0,played:0},wrestling:{best:5,played:8,careerWins:4}
+ })]]);
+ const b=boot({store});
+ assert.equal(b.get('multi-home-record-hockey').textContent,'CUP QUALIFIED · 4/5');
+ assert.equal(b.get('multi-home-record-baseball').textContent,'PERSONAL BEST · 2/5');
+ assert.equal(b.get('multi-home-record-basketball').textContent,'FIRST CHALLENGE AWAITS');
+ assert.equal(b.get('multi-mode-best-wrestling').textContent,'BEST 5/5');
+ assert.equal(b.get('multi-mode-best-basketball').textContent,'NEW SPORT');
+ assert.ok(b.get('multi-home-record-hockey').classSet.has('is-qualified'));
+ b.get('multi-tab-baseball').click();
+ assert.equal(b.get('multi-mode-best-baseball').textContent,'BEST 2/5');
+ assert.equal(b.get('multi-home-record-hockey').textContent,'CUP QUALIFIED · 4/5');
+ assert.equal(b.scores.length,0,'browsing a sport cannot invent XP');
+});
