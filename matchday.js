@@ -292,7 +292,7 @@
     render();
   }
   function boot() {
-    if (!document.querySelector('link[data-jw-extra="matchday.css"]')) {
+    if (!document.querySelector('link[href$="site-experience.css"], link[data-jw-extra="matchday.css"]')) {
       const l = document.createElement('link');
       l.rel = 'stylesheet';
       l.href = 'matchday.css';
