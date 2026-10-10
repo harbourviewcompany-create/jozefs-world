@@ -70,3 +70,29 @@ test('graphics remain static CSS, respecting safety and privacy',()=>{
  const core=new Set([...sw.matchAll(/'\.\/([^']+)'/g)].map(x=>x[1]));
  for(const name of cssAssets)assert.ok(core.has(name),'offline cache missing '+name);
 });
+
+test('original sport identities display usable live record labels on mobile and desktop',()=>{
+ const cards=[...index.matchAll(/data-multi-start="(hockey|baseball|basketball|wrestling)"/g)].map(x=>x[1]);
+ assert.deepEqual(cards,['hockey','baseball','basketball','wrestling']);
+ for(const sport of cards){
+  assert.equal((index.match(new RegExp('id="multi-home-record-'+sport+'"','g'))||[]).length,1);
+  assert.equal((index.match(new RegExp('id="multi-mode-best-'+sport+'"','g'))||[]).length,1);
+  assert.match(index,new RegExp('multi-home-illustration multi-art-'+sport));
+  assert.match(css,new RegExp('#home \\.multi-art-'+sport));
+ }
+ assert.match(css,/#home \.multi-home-card \.multi-home-record/);
+ assert.match(css,/#sports-arcade \.multi-mode \.multi-mode-record/);
+ assert.match(css,/#home \.multi-home-illustration/);
+ assert.match(css,/@media\(hover:none\)/);
+ assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+});
+test('Playbook shows live next challenge and offers a reachable unfinished filter',()=>{
+ assert.equal((index.match(/id="playbook-home-next"/g)||[]).length,1);
+ assert.equal((index.match(/id="playbook-toggle-open"/g)||[]).length,1);
+ assert.match(index,/id="playbook-toggle-open" aria-pressed="false"/);
+ assert.match(css,/#playbook \.playbook-open-filter/);
+ assert.match(css,/#playbook \.playbook-all-done/);
+ assert.match(css,/#playbook \.playbook-mission\[data-group="sports"\]/);
+ assert.match(css,/#home \.playbook-home-next/);
+ assert.doesNotMatch(css,/@import|url\(\s*https?:/);
+});
