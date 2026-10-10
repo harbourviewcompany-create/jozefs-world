@@ -882,3 +882,9 @@
 #arena .arena-upgrade-row button:disabled{background:#45665d;color:#abc3b4;opacity:.75;border-color:#84a594}
 #arena #arena-daily-progress{cursor:pointer;font:900 9px/1 "Outfit",sans-serif;min-height:18px;touch-action:manipulation}
 #arena .arena-settings input:focus-visible,#arena .arena-settings select:focus-visible,#arena .arena-upgrade-row button:focus-visible{outline:2px solid #eaffac;outline-offset:1px}
+
+@media(max-width:1100px){
+ #arena.section.active .arena-controller.swap-controls .arena-actions{order:1}
+ #arena.section.active .arena-controller.swap-controls .arena-direction{order:2}
+ #arena.section.active .arena-controller.swap-controls{grid-template-columns:1fr .92fr}
+}
