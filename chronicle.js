@@ -14,7 +14,7 @@
     return Number.isFinite(d.getTime())?d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}):'CLUB EDITION';
   };
   const number=x=>String(count(x)).padStart(2,'0');
-  const TYPES=new Set(['arena','street','career','tour','honours','cup']);
+  const TYPES=new Set(['arena','street','career','tour','honours','cup','multisport']);
   function current(){
     const a=window.JozefArena?.getProgress?.()||{};
     const s=window.JozefStreet?.getProgress?.()||{};
@@ -141,6 +141,14 @@
     $('chronicle-print')?.addEventListener('click',()=>{window.print?.()});
     window.addEventListener?.('jozef:arena-completed',()=>finished('arena'));
     window.addEventListener?.('jozef:street-completed',()=>finished('street'));
+    window.addEventListener?.('jozef:multisport-completed',()=>{
+      const last=window.JozefMultiSport?.getLastResult?.();
+      if(!last||!['hockey','baseball','basketball','wrestling'].includes(last.sport))return;
+      if(!Number.isInteger(last.score)||last.score<0||last.score>5)return;
+      const names={hockey:'HOCKEY SHOOTOUT',baseball:'BASEBALL DERBY',basketball:'BASKETBALL SHOOTOUT',wrestling:'WRESTLING SHOWDOWN'};
+      add('multisport',names[last.sport]+' UNDER THE LIGHTS.','Jozef FC finished '+last.sport+' with '+last.score+' / 5 points. Another chapter in the all-sport adventure.');
+      sync();
+    });
     window.addEventListener?.('jozef:profile-updated',sync);
     window.addEventListener?.('jozef:chronicle-sync',sync);
     window.addEventListener?.('pageshow',sync);
