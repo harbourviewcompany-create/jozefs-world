@@ -155,3 +155,35 @@ test('shot odds remain bounded for unexpected inputs',()=>{
   assert.ok(p.onTarget>=.06&&p.onTarget<=.94);
  }
 });
+
+
+test('rival counter runs toward goal instead of scoring on contact',()=>{
+ const carrier={x:80,y:280},actor={x:210,y:440};
+ const rookie=S.rivalRunTarget(carrier,actor,1.2,'rookie');
+ const legend=S.rivalRunTarget(carrier,actor,1.2,'legend');
+ assert.ok(rookie.y>carrier.y);
+ assert.ok(legend.y>rookie.y);
+ for(const position of [rookie,legend]){
+  assert.ok(position.x>=24&&position.x<=396);
+  assert.ok(position.y>=70&&position.y<=545);
+ }
+});
+test('recovery creates a wide forward pass and a teammate safety option',()=>{
+ const jozef={x:140,y:425},mate={x:240,y:390};
+ const baseline=S.counterSupportTarget(jozef,mate,[],0);
+ const recovered=S.counterSupportTarget(jozef,mate,[],4);
+ assert.ok(recovered.y<baseline.y,'fast break runner should get further forward');
+ assert.ok(recovered.x>jozef.x,'teammate offers a wide passing lane');
+ const shadow=S.counterSupportTarget(jozef,mate,[{...mate}],3);
+ assert.notEqual(shadow.x,recovered.x,'runner should avoid a nearby defender');
+ assert.ok(shadow.x>=40&&shadow.x<=380);
+});
+test('rival shots only occur after a defended advance, with bounded chance',()=>{
+ const defensive=S.rivalThreatChance(300,'pro',0,.01);
+ const unsafe=S.rivalThreatChance(540,'legend',0,100);
+ const covered=S.rivalThreatChance(540,'legend',1,20);
+ assert.ok(defensive>=.025&&defensive<=.42);
+ assert.ok(unsafe>defensive);
+ assert.ok(covered<unsafe);
+ assert.ok(unsafe<=.42);
+});
