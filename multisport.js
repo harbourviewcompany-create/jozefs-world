@@ -13,8 +13,8 @@
     {cue:'THE CROWD WANTS A HUGE ENTRANCE!',answer:0,remark:'THE LIGHTS HIT. THE CROWD ROARS!'},
     {cue:'IT IS TIME FOR YOUR SIGNATURE POSE!',answer:1,remark:'THAT IS THE POSE EVERYONE CAME TO SEE!'},
     {cue:'YOUR TAG-TEAM PARTNER NEEDS A HIGH FIVE!',answer:2,remark:'TEAMWORK BRINGS THE HOUSE DOWN!'},
-    {cue:'THE ARENA LIGHTS ARE ON YOU!',answer:0,remark:'THE ENTRANCE IS LEGENDARY!'},
-    {cue:'YOUR FINAL CELEBRATION BEGINS!',answer:1,remark:'THE WHOLE STADIUM CHEERS!'}
+    {cue:"WWE FAN QUIZ: WHO IS KNOWN FOR 'YOU CAN'T SEE ME'?",choices:['JOHN CENA','REY MYSTERIO','ROMAN REIGNS'],answer:0,remark:'JOHN CENA! THE CROWD KNOWS THAT LINE!'},
+    {cue:'WWE FAN QUIZ: WHO IS FAMOUS FOR THE 619?',choices:['CODY RHODES','REY MYSTERIO','JOHN CENA'],answer:1,remark:'REY MYSTERIO! YOU KNOW YOUR WRESTLING!'}
   ];
   const $=id=>document.getElementById(id);
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -74,7 +74,8 @@
     if(sport==='hockey'){
       controls.append(button('1 / LEFT','left'),button('2 / CENTRE','centre'),button('3 / RIGHT','right'));
     }else if(sport==='wrestling'){
-      controls.append(button('1 / ENTRANCE','entrance'),button('2 / SIGNATURE POSE','pose'),button('3 / TEAMWORK','teamwork'));
+      const names=CHALLENGES[round]?.choices||['ENTRANCE','SIGNATURE POSE','TEAMWORK'];
+      controls.append(button('1 / '+names[0],'entrance'),button('2 / '+names[1],'pose'),button('3 / '+names[2],'teamwork'));
     }else{
       controls.append(button(sport==='baseball'?'SWING BAT ↗':'RELEASE SHOT ↗','shoot','multi-primary'));
     }
@@ -103,7 +104,7 @@
     stage?.classList.toggle('multi-result',phase==='result');
     label('multi-keyhelp',sport==='hockey'||sport==='wrestling'?'Use 1, 2, 3 or tap a choice.':'Use SPACE or tap the action button.');
     const instructions=$('multi-instructions');
-    if(instructions)instructions.textContent=sport==='wrestling'?'An original, pretend sports-entertainment show inspired by televised wrestling. No real fighting or risky moves.':
+    if(instructions)instructions.textContent=sport==='wrestling'?'Original ring-show challenges and WWE superstar trivia. Unofficial fan activity, no risky wrestling moves to copy.':
       'Five turns. Have fun and chase your own personal best. No penalties for missing.';
     paintRecord();
     drawControls();
