@@ -173,10 +173,32 @@ function mount(api){
   joystick.classList.add('engaged');relative(ev);
   try{joystick.setPointerCapture(ev.pointerId);}catch(_){}
  });
- joystick?.addEventListener('pointermove',ev=>{if(ev.pointerId===stickPointer){ev.preventDefault();relative(ev);}});
+ // Pointer capture is unreliable in some embedded WebKit builds. Track
+ // the active pointer globally until its genuine up/cancel event arrives.
+ function trackPointer(ev){
+  if(stickPointer!==null&&stickPointer===ev.pointerId){
+   if(ev.cancelable)ev.preventDefault();
+   relative(ev);
+  }
+ }
+ window.addEventListener('pointermove',trackPointer,{passive:false});
  joystick?.addEventListener('pointerup',clear);
+ window.addEventListener('pointerup',clear);
  joystick?.addEventListener('pointercancel',clear);
- joystick?.addEventListener('lostpointercapture',clear);
+ window.addEventListener('pointercancel',clear);
+ joystick?.addEventListener('lostpointercapture',ev=>{
+  if(ev.buttons===0)clear(ev);
+ });
+ // Some in-app browsers generate mouse events without matching pointermove.
+ joystick?.addEventListener('mousedown',ev=>{
+  if(api.getMode()!=='playing'||stickPointer!==null)return;
+  stickPointer='mouse';
+  joystick.classList.add('engaged');relative(ev);
+ });
+ window.addEventListener('mousemove',ev=>{
+  if(stickPointer!==null&&(ev.buttons&1)===1)relative(ev);
+ });
+ window.addEventListener('mouseup',()=>clear());
  window.addEventListener('blur',()=>clear());
  document.addEventListener('visibilitychange',()=>{if(document.hidden)clear();});
  document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&dialogOpen){ev.preventDefault();openSettings(false);}});
