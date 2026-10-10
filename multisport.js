@@ -9,6 +9,12 @@
     basketball:{label:'BASKETBALL THREE-POINT CHALLENGE',short:'Basketball',kind:'timing',rounds:5,unit:'BUCKETS'},
     wrestling:{label:'WRESTLING SHOWDOWN',short:'Wrestling',kind:'show',rounds:5,unit:'CROWD POPS'}
   };
+  const WRESTLING_TIERS=[
+    {name:'OPENING ACT',rival:'NEON TITAN',required:1},
+    {name:'RISING STAR',rival:'MIDNIGHT MAVERICK',required:3},
+    {name:'MAIN EVENT',rival:'GOLDEN PANTHER',required:6},
+    {name:'CHAMPION',rival:'THE NIGHT LEGEND',required:null}
+  ];
   const CHALLENGES=[
     {cue:'THE CROWD WANTS A HUGE ENTRANCE!',answer:0,remark:'THE LIGHTS HIT. THE CROWD ROARS!'},
     {cue:'IT IS TIME FOR YOUR SIGNATURE POSE!',answer:1,remark:'THAT IS THE POSE EVERYONE CAME TO SEE!'},
@@ -24,14 +30,17 @@
     let input;
     try{input=JSON.parse(localStorage.getItem(KEY)||'null')}catch(_){}
     const out=fresh();
+    out.wrestling.careerWins=0;
     for(const sport of Object.keys(GAMES)){
       const row=input?.[sport]||{};
       if(valid(row.played))out[sport].played=row.played;
       if(valid(row.best))out[sport].best=Math.min(GAMES[sport].rounds,row.best);
     }
+    if(valid(input?.wrestling?.careerWins))
+      out.wrestling.careerWins=Math.min(input.wrestling.careerWins,out.wrestling.played);
     return out;
   }
-  let saved=load(),sport='hockey',round=0,points=0,phase='ready',turnStart=0,raf=0,indicator=50,lastMessage='',lastResult=null,roundHistory=[];
+  let saved=load(),sport='hockey',round=0,points=0,phase='ready',turnStart=0,raf=0,indicator=50,lastMessage='',lastResult=null,roundHistory=[],stageView=null;
   const button=(label,choice,extra='')=>{
     const b=document.createElement('button');
     b.type='button';b.textContent=label;b.dataset.choice=choice;
@@ -64,6 +73,31 @@
   function getCupProgress(){
     const qualified=Object.keys(GAMES).filter(id=>saved[id].best>=3);
     return {qualified:qualified.length,total:4,champion:qualified.length===4};
+  }
+  function getWrestlingCareer(){
+    const wins=saved.wrestling.careerWins||0;
+    const rank=wins>=6?3:wins>=3?2:wins>=1?1:0;
+    const tier=WRESTLING_TIERS[rank];
+    const previous=rank===0?0:WRESTLING_TIERS[rank-1].required;
+    return {wins,rank,name:tier.name,rival:tier.rival,
+      required:tier.required,remaining:tier.required===null?0:Math.max(0,tier.required-wins),
+      progress:tier.required===null?100:Math.round((wins-previous)/(tier.required-previous)*100)};
+  }
+  function paintWrestlingCareer(){
+    const career=getWrestlingCareer();
+    const panel=$('multi-wrestling-career');
+    if(panel)panel.hidden=sport!=='wrestling';
+    label('multi-wrestling-rank',career.name);
+    label('multi-wrestling-rival',career.rival);
+    label('multi-wrestling-wins',career.wins+' SHOW WINS');
+    label('multi-wrestling-story',career.rank===3?
+      'You earned the main-event title. Keep performing and defend your spotlight.':
+      'Win '+career.remaining+' more show'+(career.remaining===1?'':'s')+' with 3+ crowd pops to reach '+WRESTLING_TIERS[career.rank+1].name+'.');
+    const meter=$('multi-wrestling-meter');
+    if(meter)meter.style.width=career.progress+'%';
+    const bar=$('multi-wrestling-progress');
+    bar?.setAttribute('aria-valuenow',String(career.progress));
+    panel?.classList.toggle('is-champion',career.rank===3);
   }
   function paintCup(){
     const cup=getCupProgress(),finale=$('multi-cup-finale');
@@ -145,10 +179,12 @@
       'Five turns. Have fun and chase your own personal best. No penalties for missing.';
     paintRecord();
     paintCup();
+    paintWrestlingCareer();
     paintRounds();
     drawControls();
     if(active&&config.kind==='timing')tick();
     else stopTick();
+    stageView?.refresh();
   }
   function stopTick(){
     if(raf&&window.cancelAnimationFrame)window.cancelAnimationFrame(raf);
@@ -170,6 +206,7 @@
   function start(kind){
     if(!GAMES[kind])return;
     sport=kind;round=0;points=0;phase='ready';turnStart=Date.now();lastMessage='';roundHistory=[];
+    stageView?.begin(sport,{round,rank:getWrestlingCareer().rank});
     scene();
   }
   function act(choice){
@@ -177,13 +214,16 @@
     if(choice==='next'&&phase==='result'){
       if(round>=GAMES[sport].rounds){finish();return}
       lastMessage='';phase='ready';turnStart=Date.now();
+      stageView?.begin(sport,{round,rank:getWrestlingCareer().rank});
       scene();return;
     }
     if(phase!=='ready')return;
-    let made=false,remark='';
+    let made=false,remark='',goalieIndex=1,shotIndex=1;
     if(sport==='hockey'){
       if(!['left','centre','right'].includes(choice))return;
-      const goalie=['left','centre','right'][Math.floor(Math.random()*3)];
+      goalieIndex=Math.floor(Math.random()*3);
+      const goalie=['left','centre','right'][goalieIndex];
+      shotIndex=['left','centre','right'].indexOf(choice);
       made=goalie!==choice;
       remark=made?'GOAL! THE PUCK FINDS THE '+choice.toUpperCase()+' CORNER.':'BIG SAVE! THE KEEPER WAS READY IN '+goalie.toUpperCase()+'.';
     }else if(sport==='baseball'||sport==='basketball'){
@@ -202,6 +242,7 @@
     }
     if(made)points++;
     roundHistory.push(made);
+    stageView?.shoot({made,goalie:goalieIndex,choice:shotIndex});
     round++;phase='result';lastMessage=remark;
     scene();
   }
@@ -210,6 +251,9 @@
     phase='finished';
     saved[sport].played=Math.min(999999,saved[sport].played+1);
     saved[sport].best=Math.max(points,saved[sport].best);
+    if(sport==='wrestling'&&points>=3){
+      saved.wrestling.careerWins=Math.min(999999,(saved.wrestling.careerWins||0)+1);
+    }
     persist();
     const earned=window.JozefWorld?.record?.('multisport',{sport,score:points})||0;
     lastMessage=(points===5?'PERFECT FIVE! ':points>=3?'GREAT GAME! ':'NICE TRY! ')+
@@ -241,6 +285,7 @@
     if(GAMES[target].kind==='timing')tick();
   }
   function init(){
+    stageView=window.JozefSportStage?.create?.()||null;
     $('multi-cup-next')?.addEventListener('click',nextCupSport);
     for(const k of Object.keys(GAMES))$('multi-tab-'+k)?.addEventListener('click',()=>start(k));
     document.querySelectorAll('[data-multi-start]')?.forEach(btn=>btn.addEventListener('click',()=>{
@@ -259,6 +304,6 @@
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
   else init();
-  window.JozefMultiSport=Object.freeze({getProgress:()=>JSON.parse(JSON.stringify(saved)),getCupProgress,
+  window.JozefMultiSport=Object.freeze({getProgress:()=>JSON.parse(JSON.stringify(saved)),getCupProgress,getWrestlingCareer,
     getLastResult:()=>lastResult&&{...lastResult},evaluateTiming:accuracy});
 })();
