@@ -52,15 +52,19 @@ test('stadium graphics render all venues, a shot and a reduced-motion match',()=
  }
  assert.ok(events.some(x=>x[0]==='text'&&x[1]==='GOOOAL!'));
 });
-test('new graphic resources load in production order without remote assets',()=>{
- assert.equal((html.match(/src="arena-renderer.js"/g)||[]).length,1);
+test('new graphic resources load in bundled production order without remote assets',()=>{
+ assert.equal((html.match(/src="arena-bundle.js"/g)||[]).length,1);
  assert.equal((html.match(/href="arena-visual.css"/g)||[]).length,1);
- assert.ok(html.indexOf('src="arena-renderer.js"')<html.indexOf('src="arena.js"'));
- assert.match(src,/window\.JozefArenaGraphics=Object\.freeze/);
+ const index=fs.readFileSync(path.join(root,'index.html'),'utf8');
+ assert.equal((index.match(/src="arena-bundle.js"/g)||[]).length,1);
+ const bundled=fs.readFileSync(path.join(root,'arena-bundle.js'),'utf8');
+ assert.ok(bundled.indexOf('BEGIN arena-systems.js')<bundled.indexOf('BEGIN arena-experience.js'));
+ assert.ok(bundled.indexOf('BEGIN arena-renderer.js')<bundled.indexOf('BEGIN arena.js'));
+ assert.match(bundled,/window\.JozefArenaGraphics=Object\.freeze/);
  assert.match(css,/prefers-reduced-motion:reduce/);
  assert.doesNotMatch(src,/\bfetch\s*\(|XMLHttpRequest|WebSocket|sendBeacon/);
  const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
- for(const asset of ['arena-renderer.js','arena-visual.css'])assert.ok(sw.includes("'./"+asset+"'"));
+ for(const asset of ['arena-bundle.js','arena-visual.css'])assert.ok(sw.includes("'./"+asset+"'"));
 });
 test('formation board tracks selected positions with no new storage schema',()=>{
  const squad=fs.readFileSync(path.join(root,'squad.js'),'utf8');
