@@ -255,3 +255,46 @@ test('iPhone touch aims directly on hockey rink and taps baseball/basketball act
  const before=b.get('multi-score').textContent;tap(160);
  assert.equal(b.get('multi-score').textContent,before,'wrestling scene does not fake contact moves');
 });
+
+test('Rookie, Pro and Legend alter goalie intelligence and timing tolerance',()=>{
+ const easy=boot({random:()=>0});
+ assert.equal(easy.window.JozefMultiSport.getDifficulty(),'pro');
+ assert.equal(easy.window.JozefMultiSport.evaluateTiming('baseball',80,'rookie'),true);
+ assert.equal(easy.window.JozefMultiSport.evaluateTiming('baseball',80,'pro'),false);
+ assert.equal(easy.window.JozefMultiSport.evaluateTiming('baseball',62,'legend'),true);
+ assert.equal(easy.window.JozefMultiSport.evaluateTiming('basketball',71,'rookie'),true);
+ assert.equal(easy.window.JozefMultiSport.evaluateTiming('basketball',71,'legend'),false);
+ easy.get('multi-difficulty-rookie').click();
+ assert.equal(easy.window.JozefMultiSport.getDifficulty(),'rookie');
+ assert.equal(easy.get('multi-difficulty-rookie').attrs['aria-pressed'],'true');
+ easy.choose('left'); // rookie goalie dives away from matching shot
+ assert.equal(easy.get('multi-score').textContent,'1 / 5 GOALS');
+ easy.get('multi-difficulty-legend').click(); // restarts match, without mutating saved best
+ assert.equal(easy.window.JozefMultiSport.getDifficulty(),'legend');
+ assert.equal(easy.get('multi-score').textContent,'0 / 5 GOALS');
+ easy.choose('right'); // legend goalie learns the right corner
+ assert.equal(easy.get('multi-score').textContent,'0 / 5 GOALS');
+ assert.equal(easy.store.size,0,'changing level cannot invent a completed match');
+});
+test('Legend wrestling adds new legitimate questions, Rookie offers helpful hints',()=>{
+ const b=boot();
+ b.get('multi-tab-wrestling').click();
+ b.get('multi-difficulty-rookie').click();
+ assert.match(b.controls()[0].textContent,/COACH PICK/);
+ b.get('multi-difficulty-legend').click();
+ assert.match(b.get('multi-message').textContent,/AMERICAN NIGHTMARE/);
+ assert.ok(b.controls().some(x=>/CODY RHODES/.test(x.textContent)));
+ b.choose('teamwork');
+ assert.equal(b.get('multi-score').textContent,'1 / 5 CROWD POPS');
+ assert.ok(b.get('multi-round-markers').children[0].textContent==='✓');
+});
+test('Playbook can launch a specific sport without opening a separate profile',()=>{
+ const b=boot();
+ assert.equal(b.window.JozefMultiSport.playSport('basketball'),true);
+ assert.equal(b.get('multi-name').textContent,'BASKETBALL THREE-POINT CHALLENGE');
+ assert.equal(b.window.JozefMultiSport.playSport('unknown'),false);
+ assert.equal(b.get('multi-name').textContent,'BASKETBALL THREE-POINT CHALLENGE');
+ const html=fs.readFileSync(path.join(root,'world.html'),'utf8');
+ for(const level of ['rookie','pro','legend'])
+  assert.equal((html.match(new RegExp('id="multi-difficulty-'+level+'"','g'))||[]).length,1);
+});
