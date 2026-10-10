@@ -1,7 +1,7 @@
 /* JOZEF FC // AFTER DARK: immersive navigation and player HUD, no account or tracking. */
 (() => {
 'use strict';
-const ids=['home','street','arena','games','career','tour','club','playbook','matchday','training','learn','news','notes','album','sports','sports-arcade','chronicle','fun'];
+const ids=['home','street','arena','games','career','tour','club','playbook','matchday','training','learn','news','notes','album','sports','watch','sports-arcade','chronicle','fun'];
 const el=id=>document.getElementById(id);
 const txt=(id,x)=>{const n=el(id);if(n)n.textContent=String(x)};
 const get=key=>{try{return localStorage.getItem(key)}catch(_){return null}};

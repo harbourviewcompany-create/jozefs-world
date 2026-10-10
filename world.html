@@ -41,6 +41,7 @@
   <link rel="stylesheet" href="playbook.css" />
   <link rel="stylesheet" href="street-powerups.css" />
   <link rel="stylesheet" href="hq.css" />
+  <link rel="stylesheet" href="watch.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Lilita+One&family=Nunito:wght@400;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
@@ -81,6 +82,7 @@
       <button class="nav-btn" data-section="news">Scores</button>
       <button class="nav-btn" data-section="sports-arcade">Sports Arcade</button>
       <button class="nav-btn" data-section="sports">Sports Scores</button>
+      <button class="nav-btn" data-section="watch">Watch</button>
       <button class="nav-btn" data-section="learn">Learn</button>
       <button class="nav-btn" data-section="training">Training</button>
       <button class="nav-btn" data-section="matchday">Match Day</button>
@@ -927,6 +929,24 @@
     </aside>
   </div>
 </section>
+<section id="watch" class="section" tabindex="-1" aria-labelledby="watch-title">
+    <div class="watch-card">
+      <p class="eyebrow-live">Official video only</p>
+      <h2 id="watch-title">Watch</h2>
+      <p>Paste a YouTube or Vimeo link. Live sports stay on the official league sites. This room does not add pirate feeds.</p>
+      <label for="watch-link">Video link</label>
+      <input id="watch-link" type="url" inputmode="url" maxlength="240" placeholder="https://www.youtube.com/watch?v=…" autocomplete="off" />
+      <button type="button" class="action-btn" id="watch-save">Save and play</button>
+      <p id="watch-status" role="status">Dad can paste a YouTube or Vimeo link. No pirate feeds.</p>
+      <iframe id="watch-frame" class="watch-frame" title="Saved video" hidden allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      <div class="watch-links">
+        <a data-watch-out href="https://www.nhl.com/" target="_blank" rel="noopener">NHL</a>
+        <a data-watch-out href="https://www.nba.com/" target="_blank" rel="noopener">NBA</a>
+        <a data-watch-out href="https://www.mlb.com/" target="_blank" rel="noopener">MLB</a>
+        <a data-watch-out href="https://www.premierleague.com/" target="_blank" rel="noopener">Premier League</a>
+      </div>
+    </div>
+  </section>
 <section id="sports" class="section" tabindex="-1" aria-labelledby="sports-title">
     <h2 id="sports-title" class="section-title">Sports Room</h2>
     <p class="section-desc">Pick your teams and call the game. No odds and no betting. Scores can be delayed.</p>
@@ -1283,6 +1303,7 @@
   <script src="broadcast.js"></script>
   <script src="album.js"></script>
   <script src="sports.js"></script>
+  <script src="watch.js"></script>
   <script src="locker.js"></script>
   <script src="sports-stage.js"></script>
   <script src="multisport.js"></script>

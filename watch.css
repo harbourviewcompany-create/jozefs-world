@@ -1,0 +1,5 @@
+.watch-card { width: min(860px, calc(100% - 20px)); margin: 12px auto; padding: 16px; border-radius: 18px; background: rgba(8,16,30,0.8); border: 1px solid rgba(255,255,255,0.14); }
+.watch-card input { width: 100%; min-height: 44px; margin: 8px 0; padding: 10px; border-radius: 12px; border: 0; background: #14262a; color: white; font-size: 16px; }
+.watch-frame { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 14px; background: black; margin-top: 12px; }
+.watch-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.watch-links a { min-height: 44px; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 999px; background: rgba(255,255,255,0.08); color: white; text-decoration: none; }
