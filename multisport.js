@@ -31,7 +31,7 @@
     }
     return out;
   }
-  let saved=load(),sport='hockey',round=0,points=0,phase='ready',turnStart=0,raf=0,indicator=50,lastMessage='';
+  let saved=load(),sport='hockey',round=0,points=0,phase='ready',turnStart=0,raf=0,indicator=50,lastMessage='',lastResult=null;
   const button=(label,choice,extra='')=>{
     const b=document.createElement('button');
     b.type='button';b.textContent=label;b.dataset.choice=choice;
@@ -174,6 +174,7 @@
     lastMessage=(points===5?'PERFECT FIVE! ':points>=3?'GREAT GAME! ':'NICE TRY! ')+
       points+' / 5 '+GAMES[sport].unit+'. '+(earned?'+'+earned+' XP EARNED.':'PLAY AGAIN ANYTIME.');
     scene();
+    lastResult={sport,score:points};
     if(typeof Event==='function')window.dispatchEvent?.(new Event('jozef:multisport-completed'));
   }
   function onKey(e){
@@ -193,6 +194,13 @@
   }
   function init(){
     for(const k of Object.keys(GAMES))$('multi-tab-'+k)?.addEventListener('click',()=>start(k));
+    document.querySelectorAll('[data-multi-start]')?.forEach(btn=>btn.addEventListener('click',()=>{
+      const selected=btn.dataset.multiStart;
+      if(!GAMES[selected])return;
+      start(selected);
+      if(typeof window.showSection==='function')window.showSection('sports-arcade');
+      if(GAMES[selected].kind==='timing')tick();
+    }));
     document.addEventListener('keydown',onKey);
     document.querySelector('[data-section="sports-arcade"]')?.addEventListener('click',()=>{
       if(GAMES[sport].kind==='timing'&&phase==='ready')tick();
@@ -202,5 +210,5 @@
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
   else init();
-  window.JozefMultiSport=Object.freeze({getProgress:()=>JSON.parse(JSON.stringify(saved)),evaluateTiming:accuracy});
+  window.JozefMultiSport=Object.freeze({getProgress:()=>JSON.parse(JSON.stringify(saved)),getLastResult:()=>lastResult&&{...lastResult},evaluateTiming:accuracy});
 })();
