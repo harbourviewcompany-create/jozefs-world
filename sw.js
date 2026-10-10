@@ -1,14 +1,12 @@
 /* Jozef FC offline shell: only same-origin public game assets. Never caches personal progress. */
-const CACHE='jozef-fc-app-shell-v46';
+const CACHE='jozef-fc-app-shell-v47';
 const CORE=[
  './','./index.html','./world.html','./site-foundation.css','./site-experience.css',
  './favicon.svg','./manifest.webmanifest','./matchday.css','./training.css','./jersey-bingo.css',
- './app.js','./extras.js','./tournament.js','./career.js','./clubhouse.js',
- './scramble-positions.js','./celebrate.js','./training.js','./jersey-bingo.js','./matchday.js',
- './street.js','./stadium.js','./arcade.js','./roblox.js','./squad.js',
- './arena-bundle.js','./playmode.js','./notes.js','./visual-2026.js','./campaign-2026.js',
- './club-hq.js','./chronicle.js','./broadcast.js','./album.js','./sports.js',
- './watch.js','./sports-stage.js','./locker.js','./multisport.js','./playbook.js'
+ './tournament.js','./career.js','./clubhouse.js','./scramble-positions.js','./celebrate.js',
+ './training.js','./jersey-bingo.js','./matchday.js','./street.js','./arcade.js',
+ './roblox.js','./squad.js','./site-core.js','./site-features.js','./arena-bundle.js',
+ './visual-2026.js','./campaign-2026.js','./club-hq.js','./chronicle.js','./playbook.js'
 ];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(async cache=>{
