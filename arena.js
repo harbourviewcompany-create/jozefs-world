@@ -219,7 +219,7 @@ function loseBall(){
 function startReplay(title){
  if(mode!=='playing'||replayHistory.length<6||window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches)return;
  replay={title,frames:replayHistory.slice(-27),elapsed:0,duration:1.25};
- const banner=$('arena-replay-banner');if(banner){banner.hidden=false;banner.textContent=title+' · REPLAY';}
+ const banner=$('arena-replay-banner');if(banner){banner.hidden=false;banner.textContent=title+' · REPLAY · TAP PITCH TO SKIP';}
 }
 function captureHistory(dt){
  replayWait+=dt;if(replayWait<.057)return;
@@ -457,15 +457,28 @@ function aimMovementAtPointer(ev){
  const point=systems.screenToWorld((ev.clientX-r.left)/r.width*W,(ev.clientY-r.top)/r.height*H,camera);
  target={x:clamp(point.x,24,396),y:clamp(point.y,102,565)};
 }
+let pitchPointer=null;
 canvas.addEventListener('pointerdown',ev=>{
  if(mode==='ready'){start();return;}
  if(replay){finishReplay();return;}
  if(mode!=='playing')return;
+ ev.preventDefault();
+ pitchPointer=ev.pointerId;
+ try{canvas.setPointerCapture?.(ev.pointerId);}catch(_){}
  aimMovementAtPointer(ev);
 });
 canvas.addEventListener('pointermove',ev=>{
- // Drag across the pitch to redirect a player without extra taps.
- if(mode==='playing'&&!replay&&(ev.buttons&1)===1)aimMovementAtPointer(ev);
+ // Pointer capture keeps drag-to-move responsive when a finger crosses the pitch edge.
+ if(mode==='playing'&&!replay&&pitchPointer===ev.pointerId)aimMovementAtPointer(ev);
+});
+canvas.addEventListener('pointerup',ev=>{
+ if(pitchPointer===ev.pointerId)pitchPointer=null;
+});
+canvas.addEventListener('pointercancel',ev=>{
+ if(pitchPointer===ev.pointerId){pitchPointer=null;target=null;}
+});
+canvas.addEventListener('lostpointercapture',ev=>{
+ if(pitchPointer===ev.pointerId)pitchPointer=null;
 });
 document.addEventListener('keydown',ev=>{
  if(!$('arena')?.classList.contains('active'))return;
