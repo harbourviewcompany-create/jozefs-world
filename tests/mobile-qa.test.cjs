@@ -1,3 +1,4 @@
+const bundled=require('./bundle-contract.cjs');
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -10,13 +11,11 @@ const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
 
 test('iPhone repair overrides all existing themes last, with identical Pages HTML',()=>{
  assert.equal(html,index);
- assert.equal((html.match(/href="mobile-qa-2026.css"/g)||[]).length,1);
- const sheets=[...html.matchAll(/<link rel="stylesheet" href="([^"]+)"\s*\/>/g)].map(x=>x[1]);
- assert.ok(sheets.indexOf('chronicle.css')>sheets.indexOf('club-hq.css'), 'feature styles must follow mobile repairs');
- assert.ok(sheets.indexOf('mobile-qa-2026.css')<sheets.indexOf('club-hq.css'));
- assert.ok(sheets.indexOf('arena-visual.css')<sheets.indexOf('mobile-qa-2026.css'));
- assert.ok(sheets.indexOf('campaign-2026.css')<sheets.indexOf('mobile-qa-2026.css'));
- assert.ok(sw.includes("'./mobile-qa-2026.css'"));
+ bundled.css(root,html,sw,'mobile-qa-2026.css');
+ bundled.order(root,html,sw,'arena-visual.css','mobile-qa-2026.css');
+ bundled.order(root,html,sw,'campaign-2026.css','mobile-qa-2026.css');
+ bundled.order(root,html,sw,'mobile-qa-2026.css','club-hq.css');
+ bundled.order(root,html,sw,'club-hq.css','chronicle.css');
  assert.match(sw,/const CACHE='jozef-fc-app-shell-v\d+'/);
 });
 test('the Club is dark with readable customization, stats and unlocks',()=>{
