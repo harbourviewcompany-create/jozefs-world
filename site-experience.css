@@ -797,6 +797,47 @@
 }
 @media(prefers-reduced-motion:reduce){.multi-rival-progress>span{transition:none!important}}
 
+/* Private five-match Form Guide: real completed results, not manufactured rewards. */
+.multi-form{
+ margin:20px 0 17px;padding:16px 14px;
+ background:linear-gradient(153deg,#1a3840,#0d2832 87%);
+ border:1px solid #99e4c264;border-radius:14px;color:#ebfff1;
+ box-shadow:inset 0 1px #f0ffd112;
+}
+.multi-form-kicker{display:block;font:900 9px var(--sf-ui);letter-spacing:.13em;color:#bdeccf}
+.multi-form h4{font:900 27px/1.02 var(--sf-display);color:#f5ffdf;margin:9px 0}
+.multi-form-description{font:650 11px/1.5 var(--sf-ui);color:#b7d5c6;margin:0 0 15px}
+.multi-form-results{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+.multi-form-score{min-width:0;min-height:48px;display:grid;place-items:center;
+ border:1px solid #a4c8b75c;border-radius:9px;background:#112934;
+ color:#e8f6ed;font:900 clamp(11px,1.5vw,15px) var(--sf-ui)}
+.multi-form-score.is-good{background:linear-gradient(140deg,#2d6045,#204b3d);
+ color:#e5ffab;border-color:#c8ff5a89}
+.multi-form-score.is-empty{color:#77998f;border-style:dashed}
+.multi-form-stats{display:grid;grid-template-columns:minmax(0,.75fr) minmax(0,1.25fr);
+ gap:8px;margin:12px 0}
+.multi-form-stats>div{display:grid;gap:6px;background:#0b2833;border-radius:9px;
+ border:1px solid #bbdec247;padding:10px}
+.multi-form-stats small{font:850 9px var(--sf-ui);color:#a7cdbd;letter-spacing:.06em}
+.multi-form-stats strong{font:900 17px/1.1 var(--sf-display);
+ overflow-wrap:anywhere;color:#daffad}
+.multi-form-tip{font:700 12px/1.55 var(--sf-ui);color:#d3ede1;
+ border-left:3px solid #c8ff5a;padding:8px 11px;margin:14px 0;
+ background:#173a39;border-radius:0 7px 7px 0}
+.multi-form-replay{min-height:48px;cursor:pointer;width:100%;
+ padding:12px;border:1px solid #d7f4a9;border-radius:9px;
+ font:900 11px var(--sf-ui);letter-spacing:.05em;
+ background:#c8ff5a;color:#142d2b}
+.multi-form-replay:hover{background:#e2ff97}
+.multi-form-replay:focus-visible{outline:3px solid #c8ff5a;outline-offset:3px}
+@media(max-width:680px){
+ .multi-form{padding:14px 11px}
+ .multi-form h4{font-size:25px}
+ .multi-form-score{min-height:44px;font-size:13px}
+ .multi-form-stats strong{font-size:16px}
+}
+
+
 /* BEGIN sports-stage.css */
 /* 2026 Interactive Arcade / Canvas graphics and fantasy wrestling career.
    CSS-only fallback remains when Canvas 2D is unavailable. */
