@@ -77,6 +77,14 @@
     for(const k of Object.keys(GAMES)){
       label('multi-best-'+k,saved[k].best+'/5');
       label('multi-played-'+k,saved[k].played+' PLAYED');
+      const qualified=saved[k].best>=3;
+      const record=saved[k].played
+        ? qualified?'CUP QUALIFIED · '+saved[k].best+'/5':'PERSONAL BEST · '+saved[k].best+'/5'
+        : 'FIRST CHALLENGE AWAITS';
+      label('multi-home-record-'+k,record);
+      label('multi-mode-best-'+k,saved[k].played?'BEST '+saved[k].best+'/5':'NEW SPORT');
+      const homeRecord=$('multi-home-record-'+k);
+      homeRecord?.classList?.toggle('is-qualified',qualified);
       const tab=$('multi-tab-'+k);
       if(tab){tab.classList.toggle('selected',k===sport);tab.setAttribute('aria-pressed',String(k===sport))}
     }
