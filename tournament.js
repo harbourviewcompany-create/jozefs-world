@@ -65,6 +65,7 @@
   function save() {
     try { localStorage.setItem(STORE, JSON.stringify(state)); }
     catch (_) { text('tour-save-note', 'Progress cannot be saved in this browser. You can still play.'); }
+    if(typeof window.dispatchEvent==='function'&&typeof Event==='function')window.dispatchEvent(new Event('jozef:chronicle-sync'));
   }
   function matchId() { return 'season-' + state.season + '-round-' + state.round; }
   function reward(action, id) {
