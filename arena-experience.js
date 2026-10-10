@@ -44,8 +44,8 @@ function mount(api){
   const immersive=prefs.mobileLayout==='immersive';
   arena?.classList.toggle('mobile-immersive',immersive);
   if(skill&&actions&&originalStrip){
-    if(immersive&&skill.parentElement!==actions)actions.appendChild(skill);
-    if(!immersive&&skill.parentElement!==originalStrip)originalStrip.insertBefore(skill,originalStrip.firstChild);
+    if(immersive&&skill.parentElement!==actions&&typeof actions.appendChild==='function')actions.appendChild(skill);
+    if(!immersive&&skill.parentElement!==originalStrip&&typeof originalStrip.insertBefore==='function')originalStrip.insertBefore(skill,originalStrip.firstChild);
   }
   const layout=$('arena-mobile-layout'),graphics=$('arena-graphics-mode');
   if(layout)layout.value=prefs.mobileLayout;
