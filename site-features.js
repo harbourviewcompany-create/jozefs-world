@@ -410,7 +410,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     const tale = document.getElementById('album-story');
     if (tale) {
       const earned = Object.keys(album).length;
-      tale.textContent = earned === 0 ? 'Empty slots stay hidden until you earn them.' : earned === STICKERS.length ? 'The book is full. You collected every sticker.' : earned + ' stickers in the book. ' + (STICKERS.length - earned) + ' still to find.';
+      const page = earned === 0 ? 'Page 1 is empty. Finish a match or a Street run.' : earned < 4 ? 'Page 1: the first boots. ' + (4 - earned) + ' left on this page.' : earned < 8 ? 'Page 2: the street page. Keep running.' : 'Page 3: the season page. The hard stickers live here.';
+      tale.textContent = page + ' ' + (earned === STICKERS.length ? 'The book is full.' : earned + ' of ' + STICKERS.length + ' found.');
     }
   }
 
@@ -691,7 +692,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       }
       const fact = document.createElement('p');
       fact.className = 'team-fact';
-      fact.textContent = FACTS[select.value] || league.label;
+      const last = (saved.calls || []).find(line => line.startsWith(select.value));
+      fact.textContent = (FACTS[select.value] || league.label) + (last ? ' Last call: ' + last + '.' : '');
       select.addEventListener('change', () => { fact.textContent = FACTS[select.value] || league.label; });
       const game = document.createElement('p');
       game.className = 'sports-game';
@@ -901,6 +903,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       return (hits.length ? hits : articles).slice(0, 3).map(article => ({
         label: feed.label,
         title: article.headline,
+        detail: article.description || '',
+        when: article.published || article.lastModified || '',
         link: articleLink(article)
       }));
     }).catch(() => []))).then(groups => {
@@ -919,7 +923,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         link.target = '_blank';
         link.rel = 'noopener';
         link.textContent = row.title;
-        item.append(tag, link);
+        const detail = document.createElement('p');
+        const when = row.when ? new Date(row.when).toLocaleString() : '';
+        detail.textContent = [when, row.detail].filter(Boolean).join(' · ');
+        item.append(tag, link, detail);
         board.appendChild(item);
       });
     });

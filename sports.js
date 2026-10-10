@@ -200,7 +200,8 @@
       }
       const fact = document.createElement('p');
       fact.className = 'team-fact';
-      fact.textContent = FACTS[select.value] || league.label;
+      const last = (saved.calls || []).find(line => line.startsWith(select.value));
+      fact.textContent = (FACTS[select.value] || league.label) + (last ? ' Last call: ' + last + '.' : '');
       select.addEventListener('change', () => { fact.textContent = FACTS[select.value] || league.label; });
       const game = document.createElement('p');
       game.className = 'sports-game';

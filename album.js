@@ -60,7 +60,8 @@
     const tale = document.getElementById('album-story');
     if (tale) {
       const earned = Object.keys(album).length;
-      tale.textContent = earned === 0 ? 'Empty slots stay hidden until you earn them.' : earned === STICKERS.length ? 'The book is full. You collected every sticker.' : earned + ' stickers in the book. ' + (STICKERS.length - earned) + ' still to find.';
+      const page = earned === 0 ? 'Page 1 is empty. Finish a match or a Street run.' : earned < 4 ? 'Page 1: the first boots. ' + (4 - earned) + ' left on this page.' : earned < 8 ? 'Page 2: the street page. Keep running.' : 'Page 3: the season page. The hard stickers live here.';
+      tale.textContent = page + ' ' + (earned === STICKERS.length ? 'The book is full.' : earned + ' of ' + STICKERS.length + ' found.');
     }
   }
 

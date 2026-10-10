@@ -108,6 +108,8 @@
       return (hits.length ? hits : articles).slice(0, 3).map(article => ({
         label: feed.label,
         title: article.headline,
+        detail: article.description || '',
+        when: article.published || article.lastModified || '',
         link: articleLink(article)
       }));
     }).catch(() => []))).then(groups => {
@@ -126,7 +128,10 @@
         link.target = '_blank';
         link.rel = 'noopener';
         link.textContent = row.title;
-        item.append(tag, link);
+        const detail = document.createElement('p');
+        const when = row.when ? new Date(row.when).toLocaleString() : '';
+        detail.textContent = [when, row.detail].filter(Boolean).join(' · ');
+        item.append(tag, link, detail);
         board.appendChild(item);
       });
     });
