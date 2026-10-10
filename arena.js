@@ -307,7 +307,7 @@ function captureHistory(dt){
   actor:{...actor},mate:{...mate},ball:{...ball},
   defenders:defenders.map(d=>({...d})),keeper:{...keeper},
   camera:{...camera},phase:MATCH_LENGTH-time,
-  aim,skillTime,flash
+  rivalCarrier,counterTime,aim,skillTime,flash
  });
  if(replayHistory.length>37)replayHistory.shift();
 }
@@ -458,6 +458,7 @@ function draw(){
     venue:venues[Math.min(lifetime.stadium,2)].name,stadium:lifetime.stadium,
     actor:sample?.actor||actor,mate:sample?.mate||mate,ball:sample?.ball||ball,
     defenders:sample?.defenders||defenders,keeper:sample?.keeper||keeper,
+    rivalCarrier:sample?.rivalCarrier??rivalCarrier,counterTime:sample?.counterTime??counterTime,
     squad,identity:{
       ...(window.JozefWorld?.getProgress?.()||{}),
       ...(experience?.kitColor()?{kit:experience.kitColor()}:{})
