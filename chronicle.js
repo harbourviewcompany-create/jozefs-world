@@ -128,7 +128,7 @@
       const score=typeof detail.score==='string'&&/^\d{1,3}-\d{1,3}$/.test(detail.score)?detail.score:null;
       const result=score?score.split('-').map(Number):null;
       const outcome=result?(result[0]>result[1]?'VICTORY':result[0]===result[1]?'DRAW':'FULL-TIME'):'FULL-TIME';
-      add('arena',outcome+' UNDER THE LIGHTS.',score?'Final score: Jozef FC '+score.replace('-', ' – ')+' the rivals. Another match for the history books.':'The Arena match has finished. Another appearance for Jozef FC.');
+      add('arena',outcome+' UNDER THE LIGHTS.',score?'Final score: Jozef FC '+score.replace('-', ' – ')+'. Another match for the history books.':'The Arena match has finished. Another appearance for Jozef FC.');
     }
     if(kind==='street'){
       const detail=window.JozefStreet?.getProgress?.()||{};
