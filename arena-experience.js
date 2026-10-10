@@ -17,7 +17,8 @@ function mount(api){
   difficulty:S.DIFFICULTIES[prev.difficulty]?prev.difficulty:'pro',
   controls:['joystick','arrows'].includes(prev.controls)?prev.controls:defaultControls,
   camera:prev.camera!==false,haptics:prev.haptics!==false,
-  kit:['club','night','gold'].includes(prev.kit)?prev.kit:'club'
+  kit:['club','night','gold'].includes(prev.kit)?prev.kit:'club',
+  handedness:prev.handedness==='flipped'?'flipped':'standard'
  };
  let daily=S.normalizeDaily(saved(DAY_KEY,null));
  let passes=0,earned=0,stickPointer=null,dialogOpen=false;
@@ -35,7 +36,9 @@ function mount(api){
   if(dailyChip){dailyChip.textContent='DAILY '+daily.rewarded.length+'/4';dailyChip.title=S.CHALLENGES.map(c=>c.label+' '+Math.min(c.target,daily[c.id])+'/'+c.target).join(' · ');}
   const dir=document.querySelector('#arena .arena-direction');
   dir?.classList.toggle('is-joystick',prefs.controls==='joystick');
+  document.querySelector('#arena .arena-controller')?.classList.toggle('swap-controls',prefs.handedness==='flipped');
   const v=$('arena-difficulty'),c=$('arena-control-mode'),cam=$('arena-camera-toggle'),hap=$('arena-haptics-toggle'),kit=$('arena-kit-select');
+  if($('arena-handedness'))$('arena-handedness').value=prefs.handedness;
   if(v)v.value=prefs.difficulty;if(c)c.value=prefs.controls;
   if(cam)cam.checked=prefs.camera;if(hap)hap.checked=prefs.haptics;
   if(kit){
@@ -125,7 +128,7 @@ function mount(api){
  $('arena-rematch')?.addEventListener('click',()=>api.start());
  $('arena-upgrade-type')?.addEventListener('change',ui);
  $('arena-buy-upgrade')?.addEventListener('click',purchase);
- const options={difficulty:'arena-difficulty',controls:'arena-control-mode',kit:'arena-kit-select'};
+ const options={difficulty:'arena-difficulty',controls:'arena-control-mode',kit:'arena-kit-select',handedness:'arena-handedness'};
  for(const [key,id] of Object.entries(options)){
   $(id)?.addEventListener('change',e=>{prefs[key]=e.target.value;save();ui();});
  }
