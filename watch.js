@@ -93,6 +93,14 @@
       save(url);
       paint(url);
     });
+    document.querySelectorAll('[data-highlight]').forEach(button => {
+      button.addEventListener('click', () => {
+        const url = button.getAttribute('data-highlight') || '';
+        input.value = url;
+        save(url);
+        paint(url);
+      });
+    });
     document.querySelectorAll('[data-watch-out]').forEach(link => {
       link.addEventListener('click', event => {
         const ok = window.confirm('This opens an official league site, outside Jozef FC. Continue?');
