@@ -90,3 +90,18 @@ test('reduced motion draws stable scenes and never starts an animation loop',()=
  assert.equal(a.pending(),false);
  assert.ok(a.paint.length>25,'one static frame per stage remains visible');
 });
+
+test('goalkeeper position is the actual visible lane used by hockey aim selection',()=>{
+ const a=setup();
+ const stage=a.api.create();
+ a.now(0);stage.begin('hockey',{round:0});
+ assert.equal(stage.getGoalie(),1,'goaltender begins in the centre');
+ a.now(500);assert.equal(stage.getGoalie(),2,'right-side goalie movement is observable');
+ a.now(2100);assert.equal(stage.getGoalie(),0,'goalie tracks back left');
+ stage.begin('baseball');
+ assert.equal(stage.getGoalie(),null);
+ const b=setup({reduced:true});
+ const still=b.api.create();still.begin('hockey');
+ b.now(2100);
+ assert.equal(still.getGoalie(),1,'reduced motion keeps a known central goalie');
+});
