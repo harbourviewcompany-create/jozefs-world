@@ -11,6 +11,7 @@ const KEY='jozefs-world-arena-v1';
 const systems=window.JozefArenaSystems;
 if(!systems){$('arena-status').textContent='Arena game systems unavailable. Refresh to retry.';return;}
 let experience=null, camera={x:210,y:300,zoom:1},replay=null,replayHistory=[],replayWait=0,joystick={x:0,y:0};
+let padVector={x:0,y:0},padPrevious={},padConnected=false,padRaf=0;
 const clamp=(n,lo,hi)=>Math.max(lo,Math.min(hi,n));
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const msg=s=>{const t=$('arena-status');if(t)t.textContent=s;};
@@ -118,19 +119,19 @@ function hud(){
 function start(){
  mode='playing';time=MATCH_LENGTH;us=0;them=0;streak=0;flash=0;last=0;
  shots=0;keeperSaves=0;skillCooldown=0;skillTime=0;lastHudTick=-1;
- camera={x:210,y:300,zoom:1};replay=null;replayHistory=[];replayWait=0;joystick={x:0,y:0};experience?.reset();
+ camera={x:210,y:300,zoom:1};replay=null;replayHistory=[];replayWait=0;joystick={x:0,y:0};padVector={x:0,y:0};experience?.reset();
  squad=getSquad();resetPositions();hud();cue('start');
  msg('KICK OFF! Move, pass to your teammate, and shoot into the top goal.');
  cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
 }
 function pause(){
- if(mode==='playing'){mode='paused';cancelAnimationFrame(raf);keys.clear();heldDirections.clear();stick={x:0,y:0};joystick={x:0,y:0};experience?.clearJoystick();last=0;msg('Half-time breather. Your score is safe.');}
+ if(mode==='playing'){mode='paused';cancelAnimationFrame(raf);keys.clear();heldDirections.clear();stick={x:0,y:0};joystick={x:0,y:0};padVector={x:0,y:0};experience?.clearJoystick();last=0;msg('Half-time breather. Your score is safe.');}
  else if(mode==='paused'){mode='playing';last=0;msg('Back on the ball!');raf=requestAnimationFrame(loop);}
  hud();
 }
 function end(){
  if(mode!=='playing')return;
- mode='over';cancelAnimationFrame(raf);keys.clear();heldDirections.clear();stick={x:0,y:0};joystick={x:0,y:0};experience?.clearJoystick();
+ mode='over';cancelAnimationFrame(raf);keys.clear();heldDirections.clear();stick={x:0,y:0};joystick={x:0,y:0};padVector={x:0,y:0};experience?.clearJoystick();
  lifetime.games=Math.min(99999,lifetime.games+1);
  lifetime.goals=Math.min(99999,lifetime.goals+us);
  lifetime.best=Math.max(lifetime.best,us);
@@ -169,13 +170,13 @@ function setAim(i){
  if(mode==='playing')msg('AIM SET: '+SHOT_ZONES[aim].name+'. Create space, then shoot!');
 }
 function skillMove(){
- if(mode!=='playing'||skillCooldown>0)return;
+ if(mode!=='playing'||replay||skillCooldown>0)return;
  skillCooldown=5.5;skillTime=.66;experience?.haptic(20);
  msg('SKILL MOVE! Burst past the press!');
  hud();
 }
 function pass(){
- if(mode!=='playing'||passCooldown>0)return;
+ if(mode!=='playing'||replay||passCooldown>0)return;
  if(ball.owner!=='actor'&&ball.owner!=='mate'){msg('Recover the ball first!');return;}
  const sender=ball.owner==='actor'?actor:mate;
  const receiver=ball.owner==='actor'?mate:actor;
@@ -187,7 +188,7 @@ function pass(){
  msg(passRecipient==='mate'?'PERFECT WEIGHT! The ball is heading to your teammate.':'ONE-TWO! Jozef is getting the return pass.');
 }
 function shoot(){
- if(mode!=='playing'||shotCooldown>0)return;
+ if(mode!=='playing'||replay||shotCooldown>0)return;
  if(ball.owner!=='actor'&&ball.owner!=='mate'){msg('Get possession first!');return;}
  const p=ball.owner==='mate'?mate:actor;
  // Intentional corner aiming beats random, unstoppable goalkeeper animations.
@@ -246,8 +247,8 @@ function update(dt){
  keeperReact=Math.max(0,keeperReact-dt);
  shotCooldown=Math.max(0,shotCooldown-dt);passCooldown=Math.max(0,passCooldown-dt);
  tackleCooldown=Math.max(0,tackleCooldown-dt);
- let dx=stick.x+joystick.x+(keys.has('ArrowRight')||keys.has('d')?1:0)-(keys.has('ArrowLeft')||keys.has('a')?1:0);
- let dy=stick.y+joystick.y+(keys.has('ArrowDown')||keys.has('s')?1:0)-(keys.has('ArrowUp')||keys.has('w')?1:0);
+ let dx=stick.x+joystick.x+padVector.x+(keys.has('ArrowRight')||keys.has('d')?1:0)-(keys.has('ArrowLeft')||keys.has('a')?1:0);
+ let dy=stick.y+joystick.y+padVector.y+(keys.has('ArrowDown')||keys.has('s')?1:0)-(keys.has('ArrowUp')||keys.has('w')?1:0);
  if(target){
   const td=dist(actor,target);
   if(td>10){dx=target.x-actor.x;dy=target.y-actor.y;}else target=null;
@@ -458,12 +459,13 @@ function aimMovementAtPointer(ev){
 }
 canvas.addEventListener('pointerdown',ev=>{
  if(mode==='ready'){start();return;}
+ if(replay){finishReplay();return;}
  if(mode!=='playing')return;
  aimMovementAtPointer(ev);
 });
 canvas.addEventListener('pointermove',ev=>{
  // Drag across the pitch to redirect a player without extra taps.
- if(mode==='playing'&&(ev.buttons&1)===1)aimMovementAtPointer(ev);
+ if(mode==='playing'&&!replay&&(ev.buttons&1)===1)aimMovementAtPointer(ev);
 });
 document.addEventListener('keydown',ev=>{
  if(!$('arena')?.classList.contains('active'))return;
@@ -480,7 +482,61 @@ document.addEventListener('keyup',ev=>{
  const k=ev.key.toLowerCase();
  keys.delete(k.startsWith('arrow')?'Arrow'+k.slice(5)[0].toUpperCase()+k.slice(6):k);
 });
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode==='playing'){pause();draw();}});
+// Optional physical controllers. The polling loop only runs while a pad is
+// connected, and stops on disconnect or when the page becomes hidden.
+function pollGamepad(){
+ padRaf=0;
+ if(!padConnected||document.hidden)return;
+ let pads=[];
+ try{pads=Array.from(navigator.getGamepads?.()||[]).filter(Boolean);}catch(_){}
+ const active=pads[0];
+ if(active){
+  const p=systems.readGamepad(active),previous=padPrevious;
+  const edge=key=>p[key]&&!previous[key];
+  const onArena=$('arena')?.classList?.contains('active')!==false;
+  if(onArena){
+   padVector=mode==='playing'&&!replay?{x:p.x,y:p.y}:{x:0,y:0};
+   if(p.x||p.y)target=null;
+   if(edge('toggle')&&$('arena-settings')?.hidden!==false&&$('arena-match-report')?.hidden!==false){
+    if(mode==='ready'||mode==='over')start();
+    else pause();
+   }
+   if(mode==='playing'){
+    if(replay&&(edge('shoot')||edge('pass')||edge('skill')))finishReplay();
+    else if(!replay){
+     if(edge('pass'))pass();
+     if(edge('shoot'))shoot();
+     if(edge('skill'))skillMove();
+     if(edge('aimLeft'))setAim((aim+2)%3);
+     if(edge('aimRight'))setAim((aim+1)%3);
+    }
+   }
+  }else padVector={x:0,y:0};
+  padPrevious=p;
+ }else{padVector={x:0,y:0};padPrevious={};}
+ padRaf=requestAnimationFrame(pollGamepad);
+}
+function startGamepadPolling(){
+ if(padRaf||!padConnected||document.hidden)return;
+ padRaf=requestAnimationFrame(pollGamepad);
+}
+window.addEventListener('gamepadconnected',()=>{
+ padConnected=true;padPrevious={};msg('CONTROLLER READY: A PASS · B SHOOT · X SKILL · START PAUSE');
+ startGamepadPolling();
+});
+window.addEventListener('gamepaddisconnected',()=>{
+ let hasPad=false;
+ try{hasPad=Array.from(navigator.getGamepads?.()||[]).some(p=>p?.connected);}catch(_){}
+ padConnected=hasPad;
+ if(!hasPad){
+  if(padRaf)cancelAnimationFrame(padRaf);
+  padRaf=0;padPrevious={};padVector={x:0,y:0};
+ }
+});
+try{padConnected=Array.from(navigator.getGamepads?.()||[]).some(p=>p?.connected);}catch(_){}
+startGamepadPolling();
+
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode==='playing'){pause();draw();}if(!document.hidden)startGamepadPolling();});
 window.addEventListener('blur',()=>{if(mode==='playing'){pause();draw();}});
 window.addEventListener('pagehide',()=>{if(mode==='playing')pause();});
 window.addEventListener('jozef:squad-updated',()=>{squad=getSquad();hud();});
@@ -493,6 +549,7 @@ experience=window.JozefArenaExperience?.mount({
 window.JozefArena=Object.freeze({getProgress:()=>({...lifetime,score:us+'-'+them,mode,
   matchGoals:us,opponentGoals:them,shots,saves:keeperSaves,aim:SHOT_ZONES[aim].name,
   playerX:actor.x,playerY:actor.y,ballOwner:ball.owner,skillReady:skillCooldown<=0,
-  difficulty:experience?.prefs.difficulty||'pro',coins:lifetime.coins,level:systems.progression(lifetime).level})});
+  difficulty:experience?.prefs.difficulty||'pro',coins:lifetime.coins,level:systems.progression(lifetime).level,
+  controllerConnected:padConnected})});
 hud();draw();
 })();
