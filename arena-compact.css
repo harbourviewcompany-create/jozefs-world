@@ -717,3 +717,18 @@
     outline-offset: 1px;
   }
 }
+
+@media (max-width: 1100px) {
+  #arena.section.active .arena-direction button.is-pressed,
+  #arena.section.active .arena-direction button:active {
+    border-color: #efffb7;
+    background: #d0ff76;
+    color: #072b29;
+    box-shadow: inset 0 1px 0 #ffffff88,0 0 0 2px #c8ff5a36;
+  }
+  #arena.section.active #arena-canvas { -webkit-user-select: none; user-select: none; }
+  #arena.section.active .arena-pitch-frame { touch-action: manipulation; }
+  #arena.section.active .arena-controller,
+  #arena.section.active .arena-direction,
+  #arena.section.active .arena-aim-bar { -webkit-user-select: none; user-select: none; }
+}
