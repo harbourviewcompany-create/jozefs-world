@@ -7,6 +7,14 @@ Jozef FC // After Dark is a private football universe. Play an actual Arena matc
 
 ## The experience
 
+### Visual and mobile UX polish (October 2026)
+- Four original CSS sports posters now give hockey, baseball, basketball and wrestling distinct equipment artwork instead of generic rectangular launchers. Sport launchers and event tabs show each game's **actual saved personal best** and All-Sport Cup qualification.
+- The Coach's Playbook home preview displays the next live objective. Its new **Show Unfinished** control focuses on remaining challenges, with a useful empty state when a category is complete. Filtering never changes XP, stored achievements or progress.
+- Sports and Playbook surfaces have stronger contrast, sport-specific identity, compact touch-first layouts, visible focus rings and reduced-motion support; no remote image assets or third-party accounts.
+- Original football, save/restore, all-sport progression, navigation and local-only offline play are preserved.
+
+
+
 ### UI refresh — sports-first mobile design (October 2026)
 - **Five primary tabs:** HQ, Football Arena, Sports Arcade, Playbook, and Club are immediately available on phones. The desktop navigation shows the same core destinations.
 - **Explore:** an accessible navigation dialog gives direct access to every other existing area, including Street//11, Career, World Tour, Sports Scores, Watch, training games, stickers, Chronicle, Matchday, Locker Room and Notes. No sections, saves or games are removed.
