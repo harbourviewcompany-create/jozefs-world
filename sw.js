@@ -1,5 +1,5 @@
 /* Jozef FC offline shell: only same-origin public game assets. Never caches personal progress. */
-const CACHE='jozef-fc-app-shell-v36';
+const CACHE='jozef-fc-app-shell-v37';
 const CORE=[
  './','./index.html','./world.html','./favicon.svg','./manifest.webmanifest',
  './styles.css','./pitch.css','./extras.css','./tournament.css','./career.css',
@@ -18,9 +18,14 @@ const CORE=[
  './arena-compact.css','./playbook.js','./street-powerups.css','./ui-refresh.css'
 ];
 self.addEventListener('install',event=>{
- event.waitUntil(caches.open(CACHE)
-  .then(cache=>cache.addAll(CORE.map(path=>new URL(path,self.registration.scope).href)))
-  .then(()=>self.skipWaiting()));
+ event.waitUntil(caches.open(CACHE).then(async cache=>{
+  // An optional missing file must not prevent the entire offline shell from installing.
+  await Promise.all(CORE.map(async path=>{
+   try{await cache.add(new URL(path,self.registration.scope).href);}
+   catch(err){console.warn('Offline asset unavailable:',path,err);}
+  }));
+  await self.skipWaiting();
+ }));
 });
 self.addEventListener('activate',event=>{
  event.waitUntil(caches.keys().then(keys=>Promise.all(
