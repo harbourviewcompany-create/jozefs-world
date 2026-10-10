@@ -12,6 +12,8 @@ Jozef FC // After Dark is a private football universe. Play an actual Arena matc
 - Wrestling is an **unofficial original fan challenge** inspired by the spectacle of WWE, with no WWE logos, licensed images, unsafe moves, violence or claim of endorsement.
 - Keyboard controls (1–3 and Space) and mobile touch buttons work across modes. The baseball/basketball minigames offer untimed accessible attempts when reduced motion is preferred.
 - Best scores and play counts are saved locally in `jozefs-world-multisport-v1`. Valid completed games can earn **20 XP**, capped at four rewarded games per day across all sports; All-Sport Debut and Four-Sport Star badges join the shared player profile.
+- **All-Sport Cup:** Earn a qualifying stamp by reaching at least 3/5 in each sport. The four qualifying stamps reveal a permanent gold trophy in the Sports Arcade and unlock an All-Sport Cup Winner badge on the existing local profile after a completed game. The Cup automatically directs the player to the next unqualified sport and does not create an extra storage key or grant uncontrolled XP.
+- Every five-turn event shows a visual ✓/× result tracker, with improved final-round labels, reduced-motion support and keyboard-focus styling. The Cup has no expiration and does not pressure children into daily play.
 - Existing football and single shared Club progress is preserved. Sports Arcade results appear in the local Chronicle and are included in the device-only Club backup.
 - Sports Scores remains separate, with additional NHL/Ottawa Senators and MLB/Toronto Blue Jays team selectors (live/recent results depend on ESPN network availability); the four arcade games work offline.
 
