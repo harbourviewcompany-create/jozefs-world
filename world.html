@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JOZEF FC // AFTER DARK — Your Game. Your World.</title>
-  <meta name="description" content="Jozef FC // After Dark. An original football universe with The Arena, controllable football matches, squad building, STREET//11, Career Mode, World Tour and challenges. Your game. Your world." />
+  <meta name="description" content="Jozef FC // After Dark. An original multi-sport universe with football, hockey, baseball, basketball, wrestling showmanship, and club challenges. Your game. Your world." />
   <meta property="og:title" content="JOZEF FC // AFTER DARK" />
   <meta property="og:description" content="Your game. Your world. No limits. Play real football in The Arena, build your squad, and write a soccer legacy." />
   <meta property="og:type" content="website" />
@@ -36,6 +36,7 @@
   <link rel="stylesheet" href="club-hq.css" />
   <link rel="stylesheet" href="chronicle.css" />
   <link rel="stylesheet" href="locker.css" />
+  <link rel="stylesheet" href="multisport.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Lilita+One&family=Nunito:wght@400;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
@@ -73,7 +74,8 @@
       <button class="nav-btn" data-section="tour">World Tour</button>
       <button class="nav-btn" data-section="career">Career</button>
       <button class="nav-btn" data-section="news">Scores</button>
-      <button class="nav-btn" data-section="sports">Sports Room</button>
+      <button class="nav-btn" data-section="sports-arcade">Sports Arcade</button>
+      <button class="nav-btn" data-section="sports">Sports Scores</button>
       <button class="nav-btn" data-section="learn">Learn</button>
       <button class="nav-btn" data-section="training">Training</button>
       <button class="nav-btn" data-section="matchday">Match Day</button>
@@ -210,6 +212,19 @@
         <strong>WORLD <span>TOUR.</span></strong><small>FIVE COUNTRIES. ONE CUP. BECOME THE CHAMPION.</small><span class="studio-mode-link">START THE JOURNEY <span>→</span></span>
       </button>
     </div>
+
+    <section class="multi-home-section" aria-labelledby="multi-home-title">
+      <div class="studio-section-heading">
+        <div><span class="studio-kicker">THE NEXT CHAPTER / MORE THAN FOOTBALL</span><h2 id="multi-home-title">CHOOSE YOUR <em>SPORT.</em></h2></div>
+        <p>Hockey, baseball, basketball, or the wrestling spotlight. Four games. One shared club.</p>
+      </div>
+      <div class="multi-home">
+        <button type="button" class="multi-home-card" data-multi-start="hockey"><span>01 / ON THE ICE</span><strong>HOCKEY SHOOTOUT.</strong><small>CHASE THE GOAL ↗</small></button>
+        <button type="button" class="multi-home-card" data-multi-start="baseball"><span>02 / AT THE PLATE</span><strong>BASEBALL DERBY.</strong><small>SWING FOR THE FENCES ↗</small></button>
+        <button type="button" class="multi-home-card" data-multi-start="basketball"><span>03 / ON THE COURT</span><strong>BASKETBALL SHOTS.</strong><small>FROM DOWNTOWN ↗</small></button>
+        <button type="button" class="multi-home-card" data-multi-start="wrestling"><span>04 / UNDER THE LIGHTS</span><strong>WRESTLING SHOW.</strong><small>RULE THE STAGE ↗</small></button>
+      </div>
+    </section>
 
     <div class="studio-lower-grid">
       <div class="jw-profile-banner studio-profile" data-jw-kit>
@@ -796,7 +811,59 @@
   </section>
 
   <!-- NEWS SECTION -->
-  <section id="sports" class="section" tabindex="-1" aria-labelledby="sports-title">
+  
+<section id="sports-arcade" class="section" tabindex="-1" aria-labelledby="multi-title">
+  <div class="multi-header">
+    <div><span class="studio-kicker">JOZEF FC / THE ALL-SPORTS UNIVERSE</span>
+      <h2 id="multi-title">SPORTS <em>ARCADE.</em></h2>
+      <p>Pick a sport, play five turns, and beat your best score. One shared profile. All games can be played offline, with touch or keyboard.</p>
+    </div>
+    <span class="multi-promise">4 ORIGINAL GAMES / 1 CLUB</span>
+  </div>
+  <div class="multi-tabs" role="group" aria-label="Choose a sport">
+    <button id="multi-tab-hockey" type="button" class="multi-mode selected" data-theme="hockey" aria-pressed="true"><span class="multi-mode-tag">01 / RINK</span><strong>HOCKEY.</strong><small>SHOOTOUT CHALLENGE</small></button>
+    <button id="multi-tab-baseball" type="button" class="multi-mode" data-theme="baseball" aria-pressed="false"><span class="multi-mode-tag">02 / DIAMOND</span><strong>BASEBALL.</strong><small>HOME RUN DERBY</small></button>
+    <button id="multi-tab-basketball" type="button" class="multi-mode" data-theme="basketball" aria-pressed="false"><span class="multi-mode-tag">03 / COURT</span><strong>BASKETBALL.</strong><small>THREE-POINT CHALLENGE</small></button>
+    <button id="multi-tab-wrestling" type="button" class="multi-mode" data-theme="wrestling" aria-pressed="false"><span class="multi-mode-tag">04 / ARENA</span><strong>WRESTLING.</strong><small>SHOWTIME CHALLENGE</small></button>
+  </div>
+  <div class="multi-game-layout">
+    <div class="multi-game">
+      <div class="multi-hud">
+        <div><small>EVENT</small><strong id="multi-name">HOCKEY SHOOTOUT</strong></div>
+        <div><small>TURN</small><strong class="multi-turn" id="multi-round">1 / 5</strong></div>
+        <div><small>SCORE</small><strong id="multi-score">0 / 5 GOALS</strong></div>
+      </div>
+      <div class="multi-stage" id="multi-stage" data-sport="hockey">
+        <div class="multi-scene-art" aria-hidden="true"></div>
+        <strong class="multi-stage-title" id="multi-stage-label">AIM FOR THE OPEN CORNER</strong>
+        <span id="multi-scene-text" aria-hidden="true"></span>
+        <p id="multi-message" class="multi-commentary" role="status" aria-live="polite">Choose LEFT, CENTRE or RIGHT to beat the keeper.</p>
+      </div>
+      <div class="multi-timing" id="multi-timing" hidden>
+        <label for="multi-meter">SWEET SPOT / TIME YOUR MOVE</label>
+        <div class="multi-meter" id="multi-meter" role="img" aria-label="Power timing zone, aim for the centre">
+          <span class="multi-meter-marker" id="multi-meter-marker"></span>
+        </div>
+      </div>
+      <div id="multi-controls" class="multi-controls" aria-label="Sport game controls"></div>
+      <p class="multi-key-help" id="multi-keyhelp">Use 1, 2, 3 or tap a choice.</p>
+    </div>
+    <aside class="multi-sidebar">
+      <span class="studio-kicker">YOUR CLUB / ALL-SPORT RECORDS</span>
+      <h3>THE RECORD BOOK.</h3>
+      <div class="multi-records">
+        <div class="multi-record"><div><strong>Hockey</strong><small id="multi-played-hockey">0 PLAYED</small></div><b id="multi-best-hockey">0/5</b></div>
+        <div class="multi-record"><div><strong>Baseball</strong><small id="multi-played-baseball">0 PLAYED</small></div><b id="multi-best-baseball">0/5</b></div>
+        <div class="multi-record"><div><strong>Basketball</strong><small id="multi-played-basketball">0 PLAYED</small></div><b id="multi-best-basketball">0/5</b></div>
+        <div class="multi-record"><div><strong>Wrestling</strong><small id="multi-played-wrestling">0 PLAYED</small></div><b id="multi-best-wrestling">0/5</b></div>
+      </div>
+      <h4>HOW TO PLAY</h4>
+      <p class="multi-instructions" id="multi-instructions">Choose a direction and shoot!</p>
+      <p class="multi-unofficial">Wrestling Showdown is an original pretend sports-entertainment challenge inspired by wrestling shows. It is not affiliated with or endorsed by WWE. No contact moves to copy.</p>
+    </aside>
+  </div>
+</section>
+<section id="sports" class="section" tabindex="-1" aria-labelledby="sports-title">
     <h2 id="sports-title" class="section-title">Sports Room</h2>
     <p class="section-desc">Pick your teams and call the game. No odds and no betting. Scores can be delayed.</p>
     <button type="button" class="action-btn" id="sports-refresh">Refresh games</button>
@@ -1132,6 +1199,7 @@
   <script src="album.js"></script>
   <script src="sports.js"></script>
   <script src="locker.js"></script>
+  <script src="multisport.js"></script>
   <script src="arcade.js" defer></script>
   <script src="street.js"></script>
   <script src="roblox.js"></script>
