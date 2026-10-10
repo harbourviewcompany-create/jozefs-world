@@ -1,3 +1,4 @@
+const bundled=require('./bundle-contract.cjs');
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -49,7 +50,7 @@ test('Chronicle is a real deep-linked section with responsive print poster, cach
  assert.equal(html,fs.readFileSync(path.join(root,'index.html'),'utf8'));
  assert.equal((html.match(/id="chronicle"/g)||[]).length,1);
  assert.equal((html.match(/src="chronicle.js"/g)||[]).length,1);
- assert.equal((html.match(/href="chronicle.css"/g)||[]).length,1);
+ bundled.css(root,html,sw,'chronicle.css');
  for(const id of ['chronicle-list','chronicle-games','chronicle-wins','chronicle-tour',
   'chronicle-cover-headline','chronicle-cover-story','chronicle-cover-date',
   'chronicle-print','chronicle-home-summary']){
@@ -57,7 +58,7 @@ test('Chronicle is a real deep-linked section with responsive print poster, cach
  }
  assert.ok(html.includes('data-section="chronicle"'));
  assert.ok(fs.readFileSync(path.join(root,'stadium.js'),'utf8').includes("'chronicle'"));
- for(const file of ['chronicle.js','chronicle.css'])assert.ok(sw.includes("'./"+file+"'"));
+ assert.ok(sw.includes("'./chronicle.js'"));
  assert.match(css,/@media print/);
  assert.match(css,/@media\(max-width:700px\)/);
  assert.match(css,/prefers-reduced-motion:reduce/);
