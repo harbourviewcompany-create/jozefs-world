@@ -15,7 +15,7 @@
     nba: {
       label: 'NBA',
       urls: ['https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard'],
-      teams: ['Raptors', 'Lakers', 'Celtics', 'Warriors', 'Heat']
+      teams: ['Raptors','Lakers','Celtics','Warriors','Heat','Bucks','Knicks','Nets','76ers','Cavaliers','Bulls','Pistons','Pacers','Hawks','Hornets','Magic','Wizards','Nuggets','Timberwolves','Thunder','Trail Blazers','Jazz','Suns','Kings','Clippers','Mavericks','Rockets','Spurs','Grizzlies','Pelicans']
     },
     nfl: {
       label: 'NFL',
@@ -25,12 +25,12 @@
     nhl: {
       label: 'NHL / Hockey',
       urls: ['https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard'],
-      teams: ['Ottawa Senators', 'Toronto Maple Leafs', 'Montreal Canadiens', 'Edmonton Oilers', 'Vancouver Canucks']
+      teams: ['Ottawa Senators','Toronto Maple Leafs','Montreal Canadiens','Edmonton Oilers','Vancouver Canucks','Calgary Flames','Winnipeg Jets','Boston Bruins','Buffalo Sabres','Detroit Red Wings','Florida Panthers','Tampa Bay Lightning','New York Rangers','New York Islanders','New Jersey Devils','Philadelphia Flyers','Pittsburgh Penguins','Washington Capitals','Carolina Hurricanes','Columbus Blue Jackets','Chicago Blackhawks','St. Louis Blues','Nashville Predators','Dallas Stars','Colorado Avalanche','Minnesota Wild','Utah Mammoth','Vegas Golden Knights','Los Angeles Kings','Anaheim Ducks','San Jose Sharks','Seattle Kraken']
     },
     mlb: {
       label: 'MLB / Baseball',
       urls: ['https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard'],
-      teams: ['Toronto Blue Jays', 'New York Yankees', 'Los Angeles Dodgers', 'New York Mets', 'Boston Red Sox']
+      teams: ['Toronto Blue Jays','New York Yankees','Los Angeles Dodgers','New York Mets','Boston Red Sox','Baltimore Orioles','Tampa Bay Rays','Cleveland Guardians','Detroit Tigers','Chicago White Sox','Kansas City Royals','Minnesota Twins','Houston Astros','Los Angeles Angels','Athletics','Seattle Mariners','Texas Rangers','Atlanta Braves','Philadelphia Phillies','Miami Marlins','Washington Nationals','Chicago Cubs','Cincinnati Reds','Milwaukee Brewers','Pittsburgh Pirates','St. Louis Cardinals','Arizona Diamondbacks','Colorado Rockies','San Francisco Giants','San Diego Padres']
     }
   };
 
@@ -62,7 +62,85 @@
     'New York Yankees': 'New York. Navy pinstripes.',
     'Los Angeles Dodgers': 'Los Angeles. Blue script.',
     'New York Mets': 'New York. Orange and blue.',
-    'Boston Red Sox': 'Boston. Red socks, Fenway Park.'
+    'Boston Red Sox': 'Boston. Red socks, Fenway Park.',
+    'Bucks': 'Milwaukee. Green and cream.',
+    'Knicks': 'New York. Orange and blue, Madison Square Garden.',
+    'Nets': 'Brooklyn. Black and white.',
+    '76ers': 'Philadelphia. Red, white, and blue.',
+    'Cavaliers': 'Cleveland. Wine and gold.',
+    'Bulls': 'Chicago. Red and black.',
+    'Pistons': 'Detroit. Red, white, and blue.',
+    'Pacers': 'Indiana. Navy and gold.',
+    'Hawks': 'Atlanta. Red and yellow.',
+    'Hornets': 'Charlotte. Teal and purple.',
+    'Magic': 'Orlando. Blue and black.',
+    'Wizards': 'Washington. Navy, red, and white.',
+    'Nuggets': 'Denver. Navy and gold, altitude.',
+    'Timberwolves': 'Minnesota. Blue and green.',
+    'Thunder': 'Oklahoma City. Blue and orange.',
+    'Trail Blazers': 'Portland. Red and black.',
+    'Jazz': 'Utah. Purple and yellow.',
+    'Suns': 'Phoenix. Orange and purple.',
+    'Kings': 'Sacramento. Purple and silver.',
+    'Clippers': 'Los Angeles. Red, blue, and white.',
+    'Mavericks': 'Dallas. Blue and silver.',
+    'Rockets': 'Houston. Red.',
+    'Spurs': 'San Antonio. Silver and black.',
+    'Grizzlies': 'Memphis. Navy and gold.',
+    'Pelicans': 'New Orleans. Navy and gold.',
+    'Calgary Flames': 'Calgary. Red and yellow.',
+    'Winnipeg Jets': 'Winnipeg. Navy and light blue.',
+    'Boston Bruins': 'Boston. Black and gold.',
+    'Buffalo Sabres': 'Buffalo. Blue and gold.',
+    'Detroit Red Wings': 'Detroit. The Winged Wheel.',
+    'Florida Panthers': 'Sunrise, Florida. Red and gold.',
+    'Tampa Bay Lightning': 'Tampa Bay. Blue and white.',
+    'New York Rangers': 'New York. Blue, red, and white.',
+    'New York Islanders': 'Long Island. Orange and blue.',
+    'New Jersey Devils': 'New Jersey. Red and black.',
+    'Philadelphia Flyers': 'Philadelphia. Orange and black.',
+    'Pittsburgh Penguins': 'Pittsburgh. Black and gold.',
+    'Washington Capitals': 'Washington. Red, white, and blue.',
+    'Carolina Hurricanes': 'Raleigh. Red and black.',
+    'Columbus Blue Jackets': 'Columbus. Navy and red.',
+    'Chicago Blackhawks': 'Chicago. Red and black.',
+    'St. Louis Blues': 'St. Louis. Blue and yellow.',
+    'Nashville Predators': 'Nashville. Gold and navy.',
+    'Dallas Stars': 'Dallas. Green and black.',
+    'Colorado Avalanche': 'Denver. Burgundy and blue.',
+    'Minnesota Wild': 'St. Paul. Green and red.',
+    'Utah Mammoth': 'Utah. The newest NHL club.',
+    'Vegas Golden Knights': 'Las Vegas. Gold and steel.',
+    'Los Angeles Kings': 'Los Angeles. Black and silver.',
+    'Anaheim Ducks': 'Anaheim. Orange and black.',
+    'San Jose Sharks': 'San Jose. Teal and black.',
+    'Seattle Kraken': 'Seattle. Deep blue and red.',
+    'Baltimore Orioles': 'Baltimore. Orange and black.',
+    'Tampa Bay Rays': 'St. Petersburg. Navy and light blue.',
+    'Cleveland Guardians': 'Cleveland. Navy and red.',
+    'Detroit Tigers': 'Detroit. Navy and orange.',
+    'Chicago White Sox': 'Chicago. Black and silver.',
+    'Kansas City Royals': 'Kansas City. Royal blue.',
+    'Minnesota Twins': 'Minneapolis. Navy and red.',
+    'Houston Astros': 'Houston. Orange and navy.',
+    'Los Angeles Angels': 'Anaheim. Red.',
+    'Athletics': 'West Sacramento. Green and gold.',
+    'Seattle Mariners': 'Seattle. Navy and teal.',
+    'Texas Rangers': 'Arlington. Blue and red.',
+    'Atlanta Braves': 'Atlanta. Navy and red.',
+    'Philadelphia Phillies': 'Philadelphia. Red.',
+    'Miami Marlins': 'Miami. Black and teal.',
+    'Washington Nationals': 'Washington. Red, white, and blue.',
+    'Chicago Cubs': 'Chicago. Blue, Wrigley Field.',
+    'Cincinnati Reds': 'Cincinnati. Red.',
+    'Milwaukee Brewers': 'Milwaukee. Navy and gold.',
+    'Pittsburgh Pirates': 'Pittsburgh. Black and gold.',
+    'St. Louis Cardinals': 'St. Louis. Red.',
+    'Arizona Diamondbacks': 'Phoenix. Sedona red and black.',
+    'Colorado Rockies': 'Denver. Purple and black.',
+    'San Francisco Giants': 'San Francisco. Orange and black.',
+    'San Diego Padres': 'San Diego. Brown and gold.'
+
   };
   function load() {
     try {
