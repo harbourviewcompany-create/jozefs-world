@@ -120,3 +120,38 @@ test('camera widens immediately when Jozef returns near the defensive end',()=>{
  assert.ok(S.screenToWorld(210,600,cam).y>=jozef.y+29.99);
  assert.ok(S.screenToWorld(210,0,cam).y<=1);
 });
+
+
+test('distance matters: deep shot is low chance; moving and passing reward skill',()=>{
+ const deep=S.shotProfile(493,0,0,'pro');
+ const midfield=S.shotProfile(300,0,0,'pro');
+ const attack=S.shotProfile(165,0,0,'pro');
+ const combination=S.shotProfile(165,2,.2,'pro');
+ assert.ok(deep.onTarget<.12,'own-half shot must rarely be on target');
+ assert.ok(midfield.onTarget>deep.onTarget*2,'advancing improves the shot');
+ assert.ok(attack.onTarget>.7,'good positioning is rewarded');
+ assert.ok(combination.onTarget>attack.onTarget,'build-up passing improves accuracy');
+ assert.ok(combination.onTarget<=1);
+ assert.ok(S.shotProfile(220,0,0,'rookie').onTarget>
+   S.shotProfile(220,0,0,'legend').onTarget,'rookie must remain accessible');
+});
+test('missed long shots genuinely miss the posts, not magically hit the target',()=>{
+ const zones=[{x:171},{x:210},{x:249}],deep=S.shotProfile(493,0,0,'pro');
+ for(const i of [0,1,2]){
+  const missed=S.shotTarget(i,zones,deep,.5,.5,148,272);
+  assert.equal(missed.onTarget,false);
+  assert.ok(missed.x<148||missed.x>272,'shots should go outside actual goal');
+ }
+ for(const i of [0,1,2]){
+  const accurate=S.shotTarget(i,zones,{onTarget:.9},0,.5,148,272);
+  assert.equal(accurate.onTarget,true);
+  assert.ok(accurate.x>148&&accurate.x<272);
+ }
+});
+test('shot odds remain bounded for unexpected inputs',()=>{
+ for(const y of [-300,0,140,320,560,1200]){
+  const p=S.shotProfile(y,150,300,'legend');
+  assert.ok(Number.isFinite(p.onTarget));
+  assert.ok(p.onTarget>=.06&&p.onTarget<=.94);
+ }
+});
