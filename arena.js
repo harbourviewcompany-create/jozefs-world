@@ -7,7 +7,7 @@ if(!canvas)return;
 const ctx=canvas.getContext('2d');
 if(!ctx){$('arena-status').textContent='A newer browser with Canvas support is needed.';return;}
 const W=420,H=600,GOAL={left:148,right:272,top:16},MATCH_LENGTH=75;
-const KEY='jozefs-world-arena-v1';
+const KEY='jozefs-world-arena-v1', MATCH_SNAPSHOT_KEY='jozef-arena-match-snapshot-v1';
 const systems=window.JozefArenaSystems;
 if(!systems){$('arena-status').textContent='Arena game systems unavailable. Refresh to retry.';return;}
 let experience=null, camera={x:210,y:300,zoom:1},replay=null,replayHistory=[],replayWait=0,joystick={x:0,y:0};
@@ -33,7 +33,7 @@ const venues=[
   {name:'LEGEND ARENA',accent:'#ffd180',need:5,rival:'THE NEON ROYALS',story:'The final gates are open. You face the city champions. Keep winning to write your own legend.'}
 ];
 let mode='ready',time=MATCH_LENGTH,us=0,them=0,streak=0,flash=0,last=0,raf=0;
-let lastFrameTick=0,rawFrameTick=0,slowFrameCount=0,stableFrameCount=0,autoBattery=false;
+let lastFrameTick=0,rawFrameTick=0,slowFrameCount=0,stableFrameCount=0,autoBattery=false,checkpointElapsed=0;
 let actor={x:210,y:494},mate={x:298,y:320},ball={x:210,y:482,owner:'actor',vx:0,vy:0};
 let defenders=[],keeper={x:210,y:48},keys=new Set(),stick={x:0,y:0},target=null,shotCooldown=0,tackleCooldown=0,passCooldown=0;
 const SHOT_ZONES=[{name:'LEFT POST',x:171},{name:'CENTRE',x:210},{name:'RIGHT POST',x:249}];
@@ -141,7 +141,56 @@ function hud(){
  const b=$('arena-start');if(b)b.textContent=mode==='ready'?'KICK OFF →':mode==='playing'?'PAUSE':mode==='paused'?'RESUME →':'PLAY AGAIN →';
  canvas.setAttribute('aria-label','Football pitch, '+mode+'. Jozef FC '+us+' to '+them+'. '+Math.ceil(Math.max(0,time))+' seconds. Move with arrow keys or touch controls. Pass with J, shoot with K.');
 }
+// A short-lived, local-only checkpoint protects a match when mobile browsers
+// suspend or discard a tab. Never stores accounts, contacts, or other user data.
+function clearMatchSnapshot(){
+ try{localStorage.removeItem?.(MATCH_SNAPSHOT_KEY);}catch(_){}
+}
+function saveMatchSnapshot(){
+ if(mode!=='playing'&&mode!=='paused')return;
+ try{
+  localStorage.setItem(MATCH_SNAPSHOT_KEY,JSON.stringify({
+   version:1,savedAt:Date.now(),time,us,them,shots,keeperSaves,
+   actor,mate,ball,defenders,keeper,aim,skillCooldown,skillTime,
+   shotCooldown,tackleCooldown,passCooldown,passChain,
+   rivalCarrier,rivalElapsed,counterTime,counterRecoveries,rivalAttacks
+  }));
+ }catch(_){}
+}
+function restoreMatchSnapshot(){
+ try{
+  const old=JSON.parse(localStorage.getItem(MATCH_SNAPSHOT_KEY)||'null');
+  if(!old||old.version!==1||!Number.isFinite(old.savedAt)||
+    Date.now()-old.savedAt>2*60*60*1000||old.savedAt>Date.now()+60000)return false;
+  if(!(old.time>0&&old.time<=MATCH_LENGTH))return false;
+  const validPoint=p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.y)&&
+    p.x>=0&&p.x<=W&&p.y>=0&&p.y<=H;
+  if(!validPoint(old.actor)||!validPoint(old.mate)||!validPoint(old.ball)||
+    !validPoint(old.keeper)||!Array.isArray(old.defenders)||
+    old.defenders.length!==3||!old.defenders.every(validPoint))return false;
+  if(!['actor','mate','free','pass','shot','rival'].includes(old.ball.owner))return false;
+  time=old.time;us=clamp(Number(old.us)||0,0,99);them=clamp(Number(old.them)||0,0,99);
+  shots=clamp(Number(old.shots)||0,0,99);keeperSaves=clamp(Number(old.keeperSaves)||0,0,99);
+  actor=old.actor;mate=old.mate;ball=old.ball;defenders=old.defenders;keeper=old.keeper;
+  aim=clamp(Number(old.aim)||0,0,2);
+  skillCooldown=clamp(Number(old.skillCooldown)||0,0,10);
+  skillTime=clamp(Number(old.skillTime)||0,0,1);
+  shotCooldown=clamp(Number(old.shotCooldown)||0,0,2);
+  tackleCooldown=clamp(Number(old.tackleCooldown)||0,0,2);
+  passCooldown=clamp(Number(old.passCooldown)||0,0,2);
+  passChain=clamp(Number(old.passChain)||0,0,3);
+  rivalCarrier=clamp(Number(old.rivalCarrier)||0,-1,2);
+  rivalElapsed=clamp(Number(old.rivalElapsed)||0,0,10);
+  counterTime=clamp(Number(old.counterTime)||0,0,6);
+  counterRecoveries=clamp(Number(old.counterRecoveries)||0,0,99);
+  rivalAttacks=clamp(Number(old.rivalAttacks)||0,0,99);
+  if(ball.owner==='rival'&&rivalCarrier<0)return false;
+  squad=getSquad();mode='paused';last=0;lastFrameTick=0;rawFrameTick=0;
+  return true;
+ }catch(_){return false;}
+}
 function start(){
+ clearMatchSnapshot();checkpointElapsed=0;
  mode='playing';time=MATCH_LENGTH;us=0;them=0;streak=0;flash=0;last=0;
  shots=0;keeperSaves=0;blockedShots=0;counterRecoveries=0;rivalAttacks=0;skillCooldown=0;skillTime=0;lastHudTick=-1;
  camera={x:210,y:300,zoom:1};replay=null;replayHistory=[];replayWait=0;joystick={x:0,y:0};padVector={x:0,y:0};experience?.reset();
@@ -151,12 +200,13 @@ function start(){
  cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
 }
 function pause(){
- if(mode==='playing'){mode='paused';cancelAnimationFrame(raf);keys.clear();heldDirections.clear();stick={x:0,y:0};joystick={x:0,y:0};padVector={x:0,y:0};experience?.clearJoystick();last=0;msg('Half-time breather. Your score is safe.');}
+ if(mode==='playing'){mode='paused';cancelAnimationFrame(raf);keys.clear();heldDirections.clear();stick={x:0,y:0};joystick={x:0,y:0};padVector={x:0,y:0};experience?.clearJoystick();last=0;saveMatchSnapshot();msg('Half-time breather. Your score is safe.');}
  else if(mode==='paused'){mode='playing';last=0;msg('Back on the ball!');raf=requestAnimationFrame(loop);}
  hud();
 }
 function end(){
  if(mode!=='playing')return;
+ clearMatchSnapshot();
  mode='over';cancelAnimationFrame(raf);keys.clear();heldDirections.clear();stick={x:0,y:0};joystick={x:0,y:0};padVector={x:0,y:0};experience?.clearJoystick();
  lifetime.games=Math.min(99999,lifetime.games+1);
  lifetime.goals=Math.min(99999,lifetime.goals+us);
@@ -566,6 +616,8 @@ function loop(t){
   replay.elapsed+=dt;
   if(replay.elapsed>=replay.duration)finishReplay();
  }else if(dt){
+  checkpointElapsed+=dt;
+  if(checkpointElapsed>=2.5){checkpointElapsed=0;saveMatchSnapshot();}
   captureHistory(dt);update(dt);
   camera=systems.cameraFor(actor,ball,mode,camera,dt,
    Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches),experience?.prefs.camera!==false);
@@ -764,5 +816,6 @@ window.JozefArena=Object.freeze({getProgress:()=>({...lifetime,score:us+'-'+them
   shotChance:systems.shotProfile((ball.owner==='mate'?mate:actor).y,passChain,squad.shot+Math.min(.18,counterTime*.033),experience?.prefs.difficulty||'pro').onTarget,
   difficulty:experience?.prefs.difficulty||'pro',coins:lifetime.coins,level:systems.progression(lifetime).level,
   controllerConnected:padConnected})});
+if(restoreMatchSnapshot())msg('MATCH RESTORED! TAP RESUME WHEN READY.');
 hud();draw();
 })();
