@@ -103,8 +103,20 @@
           const data = load();
           data[id] = data[id] || { team: select.value };
           data[id].call = call;
+          data.calls = Array.isArray(data.calls) ? data.calls : [];
+          data.calls.unshift(select.value + ': ' + call);
+          data.calls = data.calls.slice(0, 6);
           save(data);
           paint();
+          if (window.localStorage) {
+            try {
+              const album = JSON.parse(localStorage.getItem('jozefs-world-album-v1') || '{}');
+              if (!album.caller) {
+                album.caller = Date.now();
+                localStorage.setItem('jozefs-world-album-v1', JSON.stringify(album));
+              }
+            } catch (err) { /* sticker can wait */ }
+          }
         });
         calls.appendChild(button);
       });
@@ -138,6 +150,11 @@
   function boot() {
     if (!document.getElementById('sports-board')) return;
     paint();
+    const log = document.getElementById('sports-log');
+    if (log) {
+      const calls = load().calls || [];
+      log.textContent = calls.length ? 'Your calls: ' + calls.join(' · ') : 'Your calls stay on this device.';
+    }
     document.getElementById('sports-refresh')?.addEventListener('click', paint);
   }
 

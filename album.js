@@ -10,7 +10,11 @@
     { id: 'clean', name: 'Clean sheet', need: 'Win without conceding' },
     { id: 'street', name: 'Night run', need: 'Finish Street//11' },
     { id: 'street20', name: 'Neon 20', need: 'Score 20 on Street' },
-    { id: 'street50', name: 'Street star', need: 'Score 50 on Street' }
+    { id: 'street50', name: 'Street star', need: 'Score 50 on Street' },
+    { id: 'street100', name: 'Century run', need: 'Score 100 on Street' },
+    { id: 'five', name: 'Five matches', need: 'Finish 5 Arena matches' },
+    { id: 'draw', name: 'Even game', need: 'Draw in the Arena' },
+    { id: 'caller', name: 'Called it', need: 'Call a game in Sports Room' }
   ];
 
   function load() {
@@ -53,18 +57,32 @@
     });
     const count = document.getElementById('album-count');
     if (count) count.textContent = Object.keys(album).length + ' / ' + STICKERS.length;
+    const tale = document.getElementById('album-story');
+    if (tale) {
+      const earned = Object.keys(album).length;
+      tale.textContent = earned === 0 ? 'Empty slots stay hidden until you earn them.' : earned === STICKERS.length ? 'The book is full. You collected every sticker.' : earned + ' stickers in the book. ' + (STICKERS.length - earned) + ' still to find.';
+    }
   }
 
   function scout(us, them) {
     const words = us > them ? ['Fast', 'Brave', 'Clinical'] : us === them ? ['Solid', 'Patient', 'Even'] : ['Brave', 'Learning', 'Hungry'];
-    const line = them === 0 && us > 0 ? 'They did not score.' : us === 0 ? 'Next one, shoot earlier.' : 'Keep that run.';
+    const story = us > them
+      ? 'You found the goal and the rivals could not live with it.'
+      : us === them
+        ? 'Neither side blinked. One more shot wins it next time.'
+        : 'They scored on the break. Next match, keep the ball in their half.';
+    const next = us >= 3 ? 'Chase the hat-trick sticker again.' : them === 0 ? 'Protect the clean sheet.' : 'Score first.';
     const card = document.getElementById('scout-report');
     if (!card) return;
     card.hidden = false;
     const title = document.getElementById('scout-words');
     const tip = document.getElementById('scout-tip');
+    const tale = document.getElementById('scout-story');
+    const nxt = document.getElementById('scout-next');
     if (title) title.textContent = words.join('. ') + '.';
-    if (tip) tip.textContent = line;
+    if (tip) tip.textContent = them === 0 && us > 0 ? 'They did not score.' : us === 0 ? 'Next one, shoot earlier.' : 'Keep that run.';
+    if (tale) tale.textContent = story;
+    if (nxt) nxt.textContent = 'Next: ' + next;
   }
 
   function boot() {
@@ -77,6 +95,11 @@
       if (us >= 2) give('brace');
       if (us >= 3) give('hattrick');
       if (us > them && them === 0) give('clean');
+      if (us === them) give('draw');
+      try {
+        const life = JSON.parse(localStorage.getItem('jozefs-world-arena-v1') || '{}');
+        if (Number(life.games) >= 5) give('five');
+      } catch (err) { /* no extra sticker */ }
       scout(us, them);
     });
     const street = document.getElementById('street-announcement');
@@ -88,6 +111,11 @@
         give('street');
         if (score >= 20) give('street20');
         if (score >= 50) give('street50');
+        if (score >= 100) give('street100');
+        const story = document.getElementById('street-story');
+        let best = 0;
+        try { best = Number(localStorage.getItem('jozefs-world-street-best-v1') || 0); } catch (err) { best = 0; }
+        if (story) story.textContent = score >= best && score > 0 ? 'New record. The street remembers this run.' : 'The record is ' + String(best).padStart(3, '0') + '. One more run.';
       }).observe(street, { childList: true, characterData: true, subtree: true });
     }
     render();

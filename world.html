@@ -293,6 +293,8 @@
       <h3>Scout report</h3>
       <p id="scout-words">Brave. Fast. Ready.</p>
       <p id="scout-tip">Finish a match to get your report.</p>
+      <p id="scout-story"></p>
+      <p id="scout-next"></p>
     </aside>
         <button id="arena-start" type="button" class="arena-kickoff">KICK OFF →</button>
         <p id="arena-status" class="arena-status" role="status" aria-live="polite">Your pitch is ready.</p>
@@ -338,6 +340,7 @@
         </div>
         <div class="street-controls"><button type="button" id="street-left" aria-label="Move one lane left">← LEFT</button><button type="button" id="street-start">START NIGHT RUN →</button><button type="button" id="street-right" aria-label="Move one lane right">RIGHT →</button></div>
         <p class="street-live-message" id="street-announcement" role="status" aria-live="polite">Your next run starts here.</p>
+        <p id="street-story" class="street-live-message"></p>
       </div>
       <aside class="street-side-panel">
         <span class="studio-kicker">THE RULES OF THE STREET</span>
@@ -904,6 +907,7 @@
     <p class="section-desc">Pick your teams and call the game. No odds and no betting. Scores can be delayed.</p>
     <button type="button" class="action-btn" id="sports-refresh">Refresh games</button>
     <div id="sports-board" class="sports-board"></div>
+    <p id="sports-log" class="section-desc">Your calls stay on this device.</p>
   </section>
 <section id="news" class="section">
     <h2 class="section-title">📰 News & Live Scores</h2>
@@ -1148,7 +1152,8 @@
 </section>
 <section id="album" class="section" tabindex="-1" aria-labelledby="album-title">
     <h2 id="album-title" class="section-title">Sticker album</h2>
-    <p class="section-desc">Finish matches and Street runs to fill the book. <span id="album-count">0 / 8</span></p>
+    <p class="section-desc">Finish matches and Street runs to fill the book. <span id="album-count">0 / 11</span></p>
+    <p id="album-story">Empty slots stay hidden until you earn them.</p>
     <div id="album-board" class="album-board"></div>
   </section>
 <section id="fun" class="section">
