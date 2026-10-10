@@ -136,6 +136,17 @@
       });
     });
   }
+  function tonight() {
+    const line = document.getElementById('watch-tonight');
+    if (!line) return;
+    fetch('https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard').then(res => res.json()).then(data => {
+      const event = (data.events || []).find(item => (item.name || '').toLowerCase().includes('ottawa'));
+      if (!event) { line.textContent = 'No Senators game on the board right now.'; return; }
+      const game = (event.competitions || [])[0] || {};
+      const detail = game.status && game.status.type && game.status.type.shortDetail;
+      line.textContent = 'Tonight: ' + event.name + (detail ? ' · ' + detail : '');
+    }).catch(() => { line.textContent = 'Senators board is not available right now.'; });
+  }
   function boot() {
     const input = document.getElementById('watch-link');
     if (!input) return;
@@ -155,6 +166,7 @@
       });
     });
     latest();
+    tonight();
     document.getElementById('watch-refresh')?.addEventListener('click', latest);
     if (!window.__jozefWatchTimer) {
       window.__jozefWatchTimer = window.setInterval(() => {
@@ -162,6 +174,7 @@
         const room = document.getElementById('watch');
         if (room && !room.classList.contains('active')) return;
         latest();
+    tonight();
       }, 60000);
     }
     document.querySelectorAll('[data-watch-out]').forEach(link => {

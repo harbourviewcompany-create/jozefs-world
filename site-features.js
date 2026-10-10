@@ -435,18 +435,35 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if (tale) tale.textContent = story;
     if (nxt) nxt.textContent = 'Next: ' + next;
     const rival = document.getElementById('arena-rival')?.textContent || 'The rivals';
-    const diary = document.getElementById('season-diary');
     const line = us + '-' + them + ' against ' + rival + '. ' + story;
-    if (diary) diary.textContent = line;
     try {
       const book = JSON.parse(localStorage.getItem('jozefs-world-diary-v1') || '[]');
       const pages = Array.isArray(book) ? book : [];
       pages.unshift(line);
       localStorage.setItem('jozefs-world-diary-v1', JSON.stringify(pages.slice(0, 5)));
     } catch (err) { /* diary can wait */ }
+    paintDiary();
+  }
+
+  function paintDiary() {
+    const diary = document.getElementById('season-diary');
+    if (!diary) return;
+    let pages = [];
+    try { pages = JSON.parse(localStorage.getItem('jozefs-world-diary-v1') || '[]'); } catch (err) { pages = []; }
+    diary.replaceChildren();
+    if (!Array.isArray(pages) || !pages.length) {
+      diary.textContent = 'No match written in the season book yet.';
+      return;
+    }
+    pages.slice(0, 5).forEach(line => {
+      const item = document.createElement('p');
+      item.textContent = line;
+      diary.appendChild(item);
+    });
   }
 
   function boot() {
+    paintDiary();
     window.addEventListener('jozef:arena-completed', () => {
       const score = (document.getElementById('arena-score')?.textContent || '0 : 0').split(':').map(part => Number(part) || 0);
       const us = score[0] || 0;
@@ -478,7 +495,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         try { best = Number(localStorage.getItem('jozefs-world-street-best-v1') || 0); } catch (err) { best = 0; }
         const nights = ['Floodlight Friday', 'Saturday night', 'School-night run', 'Sunday lights'];
         const night = nights[new Date().getDay() % nights.length];
-        if (story) story.textContent = night + '. ' + (score >= best && score > 0 ? 'New record. The street remembers this run.' : 'The record is ' + String(best).padStart(3, '0') + '. One more run.');
+        let runs = 0;
+        try {
+          runs = Number(localStorage.getItem('jozefs-world-street-runs-v1') || 0) + 1;
+          localStorage.setItem('jozefs-world-street-runs-v1', String(runs));
+        } catch (err) { runs = 1; }
+        if (story) story.textContent = night + '. Run ' + runs + '. ' + (score >= best && score > 0 ? 'New record. The street remembers this run.' : 'The record is ' + String(best).padStart(3, '0') + '. One more run.');
       }).observe(street, { childList: true, characterData: true, subtree: true });
     }
     render();
@@ -931,6 +953,17 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       });
     });
   }
+  function tonight() {
+    const line = document.getElementById('watch-tonight');
+    if (!line) return;
+    fetch('https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard').then(res => res.json()).then(data => {
+      const event = (data.events || []).find(item => (item.name || '').toLowerCase().includes('ottawa'));
+      if (!event) { line.textContent = 'No Senators game on the board right now.'; return; }
+      const game = (event.competitions || [])[0] || {};
+      const detail = game.status && game.status.type && game.status.type.shortDetail;
+      line.textContent = 'Tonight: ' + event.name + (detail ? ' · ' + detail : '');
+    }).catch(() => { line.textContent = 'Senators board is not available right now.'; });
+  }
   function boot() {
     const input = document.getElementById('watch-link');
     if (!input) return;
@@ -950,6 +983,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       });
     });
     latest();
+    tonight();
     document.getElementById('watch-refresh')?.addEventListener('click', latest);
     if (!window.__jozefWatchTimer) {
       window.__jozefWatchTimer = window.setInterval(() => {
@@ -957,6 +991,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         const room = document.getElementById('watch');
         if (room && !room.classList.contains('active')) return;
         latest();
+    tonight();
       }, 60000);
     }
     document.querySelectorAll('[data-watch-out]').forEach(link => {
