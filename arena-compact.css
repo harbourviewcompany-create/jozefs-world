@@ -953,3 +953,19 @@
     justify-content:space-evenly;
   }
 }
+
+
+/* Shot-quality feedback shares the original aim caption's two lines. */
+@media (max-width:1100px) {
+  #arena.section.active .arena-aim-caption > span {
+    display:inline-flex;align-items:center;gap:5px;
+    color:#acd4c3;font:850 clamp(9px,2.35vw,11px)/1 "Outfit",sans-serif;
+    white-space:nowrap;
+  }
+  #arena.section.active #arena-shot-quality {
+    color:#d8ff83;
+    font:900 clamp(11px,2.65vw,13px)/1 "Barlow Condensed","Outfit",sans-serif;
+    font-variant-numeric:tabular-nums;
+  }
+  #arena.section.active #arena-aim-label {color:#f0ffc2;}
+}
