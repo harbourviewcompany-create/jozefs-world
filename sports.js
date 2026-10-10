@@ -139,8 +139,15 @@
           game.textContent = 'No ' + team + ' game on the board right now.';
           return;
         }
+        const home = Number(match.homeScore);
+        const away = Number(match.awayScore);
+        let verdict = '';
+        if (picked && match.state === 'post' && Number.isFinite(home) && Number.isFinite(away)) {
+          const actual = home === away ? 'Draw' : home > away ? 'Home' : 'Away';
+          verdict = actual === picked ? ' Called it.' : ' The game went ' + actual + '.';
+        }
         game.textContent = match.away + ' ' + match.awayScore + ' - ' + match.homeScore + ' ' + match.home + ' · ' + (match.detail || match.state);
-        if (picked) game.textContent += ' · You called ' + picked;
+        if (picked) game.textContent += ' · You called ' + picked + verdict;
       }).catch(() => {
         game.textContent = 'No ' + team + ' game on the board right now.';
       });

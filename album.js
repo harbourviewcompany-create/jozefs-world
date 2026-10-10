@@ -83,6 +83,16 @@
     if (tip) tip.textContent = them === 0 && us > 0 ? 'They did not score.' : us === 0 ? 'Next one, shoot earlier.' : 'Keep that run.';
     if (tale) tale.textContent = story;
     if (nxt) nxt.textContent = 'Next: ' + next;
+    const rival = document.getElementById('arena-rival')?.textContent || 'The rivals';
+    const diary = document.getElementById('season-diary');
+    const line = us + '-' + them + ' against ' + rival + '. ' + story;
+    if (diary) diary.textContent = line;
+    try {
+      const book = JSON.parse(localStorage.getItem('jozefs-world-diary-v1') || '[]');
+      const pages = Array.isArray(book) ? book : [];
+      pages.unshift(line);
+      localStorage.setItem('jozefs-world-diary-v1', JSON.stringify(pages.slice(0, 5)));
+    } catch (err) { /* diary can wait */ }
   }
 
   function boot() {
@@ -115,7 +125,9 @@
         const story = document.getElementById('street-story');
         let best = 0;
         try { best = Number(localStorage.getItem('jozefs-world-street-best-v1') || 0); } catch (err) { best = 0; }
-        if (story) story.textContent = score >= best && score > 0 ? 'New record. The street remembers this run.' : 'The record is ' + String(best).padStart(3, '0') + '. One more run.';
+        const nights = ['Floodlight Friday', 'Saturday night', 'School-night run', 'Sunday lights'];
+        const night = nights[new Date().getDay() % nights.length];
+        if (story) story.textContent = night + '. ' + (score >= best && score > 0 ? 'New record. The street remembers this run.' : 'The record is ' + String(best).padStart(3, '0') + '. One more run.');
       }).observe(street, { childList: true, characterData: true, subtree: true });
     }
     render();

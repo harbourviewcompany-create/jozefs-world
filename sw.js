@@ -1,5 +1,5 @@
 /* Jozef FC offline shell: only same-origin public game assets. Never caches personal progress. */
-const CACHE='jozef-fc-app-shell-v27';
+const CACHE='jozef-fc-app-shell-v28';
 const CORE=[
  './','./index.html','./world.html','./favicon.svg','./manifest.webmanifest',
  './styles.css','./pitch.css','./extras.css','./tournament.css','./career.css',
