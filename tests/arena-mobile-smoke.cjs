@@ -112,11 +112,15 @@ const close=()=>new Promise(resolve=>server.close(resolve));
      assert.ok(box&&box.width>=55,'Joystick touch area visible');
      await page.mouse.move(box.x+box.width/2,box.y+box.height/2);
      await page.mouse.down();
-     await page.mouse.move(box.x+box.width/2,box.y+box.height/2-20,{steps:4});
-     await page.waitForTimeout(200);
+     await page.mouse.move(box.x+box.width/2,box.y+box.height/2-25,{steps:5});
+     await page.waitForTimeout(380);
+     const liveStick=await page.locator('#arena-joystick-knob').evaluate(el=>
+      el.style.getPropertyValue('--stick-y'));
      await page.mouse.up();
-     const after=await page.evaluate(()=>window.JozefArena.getProgress().playerY);
-     assert.ok(after<before-1,'Virtual joystick must actually move Jozef');
+     const afterState=await page.evaluate(()=>window.JozefArena.getProgress());
+     const after=afterState.playerY;
+     assert.ok(after<before-1,'Virtual joystick must move Jozef; before='+
+      before+' after='+after+' mode='+afterState.mode+' stick='+liveStick);
      await page.locator('#arena-start').click();
      assert.equal((await page.evaluate(()=>window.JozefArena.getProgress())).mode,'paused','Pause button stops game');
      await page.locator('#arena-start').click();
