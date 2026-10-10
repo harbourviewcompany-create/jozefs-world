@@ -43,7 +43,7 @@
     // Other site-wide UI updates may add stylesheets after Arena CSS.
     // Reattach its link last to keep the game's viewport sizing deterministic.
     const arenaSheet = [...document.querySelectorAll('link[rel="stylesheet"]')]
-      .find(link => /(?:^|\/)arena-compact\.css(?:\?|$)/.test(link.getAttribute('href') || ''));
+      .find(link => /(?:^|\/)(?:site-experience|arena-compact)\.css(?:\?|$)/.test(link.getAttribute('href') || ''));
     if (arenaSheet && arenaSheet.parentElement?.lastElementChild !== arenaSheet) {
       arenaSheet.parentElement.appendChild(arenaSheet);
     }
