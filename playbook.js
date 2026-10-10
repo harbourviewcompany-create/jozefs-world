@@ -26,7 +26,7 @@ const missions=[
   {id:'cup',group:'sports',title:'ALL-SPORT CHAMPION',detail:'Qualify in all four arcade sports.',target:4,section:'sports-arcade',stat:s=>s.sports.qualified,tip:'Try the next sport in the Cup panel. Each needs a best score of at least three.'}
 ];
 const groups={all:'ALL CHALLENGES',football:'FOOTBALL',sports:'ALL SPORTS',club:'MY CLUB'};
-let focus='all';
+let focus='all',onlyOpen=false;
 try{const stored=JSON.parse(localStorage.getItem(KEY)||'null');if(stored&&groups[stored.focus])focus=stored.focus;}catch(_){}
 function snapshot(){
  const a=window.JozefArena?.getProgress?.()||{};
@@ -77,6 +77,8 @@ function go(m){
 }
 function missionCard(m){
  const card=document.createElement('article');card.className='playbook-mission'+(m.complete?' is-done':'');
+ card.setAttribute('data-group',m.group);
+ card.setAttribute('data-mission',m.id);
  const meta=document.createElement('div');meta.className='playbook-mission-meta';
  const category=document.createElement('span');category.textContent=m.group.toUpperCase();
  const status=document.createElement('span');status.textContent=m.complete?'COMPLETE ✓':m.current+' / '+m.target;
@@ -87,6 +89,7 @@ function missionCard(m){
  track.setAttribute('role','progressbar');track.setAttribute('aria-label',m.title+' progress');
  track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax',String(m.target));
  track.setAttribute('aria-valuenow',String(m.current));
+ track.setAttribute('aria-valuetext',m.current+' of '+m.target+' completed');
  const fill=document.createElement('span');fill.style.width=(m.current/m.target*100)+'%';track.append(fill);
  const button=document.createElement('button');button.type='button';button.textContent=m.complete?'PLAY AGAIN ↗':'TAKE CHALLENGE ↗';
  button.addEventListener('click',()=>go(m));
@@ -97,7 +100,16 @@ function render(){
  const rows=results(),completed=rows.filter(m=>m.complete).length,
    featured=selection(rows),r=rank(completed);
  const grid=$('playbook-missions');
- if(grid){grid.replaceChildren();rows.filter(x=>focus==='all'||x.group===focus).forEach(m=>grid.append(missionCard(m)));}
+ if(grid){
+  grid.replaceChildren();
+  const visible=rows.filter(x=>(focus==='all'||x.group===focus)&&(!onlyOpen||!x.complete));
+  if(!visible.length){
+    const empty=document.createElement('div');empty.className='playbook-all-done';
+    const title=document.createElement('strong');title.textContent='EVERY CHALLENGE COMPLETE.';
+    const copy=document.createElement('p');copy.textContent='This category is complete. Show all challenges to replay your favourites.';
+    empty.append(title,copy);grid.append(empty);
+  }else visible.forEach(m=>grid.append(missionCard(m)));
+ }
  const put=(id,str)=>{const n=$(id);if(n)n.textContent=String(str)};
  put('playbook-count',completed+' / '+missions.length+' COMPLETE');
  put('playbook-rank',r.title);
@@ -107,6 +119,12 @@ function render(){
  put('playbook-coach-progress',featured.current+' / '+featured.target);
  const home=$('playbook-home-status');
  if(home)home.textContent=completed+' / '+missions.length+' PLAYBOOK MISSIONS COMPLETED · '+r.title;
+ put('playbook-home-next',featured.complete?'ALL DONE · REPLAY YOUR FAVOURITES':'NEXT UP · '+featured.title+'  ('+featured.current+'/'+featured.target+')');
+ const openBtn=$('playbook-toggle-open');
+ if(openBtn){
+   openBtn.setAttribute('aria-pressed',String(onlyOpen));
+   openBtn.textContent=onlyOpen?'SHOW ALL MISSIONS':'SHOW UNFINISHED';
+ }
  const meter=$('playbook-meter');if(meter)meter.style.width=completed/missions.length*100+'%';
  const progress=$('playbook-progress');progress?.setAttribute('aria-valuenow',String(completed));
  const btn=$('playbook-coach-go');
@@ -125,6 +143,7 @@ function setFocus(value){
 }
 function boot(){
  for(const key of Object.keys(groups))$('playbook-filter-'+key)?.addEventListener('click',()=>setFocus(key));
+ $('playbook-toggle-open')?.addEventListener('click',()=>{onlyOpen=!onlyOpen;render()});
  for(const event of ['jozef:profile-updated','jozef:squad-updated','jozef:arena-completed',
   'jozef:street-completed','jozef:multisport-completed','jozef:chronicle-sync','jozef:progress','pageshow']){
   window.addEventListener?.(event,render);
