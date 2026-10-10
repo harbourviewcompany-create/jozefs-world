@@ -158,6 +158,7 @@
       <div><span class="studio-kicker">COACH'S PLAYBOOK / THE ROAD TO LEGEND</span>
         <h2>EVERY SPORT. <em>YOUR STORY.</em></h2>
         <p id="playbook-home-status">0 / 15 PLAYBOOK MISSIONS COMPLETED</p>
+        <p id="playbook-home-next" class="playbook-home-next" aria-live="off">NEXT UP: FIRST THREE KICKOFFS</p>
       </div>
       <button type="button" onclick="showSection('playbook')">SEE YOUR NEXT CHALLENGE ↗</button>
     </aside>
@@ -241,10 +242,10 @@
         <p>Hockey, baseball, basketball, or the wrestling spotlight. Four games. One shared club.</p>
       </div>
       <div class="multi-home">
-        <button type="button" class="multi-home-card" data-multi-start="hockey"><span>01 / ON THE ICE</span><strong>HOCKEY SHOOTOUT.</strong><small>CHASE THE GOAL ↗</small></button>
-        <button type="button" class="multi-home-card" data-multi-start="baseball"><span>02 / AT THE PLATE</span><strong>BASEBALL DERBY.</strong><small>SWING FOR THE FENCES ↗</small></button>
-        <button type="button" class="multi-home-card" data-multi-start="basketball"><span>03 / ON THE COURT</span><strong>BASKETBALL SHOTS.</strong><small>FROM DOWNTOWN ↗</small></button>
-        <button type="button" class="multi-home-card" data-multi-start="wrestling"><span>04 / UNDER THE LIGHTS</span><strong>WRESTLING SHOW.</strong><small>RULE THE STAGE ↗</small></button>
+        <button type="button" class="multi-home-card" data-multi-start="hockey" aria-label="Play hockey, personal best shown on card"><span class="multi-home-card-label">01 / ON THE ICE</span><span class="multi-home-illustration multi-art-hockey" aria-hidden="true"><i></i></span><strong>HOCKEY SHOOTOUT.</strong><span class="multi-home-record" id="multi-home-record-hockey">FIRST CHALLENGE AWAITS</span><small>CHASE THE GOAL ↗</small></button>
+        <button type="button" class="multi-home-card" data-multi-start="baseball" aria-label="Play baseball, personal best shown on card"><span class="multi-home-card-label">02 / AT THE PLATE</span><span class="multi-home-illustration multi-art-baseball" aria-hidden="true"><i></i></span><strong>BASEBALL DERBY.</strong><span class="multi-home-record" id="multi-home-record-baseball">FIRST CHALLENGE AWAITS</span><small>SWING FOR THE FENCES ↗</small></button>
+        <button type="button" class="multi-home-card" data-multi-start="basketball" aria-label="Play basketball, personal best shown on card"><span class="multi-home-card-label">03 / ON THE COURT</span><span class="multi-home-illustration multi-art-basketball" aria-hidden="true"><i></i></span><strong>BASKETBALL SHOTS.</strong><span class="multi-home-record" id="multi-home-record-basketball">FIRST CHALLENGE AWAITS</span><small>FROM DOWNTOWN ↗</small></button>
+        <button type="button" class="multi-home-card" data-multi-start="wrestling" aria-label="Play wrestling, personal best shown on card"><span class="multi-home-card-label">04 / UNDER THE LIGHTS</span><span class="multi-home-illustration multi-art-wrestling" aria-hidden="true"><i></i></span><strong>WRESTLING SHOW.</strong><span class="multi-home-record" id="multi-home-record-wrestling">FIRST CHALLENGE AWAITS</span><small>RULE THE STAGE ↗</small></button>
       </div>
     </section>
 
@@ -882,10 +883,10 @@
     <span class="multi-promise">4 ORIGINAL GAMES / 1 CLUB</span>
   </div>
   <div class="multi-tabs" role="group" aria-label="Choose a sport">
-    <button id="multi-tab-hockey" type="button" class="multi-mode selected" data-theme="hockey" aria-pressed="true"><span class="multi-mode-tag">01 / RINK</span><strong>HOCKEY.</strong><small>SHOOTOUT CHALLENGE</small></button>
-    <button id="multi-tab-baseball" type="button" class="multi-mode" data-theme="baseball" aria-pressed="false"><span class="multi-mode-tag">02 / DIAMOND</span><strong>BASEBALL.</strong><small>HOME RUN DERBY</small></button>
-    <button id="multi-tab-basketball" type="button" class="multi-mode" data-theme="basketball" aria-pressed="false"><span class="multi-mode-tag">03 / COURT</span><strong>BASKETBALL.</strong><small>THREE-POINT CHALLENGE</small></button>
-    <button id="multi-tab-wrestling" type="button" class="multi-mode" data-theme="wrestling" aria-pressed="false"><span class="multi-mode-tag">04 / ARENA</span><strong>WRESTLING.</strong><small>SHOWTIME CHALLENGE</small></button>
+    <button id="multi-tab-hockey" type="button" class="multi-mode selected" data-theme="hockey" aria-pressed="true"><span class="multi-mode-tag">01 / RINK</span><strong>HOCKEY.</strong><small>SHOOTOUT CHALLENGE</small><span class="multi-mode-record" id="multi-mode-best-hockey">BEST — /5</span></button>
+    <button id="multi-tab-baseball" type="button" class="multi-mode" data-theme="baseball" aria-pressed="false"><span class="multi-mode-tag">02 / DIAMOND</span><strong>BASEBALL.</strong><small>HOME RUN DERBY</small><span class="multi-mode-record" id="multi-mode-best-baseball">BEST — /5</span></button>
+    <button id="multi-tab-basketball" type="button" class="multi-mode" data-theme="basketball" aria-pressed="false"><span class="multi-mode-tag">03 / COURT</span><strong>BASKETBALL.</strong><small>THREE-POINT CHALLENGE</small><span class="multi-mode-record" id="multi-mode-best-basketball">BEST — /5</span></button>
+    <button id="multi-tab-wrestling" type="button" class="multi-mode" data-theme="wrestling" aria-pressed="false"><span class="multi-mode-tag">04 / ARENA</span><strong>WRESTLING.</strong><small>SHOWTIME CHALLENGE</small><span class="multi-mode-record" id="multi-mode-best-wrestling">BEST — /5</span></button>
   </div>
   <div class="multi-difficulty" role="group" aria-label="Choose challenge difficulty">
     <div><strong>CHOOSE YOUR CHALLENGE</strong><small id="multi-difficulty-note">PRO / Classic challenge. Change difficulty to restart this event.</small></div>
@@ -998,8 +999,22 @@
         <button type="button" data-highlight="https://www.youtube.com/watch?v=wVdH_KCbpmc">Inter Miami vs Montreal</button>
         <button type="button" data-highlight="https://www.youtube.com/watch?v=qj9eXliDCW4">Chicago vs Inter Miami</button>
         <button type="button" data-highlight="https://www.youtube.com/watch?v=pghK2A4fW3Q">Premier League goals, 2026</button>
+        
+        <button type="button" data-highlight="https://www.youtube.com/watch?v=guHiXnYequQ">Inter Miami Campeones Cup</button>
+        <button type="button" data-highlight="https://www.youtube.com/watch?v=dVFiXhUKXmI">Man City 5-3 Sunderland</button>
         <a data-watch-out href="https://www.youtube.com/@mls" target="_blank" rel="noopener">MLS channel</a>
         <a data-watch-out href="https://www.youtube.com/@premierleague" target="_blank" rel="noopener">Premier League</a>
+      </div>
+      
+      <h3>Raptors and Bills</h3>
+      <p>Official clips. The Raptors host the Clippers tonight at 6:30 pm ET on TSN.</p>
+      <div class="watch-links">
+        <button type="button" data-highlight="https://www.youtube.com/watch?v=y8js21UYKz4">Heat at Raptors, Oct 3</button>
+        <button type="button" data-highlight="https://www.youtube.com/watch?v=SomRd5rsD6Y">NBA top 10, Oct 8</button>
+        <button type="button" data-highlight="https://www.youtube.com/watch?v=jBN4Wp4CJpI">Bills vs Texans, Week 1</button>
+        <button type="button" data-highlight="https://www.youtube.com/watch?v=z_0tp4jfNg0">Bills vs Lions</button>
+        <a data-watch-out href="https://www.nba.com/raptors/" target="_blank" rel="noopener">Raptors</a>
+        <a data-watch-out href="https://www.buffalobills.com/video/highlights" target="_blank" rel="noopener">Bills clips</a>
       </div>
       <h3>Ottawa Senators</h3>
       <p>From Ottawa, most games are on TSN5 or TSN+. Saturday Night Hockey is on Sportsnet. Monday Night Hockey is on Sportsnet+. Wednesday national games are on Prime Video. The TV feed cannot be embedded here.</p>
@@ -1245,6 +1260,7 @@
     <button type="button" aria-pressed="false" id="playbook-filter-football">FOOTBALL</button>
     <button type="button" aria-pressed="false" id="playbook-filter-sports">ALL SPORTS</button>
     <button type="button" aria-pressed="false" id="playbook-filter-club">MY CLUB</button>
+    <button type="button" class="playbook-open-filter" id="playbook-toggle-open" aria-pressed="false">SHOW UNFINISHED</button>
   </div>
   <div id="playbook-missions" class="playbook-missions" aria-label="Current playable missions"></div>
   <p class="playbook-privacy">NO DEADLINES. NO PURCHASES. NO ONLINE ACCOUNT. COACHING AND PROGRESS STAY ON THIS DEVICE.</p>
