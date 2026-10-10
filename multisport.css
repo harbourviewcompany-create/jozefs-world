@@ -1,0 +1,147 @@
+/* JOZEF'S SPORTS ARCADE — original offline multisport game scenes. */
+#sports-arcade{color:#eefaf2;padding:25px 16px 115px}
+.multi-header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin:5px auto 22px;max-width:1130px}
+.multi-header .studio-kicker{color:#c8ff5a}
+.multi-header h2{color:#f1ffed;font:900 clamp(45px,7vw,90px)/.9 var(--sf-display);margin:9px 0;letter-spacing:-.035em}
+.multi-header h2 em{color:#c8ff5a;font-style:normal}
+.multi-header p{max-width:650px;color:#bcdad0;line-height:1.6}
+.multi-promise{padding:9px 13px;border:1px solid #91ead162;border-radius:10px;color:#ccfcf3;
+ font:800 10px var(--sf-ui);letter-spacing:.08em}
+.multi-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;max-width:1130px;margin:0 auto 23px}
+.multi-mode{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-height:120px;padding:18px 15px;
+ text-align:left;cursor:pointer;border:1px solid #9bdccb50;border-radius:16px;
+ background:linear-gradient(145deg,#1b3b43,#102632);box-shadow:0 10px 24px #04111b8c;color:#f4ffed;
+ transition:transform .2s,border-color .2s,background .2s}
+.multi-mode:hover{transform:translateY(-2px);border-color:#c8ff5a}
+.multi-mode.selected{background:linear-gradient(145deg,#285a48,#183537);border-color:#c8ff5a;box-shadow:inset 0 0 0 1px #c8ff5a38,0 12px 25px #030e1980}
+.multi-mode .multi-mode-tag{font:900 10px var(--sf-ui);letter-spacing:.11em;color:#b3e6d4}
+.multi-mode strong{font:900 clamp(22px,2.7vw,33px)/.9 var(--sf-display)}
+.multi-mode small{font:700 11px var(--sf-ui);color:#c4ddd4}
+.multi-mode[data-theme="baseball"].selected{border-color:#ffbe74;background:linear-gradient(145deg,#5b3e34,#2a3032)}
+.multi-mode[data-theme="basketball"].selected{border-color:#ffa97e;background:linear-gradient(145deg,#623e33,#2e303b)}
+.multi-mode[data-theme="wrestling"].selected{border-color:#bfa4ff;background:linear-gradient(145deg,#443963,#243046)}
+.multi-game-layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(235px,.55fr);gap:16px;max-width:1130px;margin:auto;align-items:start}
+.multi-game{min-width:0;border:1px solid #cff59b77;border-radius:18px;overflow:hidden;background:linear-gradient(150deg,#102f37,#0b202b);
+ box-shadow:0 22px 48px #01101db2}
+.multi-hud{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:17px 19px;
+ background:#0a252f;border-bottom:1px solid #b7efb938;flex-wrap:wrap}
+.multi-hud small{font:850 10px var(--sf-ui);letter-spacing:.1em;color:#aad8ca}
+.multi-hud strong{display:block;font:900 27px/.96 var(--sf-display);color:#efffe8}
+.multi-hud .multi-turn{color:#c8ff5a}
+.multi-stage{position:relative;isolation:isolate;min-height:370px;display:flex;flex-direction:column;
+ justify-content:center;align-items:center;overflow:hidden;padding:36px 14px;text-align:center;
+ background:repeating-linear-gradient(0deg,#125244 0 54px,#154b40 54px 108px)}
+.multi-stage::before{content:"";position:absolute;inset:20px;pointer-events:none;z-index:-1;border:2px solid #e3fff082;border-radius:6px}
+.multi-stage::after{content:"";position:absolute;z-index:-1;bottom:8%;left:50%;width:230px;height:70px;
+ transform:translateX(-50%);border:2px solid #fff8;border-radius:50%}
+.multi-stage[data-sport="hockey"]{background:
+ repeating-linear-gradient(0deg,#d6f2ff 0 56px,#cae5ef 56px 112px);color:#102c38}
+.multi-stage[data-sport="hockey"]::before{border:3px solid #c75457}
+.multi-stage[data-sport="hockey"]::after{width:240px;height:130px;bottom:5%;border:3px solid #5c9ac6}
+.multi-stage[data-sport="baseball"]{background:radial-gradient(circle at 50% 60%,#e9ad7299,transparent 32%),
+ repeating-linear-gradient(90deg,#217654 0 75px,#1c654a 75px 150px)}
+.multi-stage[data-sport="baseball"]::before{border:2px solid #e8fbdd9c;inset:19% 18% 12%;transform:rotate(45deg)}
+.multi-stage[data-sport="basketball"]{background:
+ repeating-linear-gradient(90deg,#bc713a 0 67px,#aa6536 67px 134px)}
+.multi-stage[data-sport="basketball"]::before{border:3px solid #fff5e58a;border-radius:45%;
+ inset:24px 14%}
+.multi-stage[data-sport="wrestling"]{background:
+ radial-gradient(ellipse at 50% 2%,#c4a6ff56,transparent 62%),
+ repeating-linear-gradient(90deg,#222951 0 54px,#202542 54px 108px)}
+.multi-stage[data-sport="wrestling"]::before{inset:42px 22px;border:5px solid #c9b4ff;box-shadow:0 0 0 7px #0b163588}
+.multi-stage[data-sport="wrestling"]::after{height:6px;width:90%;bottom:23%;border:0;border-radius:0;background:#aa8dfb8c}
+.multi-scene-art{position:relative;z-index:1;display:grid;place-items:center;width:min(270px,80%);height:165px;
+ border-radius:19px;background:#061c2785;box-shadow:0 20px 44px #03182188;
+ transform:perspective(550px) rotateX(4deg)}
+.multi-scene-art::before{content:"";width:115px;height:115px;border-radius:50%;
+ background:linear-gradient(135deg,#f7fff3,#abd9ca);box-shadow:0 9px 28px #00172496}
+.multi-scene-art::after{content:"";position:absolute;width:82px;height:16px;bottom:29px;left:calc(50% - 41px);
+ border-radius:80% 80% 45% 45%;background:#c8ff5a}
+.multi-stage[data-sport="hockey"] .multi-scene-art{
+ background:linear-gradient(180deg,#3d869d22,#e0f6f199);border:2px solid #d65767;border-bottom:8px solid #d65767}
+.multi-stage[data-sport="hockey"] .multi-scene-art::before{
+ width:86px;height:86px;background:radial-gradient(circle at 48% 45%,#26363f,#0d1c25);
+ border:4px solid #f4fcff;transform:scaleY(.48);box-shadow:0 12px 9px #0004}
+.multi-stage[data-sport="hockey"] .multi-scene-art::after{height:12px;background:#171a28;bottom:18px}
+.multi-stage[data-sport="baseball"] .multi-scene-art{background:#153b328c}
+.multi-stage[data-sport="baseball"] .multi-scene-art::before{
+ width:103px;height:103px;background:radial-gradient(circle at 34% 20%,#fff9ed,#efebe8);
+ box-shadow:inset 8px 0 #f7d9c6,0 7px 23px #020d1b}
+.multi-stage[data-sport="baseball"] .multi-scene-art::after{
+ width:125px;height:16px;bottom:20px;left:calc(50% - 62px);
+ background:linear-gradient(90deg,#a3713d,#e6b971);transform:rotate(-29deg);border-radius:20px}
+.multi-stage[data-sport="basketball"] .multi-scene-art{background:#75432f65}
+.multi-stage[data-sport="basketball"] .multi-scene-art::before{
+ width:110px;height:110px;border:3px solid #4d251b;
+ background:repeating-linear-gradient(90deg,#c76d2f 0 47px,#4a241e 48px 51px,#c76d2f 52px 104px);
+ box-shadow:inset -9px -10px #824521,0 12px 24px #2e1b1980}
+.multi-stage[data-sport="basketball"] .multi-scene-art::after{background:#fff2df;width:129px;height:6px;bottom:27px;left:calc(50% - 64px)}
+.multi-stage[data-sport="wrestling"] .multi-scene-art{background:radial-gradient(ellipse at 50% 20%,#d9c7ff45,#22294b)}
+.multi-stage[data-sport="wrestling"] .multi-scene-art::before{
+ border-radius:23px 23px 12px 12px;width:114px;height:106px;
+ background:linear-gradient(150deg,#d3beff,#4e4eac);clip-path:polygon(20% 0,80% 0,100% 24%,82% 43%,75% 38%,75% 100%,25% 100%,25% 38%,18% 43%,0 24%);
+ box-shadow:0 10px 19px #070b1e}
+.multi-stage[data-sport="wrestling"] .multi-scene-art::after{height:13px;width:140px;left:calc(50% - 70px);bottom:18px;background:#ebc8ff}
+.multi-stage-title{font:900 clamp(23px,4vw,38px)/1 var(--sf-display);letter-spacing:.075em;
+ color:#fff;margin:20px 0 10px;max-width:95%;text-shadow:0 3px 15px #041721a4}
+.multi-stage[data-sport="hockey"] .multi-stage-title{color:#173747;text-shadow:none}
+.multi-commentary{font:800 clamp(14px,2.1vw,19px)/1.35 var(--sf-ui);color:#e0fcd4;max-width:570px;
+ margin:5px auto 0;min-height:58px;padding:10px 14px;background:#0c2432a8;border:1px solid #d5f6b44c;border-radius:10px}
+.multi-stage[data-sport="hockey"] .multi-commentary{color:#f8fff6;background:#123847e3}
+.multi-timing{display:flex;flex-direction:column;gap:12px;padding:17px 20px 21px;background:#0b2832}
+.multi-timing[hidden]{display:none!important}
+.multi-timing>label{font:850 12px var(--sf-ui);letter-spacing:.08em;color:#c8ff9b;text-align:center}
+.multi-meter{position:relative;height:26px;border:1px solid #d1f8c180;border-radius:99px;
+ background:linear-gradient(90deg,#7e544f 0 38%,#aedb6a 38% 72%,#7e544f 72%);overflow:hidden}
+.multi-meter-marker{position:absolute;left:50%;top:-2px;width:7px;height:30px;transform:translateX(-50%);
+ background:#f5fff7;border:1px solid #102833;box-shadow:0 0 8px #f6fff9}
+.multi-controls{display:flex;align-items:stretch;justify-content:center;flex-wrap:wrap;gap:10px;padding:17px;
+ background:#0b2530}
+.multi-action{min-height:53px;min-width:132px;flex:1 1 130px;cursor:pointer;
+ padding:13px 16px;border:1px solid #a0eece8f;border-radius:10px;
+ font:900 12px/1.2 var(--sf-ui);letter-spacing:.06em;color:#edfdee;background:#1a4749}
+.multi-action:hover{background:#2b6055;border-color:#c8ff5a}
+.multi-action:active{transform:translateY(1px)}
+.multi-action.multi-primary{background:#c8ff5a;border-color:#e8ffbd;color:#0e2828}
+.multi-key-help{margin:0;padding:0 18px 16px;background:#0b2530;color:#a7cabc;text-align:center;font:700 11px var(--sf-ui)}
+.multi-sidebar{padding:21px;border:1px solid #a8e0c04a;border-radius:18px;background:linear-gradient(150deg,#17333a,#0e242d)}
+.multi-sidebar h3{font:900 29px var(--sf-display);color:#e9fff3;margin:4px 0 16px}
+.multi-sidebar h4{font:900 16px var(--sf-ui);color:#dbefa8;margin:21px 0 9px}
+.multi-records{display:grid;gap:9px}
+.multi-record{display:flex;justify-content:space-between;align-items:center;gap:8px;
+ padding:12px 13px;border:1px solid #bfe6cc42;border-radius:10px;background:#0b2631}
+.multi-record>div{display:grid;gap:3px}
+.multi-record strong{color:#f5ffef;font:900 14px var(--sf-ui)}
+.multi-record small{font:700 10px var(--sf-ui);color:#b9d4c8}
+.multi-record>b{font:900 21px var(--sf-display);color:#c8ff5a}
+.multi-instructions{font:700 12px/1.6 var(--sf-ui);color:#bbd8c9}
+.multi-unofficial{font:650 11px/1.6 var(--sf-ui);color:#9fbbb2;border-top:1px solid #bde1cf35;padding-top:13px;margin-top:18px}
+.multi-home{margin:17px 0 28px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}
+.multi-home-card{display:flex;min-width:0;min-height:112px;flex-direction:column;justify-content:space-between;
+ gap:10px;padding:16px;text-align:left;cursor:pointer;border:1px solid #91dec361;
+ border-radius:14px;background:linear-gradient(145deg,#193741,#0d2530);color:#f3ffec}
+.multi-home-card strong{font:900 clamp(22px,2.9vw,32px)/.94 var(--sf-display)}
+.multi-home-card span{font:850 10px var(--sf-ui);letter-spacing:.09em;color:#b4e1d1}
+.multi-home-card:hover{border-color:#c8ff5a}
+.multi-home-card:nth-child(2){background:linear-gradient(145deg,#40372e,#1a2b32);border-color:#cdaa785e}
+.multi-home-card:nth-child(3){background:linear-gradient(145deg,#54362d,#1b2d35);border-color:#f1a7805c}
+.multi-home-card:nth-child(4){background:linear-gradient(145deg,#44365e,#202a43);border-color:#bba6ff5f}
+@media(max-width:980px){.multi-game-layout{grid-template-columns:1fr}.multi-home{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:680px){
+ #sports-arcade{padding:17px 12px calc(104px + env(safe-area-inset-bottom))}
+ .multi-header h2{font-size:clamp(42px,11vw,69px)}
+ .multi-tabs{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .multi-mode{min-height:104px;padding:13px}
+ .multi-mode strong{font-size:26px}
+ .multi-game-layout{gap:13px}
+ .multi-hud{padding:13px}
+ .multi-hud strong{font-size:23px}
+ .multi-stage{min-height:325px}
+ .multi-scene-art{height:134px;width:min(220px,80%)}
+ .multi-stage-title{font-size:clamp(23px,7vw,31px)}
+ .multi-controls{padding:11px;gap:7px}
+ .multi-action{min-height:52px;min-width:90px;flex-basis:80px;padding:11px 5px;font-size:10px}
+ .multi-home{gap:8px}.multi-home-card{padding:13px;min-height:95px}
+}
+@media(max-width:380px){.multi-mode strong{font-size:22px}.multi-action{font-size:9px;padding:10px 5px}}
+@media(prefers-reduced-motion:reduce){.multi-mode,.multi-action{transition:none!important;transform:none!important}}
