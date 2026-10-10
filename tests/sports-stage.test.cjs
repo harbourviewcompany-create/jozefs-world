@@ -68,12 +68,14 @@ test('hockey goalie moves and puck visibly flies to the selected goal corner',()
 });
 test('baseball has pitched ball and batter, basketball has a shot arc, wrestling has moving stage figures',()=>{
  const a=setup();const stage=a.api.create();
+ let now=0;
  for(const kind of ['baseball','basketball','wrestling']){
-  a.now(0);stage.begin(kind,{rank:kind==='wrestling'?2:0});
-  const prior=a.paint.length;a.now(500);a.frame();
+  a.now(now);stage.begin(kind,{rank:kind==='wrestling'?2:0});
+  const prior=a.paint.length;a.now(now+500);a.frame();
   assert.ok(a.paint.length>prior,kind+' draws continuous action');
   stage.shoot({made:true});
-  a.now(1300);a.frame();
+  a.now(now+1400);a.frame();
+  now+=2000;
  }
  const texts=a.paint.filter(x=>x[0]==='fillText').map(x=>String(x[1]));
  assert.ok(texts.some(x=>x.includes('BASE HIT')));
