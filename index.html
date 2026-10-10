@@ -38,6 +38,7 @@
   <link rel="stylesheet" href="locker.css" />
   <link rel="stylesheet" href="multisport.css" />
   <link rel="stylesheet" href="sports-stage.css" />
+  <link rel="stylesheet" href="playbook.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Lilita+One&family=Nunito:wght@400;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
@@ -72,6 +73,7 @@
       <button class="nav-btn studio-street-nav" data-section="street">STREET//11</button>
       <button class="nav-btn" data-section="games">Games</button>
       <button class="nav-btn" data-section="club">My Club</button>
+      <button class="nav-btn" data-section="playbook">Playbook</button>
       <button class="nav-btn" data-section="tour">World Tour</button>
       <button class="nav-btn" data-section="career">Career</button>
       <button class="nav-btn" data-section="news">Scores</button>
@@ -141,6 +143,13 @@
     </section>
 
 
+    <aside class="playbook-home" aria-label="Your Coach's Playbook">
+      <div><span class="studio-kicker">COACH'S PLAYBOOK / THE ROAD TO LEGEND</span>
+        <h2>EVERY SPORT. <em>YOUR STORY.</em></h2>
+        <p id="playbook-home-status">0 / 15 PLAYBOOK MISSIONS COMPLETED</p>
+      </div>
+      <button type="button" onclick="showSection('playbook')">SEE YOUR NEXT CHALLENGE ↗</button>
+    </aside>
     <aside class="chronicle-home" aria-label="Your Jozef FC story">
       <div class="chronicle-home-copy">
         <span class="studio-kicker">THE CLUB CHRONICLE / EVERY MATCH MATTERS</span>
@@ -160,7 +169,7 @@
       <button type="button" class="action-btn" id="locker-chant">Say the chant</button>
     </section>
 
-        <p class="jw-privacy-note" id="hq-parent-line">Dad: Save this season in My Club. It includes XP, Street best, notes, stickers, and Sports Room calls.</p>
+        <p class="jw-privacy-note" id="hq-parent-line">Save this season in My Club. It includes XP, Street best, notes, stickers, and Sports Room calls.</p>
         <p class="jw-privacy-note" id="season-diary">No match written in the season book yet.</p>
     <div class="studio-signal-row" aria-label="Your current progress">
       <div class="studio-signal"><span class="studio-signal-label">PLAYER RANK</span><strong>LVL <span data-jw-level>1</span></strong><small>ALWAYS EVOLVING</small></div>
@@ -830,6 +839,14 @@
     <button id="multi-tab-basketball" type="button" class="multi-mode" data-theme="basketball" aria-pressed="false"><span class="multi-mode-tag">03 / COURT</span><strong>BASKETBALL.</strong><small>THREE-POINT CHALLENGE</small></button>
     <button id="multi-tab-wrestling" type="button" class="multi-mode" data-theme="wrestling" aria-pressed="false"><span class="multi-mode-tag">04 / ARENA</span><strong>WRESTLING.</strong><small>SHOWTIME CHALLENGE</small></button>
   </div>
+  <div class="multi-difficulty" role="group" aria-label="Choose challenge difficulty">
+    <div><strong>CHOOSE YOUR CHALLENGE</strong><small id="multi-difficulty-note">PRO / Classic challenge. Change difficulty to restart this event.</small></div>
+    <div class="multi-difficulty-options">
+      <button id="multi-difficulty-rookie" type="button" aria-pressed="false">ROOKIE</button>
+      <button id="multi-difficulty-pro" type="button" class="selected" aria-pressed="true">PRO</button>
+      <button id="multi-difficulty-legend" type="button" aria-pressed="false">LEGEND</button>
+    </div>
+  </div>
   <div class="multi-game-layout">
     <div class="multi-game">
       <div class="multi-hud">
@@ -1105,6 +1122,38 @@
     </div>
   </section>
 
+<section id="playbook" class="section" tabindex="-1" aria-labelledby="playbook-title">
+  <header class="playbook-hero">
+    <div><span class="studio-kicker">JOZEF'S WORLD / THE COACH'S BOARD</span>
+      <h2 id="playbook-title">THE <em>PLAYBOOK.</em></h2>
+      <p>One club. Every sport. Every match moves your journey forward. Complete challenges at your own pace to rise from Academy Rookie to Club Legend.</p>
+    </div>
+    <div class="playbook-badge" aria-label="Your Playbook rank"><span>YOUR RANK</span><strong id="playbook-rank">ACADEMY ROOKIE</strong>
+      <small id="playbook-next-rank">3 TO NEXT RANK</small></div>
+  </header>
+  <div class="playbook-summary">
+    <div><span class="studio-kicker">LEGACY PROGRESS</span><strong id="playbook-count">0 / 15 COMPLETE</strong></div>
+    <div class="playbook-progress" id="playbook-progress" role="progressbar" aria-label="Challenges completed" aria-valuemin="0" aria-valuemax="15" aria-valuenow="0"><span id="playbook-meter"></span></div>
+    <p>Progress is read from completed games, saved scores, your squad, and actual Chronicle entries. Existing achievements count automatically.</p>
+  </div>
+  <div class="playbook-coach" aria-label="Your next recommended challenge">
+    <div><span class="studio-kicker">THE COACH'S PICK / YOUR NEXT MOVE</span>
+      <h3 id="playbook-coach-title">FIRST THREE KICKOFFS</h3>
+      <p id="playbook-coach-tip">Play a full Arena match to start building your club.</p>
+      <span id="playbook-coach-progress" class="playbook-coach-stat">0 / 3</span>
+    </div>
+    <button type="button" id="playbook-coach-go">PLAY FOOTBALL ↗</button>
+  </div>
+  <div class="playbook-filter" role="group" aria-label="Filter Playbook challenges">
+    <button type="button" class="selected" aria-pressed="true" id="playbook-filter-all">ALL CHALLENGES</button>
+    <button type="button" aria-pressed="false" id="playbook-filter-football">FOOTBALL</button>
+    <button type="button" aria-pressed="false" id="playbook-filter-sports">ALL SPORTS</button>
+    <button type="button" aria-pressed="false" id="playbook-filter-club">MY CLUB</button>
+  </div>
+  <div id="playbook-missions" class="playbook-missions" aria-label="Current playable missions"></div>
+  <p class="playbook-privacy">NO DEADLINES. NO PURCHASES. NO ONLINE ACCOUNT. COACHING AND PROGRESS STAY ON THIS DEVICE.</p>
+</section>
+
 <section id="chronicle" class="section" tabindex="-1" aria-labelledby="chronicle-title">
   <div class="chronicle-heading">
     <div><p class="studio-kicker">JOZEF FC / CLUB HISTORY</p>
@@ -1234,5 +1283,6 @@
   <script src="campaign-2026.js" defer></script>
   <script src="club-hq.js"></script>
   <script src="chronicle.js" defer></script>
+  <script src="playbook.js" defer></script>
 </body>
 </html>
