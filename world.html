@@ -32,6 +32,7 @@
   <link rel="stylesheet" href="mobile-qa-2026.css" />
   <link rel="stylesheet" href="broadcast.css" />
   <link rel="stylesheet" href="album.css" />
+  <link rel="stylesheet" href="sports.css" />
   <link rel="stylesheet" href="club-hq.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -70,6 +71,7 @@
       <button class="nav-btn" data-section="tour">World Tour</button>
       <button class="nav-btn" data-section="career">Career</button>
       <button class="nav-btn" data-section="news">Scores</button>
+      <button class="nav-btn" data-section="sports">Sports Room</button>
       <button class="nav-btn" data-section="learn">Learn</button>
       <button class="nav-btn" data-section="training">Training</button>
       <button class="nav-btn" data-section="matchday">Match Day</button>
@@ -771,7 +773,13 @@
   </section>
 
   <!-- NEWS SECTION -->
-  <section id="news" class="section">
+  <section id="sports" class="section" tabindex="-1" aria-labelledby="sports-title">
+    <h2 id="sports-title" class="section-title">Sports Room</h2>
+    <p class="section-desc">Pick your teams and call the game. No odds and no betting. Scores can be delayed.</p>
+    <button type="button" class="action-btn" id="sports-refresh">Refresh games</button>
+    <div id="sports-board" class="sports-board"></div>
+  </section>
+<section id="news" class="section">
     <h2 class="section-title">📰 News & Live Scores</h2>
     <p class="section-desc">Explore soccer stories and check available match updates.</p>
     <p class="jw-privacy-note">Major-sport scores can be delayed. This is not every sport in the world, and these are not guaranteed live updates. Stories below are learning features.</p>
@@ -1052,6 +1060,7 @@
   <script src="playmode.js"></script>
   <script src="broadcast.js"></script>
   <script src="album.js"></script>
+  <script src="sports.js"></script>
   <script src="arcade.js" defer></script>
   <script src="street.js"></script>
   <script src="roblox.js"></script>

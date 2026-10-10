@@ -1,0 +1,7 @@
+.sports-board { display: grid; gap: 12px; width: min(860px, calc(100% - 20px)); margin: 12px auto; }
+.sports-card { padding: 16px; border-radius: 18px; background: rgba(8,16,30,0.78); border: 1px solid rgba(255,255,255,0.14); }
+.sports-card select, .sports-calls button { min-height: 44px; border-radius: 12px; border: 0; }
+.sports-card select { width: 100%; margin: 8px 0; padding: 0 10px; background: #14262a; color: white; font-size: 16px; }
+.sports-calls { display: flex; gap: 8px; }
+.sports-calls button { flex: 1; background: rgba(255,255,255,0.08); color: white; }
+.sports-game { color: #d7e7df; }
