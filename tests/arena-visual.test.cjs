@@ -54,7 +54,7 @@ test('stadium graphics render all venues, a shot and a reduced-motion match',()=
 });
 test('new graphic resources load in bundled production order without remote assets',()=>{
  assert.equal((html.match(/src="arena-bundle.js"/g)||[]).length,1);
- assert.equal((html.match(/href="arena-visual.css"/g)||[]).length,1);
+ assert.equal((html.match(/href="site-experience.css"/g)||[]).length,1);
  const index=fs.readFileSync(path.join(root,'index.html'),'utf8');
  assert.equal((index.match(/src="arena-bundle.js"/g)||[]).length,1);
  const bundled=fs.readFileSync(path.join(root,'arena-bundle.js'),'utf8');
@@ -64,7 +64,7 @@ test('new graphic resources load in bundled production order without remote asse
  assert.match(css,/prefers-reduced-motion:reduce/);
  assert.doesNotMatch(src,/\bfetch\s*\(|XMLHttpRequest|WebSocket|sendBeacon/);
  const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
- for(const asset of ['arena-bundle.js','arena-visual.css'])assert.ok(sw.includes("'./"+asset+"'"));
+ for(const asset of ['arena-bundle.js','site-experience.css','site-foundation.css'])assert.ok(sw.includes("'./"+asset+"'"));
 });
 test('formation board tracks selected positions with no new storage schema',()=>{
  const squad=fs.readFileSync(path.join(root,'squad.js'),'utf8');
