@@ -35,6 +35,7 @@
   <link rel="stylesheet" href="sports.css" />
   <link rel="stylesheet" href="club-hq.css" />
   <link rel="stylesheet" href="chronicle.css" />
+  <link rel="stylesheet" href="locker.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Lilita+One&family=Nunito:wght@400;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
@@ -147,6 +148,16 @@
       </div>
       <button type="button" onclick="showSection('chronicle')">OPEN YOUR STORY ↗</button>
     </aside>
+
+    
+    <section class="locker-card" id="locker-card" hidden aria-labelledby="locker-title">
+      <p class="eyebrow-live">Real matchday</p>
+      <h2 id="locker-title">Locker room</h2>
+      <p id="locker-line">No real match set.</p>
+      <p id="locker-gear">Checking Ottawa weather...</p>
+      <p id="locker-award">This week: First boot</p>
+      <button type="button" class="action-btn" id="locker-chant">Say the chant</button>
+    </section>
 
     <div class="studio-signal-row" aria-label="Your current progress">
       <div class="studio-signal"><span class="studio-signal-label">PLAYER RANK</span><strong>LVL <span data-jw-level>1</span></strong><small>ALWAYS EVOLVING</small></div>
@@ -1120,6 +1131,7 @@
   <script src="broadcast.js"></script>
   <script src="album.js"></script>
   <script src="sports.js"></script>
+  <script src="locker.js"></script>
   <script src="arcade.js" defer></script>
   <script src="street.js"></script>
   <script src="roblox.js"></script>
