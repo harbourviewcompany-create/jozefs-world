@@ -55,6 +55,18 @@ const close=()=>new Promise(resolve=>server.close(resolve));
        assert.ok(data.found&&data.visible,id+' should be visible at '+JSON.stringify(viewport));
      assert.ok(result.scroll<=2,'game view must not vertically overflow');
      assert.equal(result.pitchTouchAction,'none','Touch pitch must not trigger browser panning');
+     const immersive=await page.locator('#arena').evaluate(e=>e.classList.contains('mobile-immersive'));
+     if(viewport.height>viewport.width) {
+      assert.equal(immersive,true,'portrait touch screens should use immersive layout');
+      assert.equal(await page.locator('#arena .arena-actions #arena-skill').count(),1,
+       'skill must be inside thumb controls');
+      assert.equal(await page.locator('#arena .arena-aim-bar').isVisible(),false,
+       'mobile mode should not waste a row on three aim buttons');
+     } else {
+      assert.equal(immersive,false,'landscape uses complete classic controls');
+      assert.equal(await page.locator('#arena .arena-skill-strip #arena-skill').count(),1,
+       'landscape keeps skill in its original bar');
+     }
      await page.locator('#arena-start').click();
      await page.waitForTimeout(60);
      if(engine===chromium&&viewport.width===390){
@@ -80,6 +92,14 @@ const close=()=>new Promise(resolve=>server.close(resolve));
      assert.equal(await page.locator('#arena-settings').isVisible(),true,'Settings opens');
      await page.locator('#arena-difficulty').selectOption('legend');
      assert.equal(await page.inputValue('#arena-difficulty'),'legend','Difficulty selects');
+     await page.locator('#arena-graphics-mode').selectOption('battery');
+     assert.equal(await page.inputValue('#arena-graphics-mode'),'battery','Battery preference persisted');
+     assert.equal(await page.locator('#arena-canvas').evaluate(el=>el.width),420,
+       'Battery mode reduces canvas pixel density to 1x');
+     await page.locator('#arena-graphics-mode').selectOption('quality');
+     assert.equal(await page.locator('#arena-canvas').evaluate(el=>el.width),840,
+       'Quality mode renders at up to 2x native canvas density');
+     await page.locator('#arena-graphics-mode').selectOption('auto');
      await page.locator('#arena-control-mode').selectOption('joystick');
      await page.locator('#arena-handedness').selectOption('flipped');
      await page.locator('#arena-settings-close').click();
