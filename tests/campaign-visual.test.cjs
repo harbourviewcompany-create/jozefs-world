@@ -1,3 +1,4 @@
+const bundled=require('./bundle-contract.cjs');
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -9,10 +10,9 @@ const css=fs.readFileSync(path.join(root,'campaign-2026.css'),'utf8');
 const script=fs.readFileSync(path.join(root,'campaign-2026.js'),'utf8');
 test('2026 collectible and campaign artwork is deployed and offline cache complete',()=>{
  const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
- for(const asset of ['campaign-2026.css','campaign-2026.js']){
-  assert.equal((html.match(new RegExp('(?:src|href)="'+asset+'"','g'))||[]).length,1);
-  assert.ok(sw.includes("'./"+asset+"'"),'offline cache must include '+asset);
- }
+ bundled.css(root,html,sw,'campaign-2026.css');
+ assert.equal((html.match(/src="campaign-2026.js"/g)||[]).length,1);
+ assert.ok(sw.includes("'./campaign-2026.js'"));
  for(const key of ['career-visual-status','tour-passport-status','tour-passport-progress','career-season-track','tour-passport-deck']){
   assert.ok(html.includes(key),'campaign page missing '+key);
  }
