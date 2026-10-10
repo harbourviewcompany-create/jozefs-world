@@ -84,3 +84,10 @@
  .multi-career-progress>span{transition:none!important}
  .multi-stage.has-canvas .multi-action-canvas{animation:none!important}
 }
+
+/* The stage itself is an accessible optional touch target; original buttons stay available. */
+.multi-stage.has-canvas[data-sport="hockey"] .multi-action-canvas{cursor:crosshair;touch-action:manipulation}
+.multi-stage.has-canvas[data-sport="baseball"] .multi-action-canvas,
+.multi-stage.has-canvas[data-sport="basketball"] .multi-action-canvas{cursor:pointer;touch-action:manipulation}
+.multi-stage.has-canvas .multi-action-canvas:focus-visible{outline:4px solid #c8ff5a;outline-offset:3px}
+.multi-stage.has-canvas[data-sport="wrestling"] .multi-action-canvas{cursor:default}
