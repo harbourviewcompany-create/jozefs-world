@@ -315,7 +315,7 @@
           </div>
           <div class="arena-actions">
             <button type="button" id="arena-pass" class="arena-pass">PASS <small>J</small></button>
-            <button type="button" id="arena-shoot" class="arena-shoot">SHOOT <small>K</small></button>
+            <button type="button" id="arena-shoot" class="arena-shoot" aria-label="Shoot. On mobile, swipe left or right to aim, or hold to add power.">SHOOT <small>K</small></button>
           </div>
         </div>
         <div class="arena-skill-strip"><button id="arena-skill" type="button" disabled>SKILL BURST <small>L</small></button><span id="arena-skill-status">SKILL READY</span><small>Accelerate past defenders. Recharges between moves.</small></div>
@@ -334,6 +334,7 @@
           <label>Touch controls <select id="arena-control-mode"><option value="joystick">Virtual joystick</option><option value="arrows">Arrow buttons</option></select></label>
           <label>Control layout <select id="arena-handedness"><option value="standard">Movement left</option><option value="flipped">Movement right</option></select></label>
           <label>Graphics <select id="arena-graphics-mode"><option value="auto">Auto</option><option value="quality">Smooth 60 FPS</option><option value="battery">Battery saver 30 FPS</option></select></label>
+          <p>Immersive mobile controls: swipe left or right on SHOOT to aim, or hold to charge. The classic aiming buttons remain available in Classic mode.</p>
           <label><input id="arena-camera-toggle" type="checkbox" checked> Dynamic camera</label>
           <label><input id="arena-haptics-toggle" type="checkbox" checked> Haptic feedback (where supported)</label>
           <label>Player kit <select id="arena-kit-select"><option value="club">My Club kit</option><option value="night">Neon City kit · 2 wins</option><option value="gold">Legend kit · 5 wins</option></select></label>
