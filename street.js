@@ -35,6 +35,7 @@
     text('street-combo','×'+(1+Math.min(4,Math.floor(combo/3))));
     text('street-stage',(pace<1?'UNDERGROUND':pace<2?'CITY LIGHTS':'SUPERSONIC')+(shield?' / SHIELDED':''));
     text('street-shield',shield?'SHIELD READY':'NO SHIELD');
+    const shieldChip=$('street-shield');if(shieldChip)shieldChip.dataset.active=String(Boolean(shield));
   }
   function setPanel(){
     const button=$('street-start');
@@ -107,14 +108,14 @@
           combo+=item.kind==='gold'?2:1;
           const mult=1+Math.min(4,Math.floor(combo/3));
           score+=(item.kind==='gold'?20:10)*mult;
-          if(item.kind==='gold')golden++;
+          if(item.kind==='gold'){golden++;announce('GOLDEN STAR! BIG COMBO BONUS!');}
           streak=.38;
         }else if(item.kind==='shield'){
           if(shield)score+=15;
-          else shield=1;
+          else{shield=1;announce('SHIELD READY! Your next collision is protected.');}
           streak=.38;
         }else if(shield){
-          shield=0;streak=.38;
+          shield=0;streak=.38;announce('SHIELD SAVE! YOU KEPT ALL YOUR LIVES.');
         }else{
           hearts=Math.max(0,hearts-1);combo=0;streak=-.38;
         }
