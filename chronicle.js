@@ -146,7 +146,11 @@
       if(!last||!['hockey','baseball','basketball','wrestling'].includes(last.sport))return;
       if(!Number.isInteger(last.score)||last.score<0||last.score>5)return;
       const names={hockey:'HOCKEY SHOOTOUT',baseball:'BASEBALL DERBY',basketball:'BASKETBALL SHOOTOUT',wrestling:'WRESTLING SHOWDOWN'};
-      add('multisport',names[last.sport]+' UNDER THE LIGHTS.','Jozef FC finished '+last.sport+' with '+last.score+' / 5 points. Another chapter in the all-sport adventure.');
+      const rival=last.rivalWin===true&&typeof last.rival==='string'&&/^[A-Z ]{3,35}$/.test(last.rival)?last.rival:null;
+      add('multisport',
+        rival?'RIVAL DEFEATED: '+rival+'.':names[last.sport]+' UNDER THE LIGHTS.',
+        'Jozef FC finished '+last.sport+' with '+last.score+' / 5 points.'+
+        (rival?' Earned another victory over '+rival+'.':' Another chapter in the all-sport adventure.'));
       sync();
     });
     window.addEventListener?.('jozef:profile-updated',sync);
