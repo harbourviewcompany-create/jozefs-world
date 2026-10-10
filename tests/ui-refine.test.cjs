@@ -1,3 +1,4 @@
+const bundled=require('./bundle-contract.cjs');
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -9,12 +10,10 @@ const sw=read('sw.js'),navigation=read('stadium.js');
 
 test('new visual system is loaded once and LAST with identical canonical HTML',()=>{
  assert.equal(index,world);
- const links=[...index.matchAll(/<link rel="stylesheet" href="([^"]+)"\s*\/>/g)].map(x=>x[1]);
- assert.equal(links.at(-1),'ui-refine-2026.css');
- assert.equal(links.filter(x=>x==='ui-refine-2026.css').length,1);
- assert.ok(links.indexOf('arena-compact.css')<links.indexOf('ui-refine-2026.css'));
- assert.ok(links.indexOf('ui-refresh.css')<links.indexOf('ui-refine-2026.css'));
- assert.ok(sw.includes("'./ui-refine-2026.css'"));
+ bundled.css(root,index,sw,'ui-refine-2026.css');
+ bundled.order(root,index,sw,'arena-compact.css','ui-refine-2026.css');
+ bundled.order(root,index,sw,'ui-refresh.css','ui-refine-2026.css');
+ assert.ok(fs.readFileSync(path.join(root,'site-experience.css'),'utf8').trimEnd().endsWith(css.trimEnd()),'refinements must remain last in the CSS cascade');
  assert.match(sw,/jozef-fc-app-shell-v\d+/);
  const ids=[...index.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]);
  assert.equal(new Set(ids).size,ids.length,'no duplicate interactive controls');
