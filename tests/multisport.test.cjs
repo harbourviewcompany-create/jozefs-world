@@ -62,6 +62,14 @@ test('all four sports have complete game UI, accessible controls and offline res
  assert.doesNotMatch(source,/\bfetch\s*\(|XMLHttpRequest|WebSocket|sendBeacon|speechSynthesis/);
  assert.doesNotMatch(css,/@import|url\(\s*https?:/);
  assert.match(html,/not affiliated with or endorsed by WWE/);
+ assert.match(source,/JOHN CENA/);
+ assert.match(source,/REY MYSTERIO/);
+ const scores=fs.readFileSync(path.join(root,'sports.js'),'utf8');
+ assert.match(scores,/label: 'NHL \/ Hockey'/);
+ assert.match(scores,/label: 'MLB \/ Baseball'/);
+ assert.match(scores,/Ottawa Senators/);
+ assert.match(scores,/Toronto Blue Jays/);
+ assert.match(scores, /\['nba','nhl','mlb'\]\.includes\(id\)\?\['Home','Away'\]/);
 });
 test('hockey shoots 5 real attempts, records best and avoids duplicate awards',()=>{
  const b=boot({random:()=>0});
