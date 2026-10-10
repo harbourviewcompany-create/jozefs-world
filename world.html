@@ -30,12 +30,31 @@
   <link rel="stylesheet" href="arena-visual.css" />
   <link rel="stylesheet" href="campaign-2026.css" />
   <link rel="stylesheet" href="mobile-qa-2026.css" />
+  <link rel="stylesheet" href="broadcast.css" />
   <link rel="stylesheet" href="club-hq.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Lilita+One&family=Nunito:wght@400;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 </head>
 <body>
+
+  <div id="walkout" class="walkout" hidden role="dialog" aria-modal="true" aria-labelledby="walkout-title">
+    <div class="walkout-card">
+      <p class="eyebrow-live">The tunnel</p>
+      <h2 id="walkout-title">JOZEF FC</h2>
+      <div class="walkout-number" id="walkout-number">11</div>
+      <p>Boots on. Crowd up. Tap to run out.</p>
+      <div class="walkout-actions">
+        <button type="button" class="studio-button-primary" id="walkout-run">Run out</button>
+        <button type="button" class="studio-button-outline" id="walkout-skip">Skip</button>
+      </div>
+    </div>
+  </div>
+  <div class="commentary-bar">
+    <button type="button" id="commentary-toggle" aria-pressed="false">Commentary off</button>
+    <button type="button" id="commentary-play" hidden>Hear the call</button>
+  </div>
+
 
   <a href="#main" class="jw-skip">Skip to content</a>
   <!-- Navigation -->
@@ -1019,6 +1038,7 @@
   <script src="matchday.js" defer></script>
   <script src="stadium.js"></script>
   <script src="playmode.js"></script>
+  <script src="broadcast.js"></script>
   <script src="arcade.js" defer></script>
   <script src="street.js"></script>
   <script src="roblox.js"></script>

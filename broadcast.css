@@ -1,0 +1,9 @@
+.walkout { position: fixed; inset: 0; z-index: 140; display: none; place-items: end center; padding: 24px; background: radial-gradient(circle at 50% 20%, rgba(202,250,96,0.16), transparent 40%), #05080c; color: white; }
+.walkout.is-open { display: grid; }
+.walkout-card { width: min(520px, 100%); text-align: center; }
+.walkout-card h2 { font-family: "Lilita One", "Nunito", sans-serif; font-size: clamp(3rem, 12vw, 6rem); line-height: 0.9; margin: 8px 0; }
+.walkout-number { display: inline-grid; place-items: center; width: 92px; height: 110px; margin: 10px auto; background: #cafa60; color: #102016; font: 900 52px/1 "Barlow Condensed", sans-serif; clip-path: polygon(20% 0, 80% 0, 100% 18%, 82% 36%, 82% 100%, 18% 100%, 18% 36%, 0 18%); }
+.walkout-actions { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
+.commentary-bar { display: flex; gap: 8px; justify-content: flex-end; width: min(860px, calc(100% - 20px)); margin: 8px auto; }
+.commentary-bar button { min-height: 40px; border: 0; border-radius: 999px; padding: 0 14px; background: rgba(255,255,255,0.1); color: white; }
+@media (prefers-reduced-motion: reduce) { .walkout { background: #05080c; } }
