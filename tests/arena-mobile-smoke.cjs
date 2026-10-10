@@ -30,6 +30,9 @@ const close=()=>new Promise(resolve=>server.close(resolve));
      await page.goto(url,{waitUntil:'domcontentloaded'});
      await page.evaluate(()=>window.showSection('arena'));
      await page.waitForTimeout(150);
+     // Match entry offers an intentional walkout intro on the first visit.
+     // Complete or skip it before interacting with the controls behind it.
+     if(await page.locator('#walkout').isVisible()) await page.locator('#walkout-skip').click();
      const result=await page.evaluate(()=>{
       const section=document.querySelector('#arena.section.active');
       const game=document.querySelector('#arena .arena-game');
@@ -38,11 +41,15 @@ const close=()=>new Promise(resolve=>server.close(resolve));
        const e=document.getElementById(id),r=e?.getBoundingClientRect();
        return [id,{found:!!e,visible:!!r&&r.width>=(id==='arena-settings-toggle'?27:35)&&r.height>=20,box:r?{top:r.top,bottom:r.bottom,left:r.left,right:r.right}:null}];
       }));
-      return {active:!!section,gameBottom:game.getBoundingClientRect().bottom,screenHeight:innerHeight,
-        viewportWidth:innerWidth,elements,scroll:section.scrollHeight-section.clientHeight};
+      const gameRect=game.getBoundingClientRect(),sectionRect=section.getBoundingClientRect();
+      return {active:!!section,gameBottom:gameRect.bottom,gameTop:gameRect.top,gameHeight:gameRect.height,
+        sectionBottom:sectionRect.bottom,sectionTop:sectionRect.top,screenHeight:innerHeight,
+        viewportWidth:innerWidth,visualHeight:window.visualViewport?.height,
+        bodyScrollHeight:document.body.scrollHeight,elements,scroll:section.scrollHeight-section.clientHeight};
      });
+     console.log('Arena viewport metrics',engine.name(),JSON.stringify(viewport),JSON.stringify({...result,elements:undefined}));
      assert.equal(result.active,true,'Arena should be visible');
-     assert.ok(result.gameBottom<=viewport.height+2,'Arena bottom fits viewport '+JSON.stringify(viewport));
+     assert.ok(result.gameBottom<=result.screenHeight+2,'Arena bottom fits visible viewport '+JSON.stringify(viewport)+'; actual '+JSON.stringify({gameBottom:result.gameBottom,screenHeight:result.screenHeight,gameTop:result.gameTop,sectionBottom:result.sectionBottom}));
      for(const [id,data] of Object.entries(result.elements))
        assert.ok(data.found&&data.visible,id+' should be visible at '+JSON.stringify(viewport));
      assert.ok(result.scroll<=2,'game view must not vertically overflow');
