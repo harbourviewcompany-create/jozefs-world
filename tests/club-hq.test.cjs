@@ -1,3 +1,4 @@
+const bundled=require('./bundle-contract.cjs');
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -31,13 +32,13 @@ function boot(store=new Map(),now=new Date(2026,9,9,12)){
 test('the shared activity board loads once in both HTML entries, cached offline',()=>{
  assert.equal(html,index);
  assert.equal((html.match(/src="club-hq.js"/g)||[]).length,1);
- assert.equal((html.match(/href="club-hq.css"/g)||[]).length,1);
- assert.ok(html.indexOf('href="club-hq.css"')>html.indexOf('href="mobile-qa-2026.css"'));
+ bundled.css(root,html,sw,'club-hq.css');
+ bundled.order(root,html,sw,'mobile-qa-2026.css','club-hq.css');
  for(const id of ['today-counter','today-progress','today-meter','today-task-arena','today-task-street',
     'today-arena-status','today-street-status','today-play-arena','today-play-street','today-note','today-street']){
   assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1);
  }
- assert.ok(sw.includes("'./club-hq.js'")&&sw.includes("'./club-hq.css'"));
+ assert.ok(sw.includes("'./club-hq.js'"));
  assert.match(css,/@media\(max-width:480px\)/);
  assert.match(css,/prefers-reduced-motion:reduce/);
  assert.doesNotMatch(src,/\bfetch\s*\(|XMLHttpRequest|WebSocket|sendBeacon|location\.href/);
