@@ -44,7 +44,7 @@ test('phone home keeps a prominent match CTA and four clear sports, with no hori
   assert.ok(html.includes('data-multi-start="'+sport+'"'));
  assert.match(css,/#home \.multi-home-card::before/);
  assert.match(css,/#home \.studio-hero \.hero-buttons \.studio-button-primary/);
- assert.match(css,/#home \.studio-hero-art/);
+ assert.match(css,/#home \.studio-hero \.studio-hero-art/);
  assert.match(css, /@media\(max-width:700px\)/);
  assert.match(css, /@media\(max-width:390px\)/);
  assert.match(css, /grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
