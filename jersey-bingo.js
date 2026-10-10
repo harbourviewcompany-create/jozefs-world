@@ -41,7 +41,7 @@
     try { localStorage.setItem(key, JSON.stringify(val)); } catch (_) {}
   }
   function ensureStyles() {
-    if (document.querySelector('link[data-jw-extra="jersey-bingo.css"]')) return;
+    if (document.querySelector('link[href$="site-experience.css"], link[data-jw-extra="jersey-bingo.css"]')) return;
     const l = document.createElement('link');
     l.rel = 'stylesheet';
     l.href = 'jersey-bingo.css';
