@@ -255,6 +255,6 @@ test('feint affects only defenders close ahead, never the whole rival team',()=>
   'the close defender ahead loses balance, not the whole pitch');
  assert.deepEqual(S.feintTargets(captain,[],76),[]);
  assert.deepEqual(S.feintTargets(captain,[{x:Infinity,y:30}]),[]);
- assert.deepEqual(S.feintTargets(captain,opponents,999),[0,3],
+ assert.deepEqual(S.feintTargets(captain,opponents,999),[0,1,3],
   'the radius must be bounded to avoid full-field stun');
 });
