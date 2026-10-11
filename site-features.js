@@ -804,9 +804,48 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       });
     });
   }
+
+  function paintPicker() {
+    const box = document.getElementById('team-picker');
+    if (!box) return;
+    const saved = load();
+    box.replaceChildren();
+    Object.keys(LEAGUES).forEach(id => {
+      const league = LEAGUES[id];
+      const label = document.createElement('label');
+      label.textContent = league.label;
+      const select = document.createElement('select');
+      select.setAttribute('aria-label', 'Choose ' + league.label + ' team');
+      league.teams.forEach(team => {
+        const option = document.createElement('option');
+        option.value = team;
+        option.textContent = team;
+        if (saved[id] && saved[id].team === team) option.selected = true;
+        select.appendChild(option);
+      });
+      select.addEventListener('change', () => {
+        const data = load();
+        data[id] = data[id] || {};
+        data[id].team = select.value;
+        save(data);
+        const line = document.getElementById('today-clubs');
+        if (line) line.textContent = chosen();
+        paint();
+      });
+      label.appendChild(select);
+      box.appendChild(label);
+    });
+    const line = document.getElementById('today-clubs');
+    if (line) line.textContent = chosen();
+  }
+  function chosen() {
+    const saved = load();
+    return Object.keys(LEAGUES).map(id => (saved[id] && saved[id].team) || LEAGUES[id].teams[0]).join(' · ');
+  }
   function boot() {
     if (!document.getElementById('sports-board')) return;
     paint();
+    paintPicker();
     directory();
     const log = document.getElementById('sports-log');
     if (log) {

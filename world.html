@@ -25,6 +25,10 @@
 body.nav-open .nav-extra{display:inline-flex}
 #nav-more{font-weight:800}
 .street-layout{display:none}
+
+.team-picker{display:grid;gap:10px}
+.team-picker label{display:grid;gap:4px;font-weight:800}
+.team-picker select{min-height:44px;border-radius:10px;padding:8px}
 </style>
 </head>
 <body>
@@ -114,12 +118,19 @@ body.nav-open .nav-extra{display:inline-flex}
       <a class="studio-button-primary" href="./prime/">PLAY PRIME ARENA ↗</a>
     </aside>
 
+    
+    <section class="team-picker-card" aria-labelledby="team-picker-title">
+      <h2 id="team-picker-title">His clubs</h2>
+      <p>Pick one team for each sport. The Sports Room and Watch follow this choice.</p>
+      <div id="team-picker" class="team-picker"></div>
+    </section>
+
     <section class="today-card" id="today-card" aria-labelledby="today-heading">
       <div class="today-head">
         <div>
           <p class="eyebrow-live">YOUR SHARED CLUB / TODAY</p>
           <h2 id="today-heading">TODAY.</h2>
-          <p class="today-intro">One match. One Street run. His clubs: Ottawa Senators, Atlético Ottawa, Toronto Raptors, Buffalo Bills, Toronto Blue Jays.</p>
+          <p class="today-intro">One match. One Street run. He picks his clubs.</p><p id="today-clubs">His clubs load here.</p>
         </div>
         <span class="today-counter" id="today-counter" aria-live="polite">0 / 2 PLAYED</span>
       </div>
