@@ -32,10 +32,24 @@ jobs:
           node scripts/build-site-js.cjs --check
       - name: Validate interactive games before publishing
         run: node --test tests/*.test.cjs
+      - name: Build PRIME ARENA (Phaser 4, TypeScript 6, Vite 8)
+        run: |
+          npm install --prefix prime --no-audit --no-fund --package-lock=false
+          npm run check --prefix prime
+          npm run test --prefix prime
+          npm run build --prefix prime
+          test -s prime/dist/index.html || { echo "::error::Prime Arena bundle missing"; exit 1; }
+      - name: Stage root site and compiled Prime Arena
+        run: |
+          mkdir -p _site/prime
+          rsync -a --exclude '.git' --exclude '_site' --exclude 'prime' \
+            --exclude '.github' --exclude 'tests' --exclude 'scripts' ./ _site/
+          cp -R prime/dist/. _site/prime/
+          test -s _site/prime/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
