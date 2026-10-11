@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap');
+/* All fonts are local system fallbacks: no third-party font or analytics requests. */
 :root{font-family:Outfit,system-ui,-apple-system,sans-serif;color:#f4ffe9;background:#060f18;font-synthesis:none;--lime:#cdf866;--teal:#65f0e4;--ink:#06151e;--muted:#b0c9c5;--gold:#ffcf8c}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;overflow-x:hidden;min-width:320px;background:radial-gradient(circle at 100% 4%,#143d3c 0,transparent 24rem),linear-gradient(#08161e,#061019 48%,#07171f)}
 body::before{content:"";position:fixed;inset:0;z-index:-1;opacity:.08;pointer-events:none;background-image:repeating-linear-gradient(90deg,transparent 0 31px,#ffffff16 32px 33px),repeating-linear-gradient(0deg,transparent 0 31px,#ffffff10 32px 33px)}
