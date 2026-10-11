@@ -19,6 +19,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Lilita+One&family=Nunito:wght@400;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+
+<style>
+.nav-extra{display:none}
+body.nav-open .nav-extra{display:inline-flex}
+#nav-more{font-weight:800}
+.street-layout{display:none}
+</style>
 </head>
 <body>
 
@@ -46,24 +53,25 @@
 <div class="nav-brand"><span class="studio-brand-mark" aria-hidden="true">J<span>11</span></span><span class="studio-brand-title">JOZEF <b>FC</b><small>THE FUTURE IS OURS</small></span></div>
     <div class="nav-links">
       <button class="nav-btn active" data-section="home">HQ</button>
+      <button type="button" class="nav-btn" id="nav-more">More</button>
       <button class="nav-btn studio-arena-nav" data-section="arena">PLAY MATCH</button>
-      <button class="nav-btn studio-street-nav" data-section="street">STREET//11</button>
-      <button class="nav-btn" data-section="games">Games</button>
-      <button class="nav-btn" data-section="club">My Club</button>
-      <button class="nav-btn" data-section="playbook">Playbook</button>
-      <button class="nav-btn" data-section="tour">World Tour</button>
-      <button class="nav-btn" data-section="career">Career</button>
-      <button class="nav-btn" data-section="news">Scores</button>
-      <button class="nav-btn" data-section="sports-arcade">Sports Arcade</button>
-      <button class="nav-btn" data-section="sports">Sports Scores</button>
+      <a class="nav-btn studio-street-nav" href="prime/?mode=street">STREET//11</a>
+      <button class="nav-btn nav-extra" data-section="games">Games</button>
+      <button class="nav-btn nav-extra" data-section="club">My Club</button>
+      <button class="nav-btn nav-extra" data-section="playbook">Playbook</button>
+      <button class="nav-btn nav-extra" data-section="tour">World Tour</button>
+      <button class="nav-btn nav-extra" data-section="career">Career</button>
+      <button class="nav-btn nav-extra" data-section="news">Scores</button>
+      <button class="nav-btn nav-extra" data-section="sports-arcade">Sports Arcade</button>
+      <button class="nav-btn nav-extra" data-section="sports">Sports Scores</button>
       <button class="nav-btn" data-section="watch">Watch</button>
-      <button class="nav-btn" data-section="learn">Learn</button>
-      <button class="nav-btn" data-section="training">Training</button>
-      <button class="nav-btn" data-section="matchday">Match Day</button>
+      <button class="nav-btn nav-extra" data-section="learn">Learn</button>
+      <button class="nav-btn nav-extra" data-section="training">Training</button>
+      <button class="nav-btn nav-extra" data-section="matchday">Match Day</button>
       <button class="nav-btn" data-section="notes">Notes <span id="note-dot" class="note-dot" hidden>●</span></button>
-      <button class="nav-btn" data-section="album">Stickers</button>
-      <button class="nav-btn" data-section="chronicle">Chronicle</button>
-      <button class="nav-btn" data-section="fun">Locker Room</button>
+      <button class="nav-btn nav-extra" data-section="album">Stickers</button>
+      <button class="nav-btn nav-extra" data-section="chronicle">Chronicle</button>
+      <button class="nav-btn nav-extra" data-section="fun">Locker Room</button>
     </div>
     <button class="jw-explore" id="jw-explore" type="button" aria-haspopup="dialog" aria-controls="studio-command" aria-label="Explore all games and sections">
       <span class="jw-explore-symbol" aria-hidden="true">☷</span><span>EXPLORE</span>
@@ -123,7 +131,7 @@
         </div>
         <div class="today-task" id="today-task-street">
           <div class="today-task-info"><span class="today-task-number">02 / NIGHT RUN</span><strong>TAKE THE STREETS</strong><small id="today-street-status">Not played today</small></div>
-          <button type="button" id="today-play-street" onclick="showSection('street')">RUN STREET ↗</button>
+          <button type="button" id="today-play-street" onclick="location.href='prime/?mode=street'">RUN STREET ↗</button>
         </div>
       </div>
       <div class="today-clubline">
@@ -162,7 +170,7 @@
       <button type="button" class="action-btn" id="locker-chant">Say the chant</button>
     </section>
 
-        <p class="jw-privacy-note" id="hq-parent-line">Save this season in My Club. It includes XP, Street best, notes, stickers, and Sports Room calls.</p>
+        <button type="button" class="action-btn" id="hq-parent-line" onclick="showSection('club')">Save this season in My Club</button><p class="jw-privacy-note">The file includes XP, Street best, notes, stickers, and Sports Room calls. Move it if he uses another phone.</p>
         <div class="jw-privacy-note" id="season-diary">No match written in the season book yet.</div>
     <div class="studio-signal-row" aria-label="Your current progress">
       <div class="studio-signal"><span class="studio-signal-label">PLAYER RANK</span><strong>LVL <span data-jw-level>1</span></strong><small>ALWAYS EVOLVING</small></div>
@@ -356,9 +364,10 @@
   </section>
 
   <!-- STREET 11: THE NIGHT-RUN SIGNATURE MODE -->
-  <section id="street" class="section studio-street-page" tabindex="-1" aria-labelledby="street-heading">
+  <section id="street" data-section="street" class="section studio-street-page" tabindex="-1" aria-labelledby="street-heading">
     <div class="studio-page-intro"><span class="studio-kicker">JOZEF FC / THE UNDERGROUND</span><h2 id="street-heading">STREET<span>//11</span></h2>
-      <p>Lights on. Boots ready. Dodge the defenders, chase the neon stars, and survive for 55 seconds. Three lives. One record to beat.</p>
+      <p>The night run lives in Prime. Three lanes, 55 seconds, a runner in the 11 shirt. This page is the door.</p>
+      <p><a class="action-btn" href="prime/?mode=street">Play the night run</a></p>
     </div>
     <button type="button" class="play-exit">Close game</button>
     <div class="street-layout">
@@ -1418,5 +1427,9 @@
   <script src="club-hq.js"></script>
   <script src="chronicle.js" defer></script>
   <script src="playbook.js" defer></script>
+
+<script>
+document.getElementById('nav-more')?.addEventListener('click',()=>document.body.classList.toggle('nav-open'));
+</script>
 </body>
 </html>

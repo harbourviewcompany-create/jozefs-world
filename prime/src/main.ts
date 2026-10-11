@@ -302,6 +302,12 @@ function boot(){
   label('game',"Prime Arena couldn't start on this device. The original Sports Arcade remains available.");
  }
 }
+
+ const wanted=new URLSearchParams(location.search).get('mode');
+ if(wanted==='street'){
+  document.querySelector<HTMLButtonElement>('[data-mode="street"]')?.click();
+ }
+
 boot();
  document.getElementById('street-left')?.addEventListener('pointerdown',()=>street?.move(-1));
  document.getElementById('street-right')?.addEventListener('pointerdown',()=>street?.move(1));
