@@ -117,8 +117,12 @@ const close=()=>new Promise(resolve=>server.close(resolve));
      }
      let game=await page.evaluate(()=>window.JozefArena?.getProgress?.());
      assert.equal(game?.mode,'playing','Kickoff must start');
+     const chance=page.locator('#arena .arena-mini-ticker .arena-chance-badge');
+     assert.equal(await chance.isVisible(),true,'Shot quality must remain visible in immersive and Classic modes');
      const shotQuality=await page.locator('#arena-shot-quality').textContent();
-     assert.match(shotQuality,/^\d+%$/,'Aiming HUD must show the shot-on-target estimate');
+     assert.match(shotQuality,/^\d+%$/,'Match ticker must show the shot-on-target estimate');
+     assert.equal(await page.locator('#arena .arena-scoreboard > div:last-child small:first-child').textContent(),'TIME',
+      'Mobile clock label must stay short and readable');
      assert.ok(game.shotChance<.12,'Shooting from kickoff must be low probability');
      await page.locator('#arena-shoot').click();
      game=await page.evaluate(()=>window.JozefArena?.getProgress?.());
@@ -157,7 +161,9 @@ const close=()=>new Promise(resolve=>server.close(resolve));
      assert.ok(after<before-1,'Virtual joystick must move Jozef; before='+
       before+' after='+after+' mode='+afterState.mode+' stick='+liveStick);
      await page.locator('#arena-start').click();
-     assert.equal((await page.evaluate(()=>window.JozefArena.getProgress())).mode,'paused','Pause button stops game');
+     const pausedProgress=await page.evaluate(()=>window.JozefArena.getProgress());
+     assert.equal(pausedProgress.mode,'paused','Pause button stops game');
+     assert.equal(pausedProgress.cameraZoom,1,'Pause must return to a full-field view');
      await page.locator('#arena-start').click();
      assert.equal((await page.evaluate(()=>window.JozefArena.getProgress())).mode,'playing','Resume button restarts game');
      if(viewport.width===390&&viewport.height===844){
