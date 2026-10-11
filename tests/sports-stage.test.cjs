@@ -44,9 +44,12 @@ function setup({reduced=false,canvas=true}={}){
 test('graphical action canvas is optional, bundled offline, and has reduced-motion support',()=>{
  assert.equal(page,fs.readFileSync(path.join(root,'index.html'),'utf8'));
  assert.equal((page.match(/id="multi-action-canvas"/g)||[]).length,1);
- assert.ok(page.indexOf('src="sports-stage.js"')<page.indexOf('src="multisport.js"'));
+ assert.equal((page.match(/src="site-features\\.js"/g)||[]).length,1);
+ const features=fs.readFileSync(path.join(root,'site-features.js'),'utf8');
+ assert.ok(features.indexOf('/* BEGIN sports-stage.js */')>=0);
+ assert.ok(features.indexOf('/* BEGIN sports-stage.js */')<features.indexOf('/* BEGIN multisport.js */'));
  bundled.css(root,page,sw,'sports-stage.css');
- assert.ok(sw.includes("'./sports-stage.js'"));
+ assert.ok(sw.includes("'./site-features.js'"));
  assert.match(css,/@media\(max-width:680px\)/);
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
  assert.match(css,/\.multi-stage\.has-canvas/);
