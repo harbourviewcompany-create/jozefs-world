@@ -129,7 +129,8 @@ const close=()=>new Promise(resolve=>server.close(resolve));
      assert.match(shotQuality,/^\d+%$/,'Match ticker must show the shot-on-target estimate');
      assert.equal(await page.locator('#arena .arena-scoreboard > div:last-child small:first-child').textContent(),'TIME',
       'Mobile clock label must stay short and readable');
-     assert.ok(game.shotChance<.12,'Shooting from kickoff must be low probability');
+     assert.ok(game.shotChance<.20,'Even on Rookie, shooting from kickoff must be unlikely');
+     assert.equal(game.difficulty,'rookie','New touch players should receive Rookie difficulty');
      await page.locator('#arena-shoot').click();
      game=await page.evaluate(()=>window.JozefArena?.getProgress?.());
      assert.ok(game.shots>=1,'Shoot button must fire shot');
