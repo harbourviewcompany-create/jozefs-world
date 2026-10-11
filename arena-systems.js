@@ -68,6 +68,51 @@
     return clamp((.08+.25*advance+.07*(d.pressure-1)-.23*clamp(cover,0,1)-pressureBonus),.025,.42);
   }
 
+  // Delta-time-stable movement with smooth starts, controlled turns and
+  // predictable stops. Works identically for keyboard, touch and gamepads.
+  function movePlayer(player,velocity,input,dt,speed=190,boost=1) {
+    const step=clamp(dt,0,.05);
+    const mag=Math.hypot(Number(input?.x)||0,Number(input?.y)||0);
+    const normalized=mag>.001?{x:(Number(input.x)||0)/Math.max(1,mag),y:(Number(input.y)||0)/Math.max(1,mag)}:{x:0,y:0};
+    const response=1-Math.exp(-(mag>.08?15:22)*step);
+    const limit=clamp(speed*boost,0,450);
+    const vx=(Number(velocity?.x)||0)+(normalized.x*limit-(Number(velocity?.x)||0))*response;
+    const vy=(Number(velocity?.y)||0)+(normalized.y*limit-(Number(velocity?.y)||0))*response;
+    const x=clamp((Number(player?.x)||210)+vx*step,24,396);
+    const y=clamp((Number(player?.y)||493)+vy*step,102,565);
+    return {x,y,vx:x<=24&&vx<0||x>=396&&vx>0?0:vx,vy:y<=102&&vy<0||y>=565&&vy>0?0:vy};
+  }
+  // Check if a defender is actually between a shooter and a chosen corner.
+  // Used for accurate in-game coaching. The physics still resolves real
+  // position collisions, so coaching never guarantees a goal.
+  function findShotBlocker(shooter,target,defenders,clearance=25) {
+    if(!shooter||!target||!Array.isArray(defenders))return null;
+    const vx=target.x-shooter.x,vy=target.y-shooter.y,mag2=vx*vx+vy*vy;
+    if(mag2<1)return null;
+    let closest=null,smallest=Infinity;
+    for(const d of defenders){
+      if(!d||!Number.isFinite(d.x)||!Number.isFinite(d.y))continue;
+      const t=clamp(((d.x-shooter.x)*vx+(d.y-shooter.y)*vy)/mag2,0,1);
+      if(t<.12||t>.94)continue;
+      const distance=Math.hypot(d.x-(shooter.x+t*vx),d.y-(shooter.y+t*vy));
+      if(distance<clearance&&distance<smallest){closest=d;smallest=distance;}
+    }
+    return closest;
+  }
+  function tacticalRead(actor,mate,defenders,ball,aimX=210,accuracy=.2) {
+    const owner=ball?.owner;
+    if(owner==='rival')return {kind:'defend',label:'CHASE & TACKLE',hint:'Use BOOST to win the ball',threat:false};
+    if(owner==='free')return {kind:'recover',label:'CHASE THE BALL',hint:'Collect the rebound',threat:false};
+    if(owner==='shot')return {kind:'shoot',label:'BALL IN FLIGHT',hint:'Follow the shot',threat:false};
+    if(owner==='pass')return {kind:'pass',label:'PASS IN FLIGHT',hint:'Keep moving',threat:false};
+    if(owner==='mate')return {kind:'pass',label:'ONE-TWO READY',hint:'PASS brings Jozef the ball',threat:false};
+    const shooter=actor||{x:210,y:493};
+    const blocked=Boolean(findShotBlocker(shooter,{x:aimX,y:16},defenders));
+    const forward=(Number(shooter.y)||493)>300;
+    if(blocked)return {kind:'pass',label:'FIND AN OPEN LANE',hint:'Move sideways or PASS',threat:true};
+    if(forward||accuracy<.37)return {kind:'advance',label:'DRIVE FORWARD',hint:'Get closer for a better shot',threat:false};
+    return {kind:'shoot',label:'SHOOT NOW',hint:'Swipe SHOOT to aim',threat:false};
+  }
   function shotAccuracy(y,shotBonus,difficulty='pro') {
     const factor=DIFFICULTIES[difficulty]||DIFFICULTIES.pro;
     return clamp(Math.max(1,(y-122)/23)*(1-clamp(shotBonus,0,.4))*factor.pressure,1,26);
@@ -202,7 +247,7 @@
   }
   return Object.freeze({
     clamp,distance,DIFFICULTIES,joystickVector,
-    defenderDestination,teammateDestination,rivalRunTarget,counterSupportTarget,rivalThreatChance,shotAccuracy,shotProfile,shotTarget,keeperCommit,readGamepad,
+    defenderDestination,teammateDestination,rivalRunTarget,counterSupportTarget,rivalThreatChance,movePlayer,findShotBlocker,tacticalRead,shotAccuracy,shotProfile,shotTarget,keeperCommit,readGamepad,
     cameraFor,screenToWorld,dailyKey,CHALLENGES,freshDaily,normalizeDaily,awardDaily,progression
   });
 });
