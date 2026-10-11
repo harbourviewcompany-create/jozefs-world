@@ -2546,6 +2546,39 @@
 
 /* WebKit-stable thumbstick: only the inner knob moves under the finger. */
 
+
+/* Arena 5.1: always show shot odds in the compact match ticker.
+   Unlike the classic aiming strip, the ticker stays visible in immersive mode. */
+@media (max-width:1100px) {
+  #arena.section.active .arena-mini-ticker {
+    gap:clamp(4px,1.1vw,8px);
+    justify-content:flex-start;
+  }
+  #arena.section.active .arena-mini-ticker > span {
+    flex:0 0 auto;
+    white-space:nowrap;
+  }
+  #arena.section.active .arena-mini-ticker .arena-chance-badge {
+    display:inline-flex !important;
+    align-items:center;
+    gap:3px;
+    color:#bee5cf;
+    font-size:clamp(8px,2.25vw,10px);
+    letter-spacing:0;
+  }
+  #arena.section.active .arena-chance-badge #arena-shot-quality {
+    color:#dfff85;
+    font-size:clamp(11px,3vw,13px);
+    font-variant-numeric:tabular-nums;
+    padding:0;
+  }
+  #arena.section.active #arena-daily-progress {
+    margin-left:auto;
+    flex:0 0 auto;
+    padding-inline:clamp(3px,1vw,7px);
+  }
+}
+
 /* BEGIN ui-refine-2026.css */
 /* JOZEF'S WORLD // VISUAL UX REFINEMENT 2026
  * Last-loaded design layer. Navigation and controls remain semantic HTML.
