@@ -189,7 +189,17 @@ function ball(c,s,phase,motion){
 function aimLine(c,s){
  const zones=s.shotZones||[];
  const target=zones[s.aim||0]?.x||171;
- strokeCircle(c,target,20,13,'#f0ffaeaa',2);
+ const recommended=Number.isInteger(s.advice?.recommendedAim)?s.advice.recommendedAim:-1;
+ if(recommended>=0&&recommended!==s.aim&&zones[recommended]){
+  const open=zones[recommended].x;
+  // Cyan marks a possible clear corner. Jozef still decides the shot.
+  strokeCircle(c,open,20,19,'#82f6e8df',2.3);
+  strokeCircle(c,open,20,10,'#82f6e890',1.5);
+  c.save();c.textAlign='center';c.fillStyle='#c9fff6';
+  c.font='900 9px system-ui';c.fillText('OPEN',open,52);
+  c.restore();
+ }
+ strokeCircle(c,target,20,13,recommended>=0?'#ffc184cf':'#f0ffaeaa',2);
  strokeCircle(c,target,20,7,'#c8ff5aaf',1);
  c.strokeStyle='#e5ff8b96';c.lineWidth=1;
  c.beginPath();c.moveTo(target-19,20);c.lineTo(target+19,20);c.moveTo(target,2);c.lineTo(target,38);c.stroke();
@@ -210,7 +220,7 @@ function aimLine(c,s){
   c.lineWidth=s.advice?.threat?2.2:1.5;
   c.beginPath();c.moveTo(s.actor.x,s.actor.y-17);c.lineTo(target,25);c.stroke();
   c.restore();
-  // A cyan route appears when a pass can open the shooting lane.
+  // A cyan route appears only if defenders close every shooting lane.
   if(s.advice?.kind==='pass'&&s.mate){
    c.save();c.setLineDash([5,6]);c.strokeStyle='#81f9edbd';c.lineWidth=2;
    c.beginPath();c.moveTo(s.actor.x,s.actor.y);c.lineTo(s.mate.x,s.mate.y);c.stroke();
@@ -248,6 +258,16 @@ function fx(c,s,p,phase,motion){
 function tacticalOverlay(c,s){
  if(s.mode!=='playing'||!s.advice)return;
  const a=s.advice;
+ // One-twos already improve shot probability; display the chain explicitly.
+ const chain=Math.max(0,Math.min(3,Number(s.passChain)||0));
+ if(chain>0&&s.ball?.owner!=='rival'){
+  c.save();
+  rounded(c,252,52,143,29,8,'#123d3beb');
+  c.strokeStyle='#75f4e7a8';c.lineWidth=1;c.strokeRect(253,53,141,27);
+  c.textAlign='center';c.font='900 11px system-ui';c.fillStyle='#c0fff3';
+  c.fillText('ONE-TWO  ×'+chain,323,70);
+  c.restore();
+ }
  const y=s.actor?.y<175?512:49;
  c.save();
  // Shift coaching below play whenever Jozef approaches the penalty area.
