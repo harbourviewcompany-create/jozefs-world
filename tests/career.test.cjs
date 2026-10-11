@@ -123,10 +123,10 @@ test('unique navigation, game canvases and script entrypoints across a cinematic
   const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
   for(const css of ['stadium.css','arcade.css'])bundled.css(root,html,sw,css);
   const features=fs.readFileSync(path.join(root,'site-features.js'),'utf8');
-  assert.equal((html.match(/src="site-features\\.js"/g)||[]).length,1);
+  assert.equal(html.split('src="site-features.js"').length-1,1,'feature bundle loaded once');
   assert.ok(features.includes('/* BEGIN stadium.js */'));
   for(const file of ['street.js','arcade.js'])
-    assert.equal((html.match(new RegExp('src="'+file.replace(/\\./g,'\\\\.')+'"','g'))||[]).length,1,'load '+file+' exactly once');
+    assert.equal(html.split('src="'+file+'"').length-1,1,'load '+file+' exactly once');
   const pre=html.indexOf('<section id="street"');
   const games=html.indexOf('<section id="games"');
   assert.ok(pre>0&&pre<games,'street game must appear before training games');
