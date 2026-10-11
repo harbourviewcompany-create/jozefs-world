@@ -147,6 +147,21 @@
     }
     return {kind:'shoot',label:'SHOOT NOW',hint:'Swipe SHOOT to aim',threat:false};
   }
+  // FLOW rewards considered play without making weak long-range shots
+  // automatic goals. It is a match-only meter, not a paid currency.
+  const FLOW_REWARDS=Object.freeze({pass:18,oneTwo:10,recovery:26,feint:14,goal:20});
+  function flowChange(current,event){
+    const n=clamp(current,0,100);
+    if(event==='lost')return clamp(n-38,0,100);
+    if(event==='miss')return clamp(n-14,0,100);
+    if(event==='used')return 12;
+    return clamp(n+(FLOW_REWARDS[event]||0),0,100);
+  }
+  function flowShotProfile(profile,current){
+    if(!profile)return profile;
+    // Full meter adds up to eight percentage points, not guaranteed success.
+    return current>=100?{...profile,onTarget:clamp(profile.onTarget+.08,0,.94),flow:true}:profile;
+  }
   function shotAccuracy(y,shotBonus,difficulty='pro') {
     const factor=DIFFICULTIES[difficulty]||DIFFICULTIES.pro;
     return clamp(Math.max(1,(y-122)/23)*(1-clamp(shotBonus,0,.4))*factor.pressure,1,26);
@@ -282,6 +297,6 @@
   return Object.freeze({
     clamp,distance,DIFFICULTIES,joystickVector,
     defenderDestination,teammateDestination,rivalRunTarget,counterSupportTarget,rivalThreatChance,shotCharge,movePlayer,feintTargets,findShotBlocker,bestShotLane,tacticalRead,shotAccuracy,shotProfile,shotTarget,keeperCommit,readGamepad,
-    cameraFor,screenToWorld,dailyKey,CHALLENGES,freshDaily,normalizeDaily,awardDaily,progression
+    flowChange,flowShotProfile,cameraFor,screenToWorld,dailyKey,CHALLENGES,freshDaily,normalizeDaily,awardDaily,progression
   });
 });
