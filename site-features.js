@@ -910,6 +910,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
   const FEEDS = [
     { label: 'Senators', url: 'https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/news?limit=20', words: ['senator', 'ottawa'] },
+    { label: 'Atlético Ottawa', url: 'https://site.api.espn.com/apis/site/v2/sports/soccer/can.1/news?limit=15', words: ['ottawa', 'atlético', 'atletico'] },
     { label: 'Soccer', url: 'https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/news?limit=15', words: ['inter miami', 'miami', 'messi'] },
     { label: 'Raptors', url: 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/news?limit=15', words: ['raptor', 'toronto'] },
     { label: 'Bills', url: 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/news?limit=15', words: ['bill', 'buffalo'] }
