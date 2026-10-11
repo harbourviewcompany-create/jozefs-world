@@ -149,6 +149,21 @@
     }
     return {kind:'shoot',label:'SHOOT NOW',hint:'Swipe SHOOT to aim',threat:false};
   }
+  // FLOW rewards considered play without making weak long-range shots
+  // automatic goals. It is a match-only meter, not a paid currency.
+  const FLOW_REWARDS=Object.freeze({pass:18,oneTwo:10,recovery:26,feint:14,goal:20});
+  function flowChange(current,event){
+    const n=clamp(current,0,100);
+    if(event==='lost')return clamp(n-38,0,100);
+    if(event==='miss')return clamp(n-14,0,100);
+    if(event==='used')return 12;
+    return clamp(n+(FLOW_REWARDS[event]||0),0,100);
+  }
+  function flowShotProfile(profile,current){
+    if(!profile)return profile;
+    // Full meter adds up to eight percentage points, not guaranteed success.
+    return current>=100?{...profile,onTarget:clamp(profile.onTarget+.08,0,.94),flow:true}:profile;
+  }
   function shotAccuracy(y,shotBonus,difficulty='pro') {
     const factor=DIFFICULTIES[difficulty]||DIFFICULTIES.pro;
     return clamp(Math.max(1,(y-122)/23)*(1-clamp(shotBonus,0,.4))*factor.pressure,1,26);
@@ -284,7 +299,7 @@
   return Object.freeze({
     clamp,distance,DIFFICULTIES,joystickVector,
     defenderDestination,teammateDestination,rivalRunTarget,counterSupportTarget,rivalThreatChance,shotCharge,movePlayer,feintTargets,findShotBlocker,bestShotLane,tacticalRead,shotAccuracy,shotProfile,shotTarget,keeperCommit,readGamepad,
-    cameraFor,screenToWorld,dailyKey,CHALLENGES,freshDaily,normalizeDaily,awardDaily,progression
+    flowChange,flowShotProfile,cameraFor,screenToWorld,dailyKey,CHALLENGES,freshDaily,normalizeDaily,awardDaily,progression
   });
 });
 ;
@@ -789,6 +804,24 @@ function tacticalOverlay(c,s){
  c.fillText(a.hint,31,y+39,154);
  c.restore();
 }
+// Stadium-side FLOW indicator stays on the pitch, not below the phone screen.
+function flowIndicator(c,s){
+ if(s.mode!=='playing')return;
+ const value=clip(Number(s.flow)||0,0,100);
+ const ready=value>=100;
+ c.save();
+ rounded(c,232,51,161,44,9,'#061c25bc');
+ c.strokeStyle=ready?'#e5ff9bd0':'#89e6cd72';
+ c.lineWidth=ready?1.8:1;
+ c.strokeRect(233,52,159,42);
+ c.textAlign='left';c.font='900 12px system-ui';
+ c.fillStyle=ready?'#e7ff9b':'#cbefe5';c.fillText(ready?'FLOW READY':'FLOW',243,67);
+ c.textAlign='right';c.fillStyle=ready?'#e6ff8d':'#8edfd1';
+ c.font='900 12px system-ui';c.fillText(Math.round(value)+'%',379,67);
+ rounded(c,242,76,136,6,3,'#183b3a');
+ if(value>0)rounded(c,242,76,136*value/100,6,3,ready?'#dfff6c':'#71dfcf');
+ c.restore();
+}
 function matchScreen(c,s){
  if(s.mode==='playing')return;
  c.save();
@@ -866,6 +899,7 @@ function render(c,s){
  fx(c,s,p,phase,motion);
  c.restore();
  tacticalOverlay(c,s);
+ flowIndicator(c,s);
  matchScreen(c,s);
 }
 window.JozefArenaGraphics=Object.freeze({render});
@@ -922,7 +956,7 @@ function updateTouchVector(){
 let aim=0,skillCooldown=0,skillTime=0,keeperDestination=210,keeperReact=0,passRecipient=null,mateTime=0,shots=0,keeperSaves=0,lastHudTick=-1;
 let passChain=0,blockedShots=0,looseBallElapsed=0,shotOrigin=null;
 let rivalCarrier=-1,rivalElapsed=0,counterTime=0,counterRecoveries=0,rivalAttacks=0;
-let playerVelocity={x:0,y:0};
+let playerVelocity={x:0,y:0},flow=0;
 function getSquad(){
  const api=window.JozefSquad?.getSquad?.();
  const val=api?.bonuses||{};
@@ -1007,7 +1041,7 @@ function hud(){
  put('arena-shots',shots);put('arena-keeper-saves',keeperSaves);
  put('arena-aim-label',SHOT_ZONES[aim].name);
  const shooter=ball.owner==='mate'?mate:actor;
- const chance=systems.shotProfile(shooter.y,passChain,squad.shot+Math.min(.18,counterTime*.033),experience?.prefs.difficulty||'pro');
+ const chance=systems.flowShotProfile(systems.shotProfile(shooter.y,passChain,squad.shot+Math.min(.18,counterTime*.033),experience?.prefs.difficulty||'pro'),flow);
  put('arena-shot-quality',ball.owner==='rival'?'DEFEND':Math.round(chance.onTarget*100)+'%');
  const chanceLabel=$('arena-shot-quality');if(chanceLabel)chanceLabel.title=chance.label+' · Pass and move forward to improve your shooting chance.';
  put('arena-skill-status',skillCooldown>0?'READY IN '+Math.ceil(skillCooldown)+'s':'SKILL READY');
@@ -1029,7 +1063,7 @@ function saveMatchSnapshot(){
    version:1,savedAt:Date.now(),time,us,them,shots,keeperSaves,
    actor,mate,ball,defenders,keeper,aim,skillCooldown,skillTime,
    shotCooldown,tackleCooldown,passCooldown,passChain,
-   rivalCarrier,rivalElapsed,counterTime,counterRecoveries,rivalAttacks
+   rivalCarrier,rivalElapsed,counterTime,counterRecoveries,rivalAttacks,flow
   }));
  }catch(_){}
 }
@@ -1060,6 +1094,7 @@ function restoreMatchSnapshot(){
   counterTime=clamp(Number(old.counterTime)||0,0,6);
   counterRecoveries=clamp(Number(old.counterRecoveries)||0,0,99);
   rivalAttacks=clamp(Number(old.rivalAttacks)||0,0,99);
+  flow=clamp(Number(old.flow)||0,0,100);
   if(ball.owner==='rival'&&rivalCarrier<0)return false;
   squad=getSquad();mode='paused';playerVelocity={x:0,y:0};last=0;lastFrameTick=0;rawFrameTick=0;
   return true;
@@ -1068,7 +1103,7 @@ function restoreMatchSnapshot(){
 function start(){
  clearMatchSnapshot();checkpointElapsed=0;
  mode='playing';time=MATCH_LENGTH;us=0;them=0;streak=0;flash=0;last=0;
- shots=0;keeperSaves=0;blockedShots=0;counterRecoveries=0;rivalAttacks=0;skillCooldown=0;skillTime=0;lastHudTick=-1;
+ shots=0;keeperSaves=0;blockedShots=0;counterRecoveries=0;rivalAttacks=0;flow=0;skillCooldown=0;skillTime=0;lastHudTick=-1;
  camera={x:210,y:300,zoom:1};replay=null;replayHistory=[];replayWait=0;joystick={x:0,y:0};padVector={x:0,y:0};experience?.reset();
  squad=getSquad();resetPositions();hud();cue('start');
  msg('KICK OFF! Move, pass to your teammate, and shoot into the top goal.');
@@ -1131,6 +1166,7 @@ function skillMove(){
  const defending=ball.owner==='rival';
  const targets=defending?[]:systems.feintTargets(actor,defenders);
  for(const i of targets)defenders[i].stun=.82;
+ if(targets.length)flow=systems.flowChange(flow,'feint');
  msg(defending?'TACKLE BURST! CLOSE DOWN THE BALL CARRIER!':
   targets.length?'FEINT! DEFENDER WRONG-FOOTED — RUN INTO SPACE!':
   'SKILL BURST! EXPLODE INTO SPACE!');
@@ -1154,7 +1190,8 @@ function shoot(holdCharge=0){
  const p=ball.owner==='mate'?mate:actor;
  // Intentional corner aiming beats random, unstoppable goalkeeper animations.
  // Short-range attempts have tighter accuracy. Squad strength helps long shots.
- const quality=systems.shotProfile(p.y,passChain,squad.shot+Math.min(.18,counterTime*.033)+Math.min(.06,holdCharge*.06),experience?.prefs.difficulty||'pro');
+ const quality=systems.flowShotProfile(systems.shotProfile(p.y,passChain,squad.shot+Math.min(.18,counterTime*.033)+Math.min(.06,holdCharge*.06),experience?.prefs.difficulty||'pro'),flow);
+ if(quality.flow)flow=systems.flowChange(flow,'used');
  const placement=systems.shotTarget(aim,SHOT_ZONES,quality,Math.random(),Math.random(),GOAL.left,GOAL.right);
  const goalX=placement.x;
  const dy=GOAL.top-p.y,dx=goalX-p.x,div=Math.max(1,Math.hypot(dx,dy));
@@ -1169,6 +1206,7 @@ function shoot(holdCharge=0){
  hud();
 }
 function resetAfterMiss(){
+ flow=systems.flowChange(flow,'miss');
  resetPositions();shotCooldown=.8;flash=-.08;
  msg('OFF TARGET! BRING THE BALL FORWARD AND TRY AGAIN.');hud();
 }
@@ -1179,6 +1217,7 @@ function rivalTakeover(index,reason='BALL LOST! CHASE THE RIVAL AND WIN IT BACK!
  const rival=defenders[rivalCarrier];
  ball={x:rival.x,y:rival.y-12,vx:0,vy:0,owner:'rival'};
  rivalElapsed=0;counterTime=0;passChain=0;passRecipient=null;mateTime=0;
+ flow=systems.flowChange(flow,'lost');
  tackleCooldown=.75;looseBallElapsed=0;flash=-.14;cue('tackle');
  msg(reason);hud();
 }
@@ -1187,7 +1226,7 @@ function recoverCounter(who){
  const winner=who==='mate'?mate:actor;
  ball={x:winner.x,y:winner.y-13,vx:0,vy:0,owner:who};
  tackleCooldown=1.25;passCooldown=0;looseBallElapsed=0;
- counterRecoveries++;experience?.haptic([16,25,16]);
+ counterRecoveries++;flow=systems.flowChange(flow,'recovery');experience?.haptic([16,25,16]);
  msg(who==='mate'?'TEAMMATE WINS IT! PASS BACK TO JOZEF OR SHOOT!':
   'BALL WON! FAST BREAK — PASS TO YOUR RUNNER OR DRIBBLE!');
  hud();
@@ -1252,7 +1291,7 @@ function captureHistory(dt){
   actor:{...actor},mate:{...mate},ball:{...ball},
   defenders:defenders.map(d=>({...d})),keeper:{...keeper},
   camera:{...camera},phase:MATCH_LENGTH-time,
-  rivalCarrier,counterTime,aim,skillTime,flash
+  rivalCarrier,counterTime,aim,skillTime,flash,flow
  });
  if(replayHistory.length>37)replayHistory.shift();
 }
@@ -1262,7 +1301,7 @@ function finishReplay(){
 }
 function goal(){
  const finish=passChain>=2?'ONE-TWO MAGIC!':passChain>=1?'TEAMWORK GOAL!':counterTime>0?'FAST-BREAK FINISH!':'GOOOOOAL!';
- us+=1;flash=.75;cue('goal');experience?.haptic([40,40,40]);experience?.record('goals');startReplay('GOAL');
+ us+=1;flow=systems.flowChange(flow,'goal');flash=.75;cue('goal');experience?.haptic([40,40,40]);experience?.record('goals');startReplay('GOAL');
  msg(finish+' JOZEF FC SCORES! '+us+'–'+them);
  if(us>=5){resetPositions();end();return;}
  resetPositions();
@@ -1325,6 +1364,8 @@ function update(dt){
    ball.owner=passRecipient;passRecipient=null;mateTime=0;
    ball.x=receiving.x;ball.y=receiving.y-13;
    passChain=Math.min(3,passChain+1);
+   flow=systems.flowChange(flow,'pass');
+   if(passChain>=2)flow=systems.flowChange(flow,'oneTwo');
    experience?.record('passes');
    hud();
    msg(ball.owner==='mate'?'PASS COMPLETE! Press PASS again for the one-two.':'ONE-TWO COMPLETE! SHOOT!');
@@ -1411,6 +1452,7 @@ function draw(){
     actor:sample?.actor||actor,mate:sample?.mate||mate,ball:sample?.ball||ball,
     defenders:sample?.defenders||defenders,keeper:sample?.keeper||keeper,
     rivalCarrier:sample?.rivalCarrier??rivalCarrier,counterTime:sample?.counterTime??counterTime,
+    flow:sample?.flow??flow,
     advice:systems.tacticalRead(sample?.actor||actor,sample?.mate||mate,
      sample?.defenders||defenders,sample?.ball||ball,SHOT_ZONES[aim].x,
      systems.shotProfile((sample?.ball?.owner==='mate'?sample.mate:sample?.actor||actor).y,
@@ -1718,7 +1760,7 @@ window.JozefArena=Object.freeze({getProgress:()=>({...lifetime,score:us+'-'+them
   matchGoals:us,opponentGoals:them,shots,saves:keeperSaves,aim:SHOT_ZONES[aim].name,
   playerX:actor.x,playerY:actor.y,cameraZoom:camera.zoom,ballOwner:ball.owner,skillReady:skillCooldown<=0,
   advice:systems.tacticalRead(actor,mate,defenders,ball,SHOT_ZONES[aim].x,systems.shotProfile(actor.y,passChain,squad.shot,experience?.prefs.difficulty||'pro').onTarget).kind,
-  passChain,blockedShots,counterRecoveries,rivalAttacks,counterSeconds:counterTime,
+  passChain,blockedShots,counterRecoveries,rivalAttacks,counterSeconds:counterTime,flow,
   shotChance:systems.shotProfile((ball.owner==='mate'?mate:actor).y,passChain,squad.shot+Math.min(.18,counterTime*.033),experience?.prefs.difficulty||'pro').onTarget,
   difficulty:experience?.prefs.difficulty||'pro',coins:lifetime.coins,level:systems.progression(lifetime).level,
   controllerConnected:padConnected})});
