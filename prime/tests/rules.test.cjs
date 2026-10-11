@@ -8,9 +8,9 @@ const filename=path.join(__dirname,'../src/rules.ts');
 const code=ts.transpileModule(fs.readFileSync(filename,'utf8'),{
  compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}
 }).outputText;
-const module={exports:{}};
-vm.runInNewContext(code,{exports:module.exports,module,Math,Number,Date,JSON},{timeout:1000});
-const rules=module.exports;
+const sandboxModule={exports:{}};
+vm.runInNewContext(code,{exports:sandboxModule.exports,module:sandboxModule,Math,Number,Date,JSON},{timeout:1000});
+const rules=sandboxModule.exports;
 function store(){
  const data=new Map();
  return{
