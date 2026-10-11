@@ -48,6 +48,7 @@ function updateTouchVector(){
 let aim=0,skillCooldown=0,skillTime=0,keeperDestination=210,keeperReact=0,passRecipient=null,mateTime=0,shots=0,keeperSaves=0,lastHudTick=-1;
 let passChain=0,blockedShots=0,looseBallElapsed=0,shotOrigin=null;
 let rivalCarrier=-1,rivalElapsed=0,counterTime=0,counterRecoveries=0,rivalAttacks=0;
+let playerVelocity={x:0,y:0};
 function getSquad(){
  const api=window.JozefSquad?.getSquad?.();
  const val=api?.bonuses||{};
@@ -104,7 +105,7 @@ function refreshGraphics(){
 refreshGraphics();
 window.addEventListener('resize',refreshGraphics,{passive:true});
 function resetPositions(){
- shotOrigin=null;
+ shotOrigin=null;playerVelocity={x:0,y:0};
  actor={x:210,y:493};mate={x:301,y:310};
  ball={x:actor.x,y:actor.y-14,owner:'actor',vx:0,vy:0};
  defenders=[{x:144,y:260,speed:89},{x:279,y:205,speed:90},{x:204,y:143,speed:82}];
@@ -186,7 +187,7 @@ function restoreMatchSnapshot(){
   counterRecoveries=clamp(Number(old.counterRecoveries)||0,0,99);
   rivalAttacks=clamp(Number(old.rivalAttacks)||0,0,99);
   if(ball.owner==='rival'&&rivalCarrier<0)return false;
-  squad=getSquad();mode='paused';last=0;lastFrameTick=0;rawFrameTick=0;
+  squad=getSquad();mode='paused';playerVelocity={x:0,y:0};last=0;lastFrameTick=0;rawFrameTick=0;
   return true;
  }catch(_){return false;}
 }
@@ -205,6 +206,7 @@ function pause(){
   // Paused and restored matches show the complete field, including both goals.
   // Normal smooth follow-camera resumes when the match continues.
   camera={x:210,y:300,zoom:1};
+  playerVelocity={x:0,y:0};
   saveMatchSnapshot();msg('Half-time breather. Your score is safe.');}
  else if(mode==='paused'){mode='playing';last=0;msg('Back on the ball!');raf=requestAnimationFrame(loop);}
  hud();
@@ -234,11 +236,10 @@ function end(){
  hud();draw();experience?.finish({won,us,them,shots,saves:keeperSaves});
 }
 function move(deltaX,deltaY,dt){
- const len=Math.hypot(deltaX,deltaY);
- if(len<.1)return;
- const speed=190*(1+squad.speed)*(skillTime>0?1.85:1);
- actor.x=clamp(actor.x+deltaX/Math.max(len,1)*speed*dt,24,396);
- actor.y=clamp(actor.y+deltaY/Math.max(len,1)*speed*dt,102,565);
+ const position=systems.movePlayer(actor,playerVelocity,
+  {x:deltaX,y:deltaY},dt,190*(1+squad.speed),skillTime>0?1.85:1);
+ actor.x=position.x;actor.y=position.y;
+ playerVelocity={x:position.vx,y:position.vy};
 }
 function receive(){
  if(ball.owner!=='free')return;
@@ -528,6 +529,11 @@ function draw(){
     actor:sample?.actor||actor,mate:sample?.mate||mate,ball:sample?.ball||ball,
     defenders:sample?.defenders||defenders,keeper:sample?.keeper||keeper,
     rivalCarrier:sample?.rivalCarrier??rivalCarrier,counterTime:sample?.counterTime??counterTime,
+    advice:systems.tacticalRead(sample?.actor||actor,sample?.mate||mate,
+     sample?.defenders||defenders,sample?.ball||ball,SHOT_ZONES[aim].x,
+     systems.shotProfile((sample?.ball?.owner==='mate'?sample.mate:sample?.actor||actor).y,
+       passChain,squad.shot,experience?.prefs.difficulty||'pro').onTarget),
+    playerSpeed:Math.hypot(playerVelocity.x,playerVelocity.y),
     squad,identity:{
       ...(window.JozefWorld?.getProgress?.()||{}),
       ...(experience?.kitColor()?{kit:experience.kitColor()}:{})
@@ -822,6 +828,7 @@ experience=window.JozefArenaExperience?.mount({
 window.JozefArena=Object.freeze({getProgress:()=>({...lifetime,score:us+'-'+them,mode,
   matchGoals:us,opponentGoals:them,shots,saves:keeperSaves,aim:SHOT_ZONES[aim].name,
   playerX:actor.x,playerY:actor.y,cameraZoom:camera.zoom,ballOwner:ball.owner,skillReady:skillCooldown<=0,
+  advice:systems.tacticalRead(actor,mate,defenders,ball,SHOT_ZONES[aim].x,systems.shotProfile(actor.y,passChain,squad.shot,experience?.prefs.difficulty||'pro').onTarget).kind,
   passChain,blockedShots,counterRecoveries,rivalAttacks,counterSeconds:counterTime,
   shotChance:systems.shotProfile((ball.owner==='mate'?mate:actor).y,passChain,squad.shot+Math.min(.18,counterTime*.033),experience?.prefs.difficulty||'pro').onTarget,
   difficulty:experience?.prefs.difficulty||'pro',coins:lifetime.coins,level:systems.progression(lifetime).level,
