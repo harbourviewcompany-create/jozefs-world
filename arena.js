@@ -534,7 +534,7 @@ function draw(){
      systems.shotProfile((sample?.ball?.owner==='mate'?sample.mate:sample?.actor||actor).y,
        passChain,squad.shot,experience?.prefs.difficulty||'pro').onTarget),
     playerSpeed:Math.hypot(playerVelocity.x,playerVelocity.y),
-    squad,identity:{
+    passChain, squad,identity:{
       ...(window.JozefWorld?.getProgress?.()||{}),
       ...(experience?.kitColor()?{kit:experience.kitColor()}:{})
     },camera:sample?.camera||camera,
