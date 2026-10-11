@@ -254,9 +254,11 @@ function setAim(i){
 function skillMove(){
  if(mode!=='playing'||replay||skillCooldown>0)return;
  skillCooldown=5.5;skillTime=.66;experience?.haptic(20);
- const targets=systems.feintTargets(actor,defenders);
+ const defending=ball.owner==='rival';
+ const targets=defending?[]:systems.feintTargets(actor,defenders);
  for(const i of targets)defenders[i].stun=.82;
- msg(targets.length?'FEINT! DEFENDER WRONG-FOOTED — RUN INTO SPACE!':
+ msg(defending?'TACKLE BURST! CLOSE DOWN THE BALL CARRIER!':
+  targets.length?'FEINT! DEFENDER WRONG-FOOTED — RUN INTO SPACE!':
   'SKILL BURST! EXPLODE INTO SPACE!');
  hud();
 }
