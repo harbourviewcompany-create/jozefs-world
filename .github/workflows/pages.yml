@@ -32,7 +32,7 @@ jobs:
           node scripts/build-site-js.cjs --check
       - name: Validate interactive games before publishing
         run: node --test tests/*.test.cjs
-      - name: Build PRIME ARENA (Phaser 4, TypeScript 6, Vite 8)
+      - name: Build PRIME ARENA (Phaser 4, TypeScript 7, Vite 8)
         run: |
           npm install --prefix prime --no-audit --no-fund --package-lock=false
           npm run check --prefix prime
