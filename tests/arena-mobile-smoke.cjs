@@ -118,7 +118,13 @@ const close=()=>new Promise(resolve=>server.close(resolve));
      let game=await page.evaluate(()=>window.JozefArena?.getProgress?.());
      assert.equal(game?.mode,'playing','Kickoff must start');
      const chance=page.locator('#arena .arena-mini-ticker .arena-chance-badge');
-     assert.equal(await chance.isVisible(),true,'Shot quality must remain visible in immersive and Classic modes');
+     if(viewport.height>viewport.width) {
+      assert.equal(await chance.isVisible(),true,
+       'Shot quality must remain visible in portrait immersive mode');
+     } else {
+      assert.equal(await chance.isVisible(),false,
+       'Compact landscape hides the entire mini-ticker to preserve pitch height');
+     }
      const shotQuality=await page.locator('#arena-shot-quality').textContent();
      assert.match(shotQuality,/^\d+%$/,'Match ticker must show the shot-on-target estimate');
      assert.equal(await page.locator('#arena .arena-scoreboard > div:last-child small:first-child').textContent(),'TIME',
