@@ -258,3 +258,13 @@ test('feint affects only defenders close ahead, never the whole rival team',()=>
  assert.deepEqual(S.feintTargets(captain,opponents,999),[0,1,3],
   'the radius must be bounded to avoid full-field stun');
 });
+
+
+test('shot power meter fills while held, clamps and remains deterministic',()=>{
+ assert.equal(S.shotCharge(-100),0);
+ assert.equal(S.shotCharge(0),0);
+ assert.ok(Math.abs(S.shotCharge(450)-.5)<1e-9);
+ assert.equal(S.shotCharge(900),1);
+ assert.equal(S.shotCharge(2500),1);
+ assert.equal(S.shotCharge(Number.NaN),0);
+});
