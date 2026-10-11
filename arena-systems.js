@@ -99,6 +99,18 @@
     }
     return closest;
   }
+  const AIM_LANES=Object.freeze([{x:171,name:'LEFT'},{x:210,name:'CENTRE'},{x:249,name:'RIGHT'}]);
+  function bestShotLane(shooter,defenders,aimX=210) {
+    const selected=AIM_LANES.reduce((closest,z,i)=>
+      Math.abs(z.x-aimX)<Math.abs(AIM_LANES[closest].x-aimX)?i:closest,1);
+    const blocked=AIM_LANES.map(z=>Boolean(findShotBlocker(shooter,{x:z.x,y:16},defenders)));
+    const open=blocked.map((isBlocked,i)=>!isBlocked?i:-1).filter(i=>i>=0);
+    // Preserve the player's chosen target whenever it is open. Suggestions
+    // never change the actual shot direction or override a swipe.
+    const alternative=open.length?open.reduce((best,i)=>
+      Math.abs(i-selected)<Math.abs(best-selected)?i:best,open[0]):-1;
+    return {selected,blocked,alternative,hasOpenLane:open.length>0};
+  }
   function tacticalRead(actor,mate,defenders,ball,aimX=210,accuracy=.2) {
     const owner=ball?.owner;
     if(owner==='rival')return {kind:'defend',label:'CHASE & TACKLE',hint:'Use BOOST to win the ball',threat:false};
@@ -107,10 +119,16 @@
     if(owner==='pass')return {kind:'pass',label:'PASS IN FLIGHT',hint:'Keep moving',threat:false};
     if(owner==='mate')return {kind:'pass',label:'ONE-TWO READY',hint:'PASS brings Jozef the ball',threat:false};
     const shooter=actor||{x:210,y:493};
-    const blocked=Boolean(findShotBlocker(shooter,{x:aimX,y:16},defenders));
+    const lanes=bestShotLane(shooter,defenders,aimX);
     const forward=(Number(shooter.y)||493)>300;
-    if(blocked)return {kind:'pass',label:'FIND AN OPEN LANE',hint:'Move sideways or PASS',threat:true};
     if(forward||accuracy<.37)return {kind:'advance',label:'DRIVE FORWARD',hint:'Get closer for a better shot',threat:false};
+    if(lanes.blocked[lanes.selected]){
+      if(lanes.hasOpenLane)return {
+        kind:'aim',label:'SWIPE '+AIM_LANES[lanes.alternative].name,
+        hint:'Clearer shooting lane',threat:true,recommendedAim:lanes.alternative
+      };
+      return {kind:'pass',label:'PASS INTO SPACE',hint:'Move sideways or PASS',threat:true};
+    }
     return {kind:'shoot',label:'SHOOT NOW',hint:'Swipe SHOOT to aim',threat:false};
   }
   function shotAccuracy(y,shotBonus,difficulty='pro') {
@@ -247,7 +265,7 @@
   }
   return Object.freeze({
     clamp,distance,DIFFICULTIES,joystickVector,
-    defenderDestination,teammateDestination,rivalRunTarget,counterSupportTarget,rivalThreatChance,movePlayer,findShotBlocker,tacticalRead,shotAccuracy,shotProfile,shotTarget,keeperCommit,readGamepad,
+    defenderDestination,teammateDestination,rivalRunTarget,counterSupportTarget,rivalThreatChance,movePlayer,findShotBlocker,bestShotLane,tacticalRead,shotAccuracy,shotProfile,shotTarget,keeperCommit,readGamepad,
     cameraFor,screenToWorld,dailyKey,CHALLENGES,freshDaily,normalizeDaily,awardDaily,progression
   });
 });
