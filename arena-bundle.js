@@ -70,6 +70,51 @@
     return clamp((.08+.25*advance+.07*(d.pressure-1)-.23*clamp(cover,0,1)-pressureBonus),.025,.42);
   }
 
+  // Delta-time-stable movement with smooth starts, controlled turns and
+  // predictable stops. Works identically for keyboard, touch and gamepads.
+  function movePlayer(player,velocity,input,dt,speed=190,boost=1) {
+    const step=clamp(dt,0,.05);
+    const mag=Math.hypot(Number(input?.x)||0,Number(input?.y)||0);
+    const normalized=mag>.001?{x:(Number(input.x)||0)/Math.max(1,mag),y:(Number(input.y)||0)/Math.max(1,mag)}:{x:0,y:0};
+    const response=1-Math.exp(-(mag>.08?15:22)*step);
+    const limit=clamp(speed*boost,0,450);
+    const vx=(Number(velocity?.x)||0)+(normalized.x*limit-(Number(velocity?.x)||0))*response;
+    const vy=(Number(velocity?.y)||0)+(normalized.y*limit-(Number(velocity?.y)||0))*response;
+    const x=clamp((Number(player?.x)||210)+vx*step,24,396);
+    const y=clamp((Number(player?.y)||493)+vy*step,102,565);
+    return {x,y,vx:x<=24&&vx<0||x>=396&&vx>0?0:vx,vy:y<=102&&vy<0||y>=565&&vy>0?0:vy};
+  }
+  // Check if a defender is actually between a shooter and a chosen corner.
+  // Used for accurate in-game coaching. The physics still resolves real
+  // position collisions, so coaching never guarantees a goal.
+  function findShotBlocker(shooter,target,defenders,clearance=25) {
+    if(!shooter||!target||!Array.isArray(defenders))return null;
+    const vx=target.x-shooter.x,vy=target.y-shooter.y,mag2=vx*vx+vy*vy;
+    if(mag2<1)return null;
+    let closest=null,smallest=Infinity;
+    for(const d of defenders){
+      if(!d||!Number.isFinite(d.x)||!Number.isFinite(d.y))continue;
+      const t=clamp(((d.x-shooter.x)*vx+(d.y-shooter.y)*vy)/mag2,0,1);
+      if(t<.12||t>.94)continue;
+      const distance=Math.hypot(d.x-(shooter.x+t*vx),d.y-(shooter.y+t*vy));
+      if(distance<clearance&&distance<smallest){closest=d;smallest=distance;}
+    }
+    return closest;
+  }
+  function tacticalRead(actor,mate,defenders,ball,aimX=210,accuracy=.2) {
+    const owner=ball?.owner;
+    if(owner==='rival')return {kind:'defend',label:'CHASE & TACKLE',hint:'Use BOOST to win the ball',threat:false};
+    if(owner==='free')return {kind:'recover',label:'CHASE THE BALL',hint:'Collect the rebound',threat:false};
+    if(owner==='shot')return {kind:'shoot',label:'BALL IN FLIGHT',hint:'Follow the shot',threat:false};
+    if(owner==='pass')return {kind:'pass',label:'PASS IN FLIGHT',hint:'Keep moving',threat:false};
+    if(owner==='mate')return {kind:'pass',label:'ONE-TWO READY',hint:'PASS brings Jozef the ball',threat:false};
+    const shooter=actor||{x:210,y:493};
+    const blocked=Boolean(findShotBlocker(shooter,{x:aimX,y:16},defenders));
+    const forward=(Number(shooter.y)||493)>300;
+    if(blocked)return {kind:'pass',label:'FIND AN OPEN LANE',hint:'Move sideways or PASS',threat:true};
+    if(forward||accuracy<.37)return {kind:'advance',label:'DRIVE FORWARD',hint:'Get closer for a better shot',threat:false};
+    return {kind:'shoot',label:'SHOOT NOW',hint:'Swipe SHOOT to aim',threat:false};
+  }
   function shotAccuracy(y,shotBonus,difficulty='pro') {
     const factor=DIFFICULTIES[difficulty]||DIFFICULTIES.pro;
     return clamp(Math.max(1,(y-122)/23)*(1-clamp(shotBonus,0,.4))*factor.pressure,1,26);
@@ -204,7 +249,7 @@
   }
   return Object.freeze({
     clamp,distance,DIFFICULTIES,joystickVector,
-    defenderDestination,teammateDestination,rivalRunTarget,counterSupportTarget,rivalThreatChance,shotAccuracy,shotProfile,shotTarget,keeperCommit,readGamepad,
+    defenderDestination,teammateDestination,rivalRunTarget,counterSupportTarget,rivalThreatChance,movePlayer,findShotBlocker,tacticalRead,shotAccuracy,shotProfile,shotTarget,keeperCommit,readGamepad,
     cameraFor,screenToWorld,dailyKey,CHALLENGES,freshDaily,normalizeDaily,awardDaily,progression
   });
 });
@@ -621,9 +666,18 @@ function aimLine(c,s){
  c.strokeStyle='#e5ff8b96';c.lineWidth=1;
  c.beginPath();c.moveTo(target-19,20);c.lineTo(target+19,20);c.moveTo(target,2);c.lineTo(target,38);c.stroke();
  if(s.ball?.owner==='actor'){
-  c.save();c.setLineDash([4,7]);c.strokeStyle='#d5ffb55c';c.lineWidth=1.3;
+  c.save();c.setLineDash([4,7]);
+  c.strokeStyle=s.advice?.threat?'#ffbd7cc8':'#d5ffb5a0';
+  c.lineWidth=s.advice?.threat?2.2:1.5;
   c.beginPath();c.moveTo(s.actor.x,s.actor.y-17);c.lineTo(target,25);c.stroke();
   c.restore();
+  // A cyan route appears when a pass can open the shooting lane.
+  if(s.advice?.kind==='pass'&&s.mate){
+   c.save();c.setLineDash([5,6]);c.strokeStyle='#81f9edbd';c.lineWidth=2;
+   c.beginPath();c.moveTo(s.actor.x,s.actor.y);c.lineTo(s.mate.x,s.mate.y);c.stroke();
+   strokeCircle(c,s.mate.x,s.mate.y,29,'#8dfde296',1.5);
+   c.restore();
+  }
  }
 }
 function fx(c,s,p,phase,motion){
@@ -649,6 +703,24 @@ function fx(c,s,p,phase,motion){
    c.fillText('JOZEF FC     '+s.us+'  :  '+s.them,210,321);
   }
  }
+}
+// Readable over the pitch on a 320px phone. Unlike separate page-level text,
+// this HUD does not push the playable canvas or controls below the viewport.
+function tacticalOverlay(c,s){
+ if(s.mode!=='playing'||!s.advice)return;
+ const a=s.advice;
+ c.save();
+ rounded(c,23,49,168,47,9,'#061c25d9');
+ c.strokeStyle=a.kind==='pass'?'#79f0d7a8':a.kind==='defend'?'#ffbf82ae':'#b8f57da2';
+ c.lineWidth=1.2;c.strokeRect(24,50,166,45);
+ rounded(c,30,55,32,10,3,'#164e4b');
+ c.fillStyle='#ccf8e9';c.font='900 7px system-ui';c.textAlign='center';
+ c.fillText('PLAY IQ',46,63);
+ c.textAlign='left';c.fillStyle=a.kind==='defend'?'#ffdfbd':'#e3ff9e';
+ c.font='900 12px system-ui';c.fillText(a.label,31,77,154);
+ c.font='700 9px system-ui';c.fillStyle='#b4dcd1';
+ c.fillText(a.hint,31,88,154);
+ c.restore();
 }
 function matchScreen(c,s){
  if(s.mode==='playing')return;
@@ -718,6 +790,7 @@ function render(c,s){
  ball(c,s,phase,motion);
  fx(c,s,p,phase,motion);
  c.restore();
+ tacticalOverlay(c,s);
  matchScreen(c,s);
 }
 window.JozefArenaGraphics=Object.freeze({render});
@@ -774,6 +847,7 @@ function updateTouchVector(){
 let aim=0,skillCooldown=0,skillTime=0,keeperDestination=210,keeperReact=0,passRecipient=null,mateTime=0,shots=0,keeperSaves=0,lastHudTick=-1;
 let passChain=0,blockedShots=0,looseBallElapsed=0,shotOrigin=null;
 let rivalCarrier=-1,rivalElapsed=0,counterTime=0,counterRecoveries=0,rivalAttacks=0;
+let playerVelocity={x:0,y:0};
 function getSquad(){
  const api=window.JozefSquad?.getSquad?.();
  const val=api?.bonuses||{};
@@ -830,7 +904,7 @@ function refreshGraphics(){
 refreshGraphics();
 window.addEventListener('resize',refreshGraphics,{passive:true});
 function resetPositions(){
- shotOrigin=null;
+ shotOrigin=null;playerVelocity={x:0,y:0};
  actor={x:210,y:493};mate={x:301,y:310};
  ball={x:actor.x,y:actor.y-14,owner:'actor',vx:0,vy:0};
  defenders=[{x:144,y:260,speed:89},{x:279,y:205,speed:90},{x:204,y:143,speed:82}];
@@ -912,7 +986,7 @@ function restoreMatchSnapshot(){
   counterRecoveries=clamp(Number(old.counterRecoveries)||0,0,99);
   rivalAttacks=clamp(Number(old.rivalAttacks)||0,0,99);
   if(ball.owner==='rival'&&rivalCarrier<0)return false;
-  squad=getSquad();mode='paused';last=0;lastFrameTick=0;rawFrameTick=0;
+  squad=getSquad();mode='paused';playerVelocity={x:0,y:0};last=0;lastFrameTick=0;rawFrameTick=0;
   return true;
  }catch(_){return false;}
 }
@@ -931,6 +1005,7 @@ function pause(){
   // Paused and restored matches show the complete field, including both goals.
   // Normal smooth follow-camera resumes when the match continues.
   camera={x:210,y:300,zoom:1};
+  playerVelocity={x:0,y:0};
   saveMatchSnapshot();msg('Half-time breather. Your score is safe.');}
  else if(mode==='paused'){mode='playing';last=0;msg('Back on the ball!');raf=requestAnimationFrame(loop);}
  hud();
@@ -960,11 +1035,10 @@ function end(){
  hud();draw();experience?.finish({won,us,them,shots,saves:keeperSaves});
 }
 function move(deltaX,deltaY,dt){
- const len=Math.hypot(deltaX,deltaY);
- if(len<.1)return;
- const speed=190*(1+squad.speed)*(skillTime>0?1.85:1);
- actor.x=clamp(actor.x+deltaX/Math.max(len,1)*speed*dt,24,396);
- actor.y=clamp(actor.y+deltaY/Math.max(len,1)*speed*dt,102,565);
+ const position=systems.movePlayer(actor,playerVelocity,
+  {x:deltaX,y:deltaY},dt,190*(1+squad.speed),skillTime>0?1.85:1);
+ actor.x=position.x;actor.y=position.y;
+ playerVelocity={x:position.vx,y:position.vy};
 }
 function receive(){
  if(ball.owner!=='free')return;
@@ -1254,6 +1328,11 @@ function draw(){
     actor:sample?.actor||actor,mate:sample?.mate||mate,ball:sample?.ball||ball,
     defenders:sample?.defenders||defenders,keeper:sample?.keeper||keeper,
     rivalCarrier:sample?.rivalCarrier??rivalCarrier,counterTime:sample?.counterTime??counterTime,
+    advice:systems.tacticalRead(sample?.actor||actor,sample?.mate||mate,
+     sample?.defenders||defenders,sample?.ball||ball,SHOT_ZONES[aim].x,
+     systems.shotProfile((sample?.ball?.owner==='mate'?sample.mate:sample?.actor||actor).y,
+       passChain,squad.shot,experience?.prefs.difficulty||'pro').onTarget),
+    playerSpeed:Math.hypot(playerVelocity.x,playerVelocity.y),
     squad,identity:{
       ...(window.JozefWorld?.getProgress?.()||{}),
       ...(experience?.kitColor()?{kit:experience.kitColor()}:{})
@@ -1548,6 +1627,7 @@ experience=window.JozefArenaExperience?.mount({
 window.JozefArena=Object.freeze({getProgress:()=>({...lifetime,score:us+'-'+them,mode,
   matchGoals:us,opponentGoals:them,shots,saves:keeperSaves,aim:SHOT_ZONES[aim].name,
   playerX:actor.x,playerY:actor.y,cameraZoom:camera.zoom,ballOwner:ball.owner,skillReady:skillCooldown<=0,
+  advice:systems.tacticalRead(actor,mate,defenders,ball,SHOT_ZONES[aim].x,systems.shotProfile(actor.y,passChain,squad.shot,experience?.prefs.difficulty||'pro').onTarget).kind,
   passChain,blockedShots,counterRecoveries,rivalAttacks,counterSeconds:counterTime,
   shotChance:systems.shotProfile((ball.owner==='mate'?mate:actor).y,passChain,squad.shot+Math.min(.18,counterTime*.033),experience?.prefs.difficulty||'pro').onTarget,
   difficulty:experience?.prefs.difficulty||'pro',coins:lifetime.coins,level:systems.progression(lifetime).level,
