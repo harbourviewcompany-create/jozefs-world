@@ -666,6 +666,17 @@ function aimLine(c,s){
  c.strokeStyle='#e5ff8b96';c.lineWidth=1;
  c.beginPath();c.moveTo(target-19,20);c.lineTo(target+19,20);c.moveTo(target,2);c.lineTo(target,38);c.stroke();
  if(s.ball?.owner==='actor'){
+  if(s.advice?.kind==='advance'&&s.actor){
+   // Two soft upfield chevrons offer a direction at a glance. They are
+   // informational only and never change aim or move Jozef automatically.
+   c.save();c.strokeStyle='#9cffb69a';c.lineWidth=3;
+   for(let i=0;i<2;i++){
+    const y=Math.max(72,s.actor.y-52-i*19);
+    c.beginPath();c.moveTo(s.actor.x-11,y+7);
+    c.lineTo(s.actor.x,y-1);c.lineTo(s.actor.x+11,y+7);c.stroke();
+   }
+   c.restore();
+  }
   c.save();c.setLineDash([4,7]);
   c.strokeStyle=s.advice?.threat?'#ffbd7cc8':'#d5ffb5a0';
   c.lineWidth=s.advice?.threat?2.2:1.5;
