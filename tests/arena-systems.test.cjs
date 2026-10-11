@@ -224,3 +224,24 @@ test('tactical guide distinguishes clear goal lanes, blocks and a one-two',()=>{
  assert.equal(S.tacticalRead(actor,mate,[],{owner:'rival'},210,.8).kind,'defend');
  assert.equal(S.tacticalRead(actor,mate,[],{owner:'mate'},210,.8).kind,'pass');
 });
+
+
+test('2026 open-corner guidance respects manual aim and physical defenders',()=>{
+ const shooter={x:207,y:218},mate={x:314,y:180};
+ // A marker stands on the left-channel shot, leaving a far-post alternative.
+ const marker=[{x:185,y:118}];
+ const left=S.bestShotLane(shooter,marker,171);
+ assert.equal(left.selected,0);
+ assert.equal(left.blocked[0],true);
+ assert.equal(left.hasOpenLane,true);
+ assert.ok(left.alternative>0,'a clear alternative should be recommended');
+ const advice=S.tacticalRead(shooter,mate,marker,{owner:'actor'},171,.8);
+ assert.equal(advice.kind,'aim');
+ assert.equal(advice.recommendedAim,left.alternative);
+ assert.match(advice.label,/SWIPE (CENTRE|RIGHT)/);
+ const clear=S.tacticalRead(shooter,mate,[],{owner:'actor'},171,.8);
+ assert.equal(clear.kind,'shoot');
+ assert.equal(clear.recommendedAim,undefined,'a clear chosen corner must not be overridden');
+ const crowded=S.tacticalRead(shooter,mate,[{x:207,y:128}],{owner:'actor'},210,.8);
+ assert.ok(['aim','pass'].includes(crowded.kind));
+});
