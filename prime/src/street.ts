@@ -40,19 +40,32 @@ export class StreetScene extends Phaser.Scene {
     this.road = this.add.graphics();
     this.bits = this.add.graphics();
     this.runner = this.add.container(this.x, 430);
-    const body = this.add.rectangle(0, 0, 36, 52, 0x123c42).setStrokeStyle(3, 0xcafa60);
-    const num = this.add.text(0, -2, '11', { fontFamily: 'system-ui', fontSize: '18px', color: '#cafa60', fontStyle: '900' }).setOrigin(0.5);
-    this.runner.add([body, num]);
-    this.title = this.add.text(W / 2, 80, 'READY, CAPTAIN?', { fontFamily: 'system-ui', fontSize: '28px', color: '#ffffff', fontStyle: '900' }).setOrigin(0.5);
+    const body = this.add.rectangle(0, 0, 42, 58, 0x123c42).setStrokeStyle(4, 0xcafa60);
+    const num = this.add.text(0, -2, '11', { fontFamily: 'system-ui', fontSize: '20px', color: '#cafa60', fontStyle: '900' }).setOrigin(0.5);
+    const ball = this.add.circle(18, 16, 7, 0xffffff);
+    this.runner.add([body, num, ball]);
+    this.title = this.add.text(W / 2, 70, 'READY, CAPTAIN?', { fontFamily: 'system-ui', fontSize: '32px', color: '#ffffff', fontStyle: '900' }).setOrigin(0.5);
+    this.sub = this.add.text(W / 2, 108, 'Three lanes. Dodge red. Chase the lights.', { fontFamily: 'system-ui', fontSize: '16px', color: '#cafa60' }).setOrigin(0.5);
     this.hud();
   }
 
   start() {
     this.seed = (Math.floor(Math.random() * 4294967296) || 123456789) >>> 0;
-    this.state = 'playing'; this.lane = this.target = 1; this.x = LANES[1];
+    this.lane = this.target = 1; this.x = LANES[1];
     this.items = []; this.spawnIn = 0.32; this.elapsed = 0; this.score = 0; this.hearts = 3; this.combo = 0; this.shield = 0; this.golden = 0;
+    this.state = 'ready';
+    this.count = 3;
     this.hud();
+    this.say('3');
+    this.time.addEvent({ delay: 700, repeat: 2, callback: () => {
+      this.count -= 1;
+      if (this.count > 0) this.say(String(this.count));
+      else { this.state = 'playing'; this.say(''); this.sub.setText('Dodge red. Chase the lights.'); }
+    }});
   }
+  private count = 0;
+  private sub!: Phaser.GameObjects.Text;
+  private say(text: string) { this.title.setText(text || (this.state === 'playing' ? '' : 'READY, CAPTAIN?')); }
   pause() { if (this.state === 'playing') this.state = 'paused'; else if (this.state === 'paused') this.state = 'playing'; }
   move(delta: number) { if (this.state === 'playing') this.target = Math.max(0, Math.min(2, this.target + delta)); }
   progress() { return { best: this.best, state: this.state, score: this.score, hearts: this.hearts }; }
@@ -79,6 +92,10 @@ export class StreetScene extends Phaser.Scene {
     this.state = 'over';
     if (this.score > this.best) { this.best = this.score; tone(520, 280); try { localStorage.setItem(BEST_KEY, String(this.best)); } catch { /* this visit */ } }
     window.dispatchEvent(new Event('jozef:street-completed'));
+    const record = this.score >= this.best && this.score > 0 ? ' New record.' : ' Record ' + this.best + '.';
+    this.sub.setText(this.score + ' points.' + record);
+    const line = document.getElementById('street-result');
+    if (line) line.textContent = 'Full-time. ' + this.score + ' points.' + record;
     this.hud();
   }
 
@@ -149,6 +166,6 @@ export class StreetScene extends Phaser.Scene {
       this.bits.fillCircle(LANES[item.lane], item.y, item.kind === 'defender' ? 16 : 11);
     });
     this.runner.setPosition(this.x, 430);
-    this.title.setText(this.state === 'ready' ? 'READY, CAPTAIN?' : this.state === 'paused' ? 'PAUSED' : this.state === 'over' ? 'FULL-TIME' : '');
+    if (this.state !== 'playing' && this.title.text !== '3' && this.title.text !== '2' && this.title.text !== '1') this.title.setText(this.state === 'paused' ? 'PAUSED' : this.state === 'over' ? 'FULL-TIME' : 'READY, CAPTAIN?');
   }
 }

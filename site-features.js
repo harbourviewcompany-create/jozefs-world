@@ -451,10 +451,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     let pages = [];
     try { pages = JSON.parse(localStorage.getItem('jozefs-world-diary-v1') || '[]'); } catch (err) { pages = []; }
     diary.replaceChildren();
+    const last = document.getElementById('today-last');
     if (!Array.isArray(pages) || !pages.length) {
       diary.textContent = 'No match written in the season book yet.';
+      if (last) last.textContent = 'No match yet.';
       return;
     }
+    if (last) last.textContent = 'Last match: ' + pages[0];
     pages.slice(0, 5).forEach(line => {
       const item = document.createElement('p');
       item.textContent = line;

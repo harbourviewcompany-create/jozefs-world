@@ -17,3 +17,6 @@ button,a{font:inherit}button{touch-action:manipulation}button:focus-visible,a:fo
  .shell{padding-bottom:72px}
  #street-panel{position:sticky;bottom:12px;z-index:3;background:#071018}
 }
+
+#street-panel button{min-height:52px;font-size:16px}
+.street-result{margin:8px 0;font-weight:800}
