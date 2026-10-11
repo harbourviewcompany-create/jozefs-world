@@ -72,6 +72,11 @@
 
   // Delta-time-stable movement with smooth starts, controlled turns and
   // predictable stops. Works identically for keyboard, touch and gamepads.
+  // A brief mobile hold gives a small accuracy and velocity bonus. Tap still
+  // fires immediately, and the meter fills only while the finger is down.
+  function shotCharge(elapsedMs) {
+    return clamp((Number(elapsedMs)||0)/900,0,1);
+  }
   function movePlayer(player,velocity,input,dt,speed=190,boost=1) {
     const step=clamp(dt,0,.05);
     const mag=Math.hypot(Number(input?.x)||0,Number(input?.y)||0);
@@ -278,7 +283,7 @@
   }
   return Object.freeze({
     clamp,distance,DIFFICULTIES,joystickVector,
-    defenderDestination,teammateDestination,rivalRunTarget,counterSupportTarget,rivalThreatChance,movePlayer,feintTargets,findShotBlocker,bestShotLane,tacticalRead,shotAccuracy,shotProfile,shotTarget,keeperCommit,readGamepad,
+    defenderDestination,teammateDestination,rivalRunTarget,counterSupportTarget,rivalThreatChance,shotCharge,movePlayer,feintTargets,findShotBlocker,bestShotLane,tacticalRead,shotAccuracy,shotProfile,shotTarget,keeperCommit,readGamepad,
     cameraFor,screenToWorld,dailyKey,CHALLENGES,freshDaily,normalizeDaily,awardDaily,progression
   });
 });
@@ -1071,7 +1076,7 @@ function start(){
  cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
 }
 function pause(){
- if(mode==='playing'){mode='paused';cancelAnimationFrame(raf);keys.clear();heldDirections.clear();stick={x:0,y:0};joystick={x:0,y:0};padVector={x:0,y:0};experience?.clearJoystick();last=0;
+ if(mode==='playing'){mode='paused';clearCharge();cancelAnimationFrame(raf);keys.clear();heldDirections.clear();stick={x:0,y:0};joystick={x:0,y:0};padVector={x:0,y:0};experience?.clearJoystick();last=0;
   // Paused and restored matches show the complete field, including both goals.
   // Normal smooth follow-camera resumes when the match continues.
   camera={x:210,y:300,zoom:1};
@@ -1256,7 +1261,9 @@ function finishReplay(){
  const banner=$('arena-replay-banner');if(banner)banner.hidden=true;
 }
 function goal(){
- us+=1;flash=.75;cue('goal');experience?.haptic([40,40,40]);experience?.record('goals');startReplay('GOAL');msg('GOOOOOAL! JOZEF FC SCORES! '+us+'–'+them);
+ const finish=passChain>=2?'ONE-TWO MAGIC!':passChain>=1?'TEAMWORK GOAL!':counterTime>0?'FAST-BREAK FINISH!':'GOOOOOAL!';
+ us+=1;flash=.75;cue('goal');experience?.haptic([40,40,40]);experience?.record('goals');startReplay('GOAL');
+ msg(finish+' JOZEF FC SCORES! '+us+'–'+them);
  if(us>=5){resetPositions();end();return;}
  resetPositions();
 }
@@ -1502,6 +1509,13 @@ function loop(t){
   return;
  }
  lastFrameTick=t;
+ // The existing gameplay RAF also drives hold-to-power feedback, so no
+ // second animation loop or timer is needed while the thumb stays still.
+ if(shootTouch){
+  const charge=systems.shotCharge(Date.now()-shootTouch.at);
+  shootButton?.style.setProperty('--arena-charge',Math.round(charge*100)+'%');
+  if(charge>=1&&!shootTouch.full){shootTouch.full=true;experience?.haptic(12);}
+ }
  const dt=last?clamp((t-last)/1000,0,.037):0;last=t;
  if(replay){
   replay.elapsed+=dt;
@@ -1565,8 +1579,8 @@ shootButton?.addEventListener('pointermove',ev=>{
  if(dx<-19&&aim!==0)setAim(0);
  else if(dx>19&&aim!==2)setAim(2);
  else if(Math.abs(dx)<10&&aim!==1)setAim(1);
- const charge=Math.min(1,(Date.now()-shootTouch.at)/900);
- shootButton.style.setProperty('--arena-charge',Math.round(charge*88)+'%');
+ const charge=systems.shotCharge(Date.now()-shootTouch.at);
+ shootButton.style.setProperty('--arena-charge',Math.round(charge*100)+'%');
 });
 function clearCharge(){
  shootTouch=null;
@@ -1580,7 +1594,7 @@ shootButton?.addEventListener('pointerup',ev=>{
  if(dx<-19)setAim(0);
  else if(dx>19)setAim(2);
  else setAim(1);
- const charge=Math.min(1,(Date.now()-shootTouch.at)/900);
+ const charge=systems.shotCharge(Date.now()-shootTouch.at);
  suppressShootClickUntil=Date.now()+450;
  clearCharge();shoot(charge);
 });
