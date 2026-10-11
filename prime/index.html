@@ -26,6 +26,7 @@
  <button class="mode" data-mode="basketball" aria-pressed="false"><span class="mode-no">03 / COURT</span><span class="mode-icon">◎</span><strong>HOOPS.</strong><small>FROM DOWNTOWN ↗</small></button>
  <button class="mode" data-mode="baseball" aria-pressed="false"><span class="mode-no">04 / DIAMOND</span><span class="mode-icon">✦</span><strong>BASEBALL.</strong><small>BIG LEAGUE ↗</small></button>
  <button class="mode" data-mode="wrestling" aria-pressed="false"><span class="mode-no">05 / SHOWTIME</span><span class="mode-icon">★</span><strong>WRESTLING.</strong><small>LIGHTS ON ↗</small></button>
+ <button class="mode" data-mode="street" aria-pressed="false"><span class="mode-no">06 / NIGHT</span><span class="mode-icon">☾</span><strong>STREET.</strong><small>THE NIGHT RUN ↗</small></button>
 </div>
 </section>
 <section class="experience" aria-label="Live interactive game">
@@ -33,7 +34,8 @@
  <div class="scorebar"><div class="scoreblock"><span>ON THE FLOOR</span><strong id="event-name">FOOTBALL SHOWDOWN</strong></div><div class="scoreblock"><span>ROUND</span><strong><span id="round">01</span> / 05</strong></div><div class="scoreblock score"><span>JOZEF FC</span><strong id="score">00 <small>POINTS</small></strong></div></div>
  <div id="game" class="game-mount" aria-label="Prime Arena playable game"></div>
  <div class="turnbar"><span id="turns" aria-label="Five-round score history">● ○ ○ ○ ○</span><span id="live-caption">THE MOMENT IS YOURS.</span></div>
- <div class="game-controls"><div class="aim-group" role="group" aria-label="Aim or showmanship selection"><button class="aim selected" data-aim="0" aria-pressed="true">LEFT</button><button class="aim" data-aim="1" aria-pressed="false">CENTRE</button><button class="aim" data-aim="2" aria-pressed="false">RIGHT</button></div><button id="shoot" class="shoot">TAKE THE SHOT <span>↗</span></button></div>
+ <div id="street-panel" class="game-controls" hidden><span id="street-score">0</span><span id="street-hearts">♥♥♥</span><span id="street-time">55</span><span id="street-best">0</span><button type="button" id="street-left">LEFT</button><button type="button" id="street-go">START</button><button type="button" id="street-right">RIGHT</button></div>
+ <div class="game-controls" id="prime-controls"><div class="aim-group" role="group" aria-label="Aim or showmanship selection"><button class="aim selected" data-aim="0" aria-pressed="true">LEFT</button><button class="aim" data-aim="1" aria-pressed="false">CENTRE</button><button class="aim" data-aim="2" aria-pressed="false">RIGHT</button></div><button id="shoot" class="shoot">TAKE THE SHOT <span>↗</span></button></div>
  <div class="footer-strip"><span>TOUCH THE ARENA TO PLAY · ARROW KEYS TO AIM · SPACE TO SHOOT</span><button type="button" id="sound" aria-pressed="false">SOUND OFF <span>♪</span></button></div>
 </div>
 <aside class="experience-side">

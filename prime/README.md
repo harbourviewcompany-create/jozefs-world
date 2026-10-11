@@ -40,3 +40,7 @@ The user experience starts on an iPhone and is already distributed through stati
 6. **Release QA**: automated rules tests, typecheck, build checks, iPhone Safari touch smoke, reduced motion, offline relaunch, input-precision checks, WebGL-loss fallback and accessibility.
 
 This prototype establishes the **real game engine and a playable visual baseline**, not finished AAA character art or proof of 60fps on an iPhone. Do not replace the old experiences until those gates are met.
+
+
+## Street night run
+Mode 06 is the Phaser 4 night run. Three lanes, 55 seconds, three lives, stars, gold, and a shield. The runner wears 11, the road scrolls, a hit shakes the camera, and sound stays off until the sound button is pressed. The best score uses the existing Street key.

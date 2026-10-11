@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import './style.css';
 import {SPORTS,ROUNDS,resolveAttempt,readRecords,saveGame,recordHighlight,clamp} from './rules';
 import type {Sport,Aim} from './rules';
+import {StreetScene,setStreetSound} from './street';
 
 const W=960,H=540;
 const $=<T extends HTMLElement=HTMLElement>(id:string)=>document.getElementById(id) as T|null;
@@ -21,6 +22,7 @@ const SHOW=[
  {cue:"WWE TRIVIA: WHO SAYS 'YOU CAN'T SEE ME'?",choices:['JOHN CENA','CODY RHODES','REY MYSTERIO'],answer:0 as Aim},
  {cue:'THE FINAL MOMENT NEEDS THE PERFECT POSE!',choices:['WALK OFF','TEAM POSE','TURN AWAY'],answer:1 as Aim}
 ];
+let street:StreetScene|null=null;
 let mode:Sport='football',aim:Aim=1,gameScene:PrimeScene|null=null,sound=false,ctx:AudioContext|null=null;
 const selects=[...document.querySelectorAll<HTMLButtonElement>('[data-aim]')];
 const modes=[...document.querySelectorAll<HTMLButtonElement>('[data-mode]')];
@@ -266,12 +268,24 @@ function boot(){
  label('profile-level','LEVEL '+String(level).padStart(2,'0'));
  paintRecords();
  selects.forEach(b=>b.addEventListener('click',()=>setAim(Number(b.dataset.aim))));
- modes.forEach(b=>b.addEventListener('click',()=>{const next=b.dataset.mode as Sport;if(SPORTS.includes(next))gameScene?.begin(next)}));
+ modes.forEach(b=>b.addEventListener('click',()=>{
+  const next=b.dataset.mode||'';
+  modes.forEach(el=>{el.classList.toggle('selected',el===b);el.setAttribute('aria-pressed',String(el===b))});
+  const streetOn=next==='street';
+  document.getElementById('street-panel')?.toggleAttribute('hidden',!streetOn);
+  document.getElementById('prime-controls')?.toggleAttribute('hidden',streetOn);
+  if(streetOn){
+   label('event-name','STREET // 11');label('coach','Three lanes. Fifty-five seconds. Dodge red, chase neon.');
+   game.scene.start('street');street=game.scene.getScene('street') as StreetScene;
+  }else if(SPORTS.includes(next as Sport)){
+   game.scene.start('prime');gameScene?.begin(next as Sport);
+  }
+ }));
  $<HTMLButtonElement>('shoot')?.addEventListener('click',()=>gameScene?.shoot());
  $<HTMLButtonElement>('sound')?.addEventListener('click',()=>{
   sound=!sound;const b=$('sound');
   if(b){b.setAttribute('aria-pressed',String(sound));b.textContent=sound?'SOUND ON ♪':'SOUND OFF ♪'}
-  if(sound)soundEffect(true);
+  if(sound)soundEffect(true);setStreetSound(sound);
  });
  window.addEventListener('keydown',e=>{
   if(['INPUT','TEXTAREA','SELECT'].includes((e.target as HTMLElement|null)?.tagName||''))return;
@@ -279,15 +293,23 @@ function boot(){
   else if(['1','2','3'].includes(e.key)){e.preventDefault();setAim(Number(e.key)-1)}
   else if(e.key===' '){e.preventDefault();gameScene?.shoot()}
  });
+ let game:Phaser.Game;
  try{
-  new Phaser.Game({type:Phaser.AUTO,parent:'game',width:W,height:H,backgroundColor:'#071924',
+  game=new Phaser.Game({type:Phaser.AUTO,parent:'game',width:W,height:H,backgroundColor:'#071924',
    scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},
-   render:{antialias:true,pixelArt:false},scene:[PrimeScene]});
+   render:{antialias:true,pixelArt:false},scene:[PrimeScene,StreetScene]});
  }catch{
   label('game',"Prime Arena couldn't start on this device. The original Sports Arcade remains available.");
  }
 }
 boot();
+ document.getElementById('street-left')?.addEventListener('pointerdown',()=>street?.move(-1));
+ document.getElementById('street-right')?.addEventListener('pointerdown',()=>street?.move(1));
+ document.getElementById('street-go')?.addEventListener('click',()=>{
+  if(!street)return;
+  if(street.progress().state==='playing'||street.progress().state==='paused')street.pause();
+  else street.start();
+ });
 
 // Prime Arena is part of the existing one-device PWA. Precache only public
 // same-origin game files after the first visit, never personal progress or APIs.
