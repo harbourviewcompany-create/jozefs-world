@@ -74,3 +74,14 @@ test('Chronicle only adds a truthful completed challenge while retaining prior e
  assert.equal(history.events[1].title,'Old league');
  assert.equal(history.seen.Shared,2);
 });
+
+test('Prime game has no third-party font, analytics, or personal-progress cache',()=>{
+ const root=path.join(__dirname,'..');
+ const source=fs.readFileSync(path.join(root,'src/main.ts'),'utf8');
+ const css=fs.readFileSync(path.join(root,'src/style.css'),'utf8');
+ assert.match(source,/serviceWorker\.register\('\.\.\/sw\.js'/);
+ assert.match(source,/cache\.add\(url\)/);
+ assert.match(source,/origin===location\.origin/);
+ assert.doesNotMatch(css,/@import|fonts\.googleapis\.com|url\(https?:/);
+ assert.doesNotMatch(source,/sendBeacon|XMLHttpRequest|analytics|localStorage\.clear/);
+});
