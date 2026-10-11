@@ -77,7 +77,12 @@ test('canonical homepage uses the latest stadium and loads exactly one STREET//1
  for(const id of ['home','games','club','tour','career','street'])assert.ok(html.includes('id="'+id+'"'),'missing '+id);
  const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
  bundled.css(root,html,sw,'stadium.css');
- for(const file of ['stadium.js','street.js','app.js','extras.js','career.js'])assert.ok(html.includes('"'+file+'"'),'missing '+file);
+ const core=fs.readFileSync(path.join(root,'site-core.js'),'utf8');
+ const features=fs.readFileSync(path.join(root,'site-features.js'),'utf8');
+ for(const file of ['app.js','extras.js'])assert.ok(core.includes('/* BEGIN '+file+' */'),'missing bundled '+file);
+ assert.ok(features.includes('/* BEGIN stadium.js */'),'missing bundled stadium.js');
+ for(const file of ['street.js','career.js'])assert.ok(html.includes('src="'+file+'"'),'missing '+file);
+ assert.ok(html.includes('src="site-core.js"')&&html.includes('src="site-features.js"'));
  assert.equal((html.match(/src="street\.js"/g)||[]).length,1);
  assert.ok(html.includes('class="hero studio-hero"'));
  assert.ok(html.includes('id="street-canvas"'));
