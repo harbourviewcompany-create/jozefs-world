@@ -131,6 +131,21 @@ const close=()=>new Promise(resolve=>server.close(resolve));
       'Mobile clock label must stay short and readable');
      assert.ok(game.shotChance<.20,'Even on Rookie, shooting from kickoff must be unlikely');
      assert.equal(game.difficulty,'rookie','New touch players should receive Rookie difficulty');
+     if(viewport.width===390&&viewport.height>viewport.width){
+      // Stationary thumbs must visibly charge. Older versions only updated
+      // on pointermove, so holding SHOOT gave no visual feedback.
+      const button=page.locator('#arena-shoot');
+      const box=await button.boundingBox();
+      await button.dispatchEvent('pointerdown',{
+       pointerId:71,pointerType:'touch',clientX:box.x+box.width/2,clientY:box.y+box.height/2
+      });
+      await page.waitForTimeout(390);
+      const percent=await button.evaluate(el=>parseFloat(el.style.getPropertyValue('--arena-charge')||'0'));
+      assert.ok(percent>=20&&percent<=100,'Stationary hold should visibly charge power: '+percent);
+      await button.dispatchEvent('pointercancel',{pointerId:71,pointerType:'touch'});
+      const reset=await button.evaluate(el=>el.style.getPropertyValue('--arena-charge'));
+      assert.equal(reset,'0%','Canceling touch must clear the power meter');
+     }
      await page.locator('#arena-shoot').click();
      game=await page.evaluate(()=>window.JozefArena?.getProgress?.());
      assert.ok(game.shots>=1,'Shoot button must fire shot');
