@@ -22,10 +22,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Publish canonical homepage before tests
+      - name: Verify identical published homepage and world entrypoints
         run: |
-          test -f world.html
-          cp world.html index.html
+          cmp -s index.html world.html || { echo "::error::index.html and world.html have diverged. Synchronize both before publishing."; exit 1; }
+      - name: Verify production bundles match their sources
+        run: |
+          node scripts/build-arena-bundle.cjs --check
+          node scripts/build-site-css.cjs --check
+          node scripts/build-site-js.cjs --check
       - name: Validate interactive games before publishing
         run: node --test tests/*.test.cjs
       - uses: actions/configure-pages@v5
