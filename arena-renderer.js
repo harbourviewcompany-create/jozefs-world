@@ -283,6 +283,24 @@ function tacticalOverlay(c,s){
  c.fillText(a.hint,31,y+39,154);
  c.restore();
 }
+// Stadium-side FLOW indicator stays on the pitch, not below the phone screen.
+function flowIndicator(c,s){
+ if(s.mode!=='playing')return;
+ const value=clip(Number(s.flow)||0,0,100);
+ const ready=value>=100;
+ c.save();
+ rounded(c,232,51,161,44,9,'#061c25bc');
+ c.strokeStyle=ready?'#e5ff9bd0':'#89e6cd72';
+ c.lineWidth=ready?1.8:1;
+ c.strokeRect(233,52,159,42);
+ c.textAlign='left';c.font='900 12px system-ui';
+ c.fillStyle=ready?'#e7ff9b':'#cbefe5';c.fillText(ready?'FLOW READY':'FLOW',243,67);
+ c.textAlign='right';c.fillStyle=ready?'#e6ff8d':'#8edfd1';
+ c.font='900 12px system-ui';c.fillText(Math.round(value)+'%',379,67);
+ rounded(c,242,76,136,6,3,'#183b3a');
+ if(value>0)rounded(c,242,76,136*value/100,6,3,ready?'#dfff6c':'#71dfcf');
+ c.restore();
+}
 function matchScreen(c,s){
  if(s.mode==='playing')return;
  c.save();
@@ -360,6 +378,7 @@ function render(c,s){
  fx(c,s,p,phase,motion);
  c.restore();
  tacticalOverlay(c,s);
+ flowIndicator(c,s);
  matchScreen(c,s);
 }
 window.JozefArenaGraphics=Object.freeze({render});
