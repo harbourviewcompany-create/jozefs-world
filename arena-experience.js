@@ -14,7 +14,8 @@ function mount(api){
  const defaultControls=window.matchMedia?.('(pointer:coarse)')?.matches?'joystick':'arrows';
  const prev=saved(SETTINGS_KEY,{});
  const prefs={
-  difficulty:S.DIFFICULTIES[prev.difficulty]?prev.difficulty:'pro',
+  // Touch-first sessions start on Rookie; never overwrite a saved preference.
+  difficulty:S.DIFFICULTIES[prev.difficulty]?prev.difficulty:(defaultControls==='joystick'?'rookie':'pro'),
   controls:['joystick','arrows'].includes(prev.controls)?prev.controls:defaultControls,
   camera:prev.camera!==false,haptics:prev.haptics!==false,
   kit:['club','night','gold'].includes(prev.kit)?prev.kit:'club',
