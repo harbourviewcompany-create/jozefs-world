@@ -245,3 +245,16 @@ test('2026 open-corner guidance respects manual aim and physical defenders',()=>
  const crowded=S.tacticalRead(shooter,mate,[{x:207,y:128}],{owner:'actor'},210,.8);
  assert.ok(['aim','pass'].includes(crowded.kind));
 });
+
+
+test('feint affects only defenders close ahead, never the whole rival team',()=>{
+ const captain={x:210,y:320},opponents=[
+  {x:220,y:278},{x:300,y:278},{x:210,y:365},{x:204,y:240}
+ ];
+ assert.deepEqual(S.feintTargets(captain,opponents),[0],
+  'the close defender ahead loses balance, not the whole pitch');
+ assert.deepEqual(S.feintTargets(captain,[],76),[]);
+ assert.deepEqual(S.feintTargets(captain,[{x:Infinity,y:30}]),[]);
+ assert.deepEqual(S.feintTargets(captain,opponents,999),[0,3],
+  'the radius must be bounded to avoid full-field stun');
+});
