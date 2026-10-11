@@ -116,6 +116,9 @@
       text(c,'J',0,8,22,'#fff4d8');
       c.restore();
     }
+    function movingGoalieX(now=Date.now()){
+      return reduced()?320:320+Math.sin((now-turnStart)/460)*78;
+    }
     function draw(){
       const c=ctx,now=Date.now(),elapsed=now-turnStart;
       const motion=!reduced();
@@ -124,8 +127,10 @@
       c.clearRect(0,0,W,H);
       const accent=stadium(c,activeSport);
       if(activeSport==='hockey'){
-        const goalieX=inFlight?lerp(320,[257,320,383][action.goalie??1],easeOut(t)) :
-          motion?320+Math.sin(elapsed/460)*78:320;
+        // Start the dive exactly where the moving keeper stood when the
+        // shot was taken; don't snap him back to centre at release.
+        const goalieX=inFlight?lerp(action.fromX??320,[257,320,383][action.goalie??1],easeOut(t)) :
+          motion?movingGoalieX(now):320;
         goalkeeper(c,goalieX,98);
         if(inFlight){
           const target=[257,320,383][action.choice]||320;
@@ -185,7 +190,7 @@
     function getGoalie(){
       if(activeSport!=='hockey')return null;
       if(reduced())return 1;
-      const x=320+Math.sin((Date.now()-turnStart)/460)*78;
+      const x=movingGoalieX();
       return x<291?0:x>349?2:1;
     }
     function begin(s,opts={}){
@@ -194,8 +199,10 @@
       refresh();
     }
     function shoot(opts={}){
+      const now=Date.now();
       action={
-        at:Date.now(),made:Boolean(opts.made),goalie:clamp(Number(opts.goalie)||0,0,2),
+        at:now,fromX:activeSport==='hockey'?movingGoalieX(now):320,
+        made:Boolean(opts.made),goalie:clamp(Number(opts.goalie)||0,0,2),
         choice:clamp(Number(opts.choice)||0,0,2)
       };
       refresh();
