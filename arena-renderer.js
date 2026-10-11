@@ -237,17 +237,19 @@ function fx(c,s,p,phase,motion){
 function tacticalOverlay(c,s){
  if(s.mode!=='playing'||!s.advice)return;
  const a=s.advice;
+ const y=s.actor?.y<175?512:49;
  c.save();
- rounded(c,23,49,168,47,9,'#061c25d9');
+ // Shift coaching below play whenever Jozef approaches the penalty area.
+ rounded(c,23,y,168,47,9,'#061c259d');
  c.strokeStyle=a.kind==='pass'?'#79f0d7a8':a.kind==='defend'?'#ffbf82ae':'#b8f57da2';
- c.lineWidth=1.2;c.strokeRect(24,50,166,45);
- rounded(c,30,55,32,10,3,'#164e4b');
+ c.lineWidth=1.2;c.strokeRect(24,y+1,166,45);
+ rounded(c,30,y+6,32,10,3,'#164e4b');
  c.fillStyle='#ccf8e9';c.font='900 7px system-ui';c.textAlign='center';
- c.fillText('PLAY IQ',46,63);
+ c.fillText('PLAY IQ',46,y+14);
  c.textAlign='left';c.fillStyle=a.kind==='defend'?'#ffdfbd':'#e3ff9e';
- c.font='900 12px system-ui';c.fillText(a.label,31,77,154);
+ c.font='900 12px system-ui';c.fillText(a.label,31,y+28,154);
  c.font='700 9px system-ui';c.fillStyle='#b4dcd1';
- c.fillText(a.hint,31,88,154);
+ c.fillText(a.hint,31,y+39,154);
  c.restore();
 }
 function matchScreen(c,s){
