@@ -268,3 +268,32 @@ test('shot power meter fills while held, clamps and remains deterministic',()=>{
  assert.equal(S.shotCharge(2500),1);
  assert.equal(S.shotCharge(Number.NaN),0);
 });
+
+
+test('Flow builds from real football actions and never exceeds its limits',()=>{
+ let flow=0;
+ flow=S.flowChange(flow,'pass');
+ assert.equal(flow,18);
+ flow=S.flowChange(flow,'oneTwo');
+ flow=S.flowChange(flow,'recovery');
+ flow=S.flowChange(flow,'feint');
+ assert.equal(flow,68);
+ flow=S.flowChange(flow,'pass');
+ flow=S.flowChange(flow,'pass');
+ assert.equal(flow,100);
+ assert.equal(S.flowChange(flow,'pass'),100,'extra passes cannot overflow the meter');
+ assert.equal(S.flowChange(flow,'lost'),62,'a turnover reduces momentum');
+ assert.equal(S.flowChange(6,'miss'),0,'misses cannot create negative momentum');
+ assert.equal(S.flowChange(100,'used'),12,'Flow resets after empowered shot');
+});
+test('a full Flow meter improves only one shot, never guarantees a goal',()=>{
+ const weak=S.shotProfile(493,0,0,'rookie');
+ const strong=S.shotProfile(190,2,.2,'rookie');
+ assert.equal(S.flowShotProfile(weak,99).onTarget,weak.onTarget);
+ const boosted=S.flowShotProfile(weak,100);
+ assert.ok(boosted.onTarget>weak.onTarget);
+ assert.ok(boosted.onTarget<.25,'kickoff attempts must remain low probability');
+ const boostedStrong=S.flowShotProfile(strong,100);
+ assert.ok(boostedStrong.onTarget<=.94);
+ assert.equal(boostedStrong.flow,true);
+});
