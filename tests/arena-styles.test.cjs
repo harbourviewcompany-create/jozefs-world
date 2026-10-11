@@ -41,3 +41,15 @@ test('both entrypoints retain the mobile layout and graphics settings',()=>{
   }
  }
 });
+
+test('both pages retain the narrow clock and visible shot-chance ticker',()=>{
+ for(const entry of ['index.html','world.html']){
+  const html=read(entry);
+  assert.equal((html.match(/id="arena-shot-quality"/g)||[]).length,1,entry+' needs one shot chance counter');
+  assert.match(html,/<span class="arena-chance-badge">SHOT <strong id="arena-shot-quality"/);
+  assert.match(html,/<small>TIME<\/small><strong id="arena-clock"/);
+  assert.doesNotMatch(html,/<small>MATCH CLOCK<\/small>/);
+ }
+ const css=read('site-experience.css');
+ assert.match(css,/Arena 5\.1: always show shot odds/);
+});
