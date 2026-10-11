@@ -109,3 +109,19 @@ test('goalkeeper position is the actual visible lane used by hockey aim selectio
  b.now(2100);
  assert.equal(still.getGoalie(),1,'reduced motion keeps a known central goalie');
 });
+
+test('hockey goalie dive begins at the exact position shown when a puck is released',()=>{
+ const game=setup(),stage=game.api.create();
+ game.now(0);stage.begin('hockey');
+ game.now(500);game.frame();
+ const heads=()=>game.paint.filter(op=>op[0]==='arc'&&op[3]===13);
+ const before=heads().at(-1)[1];
+ assert.ok(before>350,'moving goalie is off-centre before puck release');
+ stage.shoot({made:false,goalie:2,choice:2});
+ const released=heads().at(-1)[1];
+ assert.ok(Math.abs(released-before)<.1,
+  'animation must not teleport the goalie back to centre at shot release');
+ game.now(900);game.frame();
+ const after=heads().at(-1)[1];
+ assert.ok(after>released-1&&after<385,'goalie moves smoothly toward the chosen corner');
+});
