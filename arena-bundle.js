@@ -925,7 +925,11 @@ function start(){
  cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
 }
 function pause(){
- if(mode==='playing'){mode='paused';cancelAnimationFrame(raf);keys.clear();heldDirections.clear();stick={x:0,y:0};joystick={x:0,y:0};padVector={x:0,y:0};experience?.clearJoystick();last=0;saveMatchSnapshot();msg('Half-time breather. Your score is safe.');}
+ if(mode==='playing'){mode='paused';cancelAnimationFrame(raf);keys.clear();heldDirections.clear();stick={x:0,y:0};joystick={x:0,y:0};padVector={x:0,y:0};experience?.clearJoystick();last=0;
+  // Paused and restored matches show the complete field, including both goals.
+  // Normal smooth follow-camera resumes when the match continues.
+  camera={x:210,y:300,zoom:1};
+  saveMatchSnapshot();msg('Half-time breather. Your score is safe.');}
  else if(mode==='paused'){mode='playing';last=0;msg('Back on the ball!');raf=requestAnimationFrame(loop);}
  hud();
 }
@@ -1536,7 +1540,7 @@ experience=window.JozefArenaExperience?.mount({
 })||null;
 window.JozefArena=Object.freeze({getProgress:()=>({...lifetime,score:us+'-'+them,mode,
   matchGoals:us,opponentGoals:them,shots,saves:keeperSaves,aim:SHOT_ZONES[aim].name,
-  playerX:actor.x,playerY:actor.y,ballOwner:ball.owner,skillReady:skillCooldown<=0,
+  playerX:actor.x,playerY:actor.y,cameraZoom:camera.zoom,ballOwner:ball.owner,skillReady:skillCooldown<=0,
   passChain,blockedShots,counterRecoveries,rivalAttacks,counterSeconds:counterTime,
   shotChance:systems.shotProfile((ball.owner==='mate'?mate:actor).y,passChain,squad.shot+Math.min(.18,counterTime*.033),experience?.prefs.difficulty||'pro').onTarget,
   difficulty:experience?.prefs.difficulty||'pro',coins:lifetime.coins,level:systems.progression(lifetime).level,
