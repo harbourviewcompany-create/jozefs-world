@@ -187,3 +187,40 @@ test('rival shots only occur after a defended advance, with bounded chance',()=>
  assert.ok(covered<unsafe);
  assert.ok(unsafe<=.42);
 });
+
+
+test('2026 movement accelerates smoothly, stops without sliding and respects pitch bounds',()=>{
+ let actor={x:210,y:493},velocity={x:0,y:0};
+ const early=S.movePlayer(actor,velocity,{x:0,y:-1},1/60,190);
+ assert.ok(early.vy<0&&Math.abs(early.vy)<190,'first frame accelerates instead of teleporting to full speed');
+ for(let i=0;i<65;i++){
+  const p=S.movePlayer(actor,velocity,{x:0,y:-1},1/60,190);
+  actor={x:p.x,y:p.y};velocity={x:p.vx,y:p.vy};
+ }
+ assert.ok(actor.y<330,'continuous input still carries Jozef up the field');
+ const moving=Math.abs(velocity.y);
+ for(let i=0;i<45;i++){
+  const p=S.movePlayer(actor,velocity,{x:0,y:0},1/60,190);
+  actor={x:p.x,y:p.y};velocity={x:p.vx,y:p.vy};
+ }
+ assert.ok(Math.abs(velocity.y)<moving*.01,'the player must decelerate when the thumb lifts');
+ let edge={x:393,y:105},v={x:300,y:-300};
+ for(let i=0;i<18;i++){
+  const p=S.movePlayer(edge,v,{x:1,y:-1},1/60,190,1.85);
+  edge={x:p.x,y:p.y};v={x:p.vx,y:p.vy};
+ }
+ assert.ok(edge.x<=396&&edge.y>=102,'boost cannot move Jozef outside the pitch');
+});
+
+test('tactical guide distinguishes clear goal lanes, blocks and a one-two',()=>{
+ const actor={x:205,y:245},mate={x:305,y:185};
+ assert.equal(S.findShotBlocker(actor,{x:210,y:16},[{x:207,y:140}]).y,140);
+ assert.equal(S.findShotBlocker(actor,{x:210,y:16},[{x:385,y:140}]),null);
+ const blocked=S.tacticalRead(actor,mate,[{x:207,y:140}],{owner:'actor'},210,.8);
+ assert.equal(blocked.kind,'pass');
+ assert.equal(blocked.threat,true);
+ assert.equal(S.tacticalRead(actor,mate,[{x:385,y:140}],{owner:'actor'},210,.8).kind,'shoot');
+ assert.equal(S.tacticalRead({x:210,y:493},mate,[],{owner:'actor'},210,.1).kind,'advance');
+ assert.equal(S.tacticalRead(actor,mate,[],{owner:'rival'},210,.8).kind,'defend');
+ assert.equal(S.tacticalRead(actor,mate,[],{owner:'mate'},210,.8).kind,'pass');
+});
