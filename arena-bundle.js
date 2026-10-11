@@ -101,6 +101,17 @@
     }
     return closest;
   }
+  function feintTargets(actor,defenders,radius=76) {
+    if(!actor||!Array.isArray(defenders))return [];
+    const max=clamp(radius,24,110);
+    const affected=[];
+    for(let i=0;i<defenders.length;i++){
+      const d=defenders[i];
+      if(d&&Number.isFinite(d.x)&&Number.isFinite(d.y)&&
+        d.y<=actor.y+22&&distance(actor,d)<=max)affected.push(i);
+    }
+    return affected;
+  }
   const AIM_LANES=Object.freeze([{x:171,name:'LEFT'},{x:210,name:'CENTRE'},{x:249,name:'RIGHT'}]);
   function bestShotLane(shooter,defenders,aimX=210) {
     const selected=AIM_LANES.reduce((closest,z,i)=>
@@ -267,7 +278,7 @@
   }
   return Object.freeze({
     clamp,distance,DIFFICULTIES,joystickVector,
-    defenderDestination,teammateDestination,rivalRunTarget,counterSupportTarget,rivalThreatChance,movePlayer,findShotBlocker,bestShotLane,tacticalRead,shotAccuracy,shotProfile,shotTarget,keeperCommit,readGamepad,
+    defenderDestination,teammateDestination,rivalRunTarget,counterSupportTarget,rivalThreatChance,movePlayer,feintTargets,findShotBlocker,bestShotLane,tacticalRead,shotAccuracy,shotProfile,shotTarget,keeperCommit,readGamepad,
     cameraFor,screenToWorld,dailyKey,CHALLENGES,freshDaily,normalizeDaily,awardDaily,progression
   });
 });
@@ -810,6 +821,14 @@ function render(c,s){
  for(let i=0;i<defensive.length;i++){
   const d=defensive[i];
   const carrying=s.ball?.owner==='rival'&&s.rivalCarrier===i;
+  if(d.stun>0){
+   // A feinted opponent visibly loses balance, without a flashing screen.
+   const sway=Math.sin(phase*14+i)*3;
+   strokeCircle(c,d.x,d.y,27,'#ffe282d0',2);
+   c.fillStyle='#ffe5a0';c.font='900 15px system-ui';c.textAlign='center';
+   c.fillText('✦',d.x-12+sway,d.y-38);
+   c.fillText('✦',d.x+12-sway,d.y-42);
+  }
   strokeCircle(c,d.x,d.y,carrying?29:22,carrying?'#ffd18dda':'#ff9d8764',carrying?3:1);
   if(carrying){
    circle(c,d.x,d.y+2,31,'#ffbe5d1c');
@@ -1104,7 +1123,12 @@ function setAim(i){
 function skillMove(){
  if(mode!=='playing'||replay||skillCooldown>0)return;
  skillCooldown=5.5;skillTime=.66;experience?.haptic(20);
- msg('SKILL MOVE! Burst past the press!');
+ const defending=ball.owner==='rival';
+ const targets=defending?[]:systems.feintTargets(actor,defenders);
+ for(const i of targets)defenders[i].stun=.82;
+ msg(defending?'TACKLE BURST! CLOSE DOWN THE BALL CARRIER!':
+  targets.length?'FEINT! DEFENDER WRONG-FOOTED — RUN INTO SPACE!':
+  'SKILL BURST! EXPLODE INTO SPACE!');
  hud();
 }
 function pass(){
@@ -1271,6 +1295,7 @@ function update(dt){
  const leader=ball.owner==='mate'?mate:actor;
  for(let i=0;i<defenders.length;i++){
   const d=defenders[i];
+  if(d.stun>0){d.stun=Math.max(0,d.stun-dt);continue;}
   const dest=systems.defenderDestination(i,d,actor,mate,ball);
   const distance=dist(d,dest);
   if(distance>3){
