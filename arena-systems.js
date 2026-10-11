@@ -99,6 +99,17 @@
     }
     return closest;
   }
+  function feintTargets(actor,defenders,radius=76) {
+    if(!actor||!Array.isArray(defenders))return [];
+    const max=clamp(radius,24,110);
+    const affected=[];
+    for(let i=0;i<defenders.length;i++){
+      const d=defenders[i];
+      if(d&&Number.isFinite(d.x)&&Number.isFinite(d.y)&&
+        d.y<=actor.y+22&&distance(actor,d)<=max)affected.push(i);
+    }
+    return affected;
+  }
   const AIM_LANES=Object.freeze([{x:171,name:'LEFT'},{x:210,name:'CENTRE'},{x:249,name:'RIGHT'}]);
   function bestShotLane(shooter,defenders,aimX=210) {
     const selected=AIM_LANES.reduce((closest,z,i)=>
@@ -265,7 +276,7 @@
   }
   return Object.freeze({
     clamp,distance,DIFFICULTIES,joystickVector,
-    defenderDestination,teammateDestination,rivalRunTarget,counterSupportTarget,rivalThreatChance,movePlayer,findShotBlocker,bestShotLane,tacticalRead,shotAccuracy,shotProfile,shotTarget,keeperCommit,readGamepad,
+    defenderDestination,teammateDestination,rivalRunTarget,counterSupportTarget,rivalThreatChance,movePlayer,feintTargets,findShotBlocker,bestShotLane,tacticalRead,shotAccuracy,shotProfile,shotTarget,keeperCommit,readGamepad,
     cameraFor,screenToWorld,dailyKey,CHALLENGES,freshDaily,normalizeDaily,awardDaily,progression
   });
 });
