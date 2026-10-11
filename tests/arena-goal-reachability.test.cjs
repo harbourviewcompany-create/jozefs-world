@@ -43,14 +43,15 @@ test('an attacking shot into an open corner can actually score during a match',(
  for(const f of ['arena-experience.js','arena-renderer.js','arena.js'])
   vm.runInContext(read(f),env,{filename:f});
  events.get('arena-start:click')();
- const keydown=events.get('document:keydown'),keyup=events.get('document:keyup');
- keydown({key:'ArrowUp',preventDefault(){},repeat:false});
+ // Exercise the actual held touch-arrow control. The settings layer also
+ // registers keydown listeners, so keyboard dispatch is tested separately.
+ events.get('arena-up:pointerdown')({pointerId:19,preventDefault(){}});
  let now=0;
  for(let i=0;i<89;i++){
   const frame=frames.shift();assert.ok(frame,'running match must schedule animation');
   frame(now+=16.67);
  }
- keyup({key:'ArrowUp'});
+ events.get('arena-up:pointerup')({pointerId:19});
  const ready=window.JozefArena.getProgress();
  assert.ok(ready.playerY<300&&ready.playerY>130,
   'Jozef must dribble into the attacking half first: '+ready.playerY);
