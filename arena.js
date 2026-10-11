@@ -283,7 +283,8 @@ function shoot(holdCharge=0){
  // Intentional corner aiming beats random, unstoppable goalkeeper animations.
  // Short-range attempts have tighter accuracy. Squad strength helps long shots.
  const quality=systems.flowShotProfile(systems.shotProfile(p.y,passChain,squad.shot+Math.min(.18,counterTime*.033)+Math.min(.06,holdCharge*.06),experience?.prefs.difficulty||'pro'),flow);
- if(quality.flow)flow=systems.flowChange(flow,'used');
+ const flowShot=Boolean(quality.flow);
+ if(flowShot)flow=systems.flowChange(flow,'used');
  const placement=systems.shotTarget(aim,SHOT_ZONES,quality,Math.random(),Math.random(),GOAL.left,GOAL.right);
  const goalX=placement.x;
  const dy=GOAL.top-p.y,dx=goalX-p.x,div=Math.max(1,Math.hypot(dx,dy));
@@ -293,7 +294,7 @@ function shoot(holdCharge=0){
  // Keeper has to guess and commit. A save is earned, not guaranteed.
  keeperDestination=systems.keeperCommit(aim,SHOT_ZONES,experience?.prefs.difficulty||'pro',Math.random());
  keeperReact=.16/(systems.DIFFICULTIES[experience?.prefs.difficulty||'pro']?.keeper||1);shotCooldown=.65;mateTime=0;shots++;streak=.45;cue('shot');experience?.haptic(22);experience?.record('shots');
- msg(p.y>360?'LONG SHOT! Get closer or pass for a better chance.':
+ msg(flowShot?'FLOW SHOT! POWERED-UP FINISH!':p.y>360?'LONG SHOT! Get closer or pass for a better chance.':
   'SHOOTING AT THE '+SHOT_ZONES[aim].name+'! '+(quality.passBonus?'GREAT BUILDUP!':'FIND THE CORNER!'));
  hud();
 }
@@ -853,7 +854,7 @@ window.JozefArena=Object.freeze({getProgress:()=>({...lifetime,score:us+'-'+them
   playerX:actor.x,playerY:actor.y,cameraZoom:camera.zoom,ballOwner:ball.owner,skillReady:skillCooldown<=0,
   advice:systems.tacticalRead(actor,mate,defenders,ball,SHOT_ZONES[aim].x,systems.shotProfile(actor.y,passChain,squad.shot,experience?.prefs.difficulty||'pro').onTarget).kind,
   passChain,blockedShots,counterRecoveries,rivalAttacks,counterSeconds:counterTime,flow,
-  shotChance:systems.shotProfile((ball.owner==='mate'?mate:actor).y,passChain,squad.shot+Math.min(.18,counterTime*.033),experience?.prefs.difficulty||'pro').onTarget,
+  shotChance:systems.flowShotProfile(systems.shotProfile((ball.owner==='mate'?mate:actor).y,passChain,squad.shot+Math.min(.18,counterTime*.033),experience?.prefs.difficulty||'pro'),flow).onTarget,
   difficulty:experience?.prefs.difficulty||'pro',coins:lifetime.coins,level:systems.progression(lifetime).level,
   controllerConnected:padConnected})});
 if(restoreMatchSnapshot())msg('MATCH RESTORED! TAP RESUME WHEN READY.');
