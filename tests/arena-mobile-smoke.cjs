@@ -131,6 +131,7 @@ const close=()=>new Promise(resolve=>server.close(resolve));
       'Mobile clock label must stay short and readable');
      assert.ok(game.shotChance<.20,'Even on Rookie, shooting from kickoff must be unlikely');
      assert.equal(game.difficulty,'rookie','New touch players should receive Rookie difficulty');
+     assert.equal(game.flow,0,'Each new match starts with empty FLOW meter');
      if(viewport.width===390&&viewport.height>viewport.width){
       // Stationary thumbs must visibly charge. Older versions only updated
       // on pointermove, so holding SHOOT gave no visual feedback.
