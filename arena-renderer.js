@@ -194,9 +194,18 @@ function aimLine(c,s){
  c.strokeStyle='#e5ff8b96';c.lineWidth=1;
  c.beginPath();c.moveTo(target-19,20);c.lineTo(target+19,20);c.moveTo(target,2);c.lineTo(target,38);c.stroke();
  if(s.ball?.owner==='actor'){
-  c.save();c.setLineDash([4,7]);c.strokeStyle='#d5ffb55c';c.lineWidth=1.3;
+  c.save();c.setLineDash([4,7]);
+  c.strokeStyle=s.advice?.threat?'#ffbd7cc8':'#d5ffb5a0';
+  c.lineWidth=s.advice?.threat?2.2:1.5;
   c.beginPath();c.moveTo(s.actor.x,s.actor.y-17);c.lineTo(target,25);c.stroke();
   c.restore();
+  // A cyan route appears when a pass can open the shooting lane.
+  if(s.advice?.kind==='pass'&&s.mate){
+   c.save();c.setLineDash([5,6]);c.strokeStyle='#81f9edbd';c.lineWidth=2;
+   c.beginPath();c.moveTo(s.actor.x,s.actor.y);c.lineTo(s.mate.x,s.mate.y);c.stroke();
+   strokeCircle(c,s.mate.x,s.mate.y,29,'#8dfde296',1.5);
+   c.restore();
+  }
  }
 }
 function fx(c,s,p,phase,motion){
@@ -222,6 +231,24 @@ function fx(c,s,p,phase,motion){
    c.fillText('JOZEF FC     '+s.us+'  :  '+s.them,210,321);
   }
  }
+}
+// Readable over the pitch on a 320px phone. Unlike separate page-level text,
+// this HUD does not push the playable canvas or controls below the viewport.
+function tacticalOverlay(c,s){
+ if(s.mode!=='playing'||!s.advice)return;
+ const a=s.advice;
+ c.save();
+ rounded(c,23,49,168,47,9,'#061c25d9');
+ c.strokeStyle=a.kind==='pass'?'#79f0d7a8':a.kind==='defend'?'#ffbf82ae':'#b8f57da2';
+ c.lineWidth=1.2;c.strokeRect(24,50,166,45);
+ rounded(c,30,55,32,10,3,'#164e4b');
+ c.fillStyle='#ccf8e9';c.font='900 7px system-ui';c.textAlign='center';
+ c.fillText('PLAY IQ',46,63);
+ c.textAlign='left';c.fillStyle=a.kind==='defend'?'#ffdfbd':'#e3ff9e';
+ c.font='900 12px system-ui';c.fillText(a.label,31,77,154);
+ c.font='700 9px system-ui';c.fillStyle='#b4dcd1';
+ c.fillText(a.hint,31,88,154);
+ c.restore();
 }
 function matchScreen(c,s){
  if(s.mode==='playing')return;
@@ -291,6 +318,7 @@ function render(c,s){
  ball(c,s,phase,motion);
  fx(c,s,p,phase,motion);
  c.restore();
+ tacticalOverlay(c,s);
  matchScreen(c,s);
 }
 window.JozefArenaGraphics=Object.freeze({render});
