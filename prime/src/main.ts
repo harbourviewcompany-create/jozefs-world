@@ -288,3 +288,20 @@ function boot(){
  }
 }
 boot();
+
+// Prime Arena is part of the existing one-device PWA. Precache only public
+// same-origin game files after the first visit, never personal progress or APIs.
+// This also works when the user opens /prime/ directly without visiting HQ first.
+async function prepareOffline(){
+ if(!('serviceWorker' in navigator)||!('caches' in window))return;
+ try{
+  await navigator.serviceWorker.register('../sw.js',{scope:'../'});
+  const cache=await caches.open('jozef-prime-public-v1');
+  const urls=[location.href,...[...document.querySelectorAll<HTMLScriptElement|HTMLLinkElement>('script[src],link[rel="stylesheet"][href]')].map(el=>el instanceof HTMLScriptElement?el.src:el.href)]
+   .filter(url=>new URL(url).origin===location.origin);
+  await Promise.all(urls.map(async url=>{
+   if(!(await cache.match(url)))await cache.add(url);
+  }));
+ }catch{/* Offline is optional and should never block gameplay. */}
+}
+window.addEventListener('load',()=>{void prepareOffline()});
