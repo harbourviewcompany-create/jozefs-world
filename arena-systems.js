@@ -70,6 +70,11 @@
 
   // Delta-time-stable movement with smooth starts, controlled turns and
   // predictable stops. Works identically for keyboard, touch and gamepads.
+  // A brief mobile hold gives a small accuracy and velocity bonus. Tap still
+  // fires immediately, and the meter fills only while the finger is down.
+  function shotCharge(elapsedMs) {
+    return clamp((Number(elapsedMs)||0)/900,0,1);
+  }
   function movePlayer(player,velocity,input,dt,speed=190,boost=1) {
     const step=clamp(dt,0,.05);
     const mag=Math.hypot(Number(input?.x)||0,Number(input?.y)||0);
@@ -276,7 +281,7 @@
   }
   return Object.freeze({
     clamp,distance,DIFFICULTIES,joystickVector,
-    defenderDestination,teammateDestination,rivalRunTarget,counterSupportTarget,rivalThreatChance,movePlayer,feintTargets,findShotBlocker,bestShotLane,tacticalRead,shotAccuracy,shotProfile,shotTarget,keeperCommit,readGamepad,
+    defenderDestination,teammateDestination,rivalRunTarget,counterSupportTarget,rivalThreatChance,shotCharge,movePlayer,feintTargets,findShotBlocker,bestShotLane,tacticalRead,shotAccuracy,shotProfile,shotTarget,keeperCommit,readGamepad,
     cameraFor,screenToWorld,dailyKey,CHALLENGES,freshDaily,normalizeDaily,awardDaily,progression
   });
 });
