@@ -46,7 +46,7 @@ function updateTouchVector(){
  stick=len>1?{x:x/len,y:y/len}:{x,y};
 }
 let aim=0,skillCooldown=0,skillTime=0,keeperDestination=210,keeperReact=0,passRecipient=null,mateTime=0,shots=0,keeperSaves=0,lastHudTick=-1;
-let passChain=0,blockedShots=0,looseBallElapsed=0;
+let passChain=0,blockedShots=0,looseBallElapsed=0,shotOrigin=null;
 let rivalCarrier=-1,rivalElapsed=0,counterTime=0,counterRecoveries=0,rivalAttacks=0;
 function getSquad(){
  const api=window.JozefSquad?.getSquad?.();
@@ -104,6 +104,7 @@ function refreshGraphics(){
 refreshGraphics();
 window.addEventListener('resize',refreshGraphics,{passive:true});
 function resetPositions(){
+ shotOrigin=null;
  actor={x:210,y:493};mate={x:301,y:310};
  ball={x:actor.x,y:actor.y-14,owner:'actor',vx:0,vy:0};
  defenders=[{x:144,y:260,speed:89},{x:279,y:205,speed:90},{x:204,y:143,speed:82}];
@@ -279,6 +280,7 @@ function shoot(holdCharge=0){
  const dy=GOAL.top-p.y,dx=goalX-p.x,div=Math.max(1,Math.hypot(dx,dy));
  const power=490+110*squad.shot+Math.min(1,Math.max(0,holdCharge))*100;
  ball={x:p.x,y:p.y-7,vx:dx/div*power,vy:dy/div*power,owner:'shot'};
+ shotOrigin={x:ball.x,y:ball.y};
  // Keeper has to guess and commit. A save is earned, not guaranteed.
  keeperDestination=systems.keeperCommit(aim,SHOT_ZONES,experience?.prefs.difficulty||'pro',Math.random());
  keeperReact=.16/(systems.DIFFICULTIES[experience?.prefs.difficulty||'pro']?.keeper||1);shotCooldown=.65;mateTime=0;shots++;streak=.45;cue('shot');experience?.haptic(22);experience?.record('shots');
@@ -461,7 +463,11 @@ function update(dt){
   // Shots travel through the actual defenders. A clear passing or dribbling
   // lane earns the chance to test the goalkeeper.
   if(ball.owner==='shot'){
-   const blocker=defenders.find(d=>dist(d,ball)<18*difficulty.pressure);
+   // A defender can block a shot along its flight, not instantly erase it
+   // at Jozef's feet. This creates a real reward for dribbling into space.
+   const travelled=shotOrigin?dist(ball,shotOrigin):40;
+   const blocker=travelled>34?defenders.find(d=>d.y<=ball.y+8&&
+     dist(d,ball)<18*difficulty.pressure):null;
    if(blocker){
     ball.owner='free';looseBallElapsed=0;ball.vx=(ball.x-blocker.x)*6;
     ball.vy=175;blockedShots++;flash=-.15;
