@@ -320,6 +320,14 @@ function render(c,s){
  for(let i=0;i<defensive.length;i++){
   const d=defensive[i];
   const carrying=s.ball?.owner==='rival'&&s.rivalCarrier===i;
+  if(d.stun>0){
+   // A feinted opponent visibly loses balance, without a flashing screen.
+   const sway=Math.sin(phase*14+i)*3;
+   strokeCircle(c,d.x,d.y,27,'#ffe282d0',2);
+   c.fillStyle='#ffe5a0';c.font='900 15px system-ui';c.textAlign='center';
+   c.fillText('✦',d.x-12+sway,d.y-38);
+   c.fillText('✦',d.x+12-sway,d.y-42);
+  }
   strokeCircle(c,d.x,d.y,carrying?29:22,carrying?'#ffd18dda':'#ff9d8764',carrying?3:1);
   if(carrying){
    circle(c,d.x,d.y+2,31,'#ffbe5d1c');
