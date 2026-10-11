@@ -524,17 +524,17 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         'https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard',
         'https://site.api.espn.com/apis/site/v2/sports/soccer/uefa.champions/scoreboard'
       ],
-      teams: ['Inter Miami', 'Arsenal', 'Liverpool', 'Man City', 'Chelsea', 'Barcelona', 'Real Madrid']
+      teams: ['Atlético Ottawa', 'Inter Miami CF', 'Arsenal', 'Liverpool', 'Manchester City', 'Chelsea', 'Barcelona', 'Real Madrid']
     },
     nba: {
       label: 'NBA',
       urls: ['https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard'],
-      teams: ['Raptors','Lakers','Celtics','Warriors','Heat','Bucks','Knicks','Nets','76ers','Cavaliers','Bulls','Pistons','Pacers','Hawks','Hornets','Magic','Wizards','Nuggets','Timberwolves','Thunder','Trail Blazers','Jazz','Suns','Kings','Clippers','Mavericks','Rockets','Spurs','Grizzlies','Pelicans']
+      teams: ['Toronto Raptors','Los Angeles Lakers','Celtics','Warriors','Heat','Bucks','Knicks','Nets','76ers','Cavaliers','Bulls','Pistons','Pacers','Hawks','Hornets','Magic','Wizards','Nuggets','Timberwolves','Thunder','Trail Blazers','Jazz','Suns','Kings','Clippers','Mavericks','Rockets','Spurs','Grizzlies','Pelicans']
     },
     nfl: {
       label: 'NFL',
       urls: ['https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard'],
-      teams: ['Bills', 'Chiefs', '49ers', 'Eagles', 'Cowboys']
+      teams: ['Buffalo Bills', 'Kansas City Chiefs', 'San Francisco 49ers', 'Philadelphia Eagles', 'Dallas Cowboys']
     },
     nhl: {
       label: 'NHL / Hockey',
@@ -550,18 +550,23 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
 
   const FACTS = {
+    'Atlético Ottawa': 'Ottawa. His city\'s soccer club. Canadian Premier League.',
+    'Inter Miami CF': 'Miami. MLS. The club Messi joined.',
     'Inter Miami': 'Miami. MLS. The club Messi joined.',
+    'Manchester City': 'Manchester. Premier League. Sky blue.',
     'Arsenal': 'London. Premier League. A passing team in red and white.',
     'Liverpool': 'Liverpool. Premier League. The song is You\'ll Never Walk Alone.',
     'Man City': 'Manchester. Premier League. Sky blue.',
     'Chelsea': 'London. Premier League. The Blues.',
     'Barcelona': 'Barcelona. La Liga. Famous for its academy.',
     'Real Madrid': 'Madrid. La Liga. White shirts, big European nights.',
+    'Toronto Raptors': 'Toronto. Canada\'s NBA team.',
     'Raptors': 'Toronto. Canada\'s NBA team.',
     'Lakers': 'Los Angeles. Purple and gold.',
     'Celtics': 'Boston. Green, and one of the oldest NBA clubs.',
     'Warriors': 'San Francisco. Known for the three-point shot.',
     'Heat': 'Miami. Red and yellow.',
+    'Buffalo Bills': 'Buffalo. The closest NFL team to Ottawa.',
     'Bills': 'Buffalo. The closest NFL team to Ottawa.',
     'Chiefs': 'Kansas City. Red and yellow, Arrowhead Stadium.',
     '49ers': 'San Francisco. Red and gold.',
@@ -706,7 +711,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         if (saved[id] && saved[id].team === team) option.selected = true;
         select.appendChild(option);
       });
-      if (!saved[id]) {
+      const aliases = { 'Inter Miami': 'Inter Miami CF', Raptors: 'Toronto Raptors', Bills: 'Buffalo Bills', 'Man City': 'Manchester City', Lakers: 'Los Angeles Lakers' };
+      if (saved[id] && aliases[saved[id].team]) saved[id].team = aliases[saved[id].team];
+      if (!saved[id] || !league.teams.includes(saved[id].team)) {
         select.value = league.teams[0];
         const data = load();
         data[id] = { team: league.teams[0] };
