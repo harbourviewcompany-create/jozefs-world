@@ -123,5 +123,5 @@ test('hockey goalie dive begins at the exact position shown when a puck is relea
   'animation must not teleport the goalie back to centre at shot release');
  game.now(900);game.frame();
  const after=heads().at(-1)[1];
- assert.ok(after>released-1&&after<385,'goalie moves smoothly toward the chosen corner');
+ assert.ok(after<released&&after>=383,'goalie moves smoothly toward the right corner');
 });
