@@ -254,7 +254,10 @@ function setAim(i){
 function skillMove(){
  if(mode!=='playing'||replay||skillCooldown>0)return;
  skillCooldown=5.5;skillTime=.66;experience?.haptic(20);
- msg('SKILL MOVE! Burst past the press!');
+ const targets=systems.feintTargets(actor,defenders);
+ for(const i of targets)defenders[i].stun=.82;
+ msg(targets.length?'FEINT! DEFENDER WRONG-FOOTED — RUN INTO SPACE!':
+  'SKILL BURST! EXPLODE INTO SPACE!');
  hud();
 }
 function pass(){
@@ -421,6 +424,7 @@ function update(dt){
  const leader=ball.owner==='mate'?mate:actor;
  for(let i=0;i<defenders.length;i++){
   const d=defenders[i];
+  if(d.stun>0){d.stun=Math.max(0,d.stun-dt);continue;}
   const dest=systems.defenderDestination(i,d,actor,mate,ball);
   const distance=dist(d,dest);
   if(distance>3){
