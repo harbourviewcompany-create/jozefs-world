@@ -975,3 +975,5 @@ body.versus-focused #versus-tip{font-weight:800;letter-spacing:.03em;color:#e4ff
 #jw-adventure-guide{background:linear-gradient(135deg,#bcfbf1,#81cfff);color:#0c2530;border-color:#dcffec;box-shadow:0 6px 18px #80e9d12a}
 #jw-adventure-guide:hover:not(:disabled){filter:brightness(1.08)}
 @media(max-width:600px){#jw-adventure-guide{min-height:43px;font-size:10px}}
+
+@media(max-width:800px) and (orientation:portrait){#versus .versus-stage{min-height:62dvh}body.versus-focused #versus .versus-stage{min-height:0}}
