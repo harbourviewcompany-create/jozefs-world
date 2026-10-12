@@ -42,7 +42,11 @@ function mount(api){
   document.querySelector('#arena .arena-controller')?.classList.toggle('swap-controls',prefs.handedness==='flipped');
   const arena=$('arena'),actions=document.querySelector('#arena .arena-actions');
   const skill=$('arena-skill'),originalStrip=document.querySelector('#arena .arena-skill-strip');
-  const immersive=prefs.mobileLayout==='immersive' && (window.matchMedia?.('(orientation: portrait) and (max-width: 1100px)')?.matches!==false);
+  // Compare current layout viewport dimensions directly. Mobile browser emulators,
+  // in-app webviews and toolbar resize can retain a stale orientation media query.
+  const viewportWidth=Math.min(window.innerWidth||Infinity,document.documentElement?.clientWidth||Infinity);
+  const viewportHeight=window.innerHeight||window.visualViewport?.height||0;
+  const immersive=prefs.mobileLayout==='immersive' && viewportWidth<=1100 && viewportHeight>=viewportWidth;
   arena?.classList.toggle('mobile-immersive',immersive);
   if(skill&&actions&&originalStrip){
     if(immersive&&skill.parentElement!==actions&&typeof actions.appendChild==='function')actions.appendChild(skill);
@@ -206,6 +210,7 @@ function mount(api){
  window.addEventListener('orientationchange',ui);
  // Embedded browsers often resize the viewport without an orientationchange event.
  window.addEventListener('resize',ui,{passive:true});
+ window.visualViewport?.addEventListener('resize',ui,{passive:true});
  ui();
  return Object.freeze({prefs,record,reset,finish,kitColor,haptic,ui,clearJoystick:clear,passCount:()=>passes});
 }
