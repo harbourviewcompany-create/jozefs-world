@@ -637,6 +637,136 @@ createAdventureUi();
  };
 })();
 
+
+/* Persistent Realm Gates: shared adventures continue across four saveable worlds. */
+(function(){
+ const realmKey='jozef-block-realms-v1';
+ const names=['Our Homeworld','Frost Moon','Crystal Underworld','Sky Islands'];
+ let realmIndex=0,realmBaseSeed=adventureSeed,realms={};
+ function captureRealm(){
+  realms[realmIndex]={
+   seed:adventureSeed,world:world.map(row=>row.slice()),surface:surface.slice(),
+   players:players.map(p=>({x:p.x,y:p.y}))
+  };
+ }
+ function validRealm(v){
+  return v&&Array.isArray(v.world)&&v.world.length===H&&
+   v.world.every(row=>Array.isArray(row)&&row.length===W)&&
+   Array.isArray(v.surface)&&v.surface.length===W;
+ }
+ function tintRealm(index){
+  if(index===0)return;
+  for(let x=0;x<W;x++)for(let y=0;y<H-1;y++){
+   const id=world[y][x];
+   if(index===1){
+    if(id===1)world[y][x]=16;
+    else if(id===2)world[y][x]=3;
+    else if(id===5)world[y][x]=16;
+   }else if(index===2){
+    if(id===1)world[y][x]=3;
+    else if(id===2)world[y][x]=8;
+    else if(id===10&&noise(x,y)>.46)world[y][x]=18;
+    else if(id===3&&y>44&&noise(x,y,6)>.964)world[y][x]=18;
+   }else if(index===3){
+    if(id===1)world[y][x]=6;
+    if(id===3&&y<surface[x]+7)world[y][x]=15;
+   }
+  }
+  if(index===3){
+   for(let x=9;x<W-7;x+=13){
+    const y=Math.max(5,surface[x]-9-Math.floor(noise(x,5)*4));
+    for(let j=0;j<8;j++)if(x+j<W)world[y][x+j]=7;
+   }
+  }
+ }
+ function enterRealm(index){
+  if(index<0||index>=names.length||(!portalUnlocked&&index>0)){say('Unlock the World Portal first');return;}
+  captureRealm();
+  const keep={stage:questStage,goals:Object.assign({},goals),achievements:achievements.slice(),
+    explored:Object.assign({},explored),portalUnlocked,inventory:players.map(p=>Object.assign({},p.inventory)),
+    health:players.map(p=>p.health)};
+  realmIndex=index;
+  if(validRealm(realms[index])){
+   const state=realms[index];adventureSeed=state.seed;world=state.world.map(row=>row.slice());surface=state.surface.slice();
+  }else{
+   adventureSeed=(realmBaseSeed+index*19031)%999999+1;
+   generate();tintRealm(index);
+  }
+  players.forEach((p,i)=>{
+   const position=realms[index]?.players?.[i],x=position?.x??(i?74:71)*TILE;
+   p.x=Math.max(0,Math.min(W*TILE-p.w,x));
+   p.y=position?.y??surface[Math.floor(p.x/TILE)]*TILE-p.h;
+   if(!Number.isFinite(p.y))p.y=30*TILE;
+   p.vx=p.vy=0;p.ground=false;p.health=keep.health[i];p.inventory=keep.inventory[i];
+  });
+  questStage=keep.stage;goals=keep.goals;achievements=keep.achievements;explored=keep.explored;portalUnlocked=keep.portalUnlocked;
+  camX=Math.max(0,players[active].x-cssW/2);camY=Math.max(0,players[active].y-cssH/2);
+  changedBlocks=[];renderHotbar();questHud();queueSave();save();
+  spark(players[active].x,players[active].y,28);chime();say('ENTERED '+names[realmIndex].toUpperCase(),3400);
+ }
+ function showRealmPicker(){
+  const panel=$('bw-panel');panel.hidden=false;panel.replaceChildren();
+  const title=document.createElement('h3');title.textContent='CHOOSE A REALM';panel.appendChild(title);
+  const intro=document.createElement('p');intro.textContent='Explore unique worlds. Buildings and terrain in each realm are saved separately. Inventory, characters and team achievements travel with you.';panel.appendChild(intro);
+  names.forEach((name,index)=>{
+   const b=document.createElement('button');b.type='button';
+   b.textContent=(index===realmIndex?'✓ ':'')+name+(index>0&&!portalUnlocked?' · LOCKED':'');
+   b.disabled=index>0&&!portalUnlocked;
+   b.addEventListener('click',()=>{panel.hidden=true;enterRealm(index);});panel.appendChild(b);
+  });
+  const close=document.createElement('button');close.textContent='Close';close.onclick=()=>panel.hidden=true;panel.appendChild(close);
+ }
+ const action=document.createElement('button');action.type='button';action.textContent='REALMS';
+ action.addEventListener('click',showRealmPicker);$('bw-actions').appendChild(action);
+ const earlierQuestHud=questHud;
+ questHud=function(){
+  earlierQuestHud();
+  const el=$('bw-mission');
+  if(el)el.innerHTML='<small style="display:block;color:#9ed7ff;font-weight:800">🌍 '+names[realmIndex]+'</small>'+el.innerHTML;
+ };
+ const earlierActivate=activateTeamPortal;
+ activateTeamPortal=function(){
+  const before=portalUnlocked;
+  earlierActivate();
+  if(!before&&portalUnlocked)enterRealm(1);
+  else if(portalUnlocked)showRealmPicker();
+ };
+ const earlierSave=save;
+ save=function(){
+  const change=dirty;
+  if(change)captureRealm();
+  earlierSave();
+  if(change){try{localStorage.setItem(realmKey,JSON.stringify({version:1,realmIndex,realmBaseSeed,realms}));}catch(e){console.warn('Realm cache full; world remains backed up in IndexedDB/localStorage',e);}}
+ };
+ const earlierRead=readSave;
+ readSave=function(){
+  const loaded=earlierRead();
+  try{
+   const raw=localStorage.getItem(realmKey),s=raw?JSON.parse(raw):null;
+   if(s?.version===1&&s.realms&&typeof s.realms==='object'){
+    realms={};for(const [key,v] of Object.entries(s.realms))if(['0','1','2','3'].includes(key)&&validRealm(v))realms[key]=v;
+    realmIndex=Math.max(0,Math.min(3,Number(s.realmIndex)||0));realmBaseSeed=s.realmBaseSeed||adventureSeed;
+   }
+  }catch(e){console.warn('Realm backup could not be loaded',e);}
+  questHud();return loaded;
+ };
+ const oldReset=$('reset');
+ /* Reset clears unlocked dimension snapshots but keeps a last-world backup. */
+ oldReset.addEventListener('click',()=>{
+  try{localStorage.removeItem(realmKey);}catch(_){}
+  realmIndex=0;realmBaseSeed=adventureSeed;realms={};questHud();
+ });
+ const oldBackup=backupAdventure;
+ backupAdventure=function(){
+  captureRealm();
+  const packageData={format:'DaddyJozefBlockRealms',version:1,realmIndex,realmBaseSeed,realms,questStage,goals,achievements,portalUnlocked};
+  const blob=new Blob([JSON.stringify(packageData)],{type:'application/json'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;
+  a.download='daddy-jozef-realms-'+realmBaseSeed+'.json';a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),900);say('Downloaded all realm backups');
+ };
+})();
+
 bindButton('left','left');bindButton('right','right');bindButton('jump','jump');
 bindButton('mine',null,mine);bindButton('place',null,place);bindButton('switch',null,playerSwitch);
 const canvasTouches=new Map();let tapTimer=0,pinchGap=0;
