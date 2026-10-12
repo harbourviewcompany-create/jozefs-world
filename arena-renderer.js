@@ -148,11 +148,14 @@ function athlete(c,x,y,jersey,num,kind,phase,active,moving){
  c.fillStyle='#faffee';c.font='900 12px system-ui';
  c.textAlign='center';c.fillText(String(num),0,7+bob);
  // Head, defined hairline and face direction.
- circle(c,0,-18+bob,9,kind==='opponent'?'#dfaa88':'#c99670');
- c.beginPath();c.arc(0,-20+bob,9,Math.PI*1.05,Math.PI*1.98);
- c.fillStyle=kind==='keeper'?'#26373a':'#1b282b';c.fill();
- circle(c,-3,-15+bob,1,'#24312b');
- circle(c,3,-15+bob,1,'#24312b');
+ circle(c,-8,-18+bob,2,kind==='opponent'?'#dfaa88':'#c99670');
+ circle(c,8,-18+bob,2,kind==='opponent'?'#dfaa88':'#c99670');
+ circle(c,0,-17+bob,8,kind==='opponent'?'#e2b08c':'#d7a37c');
+ c.beginPath();c.ellipse(0,-21+bob,8,5,0,Math.PI,0);c.fillStyle=kind==='keeper'?'#26373a':'#1b282b';c.fill();
+ circle(c,-2.6,-16+bob,1.6,'#fff');circle(c,2.6,-16+bob,1.6,'#fff');
+ circle(c,-2.5,-16+bob,.7,'#24312b');circle(c,2.5,-16+bob,.7,'#24312b');
+ c.strokeStyle='#c49274';c.lineWidth=1;c.beginPath();c.moveTo(0,-15.5+bob);c.lineTo(0,-13.6+bob);c.stroke();
+ c.beginPath();c.arc(0,-12.6+bob,2.2,.2,Math.PI-.2);c.stroke();
  // Captain insignia and keeper gloves.
  if(kind==='captain'){
   circle(c,15,-11+bob,3,'#cfff66');

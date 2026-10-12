@@ -49,10 +49,14 @@ export class StreetScene extends Phaser.Scene {
     this.road = this.add.graphics();
     this.bits = this.add.graphics();
     this.runner = this.add.container(this.x, this.height-110).setScale(1.4);
-    const body = this.add.rectangle(0, 0, 42, 58, 0x123c42).setStrokeStyle(4, 0xcafa60);
-    const num = this.add.text(0, -2, '11', { fontFamily: 'system-ui', fontSize: '20px', color: '#cafa60', fontStyle: '900' }).setOrigin(0.5);
-    const ball = this.add.circle(18, 16, 7, 0xffffff);
-    this.runner.add([body, num, ball]);
+    const body = this.add.rectangle(0, 8, 42, 46, 0x123c42).setStrokeStyle(4, 0xcafa60);
+    const num = this.add.text(0, 6, '11', { fontFamily: 'system-ui', fontSize: '18px', color: '#cafa60', fontStyle: '900' }).setOrigin(0.5);
+    const head = this.add.circle(0, -28, 12, 0xf3c7a6);
+    const hair = this.add.ellipse(0, -34, 22, 12, 0x241c18);
+    const eyeL = this.add.circle(-4, -28, 1.6, 0x243044);
+    const eyeR = this.add.circle(4, -28, 1.6, 0x243044);
+    const ball = this.add.circle(18, 22, 7, 0xffffff);
+    this.runner.add([body, num, head, hair, eyeL, eyeR, ball]);
     this.title = this.add.text(W / 2, 70, 'READY, CAPTAIN?', { fontFamily: 'system-ui', fontSize: '32px', color: '#ffffff', fontStyle: '900' }).setOrigin(0.5);
     this.sub = this.add.text(W / 2, 108, 'Three lanes. Dodge red. Chase the lights.', { fontFamily: 'system-ui', fontSize: '16px', color: '#cafa60' }).setOrigin(0.5);
     this.paintCity();

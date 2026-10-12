@@ -183,11 +183,15 @@
     if(shield){ctx.strokeStyle='#9af9ed';ctx.lineWidth=3;ctx.beginPath();
       ctx.ellipse(playerX,430,34,43,0,0,Math.PI*2);ctx.stroke();}
     ctx.shadowBlur=24;ctx.shadowColor=shield?'#71e7e4':streak>0?'#eaff6e':'#36fcca';
-    fillRoundRect(playerX-23,395,46,58,16,'#d0ff60');
+    fillRoundRect(playerX-23,405,46,48,16,'#d0ff60');
     ctx.shadowBlur=0;
-    fillRoundRect(playerX-18,401,36,18,8,'#0a3a39');
-    ctx.fillStyle='#072a28';ctx.font='900 18px system-ui';ctx.textAlign='center';ctx.fillText('J',playerX,439);
-    ctx.font='32px system-ui';ctx.fillText('⚽',playerX,474);
+    fillRoundRect(playerX-18,409,36,14,8,'#0a3a39');
+    ctx.fillStyle='#072a28';ctx.font='900 16px system-ui';ctx.textAlign='center';ctx.fillText('11',playerX,432);
+    ctx.fillStyle='#f3c7a6';ctx.beginPath();ctx.arc(playerX,388,12,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#241c18';ctx.beginPath();ctx.arc(playerX,384,12,Math.PI*1.05,Math.PI*1.95);ctx.fill();
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(playerX-4,388,2,0,Math.PI*2);ctx.arc(playerX+4,388,2,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#243044';ctx.beginPath();ctx.arc(playerX-4,388,1,0,Math.PI*2);ctx.arc(playerX+4,388,1,0,Math.PI*2);ctx.fill();
+    ctx.font='28px system-ui';ctx.fillText('⚽',playerX,474);
     if(streak>0){ctx.font='800 16px system-ui';ctx.fillStyle='#fff5b1';ctx.fillText('NICE!',playerX,377);}
     if(streak<0){ctx.font='800 16px system-ui';ctx.fillStyle='#ffb2b5';ctx.fillText('OOPS!',playerX,377);}
     // A tiny framed scoreboard inside the playfield works well on phones.

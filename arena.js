@@ -530,8 +530,12 @@ function update(dt){
 function round(x,y,w,h,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();}
 function player(x,y,color,number){
  ctx.shadowColor=color;ctx.shadowBlur=18;
- round(x-14,y-15,28,31,10,color);ctx.shadowBlur=0;
- ctx.fillStyle='#06171d';ctx.font='800 13px system-ui';ctx.textAlign='center';ctx.fillText(String(number),x,y+5);
+ round(x-14,y-10,28,26,10,color);ctx.shadowBlur=0;
+ ctx.fillStyle='#06171d';ctx.font='800 12px system-ui';ctx.textAlign='center';ctx.fillText(String(number),x,y+4);
+ ctx.fillStyle='#e7b898';ctx.beginPath();ctx.arc(x,y-22,8,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle='#2a2422';ctx.beginPath();ctx.arc(x,y-24,8,Math.PI,0);ctx.fill();
+ ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x-2.4,y-22,1.4,0,Math.PI*2);ctx.arc(x+2.4,y-22,1.4,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle='#243044';ctx.beginPath();ctx.arc(x-2.3,y-22,.6,0,Math.PI*2);ctx.arc(x+2.3,y-22,.6,0,Math.PI*2);ctx.fill();
 }
 function draw(){
  const sample=replay&&replay.frames.length?
