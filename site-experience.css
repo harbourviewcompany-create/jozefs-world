@@ -2823,6 +2823,12 @@
  #home .jw-worldcore-orbit{box-shadow:none}
 }
 @media print{#home .jw-worldcore{display:none!important}#home>:not(.jw-worldcore):not(#main){display:block!important}}
+/* Keep the 3D home visible immediately beneath the desktop nav, rather than
+   inheriting the legacy dashboard's tall section top spacing. */
+@media(min-width:901px){
+ #home.section.active{padding-top:0!important}
+ #home .jw-worldcore{margin-top:0}
+}
 
 /* BEGIN ui-refine-2026.css */
 /* JOZEF'S WORLD // VISUAL UX REFINEMENT 2026

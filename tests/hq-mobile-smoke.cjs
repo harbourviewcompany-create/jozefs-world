@@ -26,7 +26,7 @@ const server=http.createServer((req,res)=>{
      assert.ok(await world.isVisible(),'new HQ is the first usable game surface');
      const box=await world.boundingBox();
      assert.ok(box.width<=viewport.width+1,'3D HQ fits viewport');
-     assert.ok(box.y<160,'globe starts above the fold');
+     assert.ok(box.y<160,'globe starts above the fold; top='+box.y+' viewport='+viewport.width+'x'+viewport.height);
      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'no horizontal scroll');
      const state=await page.evaluate(()=>window.JozefWorldCore.progress());
      assert.equal(state.selected,'adventure');
