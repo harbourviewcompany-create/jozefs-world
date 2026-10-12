@@ -335,6 +335,11 @@
     ctx.save();
     if (shake > 0 && !reduced.matches) { ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake); shake -= 1; }
     pitch();
+    if (/GOAL|scores/.test(state.call||'')) { ctx.fillStyle='rgba(255,220,80,.08)'; ctx.fillRect(0,0,W,H); }
+    for (const side of ['left','right']) {
+      const x = side==='left'?10:688, near = side==='left'?state.ball.x<80:state.ball.x>W-80;
+      if (near) { ctx.strokeStyle='rgba(255,255,255,.35)'; ctx.beginPath(); ctx.moveTo(x,150); ctx.quadraticCurveTo(x+(side==='left'?18:-18), state.ball.y, x, 270); ctx.stroke(); }
+    }
     const me=room.who==='Dad'?state.dad:state.jozef;
     if(room.phase==='playing'&&Math.hypot(me.x-ball.x,me.y-ball.y)<110){
       const gx=room.who==='Dad'?34:686,gy=SHOT_LANES[selectedAim];
@@ -368,6 +373,9 @@
     if (state.star?.on) {
       ctx.save(); ctx.translate(state.star.x, state.star.y); ctx.rotate(tick*0.05); ctx.fillStyle='#ffe14a';
       ctx.beginPath(); for(let i=0;i<5;i++){const a=i*1.256-1.57,b=a+0.628;ctx.lineTo(Math.cos(a)*10,Math.sin(a)*10);ctx.lineTo(Math.cos(b)*4,Math.sin(b)*4);} ctx.closePath(); ctx.fill(); ctx.restore();
+    }
+    for (const p of [state.dad, state.jozef]) {
+      if (Math.hypot(p.vx,p.vy)>1.2 && tick%4===0) sparks.push({x:p.x,y:p.y+16,vx:(Math.random()-.5)*.4,vy:.2,life:10,color:'#c8b48a'});
     }
     player(visualPose(state.jozef,'jozef'), jozefKit(), room.practice && room.who!=='Jozef' ? 'Rovers' : 'Jozef');
     player(visualPose(state.dad,'dad'), '#d7ff4a', room.practice && room.who!=='Dad' ? 'Rovers' : 'Dad');
