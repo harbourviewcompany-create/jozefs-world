@@ -132,7 +132,7 @@ const aimBuffer=gl.createBuffer();
 function drawAimOutline(){
  const ray=target();
  if(frames%12===0){
-  const ret=$('target');if(ret){ret.textContent=ray?.hit?'□':'+';ret.classList.toggle('aimed',!!ray?.hit);}
+  const ret=$('target');if(ret){ret.textContent=ray?.hit?'□':'+';ret.classList[ray?.hit?'add':'remove']('aimed');}
  }
  if(!ray?.hit)return;
  const {x,y,z}=ray.hit,a=-.026,b=1.026;
