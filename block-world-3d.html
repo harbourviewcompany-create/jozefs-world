@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d243d">
+<meta name="description" content="Daddy and Jozef's real 3D voxel adventure: explore infinite streamed terrain, mine, build, and face the Crystal Golem together.">
+<title>Block World 3D | Daddy + Jozef</title>
+<link rel="stylesheet" href="./block-world-3d.css">
+</head>
+<body>
+<canvas id="view" aria-label="Interactive 3D voxel sandbox"></canvas>
+<div class="hud">
+ <header class="top">
+  <div class="brand"><span>BLOCK WORLD <b>3D</b></span><small>DADDY + JOZEF · EXPEDITION</small></div>
+  <div class="stats"><strong id="hero">DADDY</strong><span id="hearts">♥ 100</span><span id="level">LVL 1</span></div>
+ </header>
+ <section id="mission" class="mission" aria-live="polite">Generating your adventure…</section>
+ <div id="target" class="target" aria-hidden="true">+</div>
+ <section class="bottom">
+  <div id="stick" class="joystick" aria-label="Move" role="group"><div id="knob"></div></div>
+  <div class="hotbar" id="hotbar" role="group" aria-label="Block selection"></div>
+  <div class="actions">
+   <button id="jump" type="button">JUMP</button>
+   <button id="mine" type="button">MINE</button>
+   <button id="place" type="button">BUILD</button>
+   <button id="attack" type="button">ATTACK</button>
+  </div>
+ </section>
+ <nav class="menu">
+  <a href="./" class="home" aria-label="Back to the world headquarters">← HQ</a>
+  <button id="options" type="button" aria-expanded="false">☰ MENU</button>
+ </nav>
+ <section id="drawer" class="drawer" hidden aria-label="Game options">
+  <h2>WORLD OPTIONS</h2>
+  <p>Look around by dragging the scene. Use WASD or arrow keys to move, Space to jump, E to mine, R to build and F to attack.</p>
+  <div class="buttons">
+   <button id="swap">SWITCH HERO</button><button id="perspective">3RD PERSON</button>
+   <button id="creative">CREATIVE ON</button><button id="save">SAVE WORLD</button>
+   <button id="sound">SOUND OFF</button><button id="export">EXPORT SAVE</button>
+   <button id="import">IMPORT SAVE</button><button id="pair">PLAY TOGETHER</button>
+   <a href="./block-world.html">CLASSIC 2D MODE</a>
+  </div>
+  <button id="close" type="button">CLOSE</button>
+ </section>
+ <section id="pairPanel" class="drawer" hidden aria-label="Private two-device session">
+  <h2>PRIVATE DADDY + JOZEF CO-OP</h2>
+  <p>One adult hosts. Share a random invitation link privately with the second device. No public room directory, chat, camera or microphones.</p>
+  <div class="buttons"><button id="host">HOST PRIVATE GAME</button><button id="share" disabled>SHARE INVITE</button><button id="disconnect">DISCONNECT</button></div>
+  <label>Invitation code <input id="invite" autocomplete="off" spellcheck="false" placeholder="Paste private invite code" /></label>
+  <div class="buttons"><button id="join">JOIN PRIVATE GAME</button><button id="pairClose">CLOSE</button></div>
+  <p id="pairStatus" aria-live="polite">Offline · local play</p>
+ </section>
+ <div class="toast" id="toast" role="status" aria-live="polite"></div>
+ <div id="fallback" hidden><strong>3D is unavailable on this device.</strong><p>Your classic 2D world is still playable.</p><a href="./block-world.html">OPEN CLASSIC BLOCK WORLD</a></div>
+</div>
+<input type="file" id="fileInput" accept=".json,application/json" hidden>
+<script src="./peerjs.min.js" defer></script>
+<script src="./block-world-3d.js" defer></script>
+</body>
+</html>
