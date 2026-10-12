@@ -32,7 +32,7 @@ body.nav-open .nav-extra{display:inline-flex}
 </style>
 
 
-</head>
+<style>.live-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.live-dot{width:12px;height:12px;border-radius:50%;background:#3a4b52;display:inline-block}.live-dot.on{background:#3dff7a;box-shadow:0 0 8px #3dff7a}.live-row button{min-height:36px;border-radius:10px;font-weight:700}</style></head>
 <body>
 
   <div id="walkout" class="walkout" hidden role="dialog" aria-modal="true" aria-labelledby="walkout-title">
@@ -149,7 +149,7 @@ body.nav-open .nav-extra{display:inline-flex}
         <div>
           <p class="eyebrow-live">YOUR SHARED CLUB / TODAY</p>
           <h2 id="today-heading">TODAY.</h2>
-          <p class="today-intro">One match. One Street run. He picks his clubs.</p><p id="today-clubs">His clubs load here.</p><p id="today-last">No match yet.</p><p id="hq-versus">Versus: open the room to see if the other one is here.</p>
+          <p class="today-intro">One match. One Street run. He picks his clubs.</p><p id="today-clubs">His clubs load here.</p><p id="today-last">No match yet.</p><p id="hq-versus" class="live-row"><span id="dot-dad" class="live-dot"></span> Dad <span id="dot-jozef" class="live-dot"></span> Jozef <button type="button" data-live-who="Dad">This phone is Dad</button> <button type="button" data-live-who="Jozef">This phone is Jozef</button></p>
         </div>
         <span class="today-counter" id="today-counter" aria-live="polite">0 / 2 PLAYED</span>
       </div>
@@ -1493,6 +1493,7 @@ body.nav-open .nav-extra{display:inline-flex}
   <script src="street.js"></script>
   <script src="peerjs.min.js"></script>
   <script src="versus.js"></script>
+  <script src="presence.js"></script>
   <script src="visual-2026.js" defer></script>
   <script src="campaign-2026.js" defer></script>
   <script src="club-hq.js"></script>

@@ -291,7 +291,7 @@
     $('versus').classList.toggle('is-playing',playing);
     document.body.classList.toggle('versus-focused',connected&&$('versus').classList.contains('active'));
     document.querySelectorAll('.versus-role').forEach(b=>{b.classList.toggle('is-on',b.dataset.who===room.who);b.setAttribute('aria-pressed',String(b.dataset.who===room.who));});
-    $('versus-who').value=room.who;
+    $('versus-who').value=room.who; try{localStorage.setItem('jozefs-world-who', room.who);}catch(_){ }
     $('versus-cpu-label').hidden=!room.practice;
     renderPracticeRecord();
   }
