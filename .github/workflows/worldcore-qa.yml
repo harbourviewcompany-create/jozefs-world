@@ -27,7 +27,7 @@ jobs:
           node-version: '22'
       - name: Verify canonical home and CSS
         run: |
-          cmp -s index.html world.html
+          cmp -s index.html world.html || { echo '::error::Jozef World HQ must have identical index.html and world.html'; exit 1; }
           node scripts/build-site-css.cjs --check
       - name: Validate sphere geometry, selection and routes
         run: node --test tests/world-core.test.cjs
