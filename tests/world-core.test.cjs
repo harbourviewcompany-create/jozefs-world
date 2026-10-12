@@ -40,7 +40,8 @@ test('metallic globe and beveled plate are nonempty finite 3D meshes',()=>{
 });
 test('offline shell caches the HQ and safely preserves existing game code',()=>{
  const html=read('index.html'),sw=read('sw.js'),js=read('world-core.js'),css=read('world-core.css');
- assert.match(html,/<link rel="stylesheet" href="world-core.css"/);
+ assert.match(read('scripts/build-site-css.cjs'),/"world-core.css"/);
+ assert.match(read('site-experience.css'),/\/\* BEGIN world-core.css \*\//);
  assert.match(html,/<script src="world-core.js"><\/script>/);
  assert.match(sw,/'.\/world-core.js'/);assert.match(sw,/'.\/world-core.css'/);
  assert.match(js,/getContext\('webgl'/);
