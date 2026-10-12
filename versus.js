@@ -400,8 +400,8 @@
     else {
       const dx = target.x - p.x, dy = target.y - p.y;
       const dist = Math.hypot(dx, dy) || 1;
-      const want = dist < 10 ? 0 : Math.min(pace, 1.2 + dist * 0.03);
-      const turn = speed > 1 && (p.vx * dx + p.vy * dy) < 0 ? 0.08 : 0.16;
+      const want = dist < 8 ? 0 : Math.min(pace, 1.6 + dist * 0.04);
+      const turn = speed > 1 && (p.vx * dx + p.vy * dy) < 0 ? 0.12 : 0.28;
       p.vx += (dx / dist * want - p.vx) * turn;
       p.vy += (dy / dist * want - p.vy) * turn;
       if (Math.abs(p.vx) > 0.35) p.face = p.vx > 0 ? 1 : -1;
@@ -449,20 +449,22 @@
   }
 
   function practiceRival(){
-    if(!room.practice)return 3.1;
+    if(!room.practice)return 4.4;
     const who=room.who==='Dad'?'Jozef':'Dad',bot=who==='Dad'?state.dad:state.jozef,ball=state.ball;
     const distance=Math.hypot(bot.x-ball.x,bot.y-ball.y);
-    const chase=distance<(cpuDifficulty==='legend'?340:cpuDifficulty==='pro'?275:215);
+    const homeX = who==='Dad' ? W-150 : 150;
+    const ballInHisHalf = who==='Dad' ? ball.x > 300 : ball.x < 420;
+    const go = ballInHisHalf || distance < 240;
+    const lead = go ? 18 : 0;
     targets[who]={
-      x:Math.max(46,Math.min(W-46,chase?ball.x+ball.vx*9:who==='Dad'?W-110:110)),
-      y:Math.max(40,Math.min(H-40,chase?ball.y+ball.vy*9:H/2+(ball.y-H/2)*.55))
+      x:Math.max(70,Math.min(W-70, go ? ball.x + (who==='Dad'?-lead:lead) : homeX)),
+      y:Math.max(50,Math.min(H-50, go ? ball.y : 210))
     };
-    if(distance<47&&kickLock===0&&tick-lastBotKick>(cpuDifficulty==='legend'?42:70)){
-      shotOptions[who]={aim:state.ball.y<185?0:state.ball.y>235?2:1,
-        power:cpuDifficulty==='legend'?1.18:cpuDifficulty==='rookie'?.94:1.04};
+    if(distance<52&&kickLock===0&&tick-lastBotKick>(cpuDifficulty==='legend'?36:64)){
+      shotOptions[who]={aim:state.ball.y<185?0:state.ball.y>235?2:1, power:1.1};
       state.kick=who;lastBotKick=tick;
     }
-    return cpuOptions[cpuDifficulty];
+    return cpuDifficulty==='legend'?4.6:cpuDifficulty==='rookie'?3.2:4.0;
   }
   function step() {
     if (!room.host || room.phase !== 'playing' || !localActive || !room.remoteActive) return;
@@ -472,8 +474,8 @@
     if(kickoffHold>0){kickoffHold--;broadcast();return;}
     const cpuPace=practiceRival();
     const now=performance.now();
-    move(state.dad,targets.Dad,room.practice&&room.who!=='Dad'?cpuPace:(now<sprintUntil.Dad?5.4:3.1));
-    move(state.jozef,targets.Jozef,room.practice&&room.who!=='Jozef'?cpuPace:(now<sprintUntil.Jozef?5.4:3.1));
+    move(state.dad,targets.Dad,room.practice&&room.who!=='Dad'?cpuPace:(now<sprintUntil.Dad?6.2:4.4));
+    move(state.jozef,targets.Jozef,room.practice&&room.who!=='Jozef'?cpuPace:(now<sprintUntil.Jozef?6.2:4.4));
     touch(state.dad, state.kick === "Dad"); touch(state.jozef, state.kick === "Jozef"); state.kick = "";
     if (kickLock) kickLock -= 1;
     const physics = window.JozefPhysics;
