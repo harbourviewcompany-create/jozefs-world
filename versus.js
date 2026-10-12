@@ -444,12 +444,14 @@
     }
     const speed = Math.hypot(p.vx, p.vy);
     if (speed < 0.4) return;
-    const ahead = 18;
-    const leadX = p.x + (p.vx || (p.face || 1)) * 4 + (p.face || 1) * ahead;
-    state.ball.x += (leadX - state.ball.x) * 0.22;
-    state.ball.y += (p.y + p.vy * 3 - state.ball.y) * 0.22;
-    state.ball.vx = p.vx * 1.05;
-    state.ball.vy = p.vy * 1.05;
+    const pace = Math.hypot(p.vx, p.vy);
+    const ahead = 14 + Math.min(8, pace * 2);
+    const leadX = p.x + (p.face || 1) * ahead;
+    const first = Math.hypot(state.ball.vx, state.ball.vy) > pace * 1.8 ? 0.12 : 0.2;
+    state.ball.x += (leadX - state.ball.x) * first;
+    state.ball.y += (p.y - state.ball.y) * first;
+    state.ball.vx += (p.vx * 0.85 - state.ball.vx) * 0.18;
+    state.ball.vy += (p.vy * 0.85 - state.ball.vy) * 0.18;
   }
 
   function inGoal(y) { return y > GOAL.y && y < GOAL.y + GOAL.h; }

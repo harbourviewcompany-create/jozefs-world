@@ -1,8 +1,8 @@
-/* Versus physics: mass, bounce, and circle collisions. Host only. */
+/* Versus physics: weight, roll, and a dying bounce. Host only. */
 (() => {
   'use strict';
-  const BALL = { mass: 1, radius: 8, bounce: 0.55, drag: 0.972 };
-  const PLAYER = { mass: 4.4, radius: 14, bounce: 0.12, drag: 0.9 };
+  const BALL = { mass: 1.15, radius: 8, bounce: 0.42, drag: 0.985 };
+  const PLAYER = { mass: 5.2, radius: 14, bounce: 0.08, drag: 0.88 };
 
   function collide(a, b, specA, specB) {
     const dx = b.x - a.x;
@@ -29,18 +29,25 @@
   }
 
   function walls(ball, W, H, inGoal) {
-    if (ball.y < 34) { ball.y = 34; ball.vy = Math.abs(ball.vy) * BALL.bounce + 0.2; }
-    if (ball.y > H - 34) { ball.y = H - 34; ball.vy = -Math.abs(ball.vy) * BALL.bounce - 0.2; }
+    const hit = (axis) => {
+      if (axis === 'y') ball.vy = -ball.vy * BALL.bounce;
+      else ball.vx = -ball.vx * BALL.bounce;
+    };
+    if (ball.y < 34) { ball.y = 34; hit('y'); }
+    if (ball.y > H - 34) { ball.y = H - 34; hit('y'); }
     const mouth = typeof inGoal === 'function' && inGoal(ball.y);
-    if (!mouth && ball.x < 34) { ball.x = 34; ball.vx = Math.abs(ball.vx) * BALL.bounce + 0.3; }
-    if (!mouth && ball.x > W - 34) { ball.x = W - 34; ball.vx = -Math.abs(ball.vx) * BALL.bounce - 0.3; }
+    if (!mouth && ball.x < 34) { ball.x = 34; hit('x'); }
+    if (!mouth && ball.x > W - 34) { ball.x = W - 34; hit('x'); }
   }
 
   function integrate(body, spec) {
     body.x += body.vx;
     body.y += body.vy;
-    body.vx *= spec.drag;
-    body.vy *= spec.drag;
+    const speed = Math.hypot(body.vx, body.vy);
+    const roll = speed < 1.4 ? 0.9 : spec.drag;
+    body.vx *= roll;
+    body.vy *= roll;
+    if (speed < 0.18) { body.vx = 0; body.vy = 0; }
   }
 
   window.JozefPhysics = { BALL, PLAYER, collide, walls, integrate };
