@@ -22,9 +22,11 @@
 
   function say(text) {
     const node = $('versus-status');
-    if (node) node.textContent = text;
+    const score = state.score.jozef + '-' + state.score.dad;
+    const line = text + '  ' + score;
+    if (node) node.textContent = line;
     const hq = $('hq-versus');
-    if (hq) hq.textContent = text;
+    if (hq) hq.textContent = line;
   }
   function lights() {
     $('light-dad')?.classList.toggle('on', room.who === 'Dad' || room.other === 'Dad');
@@ -170,7 +172,14 @@
     state.dad.x = 560; state.dad.y = 210;
     state.jozef.x = 160; state.jozef.y = 210;
     targets.Dad = null; targets.Jozef = null;
-    setTimeout(() => { state.call = ''; }, 1400);
+    setTimeout(() => { if (state.call !== 'Full time') state.call = ''; }, 1400);
+  }
+  function again() {
+    state.score = { dad: 0, jozef: 0 };
+    state.matchLeft = 120;
+    state.call = 'Kickoff';
+    reset(1);
+    say('New match. Drag to run, then Kick.');
   }
 
   function send(msg) { if (room.conn && room.conn.open) room.conn.send(msg); }
@@ -224,6 +233,7 @@
   }
   canvas.addEventListener('pointerdown', aimFrom);
   canvas.addEventListener('pointermove', event => { if (event.buttons || event.pressure) aimFrom(event); });
+  $('versus-again')?.addEventListener('click', again);
   $('versus-kick')?.addEventListener('click', () => {
     if (room.host) state.kick = room.who;
     else send({ type: 'kick', who: room.who });

@@ -1299,10 +1299,11 @@ body.nav-open .nav-extra{display:inline-flex}
       <button type="button" class="versus-role" data-who="Jozef">I am Jozef</button>
     </div>
     <input id="versus-who" value="Dad" hidden>
-    <label>Room code <input id="versus-code" value="JOZEF" maxlength="8" autocomplete="off"></label>
+    <label>Room code <input id="versus-code" value="JOZEF" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text"></label>
     <button type="button" class="action-btn" id="versus-open">Open room</button>
     <p id="versus-status">Pick who you are. Use the same code.</p>
     <button type="button" class="action-btn" id="versus-kick">Kick</button>
+    <button type="button" class="action-btn" id="versus-again">Play again</button>
     <canvas id="versus-canvas" width="720" height="420" aria-label="Two player pitch"></canvas>
   </div>
 </section>
