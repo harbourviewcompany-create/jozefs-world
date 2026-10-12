@@ -212,22 +212,32 @@
   const stadium = document.createElement('canvas'); stadium.width = W * dpr; stadium.height = H * dpr;
   const paint = stadium.getContext('2d'); paint.scale(dpr,dpr);
   function buildStadium() {
-    const g=paint.createLinearGradient(0,0,0,H);g.addColorStop(0,'#11283d');g.addColorStop(1,'#040c17');paint.fillStyle=g;paint.fillRect(0,0,W,H);
-    for(let y=4;y<H;y+=8)for(let x=4;x<W;x+=10){paint.fillStyle=['#234355','#3a5c69','#719190'][(x+y)%3];paint.fillRect(x,y,3,3);}
-    paint.fillStyle='#071821';paint.fillRect(20,16,680,388);
-    paint.fillStyle='#1e6b3a';paint.fillRect(28,22,664,376);
-    for(let x=28;x<692;x+=42){paint.fillStyle=x%84?'#176033':'#228243';paint.fillRect(x,22,42,376);}
-    paint.fillStyle='rgba(255,255,255,.04)';paint.fillRect(28,300,664,40);
-    // Deterministic grass flecks avoid expensive per-frame noise generation.
-    for(let i=0;i<2600;i++){paint.fillStyle=i%2?'#c7ffe00a':'#00181019';paint.fillRect(29+(i*137%662),23+(i*67%374),1,2);}
-    paint.strokeStyle='#d5f3df99';paint.lineWidth=1.5;paint.strokeRect(28,22,664,376);
+    const sky=paint.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#0b1c33');sky.addColorStop(1,'#050d16');paint.fillStyle=sky;paint.fillRect(0,0,W,H);
+    for(let row=0;row<7;row++){
+      for(let seat=0;seat<90;seat++){
+        paint.fillStyle=['#1d3a52','#274862','#c0392b','#1e6b4a','#f1c40f'][(row+seat)%5];
+        paint.fillRect(8+seat*8, 4+row*5, 6, 4);
+      }
+    }
+    paint.fillStyle='#0a1622';paint.fillRect(18,14,684,392);
+    for(let x=28;x<692;x+=36){paint.fillStyle=x%72?'#1a6b38':'#22884a';paint.fillRect(x,22,36,376);}
+    const shade=paint.createLinearGradient(0,22,0,398);shade.addColorStop(0,'rgba(0,0,0,.18)');shade.addColorStop(.5,'rgba(255,255,255,.04)');shade.addColorStop(1,'rgba(0,0,0,.22)');paint.fillStyle=shade;paint.fillRect(28,22,664,376);
+    paint.fillStyle='rgba(255,255,255,.05)';paint.fillRect(28,286,664,54);
+    paint.strokeStyle='rgba(236,255,244,.82)';paint.lineWidth=2;paint.strokeRect(28,22,664,376);
     paint.beginPath();paint.moveTo(360,22);paint.lineTo(360,398);paint.stroke();
-    paint.beginPath();paint.arc(360,210,48,0,Math.PI*2);paint.stroke();
-    paint.strokeRect(28,110,92,200);paint.strokeRect(600,110,92,200);
-    paint.strokeRect(28,156,36,108);paint.strokeRect(656,156,36,108);
-    for(const x of [12,686]){paint.fillStyle='#c8faff20';paint.fillRect(x,150,22,120);paint.strokeStyle='#b9e5ee44';paint.lineWidth=1;for(let y=150;y<=270;y+=8){paint.beginPath();paint.moveTo(x,y);paint.lineTo(x+22,y);paint.stroke();}for(let k=0;k<=22;k+=6){paint.beginPath();paint.moveTo(x+k,150);paint.lineTo(x+k,270);paint.stroke();}paint.strokeStyle='#eefeff';paint.lineWidth=3;paint.strokeRect(x,150,22,120);}
-    paint.shadowBlur=12;paint.shadowColor='#69d5ff';paint.fillStyle='#84e9ff';paint.fillRect(52,13,220,2);paint.fillRect(448,405,220,2);paint.shadowColor='#d0ff69';paint.fillStyle='#d0ff69';paint.fillRect(448,13,220,2);paint.fillRect(52,405,220,2);paint.shadowBlur=0;
-    for(const x of [50,670]){const light=paint.createRadialGradient(x,12,0,x,12,240);light.addColorStop(0,'#dcffff22');light.addColorStop(1,'#ffffff00');paint.fillStyle=light;paint.fillRect(0,0,W,H);}
+    paint.beginPath();paint.arc(360,210,52,0,Math.PI*2);paint.stroke();
+    paint.beginPath();paint.arc(360,210,3,0,Math.PI*2);paint.fillStyle='#eafff4';paint.fill();
+    paint.strokeRect(28,108,96,204);paint.strokeRect(596,108,96,204);
+    paint.strokeRect(28,154,40,112);paint.strokeRect(652,154,40,112);
+    paint.beginPath();paint.arc(124,210,3,0,Math.PI*2);paint.fill();paint.beginPath();paint.arc(596,210,3,0,Math.PI*2);paint.fill();
+    for(const x of [8,690]){
+      paint.fillStyle='rgba(200,250,255,.12)';paint.fillRect(x,146,22,128);
+      paint.strokeStyle='rgba(220,245,255,.35)';paint.lineWidth=1;
+      for(let y=146;y<=274;y+=7){paint.beginPath();paint.moveTo(x,y);paint.lineTo(x+22,y);paint.stroke();}
+      for(let k=0;k<=22;k+=5){paint.beginPath();paint.moveTo(x+k,146);paint.lineTo(x+k,274);paint.stroke();}
+      paint.strokeStyle='#f4feff';paint.lineWidth=4;paint.strokeRect(x,146,22,128);
+    }
+    for(const x of [40,680]){const beam=paint.createRadialGradient(x,0,0,x,80,280);beam.addColorStop(0,'rgba(220,255,255,.28)');beam.addColorStop(1,'rgba(255,255,255,0)');paint.fillStyle=beam;paint.fillRect(0,0,W,H);}
   }
   buildStadium();
   function pitch(){ctx.drawImage(stadium,0,0,W,H);}
@@ -362,12 +372,11 @@
     ctx.fillStyle = 'rgba(0,0,0,.25)';
     ctx.beginPath(); ctx.ellipse(ball.x + 2, ball.y + 5, 6, 3, 0, 0, Math.PI * 2); ctx.fill();
     ctx.shadowColor='#e2faff';ctx.shadowBlur=Math.hypot(state.ball.vx,state.ball.vy)>4?15:4;
-    ctx.fillStyle = '#f4f7f2';
-    ctx.beginPath();ctx.arc(ball.x,ball.y,8,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
-    ctx.strokeStyle = '#1c2833'; ctx.lineWidth = 1.4; ctx.stroke();
-    ctx.strokeStyle = '#c5ced6';
-    ctx.beginPath(); ctx.arc(ball.x - 2, ball.y - 1, 3.2, 0.4, 2.4); ctx.stroke();
-    ctx.beginPath(); ctx.arc(ball.x + 2, ball.y + 1, 3.2, 2.2, 4.4); ctx.stroke();
+    const ballGrad=ctx.createRadialGradient(ball.x-2,ball.y-2,1,ball.x,ball.y,8);
+    ballGrad.addColorStop(0,'#ffffff');ballGrad.addColorStop(1,'#d5ddd8');
+    ctx.fillStyle=ballGrad;ctx.beginPath();ctx.arc(ball.x,ball.y,8,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+    ctx.strokeStyle='#1c2833';ctx.lineWidth=1.2;ctx.stroke();
+    ctx.strokeStyle='#9aa7b2';ctx.beginPath();ctx.arc(ball.x-2,ball.y-1,3.4,.3,2.6);ctx.stroke();ctx.beginPath();ctx.arc(ball.x+2.2,ball.y+1.2,3.4,2.1,4.6);ctx.stroke();
     /* scoreboard is accessible HTML outside the canvas */
     /* ctx.fillStyle = '#08140f';
     ctx.fillRect(W / 2 - 78, 4, 156, 26);

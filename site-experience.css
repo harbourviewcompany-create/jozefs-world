@@ -3854,3 +3854,5 @@ body.versus-focused #versus-tip{font-weight:800;letter-spacing:.03em;color:#e4ff
 }
 
 #versus-deke{min-height:48px;border-radius:14px;font-weight:800;background:#ffb703;color:#1b1404;border:0}
+
+#versus .versus-stage{background:radial-gradient(ellipse at 50% 0,#1a3a4a,#061018 70%);box-shadow:inset 0 0 80px #000a,0 0 0 1px #9ef0ff22}
