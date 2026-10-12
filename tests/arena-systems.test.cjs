@@ -297,3 +297,10 @@ test('a full Flow meter improves only one shot, never guarantees a goal',()=>{
  assert.ok(boostedStrong.onTarget<=.94);
  assert.equal(boostedStrong.flow,true);
 });
+
+test('Rookie kickoff shots remain low probability, progression improves accuracy',()=>{
+ const deep=S.shotProfile(493,0,0,'rookie').onTarget;
+ const near=S.shotProfile(200,0,0,'rookie').onTarget;
+ assert.ok(deep<.20,'Rookie kickoff shots must remain speculative');
+ assert.ok(near>deep+.3,'Attacking toward the goal improves shot odds');
+});
