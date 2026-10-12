@@ -98,14 +98,15 @@
     p.y = Math.max(36, Math.min(H - 36, p.y + p.vy));
   }
 
-  function touch(p) {
+  function touch(p, forced) {
     const dx = state.ball.x - p.x, dy = state.ball.y - p.y;
     const dist = Math.hypot(dx, dy);
-    if (dist > 26 || kickLock > 0) return;
-    const power = 4.2 + Math.hypot(p.vx, p.vy) * 0.8;
-    state.ball.vx = (dx / (dist || 1)) * power + p.vx * 0.4;
-    state.ball.vy = (dy / (dist || 1)) * power + p.vy * 0.4;
-    kickLock = 8;
+    if (dist > (forced ? 70 : 28) || kickLock > 0) return;
+    const power = (forced ? 6.2 : 4.2) + Math.hypot(p.vx, p.vy) * 0.6;
+    const face = p.face || 1;
+    state.ball.vx = (dx / (dist || 1)) * power + face * 1.2;
+    state.ball.vy = (dy / (dist || 1)) * power;
+    kickLock = 10;
   }
 
   function inGoal(y) { return y > GOAL.y && y < GOAL.y + GOAL.h; }
@@ -114,7 +115,7 @@
     if (!room.host) return;
     move(state.dad, targets.Dad);
     move(state.jozef, targets.Jozef);
-    touch(state.dad); touch(state.jozef);
+    touch(state.dad, state.kick === "Dad"); touch(state.jozef, state.kick === "Jozef"); state.kick = "";
     if (kickLock) kickLock -= 1;
     state.ball.x += state.ball.vx;
     state.ball.y += state.ball.vy;
@@ -144,13 +145,14 @@
       else say(room.who + ' and ' + msg.who + ' are in. Tap the pitch.');
     }
     if (msg.type === 'aim' && room.host) targets[msg.who] = { x: msg.x, y: msg.y };
+    if (msg.type === 'kick' && room.host) state.kick = msg.who;
     if (msg.type === 'state' && !room.host) Object.assign(state, msg.state);
   }
   function wire(conn) {
     room.conn = conn;
     conn.on('data', onData);
     conn.on('open', () => { conn.send({ type: 'hello', who: room.who }); say('Connected. Tap where you want to run.'); });
-    conn.on('close', () => say((room.other || 'The other side') + ' left the room.'));
+    conn.on('close', () => { room.other = ''; lights(); say('The other side left. Open the room again.'); });
   }
   function openRoom() {
     if (!window.Peer) { say('The live room could not load. Check the connection and try again.'); return; }
@@ -176,11 +178,17 @@
     lights();
   }));
   $('versus-open')?.addEventListener('click', openRoom);
-  canvas.addEventListener('pointerdown', event => {
+  function aimFrom(event) {
     const r = canvas.getBoundingClientRect();
     const aim = { x: (event.clientX - r.left) / r.width * W, y: (event.clientY - r.top) / r.height * H };
     targets[room.who] = aim;
     if (!room.host) send({ type: 'aim', who: room.who, x: aim.x, y: aim.y });
+  }
+  canvas.addEventListener('pointerdown', aimFrom);
+  canvas.addEventListener('pointermove', event => { if (event.buttons || event.pressure) aimFrom(event); });
+  $('versus-kick')?.addEventListener('click', () => {
+    if (room.host) state.kick = room.who;
+    else send({ type: 'kick', who: room.who });
   });
   setInterval(() => { step(); draw(); }, 40);
   draw();
