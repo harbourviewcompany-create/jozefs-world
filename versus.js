@@ -14,6 +14,7 @@
     dad: { x: 560, y: 210, vx: 0, vy: 0, face: -1 },
     jozef: { x: 160, y: 210, vx: 0, vy: 0, face: 1 },
     score: { dad: 0, jozef: 0 },
+    matchLeft: 120,
     call: 'Kickoff'
   };
   const targets = { Dad: null, Jozef: null };
@@ -43,9 +44,12 @@
     ctx.beginPath(); ctx.arc(W / 2, H / 2, 48, 0, Math.PI * 2); ctx.stroke();
     ctx.strokeRect(28, 110, 92, 200);
     ctx.strokeRect(W - 120, 110, 92, 200);
-    ctx.fillStyle = '#f4f7f2';
-    ctx.fillRect(10, GOAL.y, 18, GOAL.h);
-    ctx.fillRect(W - 28, GOAL.y, 18, GOAL.h);
+    ctx.fillStyle = 'rgba(255,255,255,.18)';
+    ctx.fillRect(12, GOAL.y, 22, GOAL.h);
+    ctx.fillRect(W - 34, GOAL.y, 22, GOAL.h);
+    ctx.strokeStyle = '#f4f7f2'; ctx.lineWidth = 4;
+    ctx.strokeRect(12, GOAL.y, 22, GOAL.h);
+    ctx.strokeRect(W - 34, GOAL.y, 22, GOAL.h);
   }
 
   function player(p, color, name) {
@@ -80,7 +84,7 @@
     ctx.fillStyle = '#fff';
     ctx.font = '800 14px system-ui';
     ctx.textAlign = 'center';
-    ctx.fillText(state.score.jozef + '  ·  ' + state.score.dad, W / 2, 22);
+    ctx.fillText(state.score.jozef + '  ·  ' + state.score.dad + '   ' + Math.ceil(state.matchLeft || 0) + 's', W / 2, 22);
     if (state.call) {
       ctx.fillStyle = 'rgba(8,20,15,.72)';
       ctx.fillRect(W / 2 - 90, H / 2 - 18, 180, 32);
@@ -146,8 +150,13 @@
     separate(state.dad); separate(state.jozef);
     if (state.ball.y < 34) { state.ball.y = 34; state.ball.vy = Math.abs(state.ball.vy) + 0.4; }
     if (state.ball.y > H - 34) { state.ball.y = H - 34; state.ball.vy = -Math.abs(state.ball.vy) - 0.4; }
-    if (state.ball.x < 30 && inGoal(state.ball.y)) { state.score.dad += 1; state.call = 'Dad scores'; reset(1); }
-    else if (state.ball.x > W - 30 && inGoal(state.ball.y)) { state.score.jozef += 1; state.call = 'Jozef scores'; reset(-1); }
+    state.matchLeft = Math.max(0, (state.matchLeft || 120) - 0.04);
+    if (state.matchLeft <= 0 && state.call !== 'Full time') { state.call = 'Full time'; state.ball.vx = 0; state.ball.vy = 0; }
+    if (state.call === 'Full time') { send({ type: 'state', state }); return; }
+    const post = state.ball.y < GOAL.y + 6 || state.ball.y > GOAL.y + GOAL.h - 6;
+    if (state.ball.x < 30 && inGoal(state.ball.y) && !post) { state.score.dad += 1; state.call = 'Dad scores'; reset(1); }
+    else if (state.ball.x > W - 30 && inGoal(state.ball.y) && !post) { state.score.jozef += 1; state.call = 'Jozef scores'; reset(-1); }
+    else if ((state.ball.x < 34 || state.ball.x > W - 34) && post && inGoal(state.ball.y)) { state.ball.vx *= -1; state.call = 'Off the post'; }
     else if (state.ball.x < 34) { state.ball.x = 34; state.ball.vx = Math.abs(state.ball.vx) + 0.6; }
     else if (state.ball.x > W - 34) { state.ball.x = W - 34; state.ball.vx = -Math.abs(state.ball.vx) - 0.6; }
     if (state.ball.x < 70 && state.ball.y < 70 && Math.hypot(state.ball.vx, state.ball.vy) < 1) { state.ball.vx += 1.4; state.ball.vy += 1.4; }
@@ -160,6 +169,7 @@
     state.ball = { x: 360, y: 210, vx: dir * 1.4, vy: 0 };
     state.dad.x = 560; state.dad.y = 210;
     state.jozef.x = 160; state.jozef.y = 210;
+    targets.Dad = null; targets.Jozef = null;
     setTimeout(() => { state.call = ''; }, 1400);
   }
 
