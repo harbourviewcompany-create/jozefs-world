@@ -15,7 +15,24 @@
   const GOAL = { x: 36, y: 150, w: 18, h: 120 };
   const room = { code: '', who: 'Dad', peer: null, conn: null, host: false, other: '', ready: false, remoteReady: false, practice: false, phase: 'lobby', remoteActive: true };
   let connectTimer, countdownTimer, lastPacket = 0, lastSent = 0, lastHello = 0, localActive = true;
-  let stickVector = null;
+  let stickVector=null;
+  const SHOT_LANES=[160,210,260],shotOptions={Dad:{aim:1,power:1},Jozef:{aim:1,power:1}};
+  let selectedAim=1,chargingSince=0,chargeFill=0;
+  function pickAim(value){
+    selectedAim=Math.max(0,Math.min(2,Math.round(value)));
+    const label=['TOP','MIDDLE','BOTTOM'][selectedAim];
+    $('versus-aim').textContent=label+' ↻';
+    $('versus-aim').setAttribute('aria-label','Aim '+label+'. Tap to change.');
+  }
+  function localKick(power=1){
+    if(room.phase!=='playing'||!localActive||!room.remoteActive)return;
+    const p=room.who==='Dad'?state.dad:state.jozef;
+    if(Math.hypot(p.x-state.ball.x,p.y-state.ball.y)>64){$('versus-tip').textContent='GET CLOSE TO THE BALL';return;}
+    const shot={aim:selectedAim,power:Math.max(.9,Math.min(1.6,power))};
+    if(room.host){shotOptions[room.who]=shot;state.kick=room.who;}
+    else send({type:'kick',aim:shot.aim,power:shot.power});
+    $('versus-tip').textContent='TARGET '+['TOP','MIDDLE','BOTTOM'][selectedAim];
+  }
   const keys = new Set();
   const state = {
     ball: { x: 360, y: 210, vx: 0, vy: 0 },
@@ -177,6 +194,13 @@
     ctx.save();
     if (shake > 0 && !reduced.matches) { ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake); shake -= 1; }
     pitch();
+    const me=room.who==='Dad'?state.dad:state.jozef;
+    if(room.phase==='playing'&&Math.hypot(me.x-ball.x,me.y-ball.y)<110){
+      const gx=room.who==='Dad'?34:686,gy=SHOT_LANES[selectedAim];
+      ctx.save();ctx.globalAlpha=.6;ctx.strokeStyle=room.who==='Dad'?'#d7ff4a':'#7ee0ff';ctx.lineWidth=2;
+      ctx.setLineDash([6,9]);ctx.beginPath();ctx.moveTo(ball.x,ball.y);ctx.lineTo(gx,gy);ctx.stroke();
+      ctx.setLineDash([]);ctx.globalAlpha=1;ctx.beginPath();ctx.arc(gx,gy,12,0,Math.PI*2);ctx.stroke();ctx.restore();
+    }
     const sweep = (Math.sin(tick * 0.02) + 1) / 2;
     const glow = ctx.createRadialGradient(80 + sweep * 560, 8, 10, 360, 180, 420);
     glow.addColorStop(0, 'rgba(180,255,255,0.10)');
@@ -197,8 +221,9 @@
     player(visualPose(state.dad,'dad'), '#d7ff4a', 'Dad');
     ctx.fillStyle = 'rgba(0,0,0,.25)';
     ctx.beginPath(); ctx.ellipse(ball.x + 2, ball.y + 5, 6, 3, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowColor='#e2faff';ctx.shadowBlur=Math.hypot(state.ball.vx,state.ball.vy)>4?15:4;
     ctx.fillStyle = '#f4f7f2';
-    ctx.beginPath(); ctx.arc(ball.x, ball.y, 8, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath();ctx.arc(ball.x,ball.y,8,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
     ctx.strokeStyle = '#1c2833'; ctx.lineWidth = 1.4; ctx.stroke();
     ctx.strokeStyle = '#c5ced6';
     ctx.beginPath(); ctx.arc(ball.x - 2, ball.y - 1, 3.2, 0.4, 2.4); ctx.stroke();
@@ -252,11 +277,12 @@
     if (forced) {
       if (kickLock > 0) return;
       const goalX = p === state.dad ? 20 : W-20;
-      const goalY = Math.max(GOAL.y+12,Math.min(GOAL.y+GOAL.h-12,H/2+p.vy*12));
+      const who=p===state.dad?'Dad':'Jozef',shot=shotOptions[who];
+      const goalY=Math.max(GOAL.y+8,Math.min(GOAL.y+GOAL.h-8,SHOT_LANES[shot.aim]+p.vy*1.25));
       const dx=goalX-state.ball.x,dy=goalY-state.ball.y,length=Math.hypot(dx,dy)||1;
-      state.ball.vx = dx/length*8.4;
-      state.ball.vy = dy/length*8.4;
-      kickLock = 18;
+      const speed=11.5*Math.max(.9,Math.min(1.6,shot.power));
+      state.ball.vx=dx/length*speed;state.ball.vy=dy/length*speed;
+      shot.power=1;kickLock=22;
       burst(state.ball.x, state.ball.y, '#fff', 10);
       return;
     }
@@ -289,6 +315,8 @@
       y:Math.max(40,Math.min(H-40,chase?ball.y+ball.vy*9:H/2+(ball.y-H/2)*.55))
     };
     if(distance<47&&kickLock===0&&tick-lastBotKick>(cpuDifficulty==='legend'?42:70)){
+      shotOptions[who]={aim:state.ball.y<185?0:state.ball.y>235?2:1,
+        power:cpuDifficulty==='legend'?1.18:cpuDifficulty==='rookie'?.94:1.04};
       state.kick=who;lastBotKick=tick;
     }
     return cpuOptions[cpuDifficulty];
@@ -300,10 +328,10 @@
     move(state.jozef,targets.Jozef,room.practice&&room.who!=='Jozef'?cpuPace:3.1);
     touch(state.dad, state.kick === "Dad"); touch(state.jozef, state.kick === "Jozef"); state.kick = "";
     if (kickLock) kickLock -= 1;
-    state.ball.x += state.ball.vx * (25/60);
-    state.ball.y += state.ball.vy * (25/60);
-    state.ball.vx *= Math.pow(.985,25/60); state.ball.vy *= Math.pow(.985,25/60);
-    separate(state.dad); separate(state.jozef);
+    // Match shot and runner movement to the same 60Hz pixel scale.
+    state.ball.x+=state.ball.vx;state.ball.y+=state.ball.vy;
+    state.ball.vx*=.992;state.ball.vy*=.992;
+    if(!kickLock){separate(state.dad);separate(state.jozef);}
     if (state.ball.y < 34) { state.ball.y = 34; state.ball.vy = Math.abs(state.ball.vy) + 0.4; }
     if (state.ball.y > H - 34) { state.ball.y = H - 34; state.ball.vy = -Math.abs(state.ball.vy) - 0.4; }
     state.matchLeft = Math.max(0, state.matchLeft - 1/60);
@@ -370,7 +398,11 @@
     else if(msg.type==='aim'&&room.host&&room.phase==='playing'){
       if(msg.x===null&&msg.y===null)targets[room.other]=null;
       else if(Number.isFinite(msg.x)&&Number.isFinite(msg.y))targets[room.other]={x:Math.max(30,Math.min(690,msg.x)),y:Math.max(30,Math.min(390,msg.y))};
-    }else if(msg.type==='kick'&&room.host&&room.phase==='playing')state.kick=room.other;
+    }else if(msg.type==='kick'&&room.host&&room.phase==='playing'){
+      shotOptions[room.other]={aim:Number.isInteger(msg.aim)&&msg.aim>=0&&msg.aim<=2?msg.aim:1,
+        power:Number.isFinite(msg.power)?Math.max(.9,Math.min(1.6,msg.power)):1};
+      state.kick=room.other;
+    }
     else if(msg.type==='state'&&!room.host&&validState(msg.state)&&['waiting','countdown','playing','finished'].includes(msg.phase)){
       Object.assign(state,msg.state);const changed=room.phase!==msg.phase||room.remoteActive!==(msg.active!==false);room.phase=msg.phase;room.remoteActive=msg.active!==false;if(changed){syncUI();if(!room.remoteActive)say('Paused — opponent switched away.');}
       if(room.phase==='finished')say(state.score.dad===state.score.jozef?'Full time — a draw. Rematch?':(state.score.dad>state.score.jozef?'Dad':'Jozef')+' wins! Ready for a rematch?');
@@ -427,9 +459,23 @@
   }
   stick.addEventListener('pointerdown',e=>{stick.setPointerCapture(e.pointerId);fromStick(e);});stick.addEventListener('pointermove',e=>{if(stick.hasPointerCapture(e.pointerId))fromStick(e);});
   for(const event of ['pointerup','pointercancel','lostpointercapture'])stick.addEventListener(event,stopInput);
-  function shoot(){if(room.phase!=='playing'||!localActive||!room.remoteActive)return;const me=room.who==='Dad'?state.dad:state.jozef;if(Math.hypot(me.x-state.ball.x,me.y-state.ball.y)>64){$('versus-tip').textContent='Move closer to the ball';return;}$('versus-tip').textContent='Aim with your run. Shoot for goal!';if(room.host)state.kick=room.who;else send({type:'kick'});}
-  $('versus-kick').addEventListener('click',shoot);
-  window.addEventListener('keydown',e=>{if(!$('versus').classList.contains('active')||room.phase!=='playing'||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;const key=e.key.toLowerCase();if(key===' '&&e.target.tagName==='BUTTON')return;if(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d',' '].includes(key)){e.preventDefault();keys.add(key);if(key===' '&&!e.repeat)shoot();}});
+  function shoot(){
+    localKick(1+chargeFill*.6);chargeFill=0;chargingSince=0;
+    $('versus-kick').style.setProperty('--shot-charge','0%');
+  }
+  $('versus-aim').addEventListener('click',()=>pickAim((selectedAim+1)%3));
+  const shootButton=$('versus-kick');
+  shootButton.addEventListener('pointerdown',e=>{
+    if(shootButton.disabled)return;
+    chargingSince=performance.now();chargeFill=0;
+    try{shootButton.setPointerCapture(e.pointerId)}catch(_){}
+  });
+  shootButton.addEventListener('pointercancel',()=>{
+    chargingSince=0;chargeFill=0;shootButton.style.setProperty('--shot-charge','0%');
+  });
+  shootButton.addEventListener('click',shoot);
+  window.addEventListener('keydown',e=>{if(!$('versus').classList.contains('active')||room.phase!=='playing'||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;const key=e.key.toLowerCase();if(key===' '&&e.target.tagName==='BUTTON')return;
+    if(['1','2','3'].includes(key)&&!e.repeat){pickAim(Number(key)-1);return;}if(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d',' '].includes(key)){e.preventDefault();keys.add(key);if(key===' '&&!e.repeat)shoot();}});
   window.addEventListener('keyup',e=>{keys.delete(e.key.toLowerCase());if(!keys.size)stopInput();});
   function activity(){const active=!document.hidden&&$('versus').classList.contains('active');if(active!==localActive){localActive=active;stopInput();send({type:'active',active});syncUI();}document.body.classList.toggle('versus-focused',active&&room.phase!=='lobby');}
   document.addEventListener('visibilitychange',activity);window.addEventListener('blur',stopInput);
@@ -439,6 +485,10 @@
   function frame(now){
     const dt=Math.min((now-previous)/1000,.1);previous=now;activity();
     if(localActive){
+      if(chargingSince&&room.phase==='playing'){
+        chargeFill=Math.min(1,(now-chargingSince)/900);
+        $('versus-kick').style.setProperty('--shot-charge',Math.round(chargeFill*100)+'%');
+      }
       const me=room.who==='Dad'?state.dad:state.jozef;
       const x=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),y=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);
       const vector=stickVector||(x||y?{x,y}:null);
@@ -463,5 +513,5 @@
     }
     requestAnimationFrame(frame);
   }
-  syncUI();draw();requestAnimationFrame(frame);
+  pickAim(1);syncUI();draw();requestAnimationFrame(frame);
 })();

@@ -895,3 +895,14 @@ body.versus-focused #versus:not(.is-playing) .versus-card{grid-template-rows:aut
 #versus .versus-scoreboard b{font-size:34px;text-shadow:0 0 12px currentColor}
 @keyframes versus-goal{0%{transform:scale(1)}35%{transform:scale(1.06);box-shadow:0 0 24px #cafa60}100%{transform:scale(1)}}
 #versus .versus-stage{box-shadow:inset 0 0 50px #001018,0 18px 50px #000a,0 0 0 1px #9ef0ff33}
+
+/* October 2026 / skill shots, readable target indicator, tactile phone controls. */
+#versus .versus-stage{background:radial-gradient(ellipse at 50% 0,#295662,#071a25 74%);border-color:#adf3e777}
+#versus #versus-aim{min-height:36px;padding:7px 5px;border:1px solid #71cadb88;background:linear-gradient(145deg,#173a4d,#081d31);color:#bdeafa;font:900 10px/1.2 var(--sf-ui)}
+#versus .versus-actions{gap:5px;align-content:center}
+#versus #versus-kick{overflow:hidden;position:relative;isolation:isolate;border-color:#e4ffaa}
+#versus #versus-kick::before{content:'';position:absolute;inset:auto auto 0 0;width:var(--shot-charge,0%);height:5px;background:#fff;box-shadow:0 0 14px #fff;pointer-events:none}
+#versus .versus-stage canvas{filter:contrast(1.07) saturate(1.12);image-rendering:auto}
+@media(max-width:600px){#versus #versus-aim{font-size:9px;min-height:33px}#versus .versus-help{font-size:10px}}
+@media(max-height:480px) and (orientation:landscape){#versus #versus-aim{min-height:30px}#versus #versus-kick{min-height:44px}}
+@media(prefers-reduced-motion:reduce){#versus #versus-kick{transition:none!important}}
