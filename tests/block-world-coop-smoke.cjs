@@ -105,6 +105,18 @@ assert.ok(keyboardAfter[1]>keyboardBefore[1]+20,'Jo controls movement with Right
 
 const host=boot(),guest=boot();
 host.advance(3);guest.advance(3);
+// Use the same clear, flat course for remote input assertions: the generated
+// hills are gameplay obstacles and should not make networking QA random.
+const sharedCourse=host.game().getWorld();
+for(let x=65;x<110;x++){
+ sharedCourse.surface[x]=50;
+ for(let y=0;y<sharedCourse.h;y++)sharedCourse.world[y][x]=y<50?0:y===sharedCourse.h-1?14:2;
+}
+for(let i=0;i<2;i++){
+ const p=sharedCourse.players[i];p.x=(i===0?70:76)*40;p.y=50*40-(i===0?39:35)-.1;
+ p.vx=p.vy=0;p.ground=true;
+}
+assert.equal(host.game().useWorld(sharedCourse),true);
 host.click('save');guest.click('save');
 const ownSave=guest.store.get('jozefs-world-block-v3');
 host.session().host();flush();
