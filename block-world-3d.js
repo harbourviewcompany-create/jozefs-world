@@ -15,6 +15,7 @@ let selected=4,creative=true,third=false,sound=false,stage=0,stats={wood:0,place
 const hero={x:2.5,y:12,z:2.5,vy:0,yaw:0,pitch:-.07,role:0,hp:100,ground:false,double:false,inventory:{}};
 const companion={x:4.5,y:12,z:4.5,role:1,hp:100};
 let boss={x:32.5,y:12,z:32.5,hp:120,alive:true},mobs=[],clock=0,last=0,frames=0,dirty=false,saveClock=0,skyPhase=0;
+let quality='AUTO',adaptiveCap=1.5,renderCap=1.5,averageFrame=.0167;
 let guestActive=false;
 let keys={},joy={x:0,y:0},gamepadHeld={mine:false,place:false,attack:false},jumpWasDown=false,look=null,peer=null,conn=null,host=false,invite='',lastNet=0,remote=false,noticeTo=0,renderOk=false;
 const rnd=(x,z,s)=>{let n=Math.imul(x,374761393)+Math.imul(z,668265263)+Math.imul(s|0,2246822519);n=Math.imul(n^(n>>>13),1274126177);return((n^(n>>>16))>>>0)/4294967296;};
@@ -126,7 +127,7 @@ function camera(eye,target){
 }
 function renderBuffer(buf,n){if(!n)return;gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.enableVertexAttribArray(ap);gl.enableVertexAttribArray(ac);gl.vertexAttribPointer(ap,3,gl.FLOAT,false,24,0);gl.vertexAttribPointer(ac,3,gl.FLOAT,false,24,12);gl.drawArrays(gl.TRIANGLES,0,n);}
 function render(){
- const dpr=Math.min(devicePixelRatio||1,1.5),w=Math.max(1,Math.floor(innerWidth*dpr)),h=Math.max(1,Math.floor(innerHeight*dpr));
+ const dpr=Math.min(devicePixelRatio||1,renderCap),w=Math.max(1,Math.floor(innerWidth*dpr)),h=Math.max(1,Math.floor(innerHeight*dpr));
  if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}gl.viewport(0,0,w,h);
  const forward=[Math.sin(hero.yaw)*Math.cos(hero.pitch),Math.sin(hero.pitch),-Math.cos(hero.yaw)*Math.cos(hero.pitch)];
  const eye=[hero.x,hero.y+1.55,hero.z];
@@ -210,10 +211,35 @@ function gain(kind,n=1){
  }
  dirty=true;hud();if(host&&conn?.open)send({t:'progress',stage,stats,rewards,defeated,portalOpened});
 }
+// Minimap is rendered at low frequency, independent from WebGL rendering.
+function drawRadar(){
+ const map=$('minimap'),ctx=map?.getContext?.('2d');if(!ctx)return;
+ if(map.width!==132||map.height!==132){map.width=132;map.height=132;}
+ const n=11,tile=6,x0=Math.floor(hero.x),z0=Math.floor(hero.z);
+ ctx.fillStyle='#061e2c';ctx.fillRect(0,0,132,132);
+ for(let dz=-n;dz<n;dz++)for(let dx=-n;dx<n;dx++){
+  const x=x0+dx,z=z0+dz,b=biome(x,z);
+  ctx.fillStyle=b==='Desert'?'#dfc18d':b==='Snow Ridge'?'#d8e9f2':b==='Evergreen Forest'?'#326e62':'#5ca77e';
+  ctx.fillRect((dx+n)*tile,(dz+n)*tile,tile,tile);
+  if(tree(x,z)){ctx.fillStyle='#163c33';ctx.fillRect((dx+n)*tile+2,(dz+n)*tile+2,3,3);}
+ }
+ const pin=(x,z,color,size)=>{
+  const px=(x-x0+n)*tile,pz=(z-z0+n)*tile;if(px<0||pz<0||px>=132||pz>=132)return;
+  ctx.fillStyle='#03131b';ctx.fillRect(px-1,pz-1,size+2,size+2);
+  ctx.fillStyle=color;ctx.fillRect(px,pz,size,size);
+ };
+ pin(32,32,boss.alive?'#ff9cc3':'#d6ff89',5);
+ pin(40,40,'#d8a9ff',5);
+ pin(companion.x,companion.z,'#9cfcff',5);
+ pin(hero.x,hero.z,'#e9ff91',7);
+ ctx.fillStyle='#ffffff';ctx.font='bold 9px sans-serif';ctx.fillText('N',62,9);
+}
 function hud(){
  const s=JSON.parse(localStorage.getItem('jozefs-world-player-v1')||'{}');
  $('hero').textContent=hero.role===0?'DADDY':'JOZEF';$('hearts').textContent='♥ '+Math.round(hero.hp);
  $('level').textContent='LVL '+(Math.floor((Number(s.xp)||0)/100)+1);
+ $('quality').textContent='GRAPHICS '+quality;
+ $('qualityState').textContent=quality==='AUTO'?'AUTO · '+Math.round(renderCap*100)+'%':quality;
  $('compass').textContent='X '+Math.floor(hero.x)+' · Z '+Math.floor(hero.z)+' · '+(stage<4?'GOLEM 32,32':stage===5?'PORTAL 40,40':'EXPLORE YOUR WORLD');
  const done=stage>=missions.length,m=missions[Math.min(stage,missions.length-1)],ratio=done?1:clamp((stats[m[2]]||0)/m[3],0,1);
  $('mission').innerHTML='<strong>'+(done?'EXPEDITION COMPLETE':'MISSION '+(stage+1)+'/6 · '+m[0])+'</strong><small>'+m[1]+'</small><div class="progress"><i style="width:'+(ratio*100)+'%"></i></div><small>'+biome(hero.x,hero.z)+' · Realm '+(realm+1)+'</small>';
@@ -417,6 +443,12 @@ function initUi(){
  $('creative').onclick=()=>{creative=!creative;$('creative').textContent='CREATIVE '+(creative?'ON':'OFF');dirty=true;hotbar();};
  $('save').onclick=()=>{dirty=true;save();announce('World saved');};
  $('sound').onclick=()=>{sound=!sound;$('sound').textContent='SOUND '+(sound?'ON':'OFF');};
+ $('quality').onclick=()=>{
+  const modes=['AUTO','ECO','QUALITY'];quality=modes[(modes.indexOf(quality)+1)%modes.length];
+  try{localStorage.setItem('jozefs-block-3d-quality-v1',quality)}catch{}
+  hud();announce('GRAPHICS '+quality);
+ };
+ try{const stored=localStorage.getItem('jozefs-block-3d-quality-v1');if(['AUTO','ECO','QUALITY'].includes(stored))quality=stored;}catch{}
  $('export').onclick=exportFile;$('import').onclick=()=>$('fileInput').click();$('fileInput').onchange=e=>importFile(e.target.files?.[0]);
  $('host').onclick=createRoom;$('join').onclick=()=>joinRoom($('invite').value);$('disconnect').onclick=detach;
  $('share').onclick=async()=>{const u=location.origin+location.pathname+'#room='+invite;
@@ -444,12 +476,19 @@ function initUi(){
  hotbar();hud();
 }
 function loop(now){
- const dt=clamp((now-last)/1000,0,.045);last=now;frames++;
+ const rawDt=last?clamp((now-last)/1000,0,.14):.0167,dt=clamp(rawDt,0,.045);last=now;frames++;
+ averageFrame=averageFrame*.97+rawDt*.03;
+ if(quality==='AUTO'&&frames%120===0){
+  if(averageFrame>.027)adaptiveCap=Math.max(.85,adaptiveCap-.2);
+  else if(averageFrame<.018)adaptiveCap=Math.min(1.5,adaptiveCap+.1);
+ }
+ renderCap=quality==='QUALITY'?Math.min(2,devicePixelRatio||1):quality==='ECO'?1:adaptiveCap;
+ if(frames%15===0)drawRadar();
  try{step(dt);render();if(renderOk)window.__bw3dReady?.();if(noticeTo&&now>noticeTo){$('toast').classList.remove('on');noticeTo=0;}}
  catch(e){console.error('3D frame failure',e);window.__bw3dFail?.('3D rendering stopped unexpectedly. Retry or play Classic 2D.');announce('3D rendering problem · reload or use Classic');}
  requestAnimationFrame(loop);
 }
 try{if(!load())resetPose();spawn();initUi();stream();requestAnimationFrame(loop);announce('3D WORLD READY · Explore and build!',3400);}
 catch(e){console.error('3D startup failure',e);window.__bw3dFail?.('Could not initialize the 3D engine. Retry or play Classic 2D.');$('fallback').hidden=false;}
-window.BlockWorld3D=Object.freeze({status:()=>({renderOk,seed,loadedChunks:chunks.size,realm,stage,connected:!!conn?.open,hero:{x:hero.x,y:hero.y,z:hero.z,hp:hero.hp,role:hero.role},bossHp:boss.hp}),height,block});
+window.BlockWorld3D=Object.freeze({status:()=>({renderOk,seed,loadedChunks:chunks.size,realm,stage,quality,renderScale:renderCap,connected:!!conn?.open,hero:{x:hero.x,y:hero.y,z:hero.z,hp:hero.hp,role:hero.role},bossHp:boss.hp}),height,block});
 })();
