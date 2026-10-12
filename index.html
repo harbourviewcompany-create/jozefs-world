@@ -30,7 +30,17 @@ body.nav-open .nav-extra{display:inline-flex}
 .team-picker label{display:grid;gap:4px;font-weight:800}
 .team-picker select{min-height:44px;border-radius:10px;padding:8px}
 </style>
-<style>#versus{padding-top:88px}#versus .notes-card{display:grid;gap:10px}#versus label,#versus input,#versus select,#versus button{font-size:16px}</style></head>
+<style>#versus{padding-top:88px}#versus .notes-card{display:grid;gap:10px}#versus label,#versus input,#versus select,#versus button{font-size:16px}</style><style>
+#versus{padding-top:76px}
+.versus-card{display:grid;gap:12px}
+.versus-lights{display:flex;gap:8px}
+.versus-lights span{flex:1;text-align:center;padding:10px;border-radius:12px;background:#102028;font-weight:800}
+.versus-lights .on{background:#cafa60;color:#102018}
+.versus-roles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.versus-role{min-height:48px;border-radius:12px;font-weight:800}
+.versus-role.is-on{background:#cafa60;color:#102018}
+#versus-canvas{width:100%;height:auto;border-radius:14px;touch-action:none;background:#187a42}
+</style></head>
 <body>
 
   <div id="walkout" class="walkout" hidden role="dialog" aria-modal="true" aria-labelledby="walkout-title">
@@ -1278,15 +1288,21 @@ body.nav-open .nav-extra{display:inline-flex}
   
 
 <section id="versus" class="section" tabindex="-1" aria-labelledby="versus-title">
-  <div class="notes-card">
+  <div class="notes-card versus-card">
     <h2 id="versus-title">Versus</h2>
-    <p>Play each other when you are both here. Pick who you are, use the same code, and open the room.</p>
-    <label>I am <select id="versus-who"><option>Dad</option><option>Jozef</option></select></label>
+    <div class="versus-lights" aria-label="Who is in the room">
+      <span id="light-dad">Dad</span>
+      <span id="light-jozef">Jozef</span>
+    </div>
+    <div class="versus-roles" role="group" aria-label="Who are you">
+      <button type="button" class="versus-role is-on" data-who="Dad">I am Dad</button>
+      <button type="button" class="versus-role" data-who="Jozef">I am Jozef</button>
+    </div>
+    <input id="versus-who" value="Dad" hidden>
     <label>Room code <input id="versus-code" value="JOZEF" maxlength="8" autocomplete="off"></label>
     <button type="button" class="action-btn" id="versus-open">Open room</button>
-    <p id="versus-status">Open the room. The other person uses the same code.</p>
-    <canvas id="versus-canvas" width="640" height="360" style="width:100%;max-width:640px;background:#0d3b2e;border-radius:12px;touch-action:none" aria-label="Two player pitch"></canvas>
-    <p>Jozef is blue on the left. Dad is green on the right. Tap where you want to run. Reach the ball to kick it. Score only through the goal.</p>
+    <p id="versus-status">Pick who you are. Use the same code.</p>
+    <canvas id="versus-canvas" width="720" height="420" aria-label="Two player pitch"></canvas>
   </div>
 </section>
 

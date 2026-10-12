@@ -1319,7 +1319,7 @@
   padding:7px 9px;margin:0;font-size:10px;white-space:nowrap}
  .navbar .jw-xp-pill .jw-level-chip{font-size:9px}
  .phone-dock{
-  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;
+  display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;
   min-height:70px;padding:7px 8px calc(8px + env(safe-area-inset-bottom));
   background:#071c24f5;border-top:1px solid #b9edba54;
   box-shadow:0 -9px 32px #021018a8;

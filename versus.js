@@ -25,6 +25,10 @@
     const hq = $('hq-versus');
     if (hq) hq.textContent = text;
   }
+  function lights() {
+    $('light-dad')?.classList.toggle('on', room.who === 'Dad' || room.other === 'Dad');
+    $('light-jozef')?.classList.toggle('on', room.who === 'Jozef' || room.other === 'Jozef');
+  }
 
   function pitch() {
     const stripe = 28;
@@ -135,8 +139,9 @@
     if (!msg) return;
     if (msg.type === 'hello') {
       room.other = msg.who;
+      lights();
       if (msg.who === room.who) say('Both phones are ' + room.who + '. One of you pick the other name.');
-      else say(room.who + ' is here · ' + msg.who + ' is here. Tap the pitch.');
+      else say(room.who + ' and ' + msg.who + ' are in. Tap the pitch.');
     }
     if (msg.type === 'aim' && room.host) targets[msg.who] = { x: msg.x, y: msg.y };
     if (msg.type === 'state' && !room.host) Object.assign(state, msg.state);
@@ -154,7 +159,7 @@
     say('Looking for the room...');
     const peer = new Peer('jw-' + room.code);
     room.peer = peer;
-    peer.on('open', () => { room.host = true; say(room.who + ' is in ' + room.code + '. Waiting for ' + (room.who === 'Dad' ? 'Jozef' : 'Dad') + '.'); peer.on('connection', wire); });
+    peer.on('open', () => { room.host = true; lights(); say(room.who + ' is in. Waiting for ' + (room.who === 'Dad' ? 'Jozef' : 'Dad') + '.'); peer.on('connection', wire); });
     peer.on('error', err => { if (err.type === 'unavailable-id') join('jw-' + room.code); else say('Room problem: ' + err.type); });
   }
   function join(id) {
@@ -163,6 +168,13 @@
     peer.on('open', () => { wire(peer.connect(id)); say('Joined ' + room.code + ' as ' + room.who + '.'); });
   }
 
+  document.querySelectorAll('.versus-role').forEach(button => button.addEventListener('click', () => {
+    room.who = button.dataset.who;
+    const hidden = $('versus-who');
+    if (hidden) hidden.value = room.who;
+    document.querySelectorAll('.versus-role').forEach(el => el.classList.toggle('is-on', el === button));
+    lights();
+  }));
   $('versus-open')?.addEventListener('click', openRoom);
   canvas.addEventListener('pointerdown', event => {
     const r = canvas.getBoundingClientRect();
