@@ -1,5 +1,5 @@
 /* Jozef FC offline shell: only same-origin public game assets. Never caches personal progress. */
-const CACHE='jozef-fc-app-shell-v97';
+const CACHE='jozef-fc-app-shell-v98';
 const CORE=[
  './','./index.html','./world.html','./site-foundation.css','./site-experience.css',
  './favicon.svg','./manifest.webmanifest','./matchday.css','./training.css','./jersey-bingo.css',
@@ -7,6 +7,7 @@ const CORE=[
  './training.js','./jersey-bingo.js','./matchday.js','./street.js','./adventure.js','./together-renderer.js','./together.js','./versus-physics.js','./versus.js','./presence.js','./peerjs.min.js','./street-phaser.js','./phaser.min.js','./arcade.js',
  './roblox.js','./squad.js','./site-core.js','./site-features.js','./arena-bundle.js',
  './visual-2026.js','./campaign-2026.js','./club-hq.js','./chronicle.js','./playbook.js',
+ './world-core.js','./world-core.css',
  './prime/'
 ];
 self.addEventListener('install',event=>{

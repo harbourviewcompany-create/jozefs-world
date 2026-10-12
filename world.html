@@ -16,6 +16,7 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="stylesheet" href="site-foundation.css" />
   <link rel="stylesheet" href="site-experience.css" />
+  <link rel="stylesheet" href="world-core.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Lilita+One&family=Nunito:wght@400;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
@@ -91,6 +92,43 @@ body.nav-open .nav-extra{display:inline-flex}
 
   <!-- HOME SECTION -->
   <section id="home" class="section active" tabindex="-1"><div id="main"></div>
+
+    <section id="jw-worldcore" class="jw-worldcore" aria-label="Jozef's World interactive three-dimensional headquarters">
+      <header class="jw-worldcore-top">
+        <div><span class="jw-worldcore-kicker">JW / 001 — THE WORLD CORE</span><h1>JOZEF'S <em>WORLD.</em></h1></div>
+        <span class="jw-worldcore-live">12 WORLDS · ONE UNIVERSE</span>
+      </header>
+      <div class="jw-worldcore-main">
+        <div class="jw-worldcore-scene" aria-label="Rotating 3D ball with twelve raised destination plates">
+          <div class="jw-worldcore-orbit" aria-hidden="true"></div>
+          <div class="jw-worldcore-orbit jw-worldcore-orbit-two" aria-hidden="true"></div>
+          <canvas id="jw-worldcore-canvas" width="720" height="720" tabindex="0" role="img" aria-label="Interactive 3D ball. Swipe to rotate in every direction. Tap a raised plate to select it, tap the centered plate again to enter, or use the destination index. Arrow keys rotate the ball, Enter opens the selected world."></canvas>
+          <div id="jw-worldcore-labels" class="jw-worldcore-labels" aria-hidden="true"></div>
+        </div>
+        <aside id="jw-worldcore-detail" class="jw-worldcore-panel">
+          <div>
+            <span class="jw-worldcore-panel-overline">YOUR NEXT DESTINATION</span>
+            <div id="jw-worldcore-selected-type" class="jw-worldcore-selected-type">EXPLORE</div>
+            <h2 id="jw-worldcore-selected-title">Adventure</h2>
+          </div>
+          <p id="jw-worldcore-selected-description">Explore mysterious worlds, hidden routes and rival champions.</p>
+          <button type="button" id="jw-worldcore-enter">ENTER ADVENTURE ↗</button>
+          <div class="jw-worldcore-instruction"><span>DRAG TO ROTATE 360°</span><span>TAP TO SELECT</span><span>TAP TWICE TO ENTER</span></div>
+        </aside>
+      </div>
+      <div id="jw-worldcore-fallback" class="jw-worldcore-fallback" role="status" hidden><p>3D rendering is unavailable on this device. Every world remains accessible in the list below.</p></div>
+      <footer class="jw-worldcore-footer">
+        <div class="jw-worldcore-footer-actions">
+          <button type="button" id="jw-worldcore-list-toggle" aria-controls="jw-worldcore-index" aria-expanded="false">ALL WORLD PLATES ↗</button>
+          <button type="button" id="jw-worldcore-dashboard" aria-expanded="false">CLUB DASHBOARD ↗</button>
+        </div>
+        <p>SPIN THE WORLD · FIND YOUR NEXT ADVENTURE</p>
+      </footer>
+      <div id="jw-worldcore-index" class="jw-worldcore-index" role="group" aria-label="Accessible world destination index" hidden></div>
+      <p id="jw-worldcore-announcement" class="jw-sr-only" role="status" aria-live="polite"></p>
+      <noscript><nav aria-label="World destinations"><a href="#adventure">Adventure</a> · <a href="#arena">Football Arena</a> · <a href="#sports-arcade">Sports Arcade</a> · <a href="#club">My Club</a></nav></noscript>
+    </section>
+
 
     <div class="hero studio-hero">
       <div class="studio-hero-noise" aria-hidden="true"></div>
@@ -1640,6 +1678,7 @@ body.nav-open .nav-extra{display:inline-flex}
   <script src="visual-2026.js" defer></script>
   <script src="campaign-2026.js" defer></script>
   <script src="club-hq.js"></script>
+<script src="world-core.js"></script>
   <script src="chronicle.js" defer></script>
   <script src="playbook.js" defer></script>
 
