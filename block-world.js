@@ -650,6 +650,7 @@ createAdventureUi();
  const realmKey='jozef-block-realms-v1';
  const names=['Our Homeworld','Frost Moon','Crystal Underworld','Sky Islands'];
  let realmIndex=0,realmBaseSeed=adventureSeed,realms={};
+  window.__bw2dRealm=Object.freeze({get:()=>realmIndex,setGuest:i=>{if(Number.isInteger(i)&&i>=0&&i<=3)realmIndex=i;}});
  function captureRealm(){
   realms[realmIndex]={
    seed:adventureSeed,world:world.map(row=>row.slice()),surface:surface.slice(),
@@ -885,12 +886,12 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
   getWorld:()=>({
    w:W,h:H,world:world.map(r=>r.slice()),surface:surface.slice(),
    players:players.map(p=>({x:p.x,y:p.y,vx:p.vx,vy:p.vy,facing:p.facing,ground:p.ground,health:p.health,inventory:{...p.inventory}})),
-   creative,adventureSeed,realmIndex,questStage,goals:{...goals},
+   creative,adventureSeed,realmIndex:window.__bw2dRealm?.get()??0,questStage,goals:{...goals},
    achievements:achievements.slice(),explored:{...explored},portalUnlocked
   }),
   getState:()=>({
    players:players.map(p=>({x:p.x,y:p.y,vx:p.vx,vy:p.vy,facing:p.facing,ground:p.ground,health:p.health,inventory:{...p.inventory}})),
-   creative,realmIndex,questStage,goals:{...goals},portalUnlocked
+   creative,realmIndex:window.__bw2dRealm?.get()??0,questStage,goals:{...goals},portalUnlocked
   }),
   useWorld:s=>{
    if(!s||s.w!==W||s.h!==H)return false;
@@ -901,7 +902,7 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
     p.ground=!!q.ground;p.inventory={...q.inventory};
    });
    active=1;creative=!!s.creative;adventureSeed=s.adventureSeed;
-   realmIndex=s.realmIndex;questStage=s.questStage;goals={...s.goals};
+   window.__bw2dRealm?.setGuest(s.realmIndex);questStage=s.questStage;goals={...s.goals};
    achievements=Array.isArray(s.achievements)?s.achievements.slice():[];
    explored={...s.explored};portalUnlocked=!!s.portalUnlocked;
    teamFollow=false;focus=null;dirty=false;renderHotbar();questHud();return true;
