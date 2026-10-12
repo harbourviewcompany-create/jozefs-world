@@ -183,7 +183,7 @@ function cube(x,y,z,color,side,front){
 }
 function w2(){return tw*.5}
 function renderTile(x,y,t){
- const water=x===5&&y>0&&y<10&&!state.bridge,edge=x===0||y===0||x===10||y===10,rock=ROCKS.some(p=>same(p,[x,y]));
+ const water=x===5&&y>0&&y<10&&!(state.bridge&&y===5),edge=x===0||y===0||x===10||y===10,rock=ROCKS.some(p=>same(p,[x,y]));
  const z=edge?.65:rock?.4:0,p=project(x,y,z);
  const grass=(x+y)%2?'#448e72':'#4b9b76';
  cube(p[0],p[1],z,water?'#2c82ad':rock?'#657a80':edge?'#6c9778':grass,
