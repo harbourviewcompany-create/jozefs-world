@@ -305,13 +305,14 @@ function receive(m){
   seed=m.seed;edits=new Map(m.edits.filter(a=>Array.isArray(a)&&typeof a[0]==='string'&&Number.isInteger(a[1])));
   hero.role=1;companion.role=0;stage=clamp(Number(m.stage)||0,0,6);stats=Object.assign(stats,m.stats||{});defeated=!!m.defeated;portalOpened=!!m.portalOpened;companion.x=m.x;companion.y=m.y;companion.z=m.z;
   hero.x=companion.x+2;hero.z=companion.z+2;hero.y=ground(hero.x,hero.z);
-  chunks.forEach(c=>gl.deleteBuffer(c.buffer));chunks.clear();lastCX=Infinity;hotbar();hud();announce('Connected · Jozef is ready');
+  spawn();chunks.forEach(c=>gl.deleteBuffer(c.buffer));chunks.clear();lastCX=Infinity;hotbar();hud();announce('Connected · Jozef is ready');
  }else if(m.t==='move'){
   if(!Number.isFinite(m.x+m.y+m.z)||Math.abs(m.x)>1e6||Math.abs(m.z)>1e6)return;
   companion.x=m.x;companion.y=m.y;companion.z=m.z;companion.hp=m.hp;
  }else if(m.t==='edit'&&!host){modify(m.x,m.y,m.z,m.id,false);}
  else if(m.t==='boss'&&!host){boss.hp=clamp(Number(m.hp)||0,0,120);boss.alive=boss.hp>0;if(!boss.alive)defeated=true;}
- else if(m.t==='progress'&&!host){stage=clamp(Number(m.stage)||0,0,6);stats=Object.assign(stats,m.stats||{});defeated=!!m.defeated;portalOpened=!!m.portalOpened;hud();dirty=true;}
+ else if(m.t==='progress'&&!host){const previous=stage;stage=clamp(Number(m.stage)||0,0,6);stats=Object.assign(stats,m.stats||{});defeated=!!m.defeated;portalOpened=!!m.portalOpened;
+  for(let i=previous;i<stage;i++)award('block3d-'+i,missions[i][4]);hud();dirty=true;}
  else if(m.t==='request'&&host){
   if(!Number.isFinite(m.x+m.z))return;
   if(m.op==='attack'){if(Math.hypot(companion.x-m.x,companion.z-m.z)>5)return;if(boss.alive&&Math.hypot(boss.x-m.x,boss.z-m.z)<2.5){boss.hp=Math.max(0,boss.hp-18);if(boss.hp===0){boss.alive=false;defeated=true;gain('boss');}send({t:'boss',hp:boss.hp});}return;}
