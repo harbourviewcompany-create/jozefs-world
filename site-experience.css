@@ -3659,3 +3659,56 @@ body.versus-focused #versus-tip{font-weight:800;letter-spacing:.03em;color:#e4ff
 #jw-adventure-battle [data-adventure-lane].is-selected{outline:3px solid #e4ff8e;outline-offset:2px;box-shadow:0 0 0 5px #a3f4a123,inset 0 1px #fff5}
 #jw-adventure-battle [data-adventure-lane].is-selected.is-guarded{outline-color:#ffcaa0}
 @media(prefers-reduced-motion:reduce){#jw-adventure-battle [data-adventure-lane].is-selected{transition:none!important}}
+
+/* Dad + Jozef Together / cooperative chapter */
+.jw-together-teaser-actions{display:flex;gap:7px;flex:0 0 auto}
+.jw-together-teaser-actions button{min-height:46px;padding:10px 13px;border-radius:10px;font:900 11px/1.2 var(--sf-ui);cursor:pointer}
+.jw-together-teaser-actions button:last-child{background:#193e50;border:1px solid #83c6c577;color:#dbffff}
+.jw-together-game{position:relative;overflow:hidden;margin:16px 0 20px;padding:20px;border:1px solid #9aefb483;border-radius:23px;color:#f3fef4;background:radial-gradient(ellipse 70% 55% at 90% 0%,#89ffe823,transparent 88%),linear-gradient(135deg,#122b42,#061420 80%);box-shadow:0 16px 48px #020b164f}
+.jw-together-head{padding:0 1px 12px;border-bottom:1px solid #92dcd535}
+.jw-together-eyebrow{font:900 10px/1.4 var(--sf-ui);letter-spacing:.14em;color:#9ef2de}
+.jw-together-titlebar{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.jw-together-titlebar h3{margin:7px 0 8px;font:900 clamp(22px,4vw,40px)/.98 var(--sf-display);letter-spacing:-.02em;color:#f4fff4}
+.jw-together-titlebar h3 em{font-style:normal;color:#d6ff86}
+#jw-together-close{border:1px solid #a4daed77;background:#163544;color:#e3faff;min-height:42px;padding:7px 12px;border-radius:10px;font:850 10px var(--sf-ui);white-space:nowrap}
+.jw-together-head p{margin:0;color:#abcad2;font:650 12px/1.55 var(--sf-ui)}
+.jw-together-progress{display:flex;align-items:center;flex-wrap:wrap;gap:6px 13px;padding:11px 0}
+#jw-together-phase{font:900 12px/1.3 var(--sf-ui);letter-spacing:.04em;color:#d4ff9c}
+#jw-together-score{font:800 10px/1.4 var(--sf-ui);color:#88dfec}
+#jw-together-detail{flex-basis:100%;font:650 12px/1.4 var(--sf-ui);color:#d5e6e3;margin:0}
+.jw-together-layout{display:grid;grid-template-columns:minmax(0,1fr) 265px;gap:12px}
+.jw-together-pitch,.jw-together-controls{min-width:0;overflow:hidden;border:1px solid #83c5d34f;border-radius:14px;background:#081c2b}
+.jw-together-maphead{display:flex;justify-content:space-between;gap:8px;padding:10px 12px;color:#b6dfd8;font:850 10px/1.3 var(--sf-ui);letter-spacing:.07em}
+.jw-together-maphead b{color:#d7ff97}
+#jw-together-canvas{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:contain;touch-action:manipulation;background:#0b2537;cursor:crosshair}
+#jw-together-status{min-height:34px;margin:0;padding:8px 12px;font:750 11px/1.45 var(--sf-ui);color:#dbf5ed;background:#0d2836}
+.jw-together-controls{display:grid;gap:10px;align-content:start;padding:12px}
+.jw-together-controls-label{font:900 10px var(--sf-ui);letter-spacing:.12em;color:#a9e4d5}
+.jw-together-heroes{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.jw-together-heroes button{border:1px solid #73939b;background:#123347;color:#d7f6f5;border-radius:10px;min-height:48px;font:900 10px/1.3 var(--sf-ui);padding:7px 6px}
+#jw-together-hero-0[aria-pressed=true]{background:#d6ff87;color:#122323;border-color:#eaffb6}
+#jw-together-hero-1[aria-pressed=true]{background:#addef9;color:#112739;border-color:#d6f4ff}
+.jw-together-motion{display:grid;gap:10px;justify-items:center}
+.jw-together-pad{display:grid;grid-template:repeat(3,47px)/repeat(3,47px);gap:5px;justify-content:center}
+.jw-together-pad button{border:1px solid #85c7d18c;border-radius:11px;background:linear-gradient(#274f67,#102a40);color:#f5ffff;font-size:19px;font-weight:900;touch-action:manipulation}
+.jw-together-pad .up{grid-area:1/2}.jw-together-pad .left{grid-area:2/1}.jw-together-pad .right{grid-area:2/3}.jw-together-pad .down{grid-area:3/2}
+#jw-together-guide{border:1px solid #eaffb4;border-radius:10px;background:linear-gradient(120deg,#dafa93,#a6e972);color:#172922;padding:11px 12px;min-height:46px;font:900 11px var(--sf-ui);width:100%}
+#jw-together-guide:disabled{opacity:.45}
+.jw-together-shots{padding:10px;border:1px solid #a9c8ff88;border-radius:12px;background:linear-gradient(120deg,#2b274c,#11283d)}
+.jw-together-shots strong{font:900 11px/1.3 var(--sf-ui);color:#d8f7ff}
+.jw-together-shots p{font:800 11px/1.3 var(--sf-ui);color:#ffdfac;margin:8px 0}
+.jw-together-shots>div{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.jw-together-shots button{min-height:47px;min-width:0;border-radius:8px;border:1px solid #ddffc7;background:#cef886;color:#112b30;font:900 10px var(--sf-ui)}
+.jw-together-shots button.is-blocked{background:#6b374b;border-color:#e79bb3;color:#ffe9ef}
+.jw-together-shots small{display:block;color:#bdd9e4;font:650 10px/1.4 var(--sf-ui);margin-top:7px}
+.jw-together-trophy{display:flex;align-items:center;gap:12px;border:1px solid #ffe4a0;background:linear-gradient(120deg,#70532d,#402842);border-radius:12px;padding:12px}
+.jw-together-trophy>span{font-size:36px;color:#ffe49a}
+.jw-together-trophy strong{display:block;font:900 13px/1.3 var(--sf-ui);color:#fff2b3}
+.jw-together-trophy p{margin:4px 0 0;font:800 11px/1.4 var(--sf-ui);color:#e0f6e5}
+#jw-together-replay{border:1px solid #ded0ff;background:#322958;color:#f4eaff;border-radius:10px;min-height:45px;font:900 11px var(--sf-ui)}
+.jw-together-hint{font:600 10px/1.6 var(--sf-ui);color:#a7c6cd;margin:0}
+.jw-together-game button:focus-visible,#jw-together-canvas:focus-visible{outline:3px solid #d6ff86;outline-offset:2px}
+@media(max-width:900px){.jw-together-layout{grid-template-columns:1fr}.jw-together-controls{grid-template-columns:1fr 1fr;align-items:start}.jw-together-controls-label{grid-column:1/-1}.jw-together-motion{grid-row:2/4;grid-column:2}.jw-together-shots,.jw-together-hint,.jw-together-trophy,#jw-together-replay{grid-column:1/-1}}
+@media(max-width:600px){.jw-together-game{padding:10px;margin:9px 0 14px;border-radius:15px}.jw-together-head{padding-bottom:9px}.jw-together-titlebar h3{font-size:24px}.jw-together-titlebar{align-items:flex-start}.jw-together-titlebar button{font-size:9px;min-height:40px;padding:6px}.jw-together-head p{font-size:10px}.jw-together-maphead{font-size:8px}.jw-together-controls{padding:9px;gap:8px}.jw-together-pad{grid-template:repeat(3,44px)/repeat(3,44px);gap:3px}.jw-together-heroes button{min-height:46px}.jw-together-teaser-actions{width:100%}.jw-together-teaser-actions button{flex:1}}
+@media(max-width:370px){.jw-together-controls{grid-template-columns:1fr}.jw-together-motion{grid-row:auto;grid-column:1}.jw-together-teaser-actions{display:grid;grid-template-columns:1fr 1fr}.jw-together-teaser-actions button{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.jw-together-game *{transition:none!important;animation:none!important}}

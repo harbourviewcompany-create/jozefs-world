@@ -128,7 +128,7 @@ body.nav-open .nav-extra{display:inline-flex}
     </nav>
     <aside class="jw-adventure-teaser" aria-label="Explore the playable Adventure Circuit">
       <div><strong>EXPLORE JOZEF'S WORLD.</strong><p>Four worlds, hidden collectibles, champion battles and local two-player co-op.</p></div>
-      <button type="button" onclick="showSection('adventure')">ENTER ADVENTURE ↗</button>
+      <div class="jw-together-teaser-actions"><button type="button" data-start-together>PLAY TOGETHER ↗</button><button type="button" onclick="showSection('adventure')">SOLO ADVENTURE</button></div>
     </aside>
 
     <details class="hq-details">
@@ -1311,6 +1311,55 @@ body.nav-open .nav-extra{display:inline-flex}
     </div>
     <strong id="jw-adventure-stats" aria-live="polite">0/20 STARS · 0/8 SECRETS · 0/4 CUPS</strong>
   </header>
+
+  <section id="jw-together-game" class="jw-together-game" aria-label="Dad and Jozef together story" hidden>
+    <header class="jw-together-head">
+      <div class="jw-together-eyebrow">CHAPTER ONE / DAD + JOZEF / COOPERATIVE STORY</div>
+      <div class="jw-together-titlebar"><h3>THE MIDNIGHT STADIUM <em>MYSTERY</em></h3><button type="button" id="jw-together-close" aria-label="Pause cooperative story">PAUSE &amp; SAVE ×</button></div>
+      <p>Two heroes. Two stories. One mystery that neither can solve alone. Play side by side, or take turns on a phone.</p>
+    </header>
+    <div class="jw-together-progress">
+      <strong id="jw-together-phase">01 / THE HIDDEN CLUES</strong>
+      <span id="jw-together-score">CHAPTER 01 / 1 OF 5</span>
+      <p id="jw-together-detail">Jozef finds the lime clue. Dad finds the blue clue.</p>
+    </div>
+    <div class="jw-together-layout">
+      <div class="jw-together-pitch">
+        <div class="jw-together-maphead"><span>CO-OP ADVENTURE / LOCAL PLAY</span><span>JOZEF <b>11</b> + DAD <b>02</b></span></div>
+        <canvas id="jw-together-canvas" width="720" height="480" tabindex="0" role="img" aria-label="Cooperative stadium map. Tap an open square to move the selected hero. WASD moves Jozef and arrow keys move Dad."></canvas>
+        <p id="jw-together-status" role="status" aria-live="polite">Find your character's glowing mission marker.</p>
+      </div>
+      <aside class="jw-together-controls">
+        <span class="jw-together-controls-label">PICK YOUR HERO</span>
+        <div class="jw-together-heroes" role="group" aria-label="Select which hero to control on touch">
+          <button type="button" id="jw-together-hero-0" aria-pressed="true">JOZEF · CONTROLLING</button>
+          <button type="button" id="jw-together-hero-1" aria-pressed="false">DAD · SWITCH</button>
+        </div>
+        <div class="jw-together-motion">
+          <div class="jw-together-pad" role="group" aria-label="Move your selected hero">
+            <button type="button" data-together-step="0,-1" class="up" aria-label="Go up">↑</button>
+            <button type="button" data-together-step="-1,0" class="left" aria-label="Go left">←</button>
+            <button type="button" data-together-step="0,1" class="down" aria-label="Go down">↓</button>
+            <button type="button" data-together-step="1,0" class="right" aria-label="Go right">→</button>
+          </div>
+          <button type="button" id="jw-together-guide">FIND MY NEXT CLUE ↗</button>
+        </div>
+        <div id="jw-together-shots" class="jw-together-shots" hidden>
+          <strong>TAG-TEAM CHAMPIONSHIP</strong>
+          <p id="jw-together-defender">JOZEF SHOOTS · RIVAL BLOCKS CENTRE</p>
+          <div role="group" aria-label="Choose an unguarded shot lane">
+            <button type="button" data-together-shot="0">LEFT</button>
+            <button type="button" data-together-shot="1">CENTRE</button>
+            <button type="button" data-together-shot="2">RIGHT</button>
+          </div>
+          <small>Alternate turns. Two goals each wins. A defended lane counts as a block.</small>
+        </div>
+        <div id="jw-together-trophy" class="jw-together-trophy" hidden><span aria-hidden="true">★</span><div><strong>THE MIDNIGHT STADIUM CUP</strong><p>CHAMPIONS: JOZEF + DAD</p></div></div>
+        <button type="button" id="jw-together-replay" hidden>REPLAY OUR ADVENTURE ↻</button>
+        <p class="jw-together-hint">Desktop: Jozef uses WASD, Dad uses arrow keys. Mobile: select a hero and tap the map or direction pad. Saves only on this device.</p>
+      </aside>
+    </div>
+  </section>
   <div id="jw-adventure-worlds" class="jw-adventure-worlds" role="group" aria-label="Choose an unlocked adventure world"></div>
   <div class="jw-adventure-layout">
     <div class="jw-adventure-board">
@@ -1558,6 +1607,7 @@ body.nav-open .nav-extra{display:inline-flex}
   <script src="versus-physics.js"></script>
   <script src="versus.js?v=85"></script>
   <script src="adventure.js"></script>
+  <script src="together.js"></script>
   <script src="presence.js"></script>
   <script src="visual-2026.js" defer></script>
   <script src="campaign-2026.js" defer></script>
