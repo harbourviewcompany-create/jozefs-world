@@ -123,7 +123,7 @@
     SECRET_POS.forEach((a,i)=>{if(at(p,a[0],a[1]))award('secret',i)});
     SWITCH_POS.forEach((a,i)=>{if(at(p,a[0],a[1]))award('switch',i)});
     if(at(p,14,8))exitWorld();
-    if(at(p,13,7))interact();
+    if(at(p,13,7))interact(players.indexOf(p));
   }
   function move(which,dx,dy){
     if(battle)return false;
@@ -140,9 +140,9 @@
     if(state.zone===3){message('CIRCUIT COMPLETE! All four champions defeated. Your trophy is in your collection.');render();return true;}
     enterZone(state.zone+1);return true;
   }
-  function interact(){
+  function interact(which=active){
     if(battle)return false;
-    const p=players[active];
+    const p=players[which];
     for(let i=0;i<SWITCH_POS.length;i++){
       if(near(p,SWITCH_POS[i][0],SWITCH_POS[i][1])&&award('switch',i))return true;
     }

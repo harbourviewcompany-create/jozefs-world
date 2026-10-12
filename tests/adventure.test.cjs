@@ -37,5 +37,5 @@ test('adventure is wired into public navigation, offline shell and Club backup',
  assert.match(nav,/'adventure'/);
  assert.match(sw,/'\.\/adventure\.js'/);
  assert.match(read('clubhouse.js'),/'jozefs-world-adventure-v1'/);
- assert.ok(read('site-experience.css').trimEnd().endsWith(read('ui-refine-2026.css').trimEnd()));
+ assert.ok(read('site-experience.css').trimEnd().endsWith(read('adventure.css').trimEnd()));
 });
