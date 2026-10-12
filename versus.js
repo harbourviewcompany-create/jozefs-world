@@ -549,7 +549,7 @@
     if(msg.type==='hello'&&!room.host&&['Dad','Jozef'].includes(msg.hostWho)){
       room.other=msg.hostWho;room.who=msg.hostWho==='Dad'?'Jozef':'Dad';room.phase='waiting';syncUI();send({type:'joined'});say('You are '+room.who+'. Both players tap Ready.');
     }else if(msg.type==='joined'&&room.host&&room.phase==='waiting'){room.other=room.who==='Dad'?'Jozef':'Dad';send({type:'ack'});syncUI();say(room.other+' joined. Both players tap Ready.');}
-    else if(msg.type==='ack'&&!room.host&&room.phase==='waiting'){say('Connected. Both players tap Ready.');}
+    else if(msg.type==='ack'&&!room.host&&room.phase==='waiting'){say('Connected as '+room.who+'. Both players tap Ready.');}
     else if(msg.type==='ready'&&room.host&&room.phase==='waiting'){room.remoteReady=true;startMatch();}
     else if(msg.type==='aim'&&room.host&&room.phase==='playing'){
       if(msg.x===null&&msg.y===null)targets[room.other]=null;

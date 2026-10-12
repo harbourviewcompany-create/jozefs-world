@@ -24,7 +24,8 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  await host.goto(url+'#versus');await guest.goto(url+'#versus');
  await host.locator('#versus-open').click();await host.waitForFunction(()=>document.querySelector('#versus-room-code').textContent.length===6);
  const code=await host.locator('#versus-room-code').textContent();await guest.locator('#versus-code').fill(code);await guest.locator('#versus-join').click();await guest.waitForFunction(()=>!document.querySelector('#versus-ready').disabled,undefined,{timeout:20000}).catch(async err=>{throw Error('Versus join timeout: host='+await host.locator('#versus-status').textContent()+' guest='+await guest.locator('#versus-status').textContent()+'; '+err.message);});
- assert.match(await guest.locator('#versus-status').textContent(),/Jozef/);
+ assert.match(await guest.locator('#versus-status').textContent(),/Connected as Jozef|You are Jozef/);
+ assert.equal(await guest.inputValue('#versus-who'),'Jozef','joining guest retains the assigned opposite player');
  await host.locator('#versus-ready').click();assert.equal(await host.locator('#versus-clock').textContent(),'2:00');
  await guest.locator('#versus-ready').click();await host.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);await guest.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
  for(const p of [host,guest]){
