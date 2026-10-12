@@ -25,7 +25,7 @@ const DESTINATIONS=Object.freeze([
  {id:'tour',title:'World Tour',tag:'GLOBAL CUP',symbol:'W',description:'Travel the world, face fresh clubs and chase the cup.',route:'tour',color:'#93e9ac'},
  {id:'club',title:'My Club',tag:'LEGACY',symbol:'HQ',description:'See Jozef and Dad’s kits, milestones, keepsakes and trophies.',route:'club',color:'#ffdf9b'},
  {id:'playbook',title:'Playbook',tag:'NEXT MISSION',symbol:'P',description:'Find what to do next across every world and sport.',route:'playbook',color:'#b3fc95'},
- {id:'block',title:'Block World',tag:'BUILD & EXPLORE',symbol:'B',description:'Explore the voxel island with Jozef and Dad, build bridges and uncover secrets.',href:'block-world.html',color:'#9ce4ec'}
+ {id:'block',title:'Block World',tag:'BUILD & EXPLORE',symbol:'B',description:'Enter the full 3D voxel adventure, defeat the Crystal Golem and build together.',href:'block-world-3d.html',color:'#9ce4ec'}
 ].map((entry,i)=>Object.freeze({...entry,normal:Object.freeze(norm(V[i]))})));
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 const rotate=(v,yaw,pitch)=>{
