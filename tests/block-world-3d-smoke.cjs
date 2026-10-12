@@ -37,6 +37,7 @@ function boot(shared=new Map()){
   navigator:{getGamepads:()=>[]},history:{replaceState(){}},
   location:{hash:'',origin:'https://example.com',pathname:'/block-world-3d.html',reload(){}},
   performance:{now:()=>clock.now},requestAnimationFrame:fn=>clock.raf=fn,
+  crypto:{getRandomValues(arr){arr.fill(0x37);return arr;}},
   innerWidth:390,innerHeight:844,devicePixelRatio:1,console:{error:e=>errors.push(String(e)),warn:e=>errors.push(String(e))},
   setTimeout(){return 1;},clearTimeout(){},
   Blob:class{},URL:{createObjectURL:()=>'/blob',revokeObjectURL(){}},confirm:()=>false,
@@ -48,7 +49,7 @@ function boot(shared=new Map()){
  const status=()=>window.BlockWorld3D?.status();
  const tick=(n=1)=>{for(let i=0;i<n;i++){clock.now+=17;assert.ok(clock.raf);clock.raf(clock.now);}};
  const click=id=>{const el=document.getElementById(id);if(el.onclick)el.onclick({});else for(const f of(el.events.click||[]))f({preventDefault(){}});};
- return {status,tick,click,document,events,errors,shared,testHooks:window.__block3dTests};
+ return {status,tick,click,document,events,errors,shared,testHooks:window.__block3dTests,window};
 }
 const test=boot();
 assert.ok(test.status(),'3D API initialized');
@@ -68,10 +69,22 @@ const xpStart=JSON.parse(test.shared.get('jozefs-world-player-v1')||'{}').xp||0;
 test.testHooks.award('block3d-test-once',25);
 test.testHooks.award('block3d-test-once',25);
 assert.equal(JSON.parse(test.shared.get('jozefs-world-player-v1')).xp,xpStart+25,'XP awarded once per milestone');
+// Pairing must create an unguessable-length invite and not require a public room list.
+class FakePeer {
+ constructor(id){this.id=id;this.handlers={};FakePeer.current=this;}
+ on(name,fn){this.handlers[name]=fn;}
+ destroy(){}
+}
+test.window.Peer=FakePeer;
+test.click('host');
+assert.match(FakePeer.current.id,/^jw-block-[0-9a-f]{32}$/,'private invitation room ID');
+FakePeer.current.handlers.open();
+assert.equal(test.document.getElementById('invite').value.length,32,'invitation shown only to host');
+assert.equal(test.document.getElementById('share').disabled,false,'share enabled after signalling opens');
 const next=boot(test.shared);
 next.tick(2);
 assert.ok(next.status().renderOk,'saved world renders after relaunch');
 assert.equal(next.status().seed,test.status().seed,'saved seed preserved');
 assert.ok(test.document.getElementById('mission').innerHTML.includes('MISSION'),'mission HUD initialized');
 assert.equal(test.errors.length,0,'no startup/frame errors: '+test.errors.join('; '));
-console.log('Block World 3D: WebGL, chunks, movement, save/reload and one-time HQ XP PASS');
+console.log('Block World 3D: WebGL, chunks, movement, save/reload, XP and private invite creation PASS');
