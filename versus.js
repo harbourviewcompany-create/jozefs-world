@@ -359,19 +359,14 @@
     move(state.jozef,targets.Jozef,room.practice&&room.who!=='Jozef'?cpuPace:(now<sprintUntil.Jozef?5.4:3.1));
     touch(state.dad, state.kick === "Dad"); touch(state.jozef, state.kick === "Jozef"); state.kick = "";
     if (kickLock) kickLock -= 1;
-    // Match shot and runner movement to the same 60Hz pixel scale.
-    state.ball.x+=state.ball.vx;state.ball.y+=state.ball.vy;
-    state.ball.vx*=.992;state.ball.vy*=.992;
-    if(!kickLock){
-      separate(state.dad);separate(state.jozef);
-      const gap = Math.hypot(state.dad.x-state.jozef.x, state.dad.y-state.jozef.y);
-      if (gap < 26) {
-        state.ball.vx += (state.ball.x - (state.dad.x+state.jozef.x)/2) * 0.15;
-        state.ball.vy += (state.ball.y - (state.dad.y+state.jozef.y)/2) * 0.15;
-      }
+    const physics = window.JozefPhysics;
+    physics.integrate(state.ball, physics.BALL);
+    if (!kickLock) {
+      physics.collide(state.dad, state.ball, physics.PLAYER, physics.BALL);
+      physics.collide(state.jozef, state.ball, physics.PLAYER, physics.BALL);
+      physics.collide(state.dad, state.jozef, physics.PLAYER, physics.PLAYER);
     }
-    if (state.ball.y < 34) { state.ball.y = 34; state.ball.vy = Math.abs(state.ball.vy) + 0.4; }
-    if (state.ball.y > H - 34) { state.ball.y = H - 34; state.ball.vy = -Math.abs(state.ball.vy) - 0.4; }
+    physics.walls(state.ball, W, H, inGoal);
     state.matchLeft = Math.max(0, state.matchLeft - 1/60);
     if (state.matchLeft <= 0 && state.call !== 'Full time') { state.call = 'Full time'; room.phase='finished'; state.ball.vx = 0; state.ball.vy = 0; finishPractice(); syncUI(); say(state.score.dad===state.score.jozef?'Full time — a draw. Rematch?':(state.score.dad>state.score.jozef?'Dad':'Jozef')+' wins! Ready for a rematch?'); }
     if (state.call === 'Full time') { broadcast(); return; }
