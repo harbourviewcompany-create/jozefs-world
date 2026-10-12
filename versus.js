@@ -21,7 +21,7 @@
     canvas.style.width = '100%';
     canvas.style.height = 'auto';
     canvas.style.aspectRatio = portrait ? '420 / 720' : '720 / 420';
-    canvas.style.maxHeight = portrait ? '72dvh' : '100%';
+    canvas.style.maxHeight = portrait ? '78dvh' : '100%';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     if (portrait) { ctx.translate(H, 0); ctx.rotate(Math.PI / 2); }
   }
@@ -114,6 +114,27 @@
   let lastCall = '';
   let shake = 0;
 
+  function tone(freqs, type) {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    try { if (localStorage.getItem('jozefs-world-voice-alerts') === 'off') return; } catch { /* play */ }
+    const ctx = new AudioCtx();
+    freqs.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + i * 0.08 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + i * 0.08 + 0.22);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + i * 0.08);
+      osc.stop(ctx.currentTime + i * 0.08 + 0.24);
+    });
+  }
+  function whistle() { tone([880, 880], 'square'); }
+  function net() { tone([220, 180, 140], 'sawtooth'); }
+  function punch() { tone([140], 'square'); }
   function chime() {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return;
@@ -140,6 +161,17 @@
     call.pitch = /Dad/.test(line) ? 0.75 : 1.25;
     window.speechSynthesis.speak(call);
   }
+  function paintSeason() {
+    let season = [];
+    try { season = JSON.parse(localStorage.getItem('jozefs-world-season') || '[]'); } catch { season = []; }
+    const list = $('versus-season-list');
+    const line = $('versus-season');
+    if (list) list.innerHTML = season.map(score => '<li>' + score + '</li>').join('');
+    if (!line) return;
+    const dad = season.filter(s => { const [j, d] = s.split('-').map(Number); return d > j; }).length;
+    const jozef = season.filter(s => { const [j, d] = s.split('-').map(Number); return j > d; }).length;
+    line.textContent = season.length ? 'Season: Jozef ' + jozef + ' · Dad ' + dad : 'Season: no matches yet.';
+  }
   function say(text) {
     const node = $('versus-status');
     const line = text;
@@ -149,7 +181,13 @@
     const result = $('today-versus-result');
     if (result && /wins|draw/.test(text)) {
       result.textContent = text;
-      try { localStorage.setItem('jozefs-world-versus-result', text); } catch { /* this phone */ }
+      try {
+        localStorage.setItem('jozefs-world-versus-result', text);
+        const season = JSON.parse(localStorage.getItem('jozefs-world-season') || '[]');
+        season.unshift(state.score.jozef + '-' + state.score.dad);
+        localStorage.setItem('jozefs-world-season', JSON.stringify(season.slice(0, 5)));
+      } catch { /* this phone */ }
+      paintSeason();
     }
   }
   function lights() {
@@ -180,6 +218,14 @@
   }
   buildStadium();
   function pitch(){ctx.drawImage(stadium,0,0,W,H);}
+  function jozefKit() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('jozefs-world-sports-v1') || '{}');
+      const team = saved.soccer && saved.soccer.team;
+      const colors = { 'Atlético Ottawa': '#e10600', 'Inter Miami CF': '#f7b5cd', Arsenal: '#ef0107', Liverpool: '#c8102e', 'Manchester City': '#6cabdd', Chelsea: '#034694', Barcelona: '#a50044', 'Real Madrid': '#f5f5f5' };
+      return colors[team] || '#60c5ff';
+    } catch { return '#60c5ff'; }
+  }
   function player(p,color,name){
     const speed=Math.hypot(p.vx,p.vy);
     const moving=speed>.25;
@@ -295,7 +341,7 @@
     glow.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, W, H);
-    if (state.call && state.call !== lastCall && /scores|GOAL|Saved|Full time|post/.test(state.call)) { burst(ball.x, ball.y, state.call.includes('Dad') ? '#d7ff4a' : '#7ee0ff', 36); shake = 14; chime(); voice(state.call); document.querySelector('.versus-scoreboard')?.classList.add('goal'); setTimeout(() => document.querySelector('.versus-scoreboard')?.classList.remove('goal'), 900); }
+    if (state.call && state.call !== lastCall && /scores|GOAL|Saved|Full time|post|Kickoff/.test(state.call)) { burst(ball.x, ball.y, state.call.includes('Dad') ? '#d7ff4a' : '#7ee0ff', 36); shake = 14; if (/scores/.test(state.call)) net(); else if (/Saved/.test(state.call)) punch(); else if (/Kickoff/.test(state.call)) whistle(); else chime(); voice(state.call); document.querySelector('.versus-scoreboard')?.classList.add('goal'); setTimeout(() => document.querySelector('.versus-scoreboard')?.classList.remove('goal'), 900); }
     lastCall = state.call;
     trail.push({ x: ball.x, y: ball.y });
     if (trail.length > 8) trail.shift();
@@ -305,7 +351,7 @@
     });
     sparks.forEach(s => { s.x += s.vx; s.y += s.vy; s.vy += 0.15; s.life -= 1; ctx.fillStyle = s.color; ctx.globalAlpha = Math.max(0, s.life / 18); ctx.fillRect(s.x, s.y, 4, 4); ctx.globalAlpha = 1; });
     for (let i = sparks.length - 1; i >= 0; i--) if (sparks[i].life <= 0) sparks.splice(i, 1);
-    player(visualPose(state.jozef,'jozef'), '#60c5ff', room.practice && room.who!=='Jozef' ? 'Rival' : 'Jozef');
+    player(visualPose(state.jozef,'jozef'), jozefKit(), room.practice && room.who!=='Jozef' ? 'Rival' : 'Jozef');
     player(visualPose(state.dad,'dad'), '#d7ff4a', room.practice && room.who!=='Dad' ? 'Rival' : 'Dad');
     keeper('left', '#f4f7f2');
     keeper('right', '#f4f7f2');
@@ -564,7 +610,9 @@
   function fromStick(e){
     const r=stick.getBoundingClientRect(),radius=Math.max(18,Math.min(r.width,r.height)*.35);
     let x=(e.clientX-r.left-r.width/2)/radius,y=(e.clientY-r.top-r.height/2)/radius;
-    const length=Math.max(1,Math.hypot(x,y));x/=length;y/=length;stickVector={x,y};
+    const raw=Math.hypot(x,y);
+    const length=Math.max(1,raw);x/=length;y/=length;stickVector={x,y};
+    if (raw > 0.92) sprint();
     const travel=Math.max(8,(Math.min(r.width,r.height)-nub.offsetWidth)/2-3);
     nub.style.left=(r.width-nub.offsetWidth)/2+x*travel+'px';
     nub.style.top=(r.height-nub.offsetHeight)/2+y*travel+'px';
@@ -639,5 +687,6 @@
   }
   const savedResult = (() => { try { return localStorage.getItem('jozefs-world-versus-result'); } catch { return ''; } })();
   if (savedResult && $('today-versus-result')) $('today-versus-result').textContent = savedResult;
+  paintSeason();
   pickAim(1);syncUI();draw();requestAnimationFrame(frame);
 })();

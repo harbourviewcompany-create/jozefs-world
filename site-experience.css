@@ -3650,3 +3650,7 @@ body.versus-focused #versus-tip{font-weight:800;letter-spacing:.03em;color:#e4ff
 @media(max-width:800px) and (orientation:portrait){#versus .versus-stage{min-height:62dvh}body.versus-focused #versus .versus-stage{min-height:0}}
 
 @media(orientation:portrait){#versus .versus-stage{min-height:68dvh}#versus-canvas{width:min(100%,72dvh);height:auto;aspect-ratio:420/720}}
+
+#versus-season-list{display:flex;gap:8px;list-style:none;padding:0;margin:0;font-weight:800}
+#versus-season{font-weight:800}
+@media(orientation:portrait){#versus .versus-stage{min-height:72dvh}}
