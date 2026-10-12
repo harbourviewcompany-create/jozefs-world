@@ -97,13 +97,26 @@ function stream(){
  let built=0;for(const [x,z]of queue){const c=chunks.get(x+':'+z);if(!c||c.dirty){chunkMesh(x,z);if(++built===2)break;}}
 }
 function shader(type,src){const o=gl.createShader(type);gl.shaderSource(o,src);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(o));return o;}
-const vertex='attribute vec3 p;attribute vec3 c;uniform mat4 proj;uniform mat4 view;uniform vec3 eye;varying vec3 color;varying float fog;void main(){gl_Position=proj*view*vec4(p,1.);color=c;fog=clamp(distance(p,eye)/58.,0.,1.);}';
-const frag='precision mediump float;varying vec3 color;varying float fog;uniform vec3 sky;void main(){gl_FragColor=vec4(pow(mix(color,sky,fog*fog*.85),vec3(.85)),1.);}';
+// Low-cost WebGL 1 atmospheric rendering: animated sky, sunset and night haze.
+const vertex='attribute vec3 p;attribute vec3 c;uniform mat4 proj;uniform mat4 view;uniform vec3 eye;varying vec3 color;varying vec3 worldPos;varying float fog;void main(){gl_Position=proj*view*vec4(p,1.);color=c;worldPos=p;fog=clamp((distance(p,eye)-14.)/74.,0.,1.);}';
+const frag='precision mediump float;varying vec3 color;varying vec3 worldPos;varying float fog;uniform vec3 sky;uniform float daylight;void main(){float ambient=.52+.43*daylight;float heightLight=clamp((worldPos.y-1.)/28.,0.,1.);vec3 shaded=color*(ambient+heightLight*.06);vec3 graded=pow(max(shaded,vec3(.008)),vec3(.88));float haze=smoothstep(.06,1.,fog);gl_FragColor=vec4(mix(graded,sky,haze*.90),1.);}';
+const skyVertex='attribute vec2 xy;varying vec2 uv;void main(){uv=xy*.5+.5;gl_Position=vec4(xy,1.,1.);}';
+const skyFragment='precision mediump float;varying vec2 uv;uniform float t;uniform float daylight;void main(){float y=clamp(uv.y,0.,1.);vec3 zenith=mix(vec3(.016,.034,.112),vec3(.14,.44,.68),daylight);vec3 horizon=mix(vec3(.22,.12,.30),vec3(.65,.82,.86),daylight);vec3 sky=mix(horizon,zenith,smoothstep(.03,.9,y));float r=distance(uv,vec2(.73,.76));float halo=1.-smoothstep(.03,.30,r);float disc=1.-smoothstep(.023,.037,r);sky+=mix(vec3(.24,.16,.34),vec3(.96,.65,.30),daylight)*halo*.38;sky+=mix(vec3(.62,.77,.96),vec3(1.,.96,.72),daylight)*disc*.8;float wave=sin(uv.x*19.+t*.009+sin(uv.y*13.))*sin(uv.x*8.-uv.y*7.+t*.005);float clouds=smoothstep(.40,.83,wave)*smoothstep(.32,.66,y)*daylight;sky+=vec3(.27,.38,.38)*clouds*.25;float stars=step(.996,fract(sin(dot(floor(uv*vec2(330.,160.)),vec2(12.9898,78.233)))*43758.5453));sky+=vec3(.35,.46,.65)*stars*(1.-daylight)*smoothstep(.38,.70,y);gl_FragColor=vec4(sky,1.);}';
 let pg;
 try{pg=gl.createProgram();gl.attachShader(pg,shader(gl.VERTEX_SHADER,vertex));gl.attachShader(pg,shader(gl.FRAGMENT_SHADER,frag));gl.linkProgram(pg);if(!gl.getProgramParameter(pg,gl.LINK_STATUS))throw Error('Shader linking failed');}
 catch(e){$('fallback').hidden=false;console.error(e);return;}
 gl.useProgram(pg);gl.enable(gl.DEPTH_TEST);
-const ap=gl.getAttribLocation(pg,'p'),ac=gl.getAttribLocation(pg,'c'),up=gl.getUniformLocation(pg,'proj'),uv=gl.getUniformLocation(pg,'view'),ue=gl.getUniformLocation(pg,'eye'),us=gl.getUniformLocation(pg,'sky'),dynamic=gl.createBuffer();
+const ap=gl.getAttribLocation(pg,'p'),ac=gl.getAttribLocation(pg,'c'),up=gl.getUniformLocation(pg,'proj'),uv=gl.getUniformLocation(pg,'view'),ue=gl.getUniformLocation(pg,'eye'),us=gl.getUniformLocation(pg,'sky'),ud=gl.getUniformLocation(pg,'daylight'),dynamic=gl.createBuffer();
+let skyPg=null,skyBuf=null,skyAttr=-1,skyTime=null,skyDay=null;
+try{
+ skyPg=gl.createProgram();gl.attachShader(skyPg,shader(gl.VERTEX_SHADER,skyVertex));
+ gl.attachShader(skyPg,shader(gl.FRAGMENT_SHADER,skyFragment));gl.linkProgram(skyPg);
+ if(!gl.getProgramParameter(skyPg,gl.LINK_STATUS))throw Error('Sky shader linking failed');
+ skyBuf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,skyBuf);
+ gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+ skyAttr=gl.getAttribLocation(skyPg,'xy');skyTime=gl.getUniformLocation(skyPg,'t');skyDay=gl.getUniformLocation(skyPg,'daylight');
+}catch(e){console.warn('Sky shader unavailable; falling back to clear color',e);skyPg=null;}
+gl.useProgram(pg);
 function projection(fov,ratio,near,far){const f=1/Math.tan(fov/2),n=1/(near-far);return new Float32Array([f/ratio,0,0,0,0,f,0,0,0,0,(far+near)*n,-1,0,0,2*far*near*n,0]);}
 function camera(eye,target){
  const norm=v=>{const l=Math.hypot(...v)||1;return v.map(q=>q/l);},sub=(a,b)=>a.map((n,i)=>n-b[i]);
@@ -119,10 +132,18 @@ function render(){
  const eye=[hero.x,hero.y+1.55,hero.z];
  const cam=third?[eye[0]-forward[0]*5,eye[1]+2.2,eye[2]-forward[2]*5]:eye;
  const at=eye.map((n,i)=>n+forward[i]*5);
- const day=.5+.5*Math.sin(clock*.02),sky=[.18+.24*day,.35+.32*day,.49+.40*day];
+ const day=.50+.50*Math.sin(clock*.018),sky=[.16+.37*day,.18+.47*day,.32+.45*day];
  gl.clearColor(...sky,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+ if(skyPg){
+  gl.disable(gl.DEPTH_TEST);gl.useProgram(skyPg);
+  gl.bindBuffer(gl.ARRAY_BUFFER,skyBuf);gl.enableVertexAttribArray(skyAttr);
+  gl.vertexAttribPointer(skyAttr,2,gl.FLOAT,false,0,0);
+  gl.uniform1f(skyTime,clock);gl.uniform1f(skyDay,day);
+  gl.drawArrays(gl.TRIANGLES,0,3);
+  gl.disableVertexAttribArray(skyAttr);gl.enable(gl.DEPTH_TEST);gl.useProgram(pg);
+ }
  gl.uniformMatrix4fv(up,false,projection(1.16,w/h,.06,120));gl.uniformMatrix4fv(uv,false,camera(cam,at));
- gl.uniform3fv(ue,new Float32Array(cam));gl.uniform3fv(us,new Float32Array(sky));
+ gl.uniform3fv(ue,new Float32Array(cam));gl.uniform3fv(us,new Float32Array(sky));gl.uniform1f(ud,day);
  for(const chunk of chunks.values())renderBuffer(chunk.buffer,chunk.count);
  const v=[];
  const figure=(p,role)=>{cube(v,p.x-.28,p.y+.55,p.z-.2,role?1:10,.55);cube(v,p.x-.25,p.y+1.14,p.z-.19,6,.5);
