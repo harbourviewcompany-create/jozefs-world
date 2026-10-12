@@ -61,3 +61,7 @@ html,body{overscroll-behavior:none;background:#0d253e}
 @media(max-height:460px){#ui p{display:none}#toolbar{top:43px}#controls{bottom:calc(54px + env(safe-area-inset-bottom))}.hotbar{padding:3px}.slot{width:34px;height:34px}}
 @media(prefers-reduced-motion:reduce){#notice{transition:none}.ctrl-btn:active{transform:none}}
 
+
+/* Persistent safe return to Jozef's World HQ */
+#toolbar .bw-hq-link{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:8px 11px;color:#f8f4cc;text-decoration:none;font:800 11px system-ui;border:1px solid #ffecaa88;border-radius:10px;background:#11344add;box-shadow:0 4px 15px #0005;backdrop-filter:blur(8px)}
+#toolbar .bw-hq-link:focus-visible{outline:3px solid #ffdc75;outline-offset:3px}
