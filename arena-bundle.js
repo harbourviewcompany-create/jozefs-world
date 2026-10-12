@@ -969,7 +969,7 @@ function updateTouchVector(){
 let aim=0,skillCooldown=0,skillTime=0,keeperDestination=210,keeperReact=0,passRecipient=null,mateTime=0,shots=0,keeperSaves=0,lastHudTick=-1;
 let passChain=0,blockedShots=0,looseBallElapsed=0,shotOrigin=null;
 let rivalCarrier=-1,rivalElapsed=0,counterTime=0,counterRecoveries=0,rivalAttacks=0;
-let playerVelocity={x:0,y:0},flow=0;
+let playerVelocity={x:0,y:0},flow=0,positionResets=0;
 function getSquad(){
  const api=window.JozefSquad?.getSquad?.();
  const val=api?.bonuses||{};
@@ -1026,6 +1026,7 @@ function refreshGraphics(){
 refreshGraphics();
 window.addEventListener('resize',refreshGraphics,{passive:true});
 function resetPositions(){
+ positionResets++;
  shotOrigin=null;playerVelocity={x:0,y:0};
  actor={x:210,y:493};mate={x:301,y:310};
  ball={x:actor.x,y:actor.y-14,owner:'actor',vx:0,vy:0};
@@ -1776,7 +1777,7 @@ experience=window.JozefArenaExperience?.mount({
 })||null;
 window.JozefArena=Object.freeze({getProgress:()=>({...lifetime,score:us+'-'+them,mode,
   matchGoals:us,opponentGoals:them,shots,saves:keeperSaves,aim:SHOT_ZONES[aim].name,
-  playerX:actor.x,playerY:actor.y,cameraZoom:camera.zoom,ballOwner:ball.owner,skillReady:skillCooldown<=0,
+  playerX:actor.x,playerY:actor.y,positionResets,cameraZoom:camera.zoom,ballOwner:ball.owner,skillReady:skillCooldown<=0,
   advice:systems.tacticalRead(actor,mate,defenders,ball,SHOT_ZONES[aim].x,systems.shotProfile(actor.y,passChain,squad.shot,experience?.prefs.difficulty||'pro').onTarget).kind,
   passChain,blockedShots,counterRecoveries,rivalAttacks,counterSeconds:counterTime,flow,
   shotChance:systems.flowShotProfile(systems.shotProfile((ball.owner==='mate'?mate:actor).y,passChain,squad.shot+Math.min(.18,counterTime*.033),experience?.prefs.difficulty||'pro'),flow).onTarget,

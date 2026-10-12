@@ -190,10 +190,10 @@ const close=()=>new Promise(resolve=>server.close(resolve));
      const afterState=await page.evaluate(()=>window.JozefArena.getProgress());
      const after=afterState.playerY;
      assert.ok(Number.parseFloat(liveStick)<-10,'Up gesture must report a negative joystick vector');
-     // A rival goal can reset the pitch to y=493 during this sample: this is
-     // expected gameplay, not evidence the joystick moved the wrong way.
-     const reset=afterState.opponentGoals>beforeState.opponentGoals||
-       afterState.matchGoals>beforeState.matchGoals;
+     // Missed shots, recovered loose balls, and goal celebrations can all
+     // restart positions. Verify upward movement unless a legitimate reset
+     // took place while the joystick was held.
+     const reset=afterState.positionResets>beforeState.positionResets;
      assert.ok(after<before-1||reset||Math.abs(after-493)<15,'Virtual joystick must move upward unless the Arena has reset positions following a challenge; before='+
       before+' after='+after+' mode='+afterState.mode+' stick='+liveStick+
       ' score='+beforeState.score+' -> '+afterState.score);
