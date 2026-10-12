@@ -9,7 +9,8 @@ const col=[[0,0,0],[.34,.72,.36],[.53,.38,.26],[.53,.60,.68],[.53,.32,.16],[.20,
 const faces=[[[0,1,0],[[0,1,0],[0,1,1],[1,1,1],[1,1,0]]],[[0,0,1],[[0,0,1],[1,0,1],[1,1,1],[0,1,1]]],[[1,0,0],[[1,0,1],[1,0,0],[1,1,0],[1,1,1]]],[[0,-1,0],[[0,0,0],[1,0,0],[1,0,1],[0,0,1]]],[[-1,0,0],[[0,0,0],[0,0,1],[0,1,1],[0,1,0]]],[[0,0,-1],[[1,0,0],[0,0,0],[0,1,0],[1,1,0]]]];
 const missions=[['Gather wood','Mine eight wood blocks','wood',8,25],['Build our base','Place twelve blocks together','placed',12,30],['Explore a biome','Discover the far desert or snow ridge','explore',1,35],['Mine a crystal','Find a rare glowing crystal','crystal',1,40],['Defeat the Crystal Golem','Find the guardian at 32, 32','boss',1,60],['Activate the portal','Bring both heroes to 40, 40','portal',1,80]];
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
-let seed=Math.floor(Math.random()*1e9),realm=0,edits=new Map(),chunks=new Map(),queue=[],lastCX=Infinity,lastCZ=Infinity;
+let seed=Math.floor(Math.random()*1e9),realm=0,baseSeed=seed,dimensions={},edits=new Map(),chunks=new Map(),queue=[],lastCX=Infinity,lastCZ=Infinity;
+const DIMKEY='jozefs-block-3d-dimensions-v1';
 let selected=4,creative=true,third=false,sound=false,stage=0,stats={wood:0,placed:0,explore:0,crystal:0,boss:0,portal:0},rewards=[],discovered={},defeated=false,portalOpened=false;
 const hero={x:2.5,y:12,z:2.5,vy:0,yaw:0,pitch:-.07,role:0,hp:100,ground:false,double:false,inventory:{}};
 const companion={x:4.5,y:12,z:4.5,role:1,hp:100};
@@ -181,7 +182,8 @@ function attack(){
 function spawn(){
  mobs=[];for(let i=0;i<16;i++){const x=Math.floor(rnd(i,seed,5)*90)-45,z=Math.floor(rnd(i,seed,8)*90)-45;
  if(Math.hypot(x,z)>9)mobs.push({x,y:ground(x,z),z,hp:30,kind:i%2});}
- boss={x:32.5,z:32.5,y:ground(32.5,32.5),hp:defeated?0:120,alive:!defeated};
+ const bossHp=Number.isFinite(dimensions[realm]?.bossHp)?dimensions[realm].bossHp:(realm===0&&defeated?0:120);
+ boss={x:32.5,z:32.5,y:ground(32.5,32.5),hp:bossHp,alive:bossHp>0};
 }
 function step(dt){
  clock+=dt;saveClock+=dt;
@@ -224,17 +226,25 @@ function step(dt){
  stream();if(frames%15===0)hud();
 }
 function portal(){
- if(!defeated){announce('Defeat the Crystal Golem first');return;}
+ if(!defeated&&!portalOpened){announce('Defeat the Crystal Golem first');return;}
  if(Math.hypot(hero.x-40,hero.z-40)>5||Math.hypot(companion.x-40,companion.z-40)>5){announce('Both heroes must reach the portal at 40, 40');return;}
  if(!portalOpened){portalOpened=true;gain('portal');}
- realm=(realm+1)%3;seed+=realm*1973+1;edits.clear();chunks.forEach(c=>gl.deleteBuffer(c.buffer));chunks.clear();lastCX=Infinity;
+ captureDimension();realm=(realm+1)%3;
+ const next=dimensions[realm];
+ if(next){seed=next.seed;edits=new Map(next.edits||[]);}else{seed=baseSeed+realm*1973+1;edits=new Map();}
+ chunks.forEach(c=>gl.deleteBuffer(c.buffer));chunks.clear();lastCX=Infinity;
  resetPose();spawn();dirty=true;save();announce('PORTAL OPEN · REALM '+(realm+1),3300);
 }
+function captureDimension(){dimensions[realm]={seed,edits:[...edits].slice(-14000),bossHp:boss.hp};}
 function save(){if(!dirty)return;try{
+ captureDimension();
+ localStorage.setItem(DIMKEY,JSON.stringify({version:1,baseSeed,dimensions}));
  localStorage.setItem(KEY,JSON.stringify({version:1,seed,realm,edits:[...edits].slice(-14000),hero:{x:hero.x,y:hero.y,z:hero.z,role:hero.role,inventory:hero.inventory},stage,stats,rewards,discovered,defeated,portalOpened,creative}));
  dirty=false;}catch(e){announce('Save storage full · export a backup');}}
 function load(){try{const data=JSON.parse(localStorage.getItem(KEY)||'null');if(!data||data.version!==1)return false;
  seed=data.seed;realm=data.realm||0;
+ baseSeed=seed-realm*1973-(realm?1:0);
+ try{const archive=JSON.parse(localStorage.getItem(DIMKEY)||'null');if(archive?.version===1&&archive.dimensions&&typeof archive.dimensions==='object'){baseSeed=Number(archive.baseSeed)||baseSeed;dimensions=archive.dimensions;}}catch(_){}
  if(!Number.isFinite(seed)||!Array.isArray(data.edits)||data.edits.length>14000)return false;
  edits=new Map(data.edits.filter(row=>Array.isArray(row)&&/^[-0-9]+,[-0-9]+,[-0-9]+$/.test(row[0])&&Number.isInteger(row[1])&&row[1]>=0&&row[1]<types.length));
  if(data.hero){Object.assign(hero,{x:data.hero.x,y:data.hero.y,z:data.hero.z,role:data.hero.role===1?1:0,inventory:data.hero.inventory||{}});}
