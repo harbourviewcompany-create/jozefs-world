@@ -17,6 +17,11 @@
  </header>
  <section id="mission" class="mission" aria-live="polite">Generating your adventure…</section>
  <aside id="compass" class="compass" aria-live="off">X 2 · Z 2 · Explore</aside>
+ <section class="radar" aria-label="Terrain radar and landmarks">
+  <div class="radar-header"><strong>EXPEDITION RADAR</strong><span id="qualityState">AUTO</span></div>
+  <canvas id="minimap" width="132" height="132" aria-label="Local biome map with players, Golem and portal"></canvas>
+  <div class="radar-legend"><span>■ US</span><span>■ GOLEM</span><span>■ PORTAL</span></div>
+ </section>
  <div id="target" class="target" aria-hidden="true">+</div>
  <section class="bottom">
   <div id="stick" class="joystick" aria-label="Move" role="group"><div id="knob"></div></div>
@@ -40,7 +45,7 @@
   <div class="buttons">
    <button id="swap">SWITCH HERO</button><button id="perspective">3RD PERSON</button>
    <button id="creative">CREATIVE ON</button><button id="save">SAVE WORLD</button>
-   <button id="sound">SOUND OFF</button><button id="export">EXPORT SAVE</button>
+   <button id="sound">SOUND OFF</button><button id="quality" type="button">GRAPHICS AUTO</button><button id="export">EXPORT SAVE</button>
    <button id="import">IMPORT SAVE</button>
    <a href="./block-world.html">PLAY CLASSIC 2D</a>
    <a href="./block-world-select.html">CHOOSE MODE</a>
