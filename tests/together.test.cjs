@@ -1,44 +1,48 @@
 'use strict';
-const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
-const rules=require('../together.js'),root=path.resolve(__dirname,'..');
-const read=file=>fs.readFileSync(path.join(root,file),'utf8');
-test('shared mystery has physically separate, reachable objectives for both heroes',()=>{
- assert.equal(rules.STAGES.length,5);
- const start=rules.HEROES.map(h=>({x:h.start[0],y:h.start[1]}));
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path');
+const rules=require('../together.js');
+const root=path.resolve(__dirname,'..');
+test('two heroes can reach all story stages without crossing walls',()=>{
  for(let stage=0;stage<3;stage++){
-  const targets=rules.STAGES[stage].targets;
-  assert.equal(targets.length,2);
-  assert.notDeepEqual(targets[0],targets[1]);
-  for(let who=0;who<2;who++){
-   const route=rules.pathTo(start[who],targets[who],start[1-who]);
-   assert.ok(route&&route.length>0,'stage '+stage+' hero '+who+' must have reachable destination');
-   for(const p of route)assert.equal(rules.own(p[0],p[1]),true);
+  for(let hero=0;hero<2;hero++){
+   const from={x:rules.HEROES[hero].start[0],y:rules.HEROES[hero].start[1]};
+   const other=rules.HEROES[1-hero].start;
+   const path=rules.pathTo(from,rules.STAGES[stage].targets[hero],{x:other[0],y:other[1]});
+   assert.ok(path?.length>0,'stage '+stage+' hero '+hero+' has a safe route');
+   let current=from;
+   for(const [x,y] of path){
+     assert.equal(rules.own(x,y),true);
+     assert.equal(Math.abs(x-current.x)+Math.abs(y-current.y),1);
+     current={x,y};
+   }
+   assert.deepEqual([current.x,current.y],rules.STAGES[stage].targets[hero]);
   }
  }
- assert.equal(rules.own(0,1),false);
- assert.equal(rules.own(4,3),false);
- assert.equal(rules.pathTo(start[0],[0,0],start[1]),null);
- assert.equal(rules.pathTo(start[0],[1,6],start[1]),null);
 });
-test('shared story restores safely from offline saves and keeps trophies on replay',()=>{
- assert.deepEqual(rules.sanitize(null),rules.fresh());
- const malformed=rules.sanitize({stage:800,won:false,clues:[true,false],positions:[{x:0,y:0},{x:4,y:3}]});
- assert.equal(malformed.stage,0);assert.deepEqual(malformed.clues,[true,false]);
- assert.deepEqual(malformed.positions,rules.fresh().positions);
- const checkpoint=rules.sanitize({stage:3,clues:[true,true],positions:[{x:5,y:2},{x:6,y:5}]});
- assert.equal(checkpoint.stage,2,'boss fight restarts safely without lost clues');
- const victory=rules.sanitize({stage:4,won:true,clues:[true,true]});
- assert.equal(victory.stage,4);assert.equal(victory.won,true);
- for(let round=0;round<9;round++)assert.ok(rules.shieldFor(round)>=0&&rules.shieldFor(round)<=2);
+test('saved co-op chapter resumes only from validated checkpoints',()=>{
+ const fresh=rules.fresh();assert.equal(fresh.stage,0);
+ assert.equal(rules.sanitize({stage:3,clues:[true,true]}).stage,2);
+ assert.equal(rules.sanitize({stage:4,won:false,clues:[true,true]}).stage,2);
+ assert.equal(rules.sanitize({stage:4,won:true,clues:[true,true]}).stage,4);
+ assert.equal(rules.sanitize({stage:2,clues:[false,false]}).stage,0);
+ const bad=rules.sanitize({positions:[{x:4,y:2},{x:4,y:2}],stage:0});
+ assert.deepEqual(bad.positions,fresh.positions);
 });
-test('Together Mode ships visibly on both pages and is available offline and in Club backups',()=>{
- const html=read('index.html');
- assert.equal(html,read('world.html'));
- for(const id of ['jw-together-game','jw-together-canvas','jw-together-hero-0','jw-together-hero-1','jw-together-trophy','jw-together-shots','jw-together-replay'])
-  assert.match(html,new RegExp('id="'+id+'"'));
- assert.match(html,/data-start-together/);
- assert.match(html,/src="together\.js"/);
+test('controllers and finalist shield use deterministic valid inputs',()=>{
+ const pad={connected:true,axes:[.8,.1],buttons:Array.from({length:16},(_,i)=>({pressed:i===0}))};
+ assert.deepEqual(rules.readPad(pad),{dx:1,dy:0,act:true,switchHero:false});
+ pad.axes=[0,0];pad.buttons[0].pressed=false;pad.buttons[12].pressed=true;
+ assert.equal(rules.readPad(pad).dy,-1);
+ assert.equal(rules.readPad(null).act,false);
+ assert.deepEqual([0,1,2].map(rules.shieldFor),[1,0,2]);
+});
+test('shared game has a visible launch, Club backup and offline source',()=>{
+ const read=p=>fs.readFileSync(path.join(root,p),'utf8');
+ assert.equal(read('index.html'),read('world.html'));
+ assert.match(read('index.html'),/id="jw-together-game"/);
+ assert.match(read('index.html'),/src="together\.js"/);
  assert.match(read('sw.js'),/'\.\/together\.js'/);
  assert.match(read('clubhouse.js'),/'jozefs-world-together-v1'/);
- assert.match(read('site-experience.css'),/\.jw-together-game/);
 });

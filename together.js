@@ -51,7 +51,18 @@ function pathTo(a,b,occupied){
  return null;
 }
 const shieldFor=round=>(round*2+1)%3;
-const rules=Object.freeze({KEY,W,H,WALLS,STAGES,HEROES,own,fresh,sanitize,pathTo,shieldFor});
+function readPad(pad){
+ if(!pad?.connected)return {dx:0,dy:0,act:false,switchHero:false};
+ const pressed=n=>pad.buttons?.[n]?.pressed===true;
+ const axis=n=>Number.isFinite(pad.axes?.[n])?pad.axes[n]:0;
+ const x=pressed(14)?-1:pressed(15)?1:axis(0)<-.48?-1:axis(0)>.48?1:0;
+ const y=pressed(12)?-1:pressed(13)?1:axis(1)<-.48?-1:axis(1)>.48?1:0;
+ // The physical D-pad takes priority. Grid exploration never moves diagonally.
+ const dpadHorizontal=pressed(14)||pressed(15),dpadVertical=pressed(12)||pressed(13);
+ const horizontal=dpadHorizontal?x:dpadVertical?0:Math.abs(axis(0))>=Math.abs(axis(1))?x:0;
+ return {dx:horizontal,dy:horizontal?0:y,act:pressed(0),switchHero:pressed(2)};
+}
+const rules=Object.freeze({KEY,W,H,WALLS,STAGES,HEROES,own,fresh,sanitize,pathTo,shieldFor,readPad});
 if(typeof module!=='undefined'&&module.exports)module.exports=rules;
 if(typeof document==='undefined')return;
 const $=id=>document.getElementById(id);
@@ -61,6 +72,7 @@ const ctx=canvas.getContext('2d');
 let state;
 try{state=sanitize(JSON.parse(localStorage.getItem(KEY)||'null'))}catch(_){state=fresh()}
 let opened=false,selected=0,battle=null,walking=null,walkToken=0,lastFrame=0;
+let controllerLane=1,lastPadTick=0,lastPadButtons=[{act:false,switchHero:false},{act:false,switchHero:false}];
 const motionReduced=!!root.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
 function notify(s){const el=$('jw-together-status');if(el)el.textContent=s;}
 function persist(){
@@ -71,7 +83,7 @@ function persist(){
 function stop(){walkToken++;if(walking!==null)clearTimeout(walking);walking=null;}
 function progress(){return {stage:state.stage,clues:state.clues.slice(),won:state.won,positions:state.positions.map(p=>({...p})),selected,opened,shots:battle?battle.hits.slice():null};}
 function start(){
- opened=true;rootGame.hidden=false;root.showSection?.('adventure');
+ opened=true;lastPadTick=0;lastPadButtons=[{act:false,switchHero:false},{act:false,switchHero:false}];rootGame.hidden=false;root.showSection?.('adventure');
  selected=0;
  checkpoint();hud();
  notify(state.stage===4?'Your shared Stadium Cup is ready. Replay to start a new mission.':'Story ready. Both players have equal challenges and a turn in the finale.');
@@ -79,7 +91,7 @@ function start(){
  return true;
 }
 function close(){
- opened=false;rootGame.hidden=true;stop();battle=null;
+ opened=false;lastPadButtons=[{act:false,switchHero:false},{act:false,switchHero:false}];rootGame.hidden=true;stop();battle=null;
  notify('Together Mode paused. Your progress is saved on this device.');
  return true;
 }
@@ -104,7 +116,7 @@ function checkpoint(){
    state.stage++;
    stop();persist();hud();
    if(state.stage===2)notify('THE LIGHTS ARE ON! Both heroes must enter the champion vault.');
-   else {battle={turn:0,hits:[0,0],blocks:0,round:0};notify('FINALE UNLOCKED! Jozef shoots first. Each of you needs two scores.');}
+   else {battle={turn:0,hits:[0,0],blocks:0,round:0};controllerLane=1;notify('FINALE UNLOCKED! Jozef shoots first. Each of you needs two scores.');}
    return true;
   }
  }
@@ -172,6 +184,8 @@ function hud(){
  for(const button of document.querySelectorAll('[data-together-shot]')){
   const n=Number(button.dataset.togetherShot),blocked=state.stage===3&&battle&&shieldFor(battle.round)===n;
   button.classList.toggle('is-blocked',!!blocked);
+  button.classList.toggle('is-selected',state.stage===3&&n===controllerLane);
+  button.setAttribute('aria-pressed',String(state.stage===3&&n===controllerLane));
   button.setAttribute('aria-label',['Left','Centre','Right'][n]+(blocked?' defended by rival':' open to score'));
  }
  const guideButton=$('jw-together-guide');
@@ -228,7 +242,31 @@ function draw(t){
   ctx.fillStyle='#caff92';ctx.font='750 17px system-ui';ctx.fillText(state.stage===4?'THE MIDNIGHT STADIUM CUP IS YOURS':'JOZEF + DAD / TWO SCORES EACH',canvas.width/2,251);
  }
 }
-function tick(t){if(opened&&(!document.hidden)&&t-lastFrame>=34){draw(t);lastFrame=t;}root.requestAnimationFrame?.(tick);}
+function pollGamepads(t){
+ if(!opened||document.hidden||!$('adventure')?.classList.contains('active')||t-lastPadTick<155)return;
+ lastPadTick=t;
+ let pads=[];
+ try{pads=Array.from(navigator.getGamepads?.()||[]).filter(p=>p?.connected).slice(0,2);}catch(_){}
+ if(!pads.length){lastPadButtons=[{act:false,switchHero:false},{act:false,switchHero:false}];return;}
+ const two=pads.length>1;
+ for(let i=0;i<pads.length;i++){
+  const input=readPad(pads[i]),prior=lastPadButtons[i]||{act:false,switchHero:false};
+  const hero=two?i:selected;
+  if(input.switchHero&&!prior.switchHero&&!two&&state.stage<3)choose(1-selected);
+  if(state.stage===3){
+   if(!battle)continue;
+   if(input.dx&&(!two||i===battle.turn)){
+    controllerLane=(controllerLane+input.dx+3)%3;
+    hud();
+   }
+   if(input.act&&!prior.act&&(!two||i===battle.turn))shoot(controllerLane);
+  }else if(input.dx||input.dy){
+   stop();move(hero,input.dx,input.dy);
+  }
+  lastPadButtons[i]={act:input.act,switchHero:input.switchHero};
+ }
+}
+function tick(t){if(opened&&!document.hidden){pollGamepads(t);if(t-lastFrame>=34){draw(t);lastFrame=t;}}root.requestAnimationFrame?.(tick);}
 function init(){
  document.querySelectorAll('[data-start-together]').forEach(el=>el.addEventListener('click',start));
  $('jw-together-start')?.addEventListener('click',start);
@@ -239,7 +277,7 @@ function init(){
  document.querySelectorAll('[data-together-step]').forEach(button=>button.addEventListener('click',()=>{
   const [dx,dy]=button.dataset.togetherStep.split(',').map(Number);stop();move(selected,dx,dy);
  }));
- document.querySelectorAll('[data-together-shot]').forEach(button=>button.addEventListener('click',()=>shoot(Number(button.dataset.togetherShot))));
+ document.querySelectorAll('[data-together-shot]').forEach(button=>button.addEventListener('click',()=>{controllerLane=Number(button.dataset.togetherShot);shoot(controllerLane);}));
  canvas.addEventListener('click',e=>{
   if(!opened||state.stage>=3)return;
   const r=canvas.getBoundingClientRect(),x=Math.floor((e.clientX-r.left)/r.width*W),y=Math.floor((e.clientY-r.top)/r.height*H);
@@ -257,7 +295,9 @@ function init(){
  document.addEventListener('keydown',e=>{
   if(!opened||!$('adventure')?.classList.contains('active')||e.repeat||e.metaKey||e.ctrlKey||e.altKey)return;
   if(e.target.closest('button,input,select,textarea,dialog'))return;
-  if(state.stage===3&&['1','2','3'].includes(e.key)){e.preventDefault();shoot(Number(e.key)-1);return;}
+  if(state.stage===3&&['1','2','3'].includes(e.key)){e.preventDefault();controllerLane=Number(e.key)-1;shoot(controllerLane);return;}
+  if(state.stage===3&&[' ','Enter'].includes(e.key)){e.preventDefault();shoot(controllerLane);return;}
+  if(state.stage===3&&['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();controllerLane=(controllerLane+(e.key==='ArrowLeft'?2:1))%3;hud();return;}
   const direction={w:[0,-1],a:[-1,0],s:[0,1],d:[1,0],ArrowUp:[0,-1],ArrowLeft:[-1,0],ArrowDown:[0,1],ArrowRight:[1,0]}[e.key];
   if(!direction)return;
   e.preventDefault();stop();move(e.key.startsWith('Arrow')?1:0,...direction);

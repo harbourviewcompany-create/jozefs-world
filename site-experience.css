@@ -3712,3 +3712,8 @@ body.versus-focused #versus-tip{font-weight:800;letter-spacing:.03em;color:#e4ff
 @media(max-width:600px){.jw-together-game{padding:10px;margin:9px 0 14px;border-radius:15px}.jw-together-head{padding-bottom:9px}.jw-together-titlebar h3{font-size:24px}.jw-together-titlebar{align-items:flex-start}.jw-together-titlebar button{font-size:9px;min-height:40px;padding:6px}.jw-together-head p{font-size:10px}.jw-together-maphead{font-size:8px}.jw-together-controls{padding:9px;gap:8px}.jw-together-pad{grid-template:repeat(3,44px)/repeat(3,44px);gap:3px}.jw-together-heroes button{min-height:46px}.jw-together-teaser-actions{width:100%}.jw-together-teaser-actions button{flex:1}}
 @media(max-width:370px){.jw-together-controls{grid-template-columns:1fr}.jw-together-motion{grid-row:auto;grid-column:1}.jw-together-teaser-actions{display:grid;grid-template-columns:1fr 1fr}.jw-together-teaser-actions button{font-size:9px}}
 @media(prefers-reduced-motion:reduce){.jw-together-game *{transition:none!important;animation:none!important}}
+
+/* Shared co-op finale: visible focus for keyboard and dual controllers. */
+#jw-together-shots [data-together-shot].is-selected{outline:3px solid #cbff79;outline-offset:2px;box-shadow:0 0 0 5px #96eaf421}
+#jw-together-shots [data-together-shot].is-selected.is-blocked{outline-color:#ffc38a}
+@media(prefers-reduced-motion:reduce){#jw-together-shots [data-together-shot].is-selected{transition:none!important}}
