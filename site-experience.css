@@ -3508,3 +3508,49 @@ body.versus-focused #versus:not(.is-playing) .versus-card{grid-template-rows:aut
 #versus #versus-practice-record{grid-column:1/-1;padding-top:1px;letter-spacing:.06em}
 body.versus-focused #versus-tip{font-weight:800;letter-spacing:.03em;color:#e4fff1}
 @media(max-width:375px){#versus .versus-practice-settings{gap:6px}#versus .versus-practice-settings select{font-size:11px}}
+
+/* Adventure Circuit — mobile-first premium game shell, no external art services. */
+#adventure{max-width:1400px;margin:0 auto;padding:90px 16px 100px;color:#e8fff4}
+#adventure [hidden]{display:none!important}
+.jw-adventure-heading{display:flex;gap:20px;align-items:end;justify-content:space-between}
+.jw-adventure-heading h2{margin:5px 0 8px;font:900 clamp(26px,5vw,50px)/.98 var(--sf-display);letter-spacing:-.03em}
+.jw-adventure-heading h2 em{color:#ceff71;font-style:normal}
+.jw-adventure-heading p{max-width:690px;font:500 14px/1.5 var(--sf-ui);color:#a9cbcb}
+#jw-adventure-stats{flex-shrink:0;font:800 11px/1.5 var(--sf-ui);color:#cbff97}
+.jw-adventure-worlds{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:14px 0}
+.jw-adventure-world,#adventure button{touch-action:manipulation}
+.jw-adventure-world{display:flex;align-items:flex-start;justify-content:space-between;flex-direction:column;gap:8px;min-height:70px;padding:11px 12px;border:1px solid #70adae4c;border-radius:13px;background:linear-gradient(150deg,#173742,#081827);font:900 14px/1.25 var(--sf-ui);color:#eaffeb;text-align:left}
+.jw-adventure-world small{font:800 9px/1 var(--sf-ui);color:#aad6d6;letter-spacing:.08em}
+.jw-adventure-world.is-active{border-color:#cbff79;color:#d8ff98;background:linear-gradient(150deg,#294d43,#0d242b)}
+.jw-adventure-world:disabled{opacity:.43}
+.jw-adventure-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,305px);gap:12px;align-items:start}
+.jw-adventure-board,.jw-adventure-sidebar{border:1px solid #8fcbd64a;border-radius:17px;background:linear-gradient(145deg,#0a2834,#061520);overflow:hidden}
+.jw-adventure-boardhead{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;font:800 12px var(--sf-ui)}
+#jw-adventure-zone-title{font:900 19px/1 var(--sf-display);color:#d8ff83}
+#jw-adventure-active{color:#a8ced5}
+#jw-adventure-canvas{display:block;width:100%;height:auto;aspect-ratio:8/5;object-fit:contain;touch-action:manipulation;image-rendering:auto;background:#071b29}
+.jw-adventure-status{min-height:38px;margin:0;padding:9px 13px;color:#d4f5ef;background:#081b27;font:700 11px/1.4 var(--sf-ui)}
+.jw-adventure-sidebar{padding:12px;display:grid;gap:11px}
+.jw-adventure-mission{padding:12px;border:1px solid #b5e98942;border-radius:12px;background:#183c3788}
+#jw-adventure-objective{margin:8px 0 0;font:800 12px/1.5 var(--sf-ui);color:#e7fbdc}
+.jw-adventure-controls{display:grid;grid-template-columns:130px 1fr;gap:10px;align-items:center}
+.jw-adventure-dpad{display:grid;grid-template:repeat(3,38px)/repeat(3,38px);gap:3px;place-content:center}
+.jw-adventure-dpad button,.jw-adventure-main-actions button,.jw-adventure-battle button{border:1px solid #82d8d27d;border-radius:9px;background:#174252;color:#f3ffec;font:900 16px/1 var(--sf-ui);min-height:38px}
+.jw-adventure-dpad .up{grid-area:1/2}.jw-adventure-dpad .left{grid-area:2/1}.jw-adventure-dpad .right{grid-area:2/3}.jw-adventure-dpad .down{grid-area:3/2}
+.jw-adventure-main-actions{display:grid;gap:5px}.jw-adventure-main-actions button{min-height:36px;font-size:10px;padding:5px}
+#jw-adventure-interact{background:#d0ff68;color:#102423}
+#jw-adventure-retry{background:#0b2835}
+.jw-adventure-battle{padding:10px;border:1px solid #ffcb71a3;border-radius:12px;background:#44243c}
+.jw-adventure-battle strong{display:block;font:900 13px var(--sf-ui);color:#fff2c1}
+.jw-adventure-battle p{margin:6px 0;font:700 11px var(--sf-ui)}
+.jw-adventure-battle>div{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.jw-adventure-battle button{font-size:10px;min-width:0}.jw-adventure-battle button.is-guarded{border-color:#ff8e8e;background:#703b4a}
+.jw-adventure-outfits{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.jw-outfit{display:flex;gap:5px;align-items:center;padding:7px 9px;min-height:36px;border-radius:9px;border:1px solid #89cad75a;background:#10303e;color:#eafde9;font:800 10px var(--sf-ui)}
+.jw-outfit:disabled{opacity:.45}.jw-outfit.is-equipped{border-color:#caff70;background:#264a39}
+.jw-outfit-swatch{width:13px;height:17px;border-radius:4px;display:inline-block}
+.jw-adventure-help{margin:0;color:#a5c8cc;font:500 10px/1.5 var(--sf-ui)}
+#adventure button:focus-visible,#jw-adventure-canvas:focus-visible{outline:3px solid #d5ff84;outline-offset:2px}
+@media(max-width:900px){.jw-adventure-layout{grid-template-columns:minmax(0,1fr)}.jw-adventure-sidebar{grid-template-columns:1fr 1fr;align-items:start}.jw-adventure-controls{grid-row:1/3;grid-column:2;align-self:stretch}.jw-adventure-collection{grid-column:1/-1}.jw-adventure-help{grid-column:1/-1}}
+@media(max-width:600px){#adventure{padding:12px 9px 90px}.jw-adventure-heading{display:block}.jw-adventure-heading p{font-size:11px;margin:6px 0}#jw-adventure-stats{font-size:10px}.jw-adventure-worlds{display:flex;overflow-x:auto;gap:6px;margin:9px 0;scroll-snap-type:x mandatory}.jw-adventure-world{flex:0 0 45%;min-height:58px;scroll-snap-align:start;font-size:11px}.jw-adventure-boardhead{padding:7px 10px}.jw-adventure-sidebar{display:grid;grid-template-columns:1fr;padding:8px;gap:7px}.jw-adventure-controls{grid-column:1;grid-row:auto;grid-template-columns:125px 1fr}.jw-adventure-collection,.jw-adventure-help{grid-column:1}.jw-adventure-mission{padding:8px}#jw-adventure-objective{font-size:10px}.jw-adventure-status{min-height:32px;padding:6px 9px}.jw-adventure-outfits{flex-wrap:nowrap;overflow-x:auto}}
+@media(prefers-reduced-motion:reduce){#adventure *,#adventure *::before,#adventure *::after{animation:none!important;transition:none!important}}

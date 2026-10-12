@@ -69,6 +69,7 @@ body.nav-open .nav-extra{display:inline-flex}
       <button class="nav-btn nav-extra" data-section="career">Career</button>
       <button class="nav-btn nav-extra" data-section="news">Scores</button>
       <button class="nav-btn nav-extra" data-section="sports-arcade">Sports Arcade</button>
+      <button class="nav-btn nav-extra" data-section="adventure">Adventure</button>
       <button class="nav-btn nav-extra" data-section="sports">Sports Scores</button>
       <button class="nav-btn" data-section="versus">Versus</button>
       <button class="nav-btn" data-section="watch">Watch</button>
@@ -101,6 +102,7 @@ body.nav-open .nav-extra{display:inline-flex}
           <button type="button" class="studio-button-primary" onclick="showSection('arena')"><span class="studio-button-icon">▶</span> PLAY FOOTBALL <span aria-hidden="true">↗</span></button>
           <button type="button" class="studio-button-primary" onclick="showSection('versus')">VERSUS <span aria-hidden="true">↗</span></button>
           <button type="button" class="studio-button-outline" onclick="showSection('sports-arcade')">PLAY ALL SPORTS <span aria-hidden="true">↗</span></button>
+          <button type="button" class="studio-button-outline" onclick="showSection('adventure')">ADVENTURE CIRCUIT <span aria-hidden="true">↗</span></button>
         </div>
         <div class="studio-hero-foot"><span>01 / YOUR STORY STARTS HERE</span><span>OFFLINE-FIRST • NO ACCOUNTS • ALL YOU</span></div>
       </div>
@@ -1296,6 +1298,59 @@ body.nav-open .nav-extra{display:inline-flex}
   <!-- FUN ZONE SECTION -->
   
 
+
+<section id="adventure" class="section jw-adventure" tabindex="-1" aria-labelledby="jw-adventure-heading">
+  <header class="jw-adventure-heading">
+    <div><span class="studio-kicker">JOZEF'S WORLD / THE ADVENTURE CIRCUIT</span>
+      <h2 id="jw-adventure-heading">FOUR WORLDS. <em>ONE LEGEND.</em></h2>
+      <p>Explore original sports worlds, collect stars, activate beacons and beat each champion. Play solo or together on one device. Progress stays on your device.</p>
+    </div>
+    <strong id="jw-adventure-stats" aria-live="polite">0/20 STARS · 0/8 SECRETS · 0/4 CUPS</strong>
+  </header>
+  <div id="jw-adventure-worlds" class="jw-adventure-worlds" role="group" aria-label="Choose an unlocked adventure world"></div>
+  <div class="jw-adventure-layout">
+    <div class="jw-adventure-board">
+      <div class="jw-adventure-boardhead"><strong id="jw-adventure-zone-title">Neon City</strong><span id="jw-adventure-active">Solo adventure</span></div>
+      <canvas id="jw-adventure-canvas" width="960" height="600" tabindex="0" aria-label="Adventure map. Tap any open tile to walk there, or use the direction pad." role="img"></canvas>
+      <p id="jw-adventure-status" class="jw-adventure-status" role="status" aria-live="polite">Choose a path. Collect stars and find the champion.</p>
+    </div>
+    <aside class="jw-adventure-sidebar" aria-label="Adventure mission and controls">
+      <div class="jw-adventure-mission">
+        <span class="studio-kicker">ACTIVE MISSION</span>
+        <p id="jw-adventure-objective">Find two stars and activate two beacons.</p>
+      </div>
+      <div class="jw-adventure-controls">
+        <div class="jw-adventure-dpad" role="group" aria-label="Walk around the world">
+          <button type="button" data-adventure-step="0,-1" class="up" aria-label="Move up">↑</button>
+          <button type="button" data-adventure-step="-1,0" class="left" aria-label="Move left">←</button>
+          <button type="button" data-adventure-step="0,1" class="down" aria-label="Move down">↓</button>
+          <button type="button" data-adventure-step="1,0" class="right" aria-label="Move right">→</button>
+        </div>
+        <div class="jw-adventure-main-actions">
+          <button type="button" id="jw-adventure-interact">INTERACT / CHALLENGE</button>
+          <button type="button" id="jw-adventure-coop" aria-pressed="false">2 PLAYER: OFF</button>
+          <button type="button" id="jw-adventure-switch" hidden>SWITCH PLAYER</button>
+          <button type="button" id="jw-adventure-retry">RESTART POSITION</button>
+        </div>
+      </div>
+      <div id="jw-adventure-battle" class="jw-adventure-battle" hidden>
+        <strong id="jw-adventure-battle-score">GOALS 0/3 · SAVES 0/3</strong>
+        <p id="jw-adventure-shield">CHAMPION SHIELD</p>
+        <div role="group" aria-label="Choose a free lane">
+          <button type="button" data-adventure-lane="0">TOP</button>
+          <button type="button" data-adventure-lane="1">MIDDLE</button>
+          <button type="button" data-adventure-lane="2">BOTTOM</button>
+        </div>
+      </div>
+      <div class="jw-adventure-collection">
+        <span class="studio-kicker">EARNED KITS / SHARED CLUB</span>
+        <div id="jw-adventure-outfits" class="jw-adventure-outfits"></div>
+      </div>
+      <p class="jw-adventure-help">Tap an open tile to follow a safe path, or use the arrows. On desktop, WASD controls Jozef and arrow keys control Dad in two-player mode. Space or Enter interacts.</p>
+    </aside>
+  </div>
+</section>
+
 <section id="versus" class="section" tabindex="-1" aria-labelledby="versus-title">
   <div class="versus-card">
     <header class="versus-head"><div><span class="versus-eyebrow">AFTER DARK / 1 v 1</span><h2 id="versus-title">RIVAL NIGHT.</h2></div><button type="button" id="versus-leave" hidden>Leave match</button></header>
@@ -1497,6 +1552,7 @@ body.nav-open .nav-extra{display:inline-flex}
   <script src="peerjs.min.js"></script>
   <script src="versus-physics.js"></script>
   <script src="versus.js"></script>
+  <script src="adventure.js"></script>
   <script src="presence.js"></script>
   <script src="visual-2026.js" defer></script>
   <script src="campaign-2026.js" defer></script>

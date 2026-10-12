@@ -51,7 +51,32 @@
   function earnedCount(state,zone,kind){const name=kind==='stars'?'star':kind==='secrets'?'secret':'switch';return state[kind].filter(k=>k.startsWith(zone+'-'+name+'-')).length}
   function canChallenge(state,zone){return earnedCount(state,zone,'stars')>=2&&earnedCount(state,zone,'switches')===2}
   function bossGuard(zone,round,attempt){return (zone*2+round+attempt+1)%3}
-  const api=Object.freeze({KEY,WORLDS,OUTFITS,STAR_POS,SECRET_POS,SWITCH_POS,newState,sanitize,tileAt,canMove,canChallenge,bossGuard,pointId,earnedCount});
+  // Grid BFS gives touch players a predictable, obstacle-safe route without teleporting.
+  function shortestPath(zone,sx,sy,tx,ty){
+    if(!Number.isInteger(zone)||zone<0||zone>=WORLDS.length||
+      ![sx,sy,tx,ty].every(Number.isInteger)||!canMove(zone,sx,sy)||!canMove(zone,tx,ty))return null;
+    if(sx===tx&&sy===ty)return [];
+    const start=sy*WIDTH+sx,goal=ty*WIDTH+tx;
+    const queue=[start],seen=new Set([start]),previous=new Map();
+    for(let i=0;i<queue.length;i++){
+      const key=queue[i],x=key%WIDTH,y=Math.floor(key/WIDTH);
+      for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]){
+        const nx=x+dx,ny=y+dy,nk=ny*WIDTH+nx;
+        if(!canMove(zone,nx,ny)||seen.has(nk))continue;
+        seen.add(nk);previous.set(nk,key);queue.push(nk);
+        if(nk===goal){
+          const path=[];let current=goal;
+          while(current!==start){
+            path.unshift([current%WIDTH,Math.floor(current/WIDTH)]);
+            current=previous.get(current);
+          }
+          return path;
+        }
+      }
+    }
+    return null;
+  }
+  const api=Object.freeze({KEY,WORLDS,OUTFITS,STAR_POS,SECRET_POS,SWITCH_POS,newState,sanitize,tileAt,canMove,canChallenge,bossGuard,pointId,earnedCount,shortestPath});
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
   if(typeof document==='undefined')return;
   root.JozefAdventureRules=api;
@@ -61,7 +86,7 @@
   const ctx=canvas.getContext&&canvas.getContext('2d');
   let state;
   try{state=sanitize(JSON.parse(localStorage.getItem(KEY)||'null'))}catch(_){state=newState()}
-  let players=[{x:1,y:1},{x:1,y:2}],active=0,battle=null,frameId=0;
+  let players=[{x:1,y:1},{x:1,y:2}],active=0,battle=null,frameId=0,walkingTimer=null,walkingToken=0;
   let toast='Explore the arena. Collect two energy stars and activate both beacons.',soundOff=true;
   const hits=['LEFT','CENTRE','RIGHT'];
   function save(){
@@ -73,7 +98,8 @@
     const node=$('jw-adventure-status');
     if(node)node.textContent=value;
   }
-  function resetPlayers(){players=[{x:1,y:1},{x:1,y:2}];active=0;battle=null;}
+  function stopWalking(){walkingToken++;if(walkingTimer!==null)clearTimeout(walkingTimer);walkingTimer=null;}
+  function resetPlayers(){stopWalking();players=[{x:1,y:1},{x:1,y:2}];active=0;battle=null;}
   function progress(){return {zones:state.completed.length,stars:state.stars.length,secrets:state.secrets.length,coop:state.coop,outfit:state.outfit};}
   function enterZone(index){
     if(!Number.isInteger(index)||index<0||index>=4||index>state.completed.length)return false;
@@ -223,10 +249,10 @@
       const k=e.key.toLowerCase();
       const id=state.coop&&e.key.startsWith('Arrow')?1:0;
       const directions={arrowup:[0,-1],arrowdown:[0,1],arrowleft:[-1,0],arrowright:[1,0],w:[0,-1],s:[0,1],a:[-1,0],d:[1,0]};
-      const vector=directions[k];if(vector){e.preventDefault();move(id,vector[0],vector[1]);}
+      const vector=directions[k];if(vector){e.preventDefault();stopWalking();move(id,vector[0],vector[1]);}
     });
     document.querySelectorAll('[data-adventure-step]').forEach(b=>b.addEventListener('click',()=>{
-      const parts=b.dataset.adventureStep.split(',').map(Number);move(active,parts[0],parts[1]);canvas.focus();
+      const parts=b.dataset.adventureStep.split(',').map(Number);stopWalking();move(active,parts[0],parts[1]);canvas.focus();
     }));
     document.querySelectorAll('[data-adventure-lane]').forEach(b=>b.addEventListener('click',()=>shoot(Number(b.dataset.adventureLane))));
     $('jw-adventure-interact')?.addEventListener('click',()=>{interact();canvas.focus();});
@@ -238,9 +264,18 @@
       const rect=canvas.getBoundingClientRect();
       const x=Math.floor((e.clientX-rect.left)/rect.width*WIDTH),y=Math.floor((e.clientY-rect.top)/rect.height*HEIGHT);
       const p=players[active],dx=x-p.x,dy=y-p.y;
-      if(Math.abs(dx)+Math.abs(dy)===1)move(active,Math.sign(dx),Math.sign(dy));
-      else if(Math.abs(dx)+Math.abs(dy)===0)interact();
-      else message('Tap a square next to your player, or use the direction pad.');
+      stopWalking();
+      if(Math.abs(dx)+Math.abs(dy)===0){interact();return;}
+      const route=shortestPath(state.zone,p.x,p.y,x,y);
+      if(!route){message('That square is blocked. Tap an open path.');return;}
+      const token=walkingToken,which=active,zone=state.zone;
+      function walk(){
+        if(token!==walkingToken||battle||state.zone!==zone||active!==which||!route.length)return;
+        const next=route.shift(),current=players[which];
+        if(!move(which,next[0]-current.x,next[1]-current.y))return;
+        if(route.length&&!battle&&state.zone===zone)walkingTimer=setTimeout(walk,125);
+      }
+      walk();
     });
     window.addEventListener('storage',e=>{if(e.key!==KEY)return;try{state=sanitize(JSON.parse(e.newValue||'null'));resetPlayers();render();}catch(_){}});
   }
