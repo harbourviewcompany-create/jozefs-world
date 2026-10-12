@@ -40,9 +40,10 @@
     jozef: { x: 160, y: 210, vx: 0, vy: 0, face: 1 },
     score: { dad: 0, jozef: 0 },
     matchLeft: 120,
-    call: 'Kickoff'
+    call: 'Kickoff',
+    keepers: { left: 210, right: 210 }
   };
-  const keepers = { left: { x: 52, y: 210 }, right: { x: 668, y: 210 } };
+  const keeperState = { left: { commit: 0, target: 210 }, right: { commit: 0, target: 210 } };
   const targets = { Dad: null, Jozef: null };
   let kickLock = 0;
   // Host-authoritative stamina keeps two-player matches fair.
@@ -196,9 +197,13 @@
     ctx.restore();
   }
 
-  function keeper(k, color) {
+  function keeper(side, color) {
+    const y = state.keepers?.[side] || 210;
+    const x = side === 'left' ? 52 : 668;
+    const dive = keeperState[side].commit > 0 ? Math.sign(keeperState[side].target - 210) : 0;
     ctx.save();
-    ctx.translate(k.x, k.y);
+    ctx.translate(x, y);
+    ctx.rotate(dive * 0.5);
     ctx.fillStyle = 'rgba(0,0,0,.3)';
     ctx.beginPath(); ctx.ellipse(0, 16, 10, 3, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = color;
@@ -206,24 +211,34 @@
     ctx.fillStyle = '#e7b898';
     ctx.beginPath(); ctx.arc(0, -12, 6, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#111';
-    ctx.fillRect(-11, -2, 5, 5);
-    ctx.fillRect(6, -2, 5, 5);
+    ctx.fillRect(-14, -4, 6, 5);
+    ctx.fillRect(8, -4, 6, 5);
     ctx.restore();
   }
   function mindKeepers() {
     const ball = state.ball;
-    for (const [side, k] of Object.entries(keepers)) {
-      const home = side === 'left' ? 52 : 668;
-      const threat = side === 'left' ? ball.vx < -1 && ball.x < 280 : ball.vx > 1 && ball.x > 440;
-      const target = threat ? ball.y : 210;
-      k.y += (target - k.y) * (threat ? 0.18 : 0.06);
-      k.y = Math.max(GOAL.y + 8, Math.min(GOAL.y + GOAL.h - 8, k.y));
-      k.x = home;
+    state.keepers = state.keepers || { left: 210, right: 210 };
+    for (const side of ['left', 'right']) {
+      const mind = keeperState[side];
+      const shot = side === 'left' ? ball.vx < -2.4 && ball.x < 220 : ball.vx > 2.4 && ball.x > 500;
+      if (shot && mind.commit <= 0) {
+        mind.target = Math.max(GOAL.y + 16, Math.min(GOAL.y + GOAL.h - 16, ball.y + ball.vy * 4));
+        mind.commit = 28;
+      }
+      if (mind.commit > 0) {
+        state.keepers[side] += (mind.target - state.keepers[side]) * 0.22;
+        mind.commit -= 1;
+      } else {
+        const watch = side === 'left' ? ball.x < 360 : ball.x > 360;
+        const home = watch ? 210 + (ball.y - 210) * 0.25 : 210;
+        state.keepers[side] += (home - state.keepers[side]) * 0.05;
+      }
+      state.keepers[side] = Math.max(GOAL.y + 12, Math.min(GOAL.y + GOAL.h - 12, state.keepers[side]));
     }
   }
   function save(side) {
-    const k = keepers[side];
-    return Math.abs(state.ball.y - k.y) < 22;
+    const diving = keeperState[side].commit > 8;
+    return Math.abs(state.ball.y - (state.keepers?.[side] || 210)) < (diving ? 28 : 16);
   }
   function burst(x, y, color, n) {
     if(reduced.matches)return;
@@ -269,8 +284,8 @@
     for (let i = sparks.length - 1; i >= 0; i--) if (sparks[i].life <= 0) sparks.splice(i, 1);
     player(visualPose(state.jozef,'jozef'), '#60c5ff', 'Jozef');
     player(visualPose(state.dad,'dad'), '#d7ff4a', 'Dad');
-    keeper(keepers.left, '#f4f7f2');
-    keeper(keepers.right, '#f4f7f2');
+    keeper('left', '#f4f7f2');
+    keeper('right', '#f4f7f2');
     ctx.fillStyle = 'rgba(0,0,0,.25)';
     ctx.beginPath(); ctx.ellipse(ball.x + 2, ball.y + 5, 6, 3, 0, 0, Math.PI * 2); ctx.fill();
     ctx.shadowColor='#e2faff';ctx.shadowBlur=Math.hypot(state.ball.vx,state.ball.vy)>4?15:4;
@@ -428,6 +443,7 @@
     targets.Dad = null; targets.Jozef = null;
     for(const p of [state.dad,state.jozef]){p.vx=0;p.vy=0;}
     state.dad.face=-1;state.jozef.face=1;
+    state.keepers={left:210,right:210};keeperState.left.commit=0;keeperState.right.commit=0;
     setTimeout(() => { if (room.phase === 'playing' && state.call !== 'Full time') state.call = ''; }, 1400);
   }
   function send(msg){if(room.conn?.open)room.conn.send(msg);}
