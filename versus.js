@@ -128,21 +128,27 @@
   function player(p,color,name){
     const speed=Math.hypot(p.vx,p.vy);
     const moving=speed>.25;
-    const stride=moving?Math.sin(tick*(0.18+speed*0.12))* (4+speed):0;
-    const bob=moving?Math.abs(Math.sin(tick*(0.18+speed*0.12)))*-2:0;
-    ctx.save();ctx.translate(p.x,p.y+bob);if(portrait)ctx.rotate(-Math.PI/2);ctx.scale(p.face||1,1);ctx.rotate(Math.max(-0.25,Math.min(0.25,p.vy*0.08)));ctx.scale(1.3,1.3);
-    ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.ellipse(2,18,12,4,0,0,Math.PI*2);ctx.fill();
-    if(name===room.who){ctx.strokeStyle=color;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(0,16,18,8,0,0,Math.PI*2);ctx.stroke();ctx.strokeStyle=color+'88';ctx.beginPath();ctx.arc(0,0,24,-Math.PI*.83,-Math.PI*.17);ctx.stroke();}
-    else if(room.practice){ctx.strokeStyle='#ffb37a99';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(0,16,18,8,0,0,Math.PI*2);ctx.stroke();}
-    ctx.lineCap='round';ctx.lineWidth=6;ctx.strokeStyle='#142439';
-    ctx.beginPath();ctx.moveTo(-5,7);ctx.lineTo(-6+stride,19);ctx.moveTo(5,7);ctx.lineTo(6-stride,19);ctx.stroke();
-    ctx.strokeStyle='#e4fff4';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-6+stride,19);ctx.lineTo(-2+stride,20);ctx.moveTo(6-stride,19);ctx.lineTo(10-stride,20);ctx.stroke();
-    ctx.strokeStyle='#bd8d69';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-8,-5);ctx.lineTo(-13,-1-stride);ctx.moveTo(8,-5);ctx.lineTo(13,-1+stride);ctx.stroke();
-    ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(-10,-8,20,16,4);ctx.fill();
-    ctx.fillStyle='#f4f7f2';ctx.fillRect(-10,6,20,6);
-    ctx.fillStyle='#e6fff1';ctx.font='bold 9px system-ui';ctx.textAlign='center';ctx.fillText('11',0,2);
-    ctx.fillStyle='#d6a980';ctx.beginPath();ctx.arc(0,-16,7,0,Math.PI*2);ctx.fill();ctx.fillStyle='#29211f';ctx.beginPath();ctx.arc(0,-18,7,Math.PI,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#071724d9';ctx.beginPath();ctx.roundRect(-25,-42,50,15,5);ctx.fill();ctx.fillStyle='#ecfffa';ctx.font='bold 10px system-ui';ctx.fillText(name,0,-31);
+    const phase=tick*(0.16+speed*0.1);
+    const stride=moving?Math.sin(phase)*(5+speed*1.4):0;
+    const bob=moving?Math.abs(Math.sin(phase))*-1.6:0;
+    ctx.save();ctx.translate(p.x,p.y+bob);if(portrait)ctx.rotate(-Math.PI/2);ctx.scale(p.face||1,1);ctx.rotate(Math.max(-0.18,Math.min(0.18,p.vy*0.06)));ctx.scale(1.35,1.35);
+    ctx.fillStyle='rgba(0,0,0,.32)';ctx.beginPath();ctx.ellipse(1,20,11,3.5,0,0,Math.PI*2);ctx.fill();
+    if(name===room.who){ctx.strokeStyle=color;ctx.globalAlpha=.55;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(0,18,16,6,0,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;}
+    ctx.lineCap='round';ctx.lineJoin='round';
+    ctx.strokeStyle='#1d2430';ctx.lineWidth=5;
+    ctx.beginPath();ctx.moveTo(-4,8);ctx.lineTo(-5+stride*.3,16);ctx.lineTo(-6+stride,21);ctx.moveTo(4,8);ctx.lineTo(5-stride*.3,16);ctx.lineTo(6-stride,21);ctx.stroke();
+    ctx.strokeStyle='#f2f5f3';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-5+stride*.2,12);ctx.lineTo(-5+stride*.2,17);ctx.moveTo(5-stride*.2,12);ctx.lineTo(5-stride*.2,17);ctx.stroke();
+    ctx.fillStyle='#1b1f27';ctx.beginPath();ctx.ellipse(-6+stride,21,4,2,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(6-stride,21,4,2,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#e0b08a';ctx.lineWidth=3.5;
+    ctx.beginPath();ctx.moveTo(-7,-2);ctx.lineTo(-12,-stride*.4);ctx.moveTo(7,-2);ctx.lineTo(12,stride*.4);ctx.stroke();
+    ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(-9,-9);ctx.quadraticCurveTo(0,-13,9,-9);ctx.lineTo(8,7);ctx.quadraticCurveTo(0,10,-8,7);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#ffffffcc';ctx.fillRect(-8,4,16,3);
+    ctx.fillStyle='#fff';ctx.font='700 8px system-ui';ctx.textAlign='center';ctx.fillText('11',0,1);
+    ctx.fillStyle='#f0c2a0';ctx.beginPath();ctx.arc(0,-15,6.5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#2a2422';ctx.beginPath();ctx.arc(0,-17,6.5,Math.PI*1.05,Math.PI*1.95);ctx.fill();
+    ctx.fillStyle='#243044';ctx.beginPath();ctx.arc(-2,-15,1,0,Math.PI*2);ctx.arc(2,-15,1,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#071724e6';ctx.beginPath();ctx.roundRect(-22,-36,44,13,4);ctx.fill();
+    ctx.fillStyle='#f4fffb';ctx.font='700 9px system-ui';ctx.fillText(name,0,-27);
     ctx.restore();
   }
 
