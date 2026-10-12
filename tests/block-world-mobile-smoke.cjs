@@ -21,7 +21,7 @@ async function play(engine,width,height){
   const page=await browser.newPage({viewport:{width,height},isMobile:true,hasTouch:true,reducedMotion:'reduce'});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   try{
-   await page.goto('http://127.0.0.1:'+server.address().port+'/block-world.html',{waitUntil:'domcontentloaded'});
+   await page.goto('http://127.0.0.1:'+server.address().port+'/block-quest.html',{waitUntil:'domcontentloaded'});
    await page.waitForFunction(()=>!!window.JozefBlock&&document.querySelector('canvas')?.width>100,null,{timeout:15000});
    const boxes=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,width:innerWidth,
     buttons:[...document.querySelectorAll('.controls button')].map(b=>b.getBoundingClientRect().toJSON())}));
