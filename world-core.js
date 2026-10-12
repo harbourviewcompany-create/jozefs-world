@@ -100,7 +100,7 @@ function glRenderer(canvas){
  if(!gl)return null;
  const vertex=`attribute vec3 p;attribute vec3 n;attribute float bevel;
  uniform vec2 rotation;uniform float scale;uniform mediump float selected;
- varying vec3 normal;varying vec3 point;varying float finish;
+ varying mediump vec3 normal;varying mediump vec3 point;varying mediump float finish;
  void main(){
  float cy=cos(rotation.x),sy=sin(rotation.x),cx=cos(rotation.y),sx=sin(rotation.y);
  vec3 position=p*(1.0+selected*.018);
