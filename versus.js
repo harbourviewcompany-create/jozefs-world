@@ -564,6 +564,17 @@
     $('versus-ready').textContent=room.ready?'Ready — waiting for opponent':room.other?'Ready to play':'Waiting for opponent';
     $('versus-room-code').textContent=room.code;
     $('versus').classList.toggle('is-playing',playing);
+    const stage=$('.versus-stage'), play=$('.versus-play'), board=$('.versus-scoreboard'), card=$('.versus-card');
+    if(playing){
+      if(card){card.style.cssText='position:relative;height:100dvh;padding:0;overflow:hidden;background:#061018';}
+      if(stage){stage.style.cssText='position:absolute;inset:0;z-index:0';}
+      if(canvas){canvas.style.cssText='width:100%;height:100%;object-fit:cover;display:block';}
+      if(board){board.style.cssText='position:absolute;top:6px;left:8px;right:8px;z-index:4;margin:0;padding:4px 10px;background:rgba(6,16,24,.4);border-radius:12px';}
+      if(play){play.style.cssText='position:absolute;left:0;right:0;bottom:0;z-index:4;background:transparent;padding:8px 10px 16px';}
+      ['versus-aim','versus-deke','versus-pass'].forEach(id=>{const b=$(id);if(b)b.style.cssText='background:rgba(8,22,32,.4);color:#fff;border:1px solid rgba(255,255,255,.3)';});
+      const kick=$('versus-kick'); if(kick) kick.style.background='rgba(208,255,105,.55)';
+      const tip=$('versus-tip'); if(tip) tip.style.display='none';
+    }
     document.body.classList.toggle('versus-focused',connected&&$('versus').classList.contains('active'));
     document.querySelectorAll('.versus-role').forEach(b=>{b.classList.toggle('is-on',b.dataset.who===room.who);b.setAttribute('aria-pressed',String(b.dataset.who===room.who));});
     $('versus-who').value=room.who; try{localStorage.setItem('jozefs-world-who', room.who);}catch(_){ }
