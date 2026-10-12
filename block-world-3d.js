@@ -16,6 +16,7 @@ const hero={x:2.5,y:12,z:2.5,vy:0,yaw:0,pitch:-.07,role:0,hp:100,ground:false,do
 const companion={x:4.5,y:12,z:4.5,role:1,hp:100};
 let boss={x:32.5,y:12,z:32.5,hp:120,alive:true},mobs=[],clock=0,last=0,frames=0,dirty=false,saveClock=0,skyPhase=0;
 let guestActive=false;
+let bossPhase=0,bossWarned=false,lastMobSpawn=0;
 let keys={},joy={x:0,y:0},gamepadHeld={mine:false,place:false,attack:false},jumpWasDown=false,look=null,peer=null,conn=null,host=false,invite='',lastNet=0,remote=false,noticeTo=0,renderOk=false;
 const rnd=(x,z,s)=>{let n=Math.imul(x,374761393)+Math.imul(z,668265263)+Math.imul(s|0,2246822519);n=Math.imul(n^(n>>>13),1274126177);return((n^(n>>>16))>>>0)/4294967296;};
 function noise(x,z,s){let X=Math.floor(x/s),Z=Math.floor(z/s),u=x/s-X,v=z/s-Z;
@@ -187,7 +188,7 @@ function spawn(){
  mobs=[];for(let i=0;i<16;i++){const x=Math.floor(rnd(i,seed,5)*90)-45,z=Math.floor(rnd(i,seed,8)*90)-45;
  if(Math.hypot(x,z)>9)mobs.push({x,y:ground(x,z),z,hp:30,kind:i%2});}
  const bossHp=Number.isFinite(dimensions[realm]?.bossHp)?dimensions[realm].bossHp:(realm===0&&defeated?0:120);
- boss={x:32.5,z:32.5,y:ground(32.5,32.5),hp:bossHp,alive:bossHp>0};
+ boss={x:32.5,z:32.5,y:ground(32.5,32.5),hp:bossHp,alive:bossHp>0};bossPhase=0;bossWarned=false;
 }
 function step(dt){
  clock+=dt;saveClock+=dt;
@@ -222,8 +223,21 @@ function step(dt){
   if(d<1.3&&!creative&&clock-(m.last||0)>1.3){hero.hp=Math.max(0,hero.hp-7);m.last=clock;}
  }
  const d=Math.hypot(boss.x-hero.x,boss.z-hero.z);
- if(boss.alive&&d<13){if(d>2){boss.x+=(hero.x-boss.x)/d*.45*dt;boss.z+=(hero.z-boss.z)/d*.45*dt;boss.y=ground(boss.x,boss.z);}
- else if(clock-(boss.last||0)>1.4&&!creative){hero.hp=Math.max(0,hero.hp-16);boss.last=clock;announce('The Crystal Golem attacks!');}}
+ if(boss.alive&&d<13){
+  if(d>2){boss.x+=(hero.x-boss.x)/d*.48*dt;boss.z+=(hero.z-boss.z)/d*.48*dt;boss.y=ground(boss.x,boss.z);}
+  bossPhase+=dt;
+  if(bossPhase>4.3&&!bossWarned){bossWarned=true;announce('GOLEM SHOCKWAVE INCOMING · JUMP!',1700);}
+  if(bossPhase>5.8){if(d<6&&!creative&&hero.ground){hero.hp=Math.max(0,hero.hp-24);announce('Shockwave hit! Jump to dodge the next one.',1800);}
+   else if(d<6)announce('SHOCKWAVE DODGED!',1000);
+   bossPhase=0;bossWarned=false;}
+ }
+ if(clock-lastMobSpawn>7){lastMobSpawn=clock;
+  mobs=mobs.filter(m=>m.hp>0&&Math.hypot(m.x-hero.x,m.z-hero.z)<48);
+  const spawnCount=14-mobs.length;
+  for(let i=0;i<spawnCount;i++){const a=rnd(i+frames,seed,3)*Math.PI*2,r=18+rnd(i+frames,seed,6)*25;
+   const x=hero.x+Math.sin(a)*r,z=hero.z+Math.cos(a)*r;
+   if(mobs.every(m=>Math.hypot(m.x-x,m.z-z)>4))mobs.push({x,y:ground(x,z),z,hp:30,kind:biome(x,z)==='Snow Ridge'?1:0});}
+ }
  const zone=biome(hero.x,hero.z);if(!discovered[zone]&&Math.hypot(hero.x-2,hero.z-2)>24){discovered[zone]=true;gain('explore');}
  if(conn?.open){lastNet+=dt;if(lastNet>.13){lastNet=0;send({t:'move',x:hero.x,y:hero.y,z:hero.z,hp:hero.hp});}}
  if(saveClock>15){saveClock=0;if(dirty)save();}
