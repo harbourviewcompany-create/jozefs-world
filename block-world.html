@@ -271,7 +271,7 @@ function place(){
 }
 function playerSwitch(){active=1-active;focus=null;dirty=true;renderHotbar();queueSave();say('Playing as '+players[active].name);}
 function renderHotbar(){
- const bar=$('hotbar');bar.replaceChildren();const ids=hotItems;
+ const bar=$('hotbar');bar.replaceChildren();const ids=hotItems.includes(selected)?hotItems:[selected,...hotItems.slice(0,7)];
  ids.forEach((id,k)=>{
   const slot=document.createElement('button');slot.className='slot'+(selected===id?' selected':'');slot.type='button';slot.title=names[id];slot.setAttribute('aria-label','Select '+names[id]);slot.setAttribute('aria-pressed',selected===id?'true':'false');
   const img=document.createElement('canvas');img.width=img.height=32;img.getContext('2d').drawImage(tex(id),0,0);
@@ -574,6 +574,70 @@ draw=function(){
 };
 createAdventureUi();
 
+/* Compact mobile action drawer, block catalog, survival hazards and recipes. */
+(function(){
+ const actions=$('bw-actions');
+ if(!actions)return;
+ actions.classList.add('closed');
+ const menu=document.createElement('button');menu.type='button';menu.id='bw-menu-toggle';menu.textContent='☰ WORLD MENU';
+ menu.setAttribute('aria-expanded','false');
+ menu.addEventListener('click',()=>{
+  const opened=actions.classList.toggle('closed')===false;
+  menu.setAttribute('aria-expanded',String(opened));
+  menu.textContent=opened?'✕ CLOSE MENU':'☰ WORLD MENU';
+ });
+ actions.insertBefore(menu,actions.firstChild);
+ const picker=document.createElement('button');picker.type='button';picker.textContent='BLOCK CATALOG';
+ picker.addEventListener('click',()=>{
+  const panel=$('bw-panel');panel.hidden=false;panel.replaceChildren();
+  const title=document.createElement('h3');title.textContent='CHOOSE A BUILDING BLOCK';panel.appendChild(title);
+  const grid=document.createElement('div');grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(85px,1fr));gap:5px';
+  blockable.forEach(id=>{
+    const item=document.createElement('button');item.type='button';item.textContent=names[id];item.style.cssText='min-height:48px;padding:7px;border:1px solid #b4dbf178;background:#17334f;color:white;font-size:11px';
+    item.addEventListener('click',()=>{selected=id;renderHotbar();panel.hidden=true;queueSave();say('Selected '+names[id]);});
+    grid.appendChild(item);
+  });panel.appendChild(grid);
+  const close=document.createElement('button');close.type='button';close.textContent='Close';close.onclick=()=>panel.hidden=true;panel.appendChild(close);
+ });
+ actions.appendChild(picker);
+ const toggleSound=document.createElement('button');toggleSound.type='button';toggleSound.textContent='SOUND OFF';
+ toggleSound.addEventListener('click',()=>{
+  soundEnabled=!soundEnabled;toggleSound.textContent=soundEnabled?'SOUND ON':'SOUND OFF';
+  if(soundEnabled)chime();queueSave();
+ });actions.appendChild(toggleSound);
+ const playerSkill=document.createElement('p');playerSkill.id='bw-character-skill';playerSkill.style.cssText='position:fixed;top:117px;left:10px;z-index:12;margin:0;padding:4px 7px;border-radius:8px;background:#0e2543bb;color:#dcefff;font:10px system-ui;pointer-events:none';
+ document.body.appendChild(playerSkill);
+ const style=document.createElement('style');
+ style.textContent='#bw-actions.closed button:not(:first-child){display:none}#bw-actions{top:150px;left:8px;max-width:min(200px,49vw)}#bw-actions:not(.closed){max-height:45dvh;overflow-y:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:min(230px,58vw);padding:6px;background:#102943ef;border:1px solid #a3d5f760;border-radius:12px}#bw-actions:not(.closed) button:first-child{grid-column:1/-1}#bw-character-skill{max-width:65vw}@media(max-width:550px){#bw-actions{top:134px}#bw-character-skill{top:111px;font-size:9px}}@media(max-height:480px){#bw-character-skill{display:none}#bw-actions{top:57px}}';
+ document.head.appendChild(style);
+ const updateSkill=()=>playerSkill.textContent=active===0?'DADDY · Strong Builder':'JOZEF · Agile Explorer';
+ updateSkill();
+ const oldSwitch=playerSwitch;
+ playerSwitch=function(){oldSwitch();updateSkill();};
+ recipes.push({name:'Clay Blocks ×2',needs:{2:2,6:1},makes:{15:2}},
+  {name:'Cobblestone ×2',needs:{3:2},makes:{8:2}},
+  {name:'Emerald Jewel',needs:{22:1,26:1},makes:{29:1}},
+  {name:'Lapis Crystal',needs:{23:1},makes:{30:1}},
+  {name:'Redstone Powder ×2',needs:{24:1},makes:{31:2}});
+ let hazardCooldown=0;
+ const prevUpdate=update;
+ update=function(dt){
+  prevUpdate(dt);if(craftingOpen)return;
+  hazardCooldown=Math.max(0,hazardCooldown-dt);
+  if(!creative&&hazardCooldown===0){
+    for(const c of friends){
+      if(c.c!==3)continue;
+      const hit=players.find(p=>Math.abs(p.x-c.x)<22&&Math.abs(p.y-c.y)<25);
+      if(hit){hit.health=Math.max(0,hit.health-8);hazardCooldown=2.4;spark(hit.x,hit.y,14);
+        say('Crystal slime! Avoid it or jump over it');
+        if(hit.health===0){const slot=players.indexOf(hit),spawn=slot?74:71;hit.x=spawn*TILE;hit.y=surface[spawn]*TILE-hit.h;hit.vx=hit.vy=0;hit.health=100;say(hit.name+' returned safely to the base');}
+        break;}
+    }
+  }
+  for(const p of players){if(Math.abs(p.x-players[1-players.indexOf(p)].x)<TILE*2&&p.health<100&&ticks%120===0)p.health=Math.min(100,p.health+2);}
+ };
+})();
+
 bindButton('left','left');bindButton('right','right');bindButton('jump','jump');
 bindButton('mine',null,mine);bindButton('place',null,place);bindButton('switch',null,playerSwitch);
 canvas.addEventListener('pointerdown',e=>{
@@ -604,7 +668,7 @@ $('save').addEventListener('click',()=>{dirty=true;save();say('World saved on th
 $('mode').addEventListener('click',()=>{creative=!creative;queueSave();renderHotbar();say(creative?'Creative: unlimited building':'Survival: collect and spend materials');});
 $('reset').addEventListener('click',()=>{
  if(!confirm('Start a new Block World? This permanently replaces the saved world on this device.'))return;
- try{localStorage.removeItem(KEY);}catch(_){}
+ try{const previous=localStorage.getItem(KEY);if(previous)localStorage.setItem(KEY+'-backup',previous);localStorage.removeItem(KEY);localStorage.removeItem(advSaveKey);}catch(_){}
  adventureSeed=Math.floor(Math.random()*999999)+1;generate();initPlayers();creative=true;active=0;selected=2;focus=null;camX=camY=0;queueSave();renderHotbar();say('Fresh new world created');
 });
 $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-modal','true');$('crafting').setAttribute('aria-hidden','true');
