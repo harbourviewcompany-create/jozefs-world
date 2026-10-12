@@ -3498,3 +3498,5 @@ body.versus-focused #versus:not(.is-playing) .versus-card{grid-template-rows:aut
 #versus #versus-sprint:not(:disabled){box-shadow:0 0 15px #4ebaff25}
 #versus #versus-kick,#versus #versus-again{grid-column:1/-1;min-height:52px}
 @media(max-height:480px) and (orientation:landscape){#versus #versus-aim,#versus #versus-sprint{min-height:32px}#versus #versus-kick{min-height:44px}}
+
+#versus-stats{position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);font:700 10px/1 var(--sf-ui);letter-spacing:.08em;color:#d5efb4}

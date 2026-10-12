@@ -41,7 +41,8 @@
     score: { dad: 0, jozef: 0 },
     matchLeft: 120,
     call: 'Kickoff',
-    keepers: { left: 210, right: 210 }
+    keepers: { left: 210, right: 210 },
+    shots: 0, saves: 0
   };
   const keeperState = { left: { commit: 0, target: 210 }, right: { commit: 0, target: 210 } };
   const targets = { Dad: null, Jozef: null };
@@ -130,6 +131,8 @@
     const node = $('versus-status');
     const line = text;
     if (node) node.textContent = line;
+    const stats = $('versus-stats');
+    if (stats) stats.textContent = (state.shots||0) + ' shots · ' + (state.saves||0) + ' saves';
     const result = $('today-versus-result');
     if (result && /wins|draw/.test(text)) {
       result.textContent = text;
@@ -272,7 +275,7 @@
     glow.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, W, H);
-    if (state.call && state.call !== lastCall && /scores|Full time|post/.test(state.call)) { burst(ball.x, ball.y, state.call.includes('Dad') ? '#d7ff4a' : '#7ee0ff', 36); shake = 14; chime(); voice(state.call); document.querySelector('.versus-scoreboard')?.classList.add('goal'); setTimeout(() => document.querySelector('.versus-scoreboard')?.classList.remove('goal'), 900); }
+    if (state.call && state.call !== lastCall && /scores|GOAL|Saved|Full time|post/.test(state.call)) { burst(ball.x, ball.y, state.call.includes('Dad') ? '#d7ff4a' : '#7ee0ff', 36); shake = 14; chime(); voice(state.call); document.querySelector('.versus-scoreboard')?.classList.add('goal'); setTimeout(() => document.querySelector('.versus-scoreboard')?.classList.remove('goal'), 900); }
     lastCall = state.call;
     trail.push({ x: ball.x, y: ball.y });
     if (trail.length > 8) trail.shift();
@@ -357,7 +360,7 @@
         vy = p.vy * 0.8;
       }
       state.ball.vx=vx; state.ball.vy=vy;
-      shot.power=1; kickLock=16;
+      shot.power=1; kickLock=16; state.shots = (state.shots||0)+1;
       burst(state.ball.x, state.ball.y, '#fff', 10);
       return;
     }
@@ -400,6 +403,7 @@
   }
   function step() {
     if (!room.host || room.phase !== 'playing' || !localActive || !room.remoteActive) return;
+    if (state.freeze > 0) { state.freeze -= 1; state.ball.vx = 0; state.ball.vy = 0; if (state.freeze === 1) reset(state.score.dad >= state.score.jozef ? 1 : -1); broadcast(); return; }
     const cpuPace=practiceRival();
     const now=performance.now();
     move(state.dad,targets.Dad,room.practice&&room.who!=='Dad'?cpuPace:(now<sprintUntil.Dad?5.4:3.1));
@@ -420,12 +424,12 @@
     if (state.call === 'Full time') { broadcast(); return; }
     const post = state.ball.y < GOAL.y + 6 || state.ball.y > GOAL.y + GOAL.h - 6;
     if (state.ball.x < 30 && inGoal(state.ball.y) && !post) {
-      if (save('left')) { state.ball.vx = 4; state.call = 'Save'; }
-      else { state.score.dad += 1; state.call = 'Dad scores'; reset(1); }
+      if (save('left')) { state.saves += 1; state.ball.vx = 5.5; state.ball.vy *= 0.4; state.call = 'Saved'; kickLock = 20; }
+      else { state.score.dad += 1; state.call = 'Dad scores'; state.freeze = 40; }
     }
     else if (state.ball.x > W - 30 && inGoal(state.ball.y) && !post) {
-      if (save('right')) { state.ball.vx = -4; state.call = 'Save'; }
-      else { state.score.jozef += 1; state.call = 'Jozef scores'; reset(-1); }
+      if (save('right')) { state.saves += 1; state.ball.vx = -5.5; state.ball.vy *= 0.4; state.call = 'Saved'; kickLock = 20; }
+      else { state.score.jozef += 1; state.call = 'Jozef scores'; state.freeze = 40; }
     }
     else if ((state.ball.x < 34 || state.ball.x > W - 34) && post && inGoal(state.ball.y)) { state.ball.vx *= -1; state.call = 'Off the post'; }
     else if (state.ball.x < 34) { state.ball.x = 34; state.ball.vx = Math.abs(state.ball.vx) + 0.6; }
