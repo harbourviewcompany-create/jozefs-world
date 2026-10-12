@@ -30,6 +30,7 @@
  </section>
  <nav class="menu">
   <a href="./" class="home" aria-label="Back to the world headquarters">← HQ</a>
+  <a href="./block-world-select.html" class="home" aria-label="Choose 2D or 3D mode">MODE</a>
   <button id="options" type="button" aria-expanded="false">☰ MENU</button>
  </nav>
  <section id="drawer" class="drawer" hidden aria-label="Game options">
@@ -40,7 +41,8 @@
    <button id="creative">CREATIVE ON</button><button id="save">SAVE WORLD</button>
    <button id="sound">SOUND OFF</button><button id="export">EXPORT SAVE</button>
    <button id="import">IMPORT SAVE</button><button id="pair">PLAY TOGETHER</button>
-   <a href="./block-world.html">CLASSIC 2D MODE</a>
+   <a href="./block-world.html">PLAY CLASSIC 2D</a>
+   <a href="./block-world-select.html">CHOOSE MODE</a>
   </div>
   <button id="close" type="button">CLOSE</button>
  </section>
@@ -57,7 +59,6 @@
 </div>
 <input type="file" id="fileInput" accept=".json,application/json" hidden>
 <script>
-/* Boot guard runs independently of the game bundle, including when a script is missing. */
 (function(){
  let ready=false;
  function fail(message){
