@@ -33,8 +33,13 @@ async function run(engine,viewport){
     assert.ok(btn.width>=43&&btn.height>=40,'touch target is large enough');
     assert.ok(btn.right<=viewport.width+1,'control is not clipped on the right');
    }
+   // A canvas can exist before Phaser finishes running Scene.create().
+   await page.waitForFunction(()=>document.getElementById('neon-status')?.textContent.includes('A new night'),null,{timeout:12000})
+     .catch(async error=>{throw Error('Neon scene failed to initialize: '+await page.locator('#neon-status').textContent()+' browser errors: '+errors.join(' | ')+' '+error.message)});
    await page.locator('#neon-guide').click();
-   await page.waitForFunction(()=>document.getElementById('neon-progress').textContent.includes('1/5'),null,{timeout:8000});
+   await page.waitForFunction(()=>document.getElementById('neon-progress').textContent.includes('1/5'),null,{timeout:8000})
+     .catch(async error=>{throw Error('Neon guided movement failed: status='+await page.locator('#neon-status').textContent()+
+       ' progress='+await page.locator('#neon-progress').textContent()+' browser errors='+errors.join(' | ')+' '+error.message)});
    const first=await page.evaluate(()=>JSON.parse(localStorage.getItem('jozefs-world-adventure-v1')));
    assert.ok(first.stars.includes('0-star-0'),'guided movement collected a real Adventure star');
    // Continue the SAME original Adventure save from an unlocked keeper.
