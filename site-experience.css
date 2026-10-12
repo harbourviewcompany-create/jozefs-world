@@ -3856,3 +3856,27 @@ body.versus-focused #versus-tip{font-weight:800;letter-spacing:.03em;color:#e4ff
 #versus-deke{min-height:48px;border-radius:14px;font-weight:800;background:#ffb703;color:#1b1404;border:0}
 
 #versus .versus-stage{background:radial-gradient(ellipse at 50% 0,#1a3a4a,#061018 70%);box-shadow:inset 0 0 80px #000a,0 0 0 1px #9ef0ff22}
+
+/* Together 2026 — cinematic mobile game viewport and polished touch controls. */
+.jw-together-sparks{color:#ffdf9c;font:900 10px/1.2 var(--sf-ui);letter-spacing:.04em;white-space:nowrap}
+.jw-together-settings{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.jw-together-settings button{min-width:0;min-height:40px;padding:7px 5px;border:1px solid #76b1c78c;background:#15374d;color:#def8ff;border-radius:10px;font:900 10px/1.2 var(--sf-ui)}
+.jw-together-settings button[aria-pressed="true"]{border-color:#ffe29b;color:#ffe2a4;background:#443644}
+.jw-together-perfect{display:block;padding:10px;border:1px solid #ffe6a8;background:#634a24;border-radius:12px;color:#fff1b9;font:900 11px/1.4 var(--sf-ui)}
+.jw-together-pitch{position:relative;background:#071627;box-shadow:0 4px 35px #01071566}
+#jw-together-canvas{image-rendering:auto;filter:saturate(1.12) contrast(1.045);border-top:1px solid #99eaff55;border-bottom:1px solid #d0ff9a55}
+.jw-together-game{background:radial-gradient(ellipse at 85% -10%,#408ca540,transparent 45%),linear-gradient(120deg,#0a263d,#05121d 82%)}
+.jw-together-heroes button:active,.jw-together-pad button:active{transform:scale(.96)}
+@media(max-width:900px){#adventure.together-focused{padding:4px 8px 90px}.jw-together-game{max-width:780px;margin:2px auto}.jw-together-controls-label{display:none}}
+@media(max-width:600px){
+ .jw-together-game{padding:10px 9px}.jw-together-head{padding-bottom:5px}
+ .jw-together-head p{display:none}.jw-together-titlebar h3{font-size:clamp(21px,6.5vw,28px)}
+ .jw-together-progress{padding:7px 0;gap:4px 9px}#jw-together-detail{font-size:10px}
+ .jw-together-maphead{padding:6px 9px}.jw-together-layout{gap:6px}
+ .jw-together-controls{grid-template-columns:1fr 1fr;gap:7px;padding:8px;overflow:visible}
+ .jw-together-settings{grid-column:1/-1}.jw-together-heroes{grid-column:1;grid-row:2;grid-template-columns:1fr}
+ .jw-together-motion{grid-column:2;grid-row:2/4}
+ .jw-together-pad{grid-template:repeat(3,44px)/repeat(3,44px);gap:3px}
+ #jw-together-guide{min-height:43px;font-size:10px;padding:7px}
+ .jw-together-shots,.jw-together-hint,.jw-together-trophy,.jw-together-perfect,#jw-together-replay{grid-column:1/-1}
+}

@@ -873,6 +873,7 @@ body.nav-open .nav-extra{display:inline-flex}
         <h3>OUR SHARED LEGENDS.</h3>
         <p>Every chapter you conquer together becomes part of your club story.</p>
         <strong id="jw-together-club-cup" hidden>★ MIDNIGHT STADIUM CUP · CHAMPIONS: JOZEF + DAD</strong>
+        <strong id="jw-together-club-perfect" hidden>✦ PERFECT TEAM · 6 / 6 SECRET SPARKS</strong>
         <small id="jw-together-club-pending">Your first shared trophy is waiting in Together Mode.</small>
       </div>
       <button type="button" data-start-together>PLAY TOGETHER ↗</button>
@@ -1335,6 +1336,7 @@ body.nav-open .nav-extra{display:inline-flex}
     <div class="jw-together-progress">
       <strong id="jw-together-phase">01 / THE HIDDEN CLUES</strong>
       <span id="jw-together-score">CHAPTER 01 / 1 OF 5</span>
+      <span id="jw-together-sparks" class="jw-together-sparks">STADIUM SPARKS 0/6</span>
       <p id="jw-together-detail">Jozef finds the lime clue. Dad finds the blue clue.</p>
     </div>
     <div class="jw-together-layout">
@@ -1344,6 +1346,7 @@ body.nav-open .nav-extra{display:inline-flex}
         <p id="jw-together-status" role="status" aria-live="polite">Find your character's glowing mission marker.</p>
       </div>
       <aside class="jw-together-controls">
+        <div class="jw-together-settings"><button type="button" id="jw-together-difficulty" aria-pressed="false">STORY / GUIDED</button><button type="button" id="jw-together-sound" aria-pressed="false">SOUND OFF</button></div>
         <span class="jw-together-controls-label">PICK YOUR HERO</span>
         <div class="jw-together-heroes" role="group" aria-label="Select which hero to control on touch">
           <button type="button" id="jw-together-hero-0" aria-pressed="true">JOZEF · CONTROLLING</button>
@@ -1369,6 +1372,7 @@ body.nav-open .nav-extra{display:inline-flex}
           <small>Alternate turns. Two goals each wins. A defended lane counts as a block.</small>
         </div>
         <div id="jw-together-trophy" class="jw-together-trophy" hidden><span aria-hidden="true">★</span><div><strong>THE MIDNIGHT STADIUM CUP</strong><p>CHAMPIONS: JOZEF + DAD</p></div></div>
+        <strong id="jw-together-perfect" class="jw-together-perfect" hidden>✦ PERFECT TEAM · ALL SIX STADIUM SPARKS</strong>
         <button type="button" id="jw-together-replay" hidden>REPLAY OUR ADVENTURE ↻</button>
         <p class="jw-together-hint">Desktop: Jozef uses WASD, Dad uses arrow keys. Mobile: select a hero and tap the map or direction pad. Saves only on this device.</p>
       </aside>
@@ -1627,6 +1631,7 @@ body.nav-open .nav-extra{display:inline-flex}
   <script src="versus-physics.js"></script>
   <script src="versus.js?v=85"></script>
   <script src="adventure.js"></script>
+  <script src="together-renderer.js"></script>
   <script src="together.js"></script>
   <script src="presence.js"></script>
   <script src="visual-2026.js" defer></script>
