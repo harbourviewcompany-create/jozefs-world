@@ -1,0 +1,35 @@
+name: Block World 3D GPU quality
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'block-world-3d.html'
+      - 'block-world-3d.js'
+      - 'block-world-3d.css'
+      - 'tests/block-world-3d-browser.cjs'
+      - '.github/workflows/block-world-3d-gpu.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gpu-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned Playwright browser
+        run: |
+          npm ci --prefix prime --no-audit --no-fund
+          npm exec --prefix prime -- playwright install --with-deps chromium
+      - name: Run real GPU and handheld layout QA
+        run: node tests/block-world-3d-browser.cjs
+      - name: Preserve screenshots for visual review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: block-world-3d-visual-check
+          path: block3d-*.png
+          if-no-files-found: ignore
