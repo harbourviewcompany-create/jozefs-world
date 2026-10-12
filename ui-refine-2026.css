@@ -1070,3 +1070,6 @@ body.versus-focused #versus-tip{font-weight:800;letter-spacing:.03em;color:#e4ff
   #versus #versus-kick.in-range{background:#e8ff8a;box-shadow:0 0 0 3px #cafa60}
   body.versus-focused #versus{touch-action:none}
 }
+
+#versus-pass{min-height:48px;border-radius:14px;font-weight:800;background:#163040;color:#fff;border:0}
+#versus-trophy,#hq-trophy{color:#d7ff4a;font-weight:800}

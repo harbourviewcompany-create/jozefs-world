@@ -46,7 +46,7 @@
     if (theirs) theirs.classList.toggle('on', online);
     const line = document.getElementById('live-status');
     if (line) line.textContent = online ? other() + ' is here.' : 'Waiting for ' + other() + '.';
-    if (online && !wasOnline) { chime(true); voice(other(), other() + ' is here.'); }
+    if (online && !wasOnline) { chime(true); voice(other(), other() + ' is here. Your turn.'); navigator.vibrate?.(30); }
     if (!online && wasOnline) { chime(false); voice(other(), other() + ' left.'); }
     wasOnline = online;
   }

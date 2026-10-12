@@ -177,7 +177,13 @@
     if(!line)return;
     const dad=season.filter(s=>{const [j,d]=s.split('-').map(Number);return d>j;}).length;
     const jozef=season.filter(s=>{const [j,d]=s.split('-').map(Number);return j>d;}).length;
-    line.textContent=season.length?'Season: Jozef '+jozef+' · Dad '+dad:'Season: no matches yet.';
+    const text=season.length?'Season: Jozef '+jozef+' · Dad '+dad:'Season: no matches yet.';
+    line.textContent=text;
+    const lobby=$('versus-season-line'); if(lobby) lobby.textContent=text;
+    const streak=Number(localStorage.getItem('jozefs-world-versus-streak')||0);
+    const trophy=$('hq-trophy'), cup=$('versus-trophy');
+    if(trophy) trophy.hidden=streak<3;
+    if(cup) cup.hidden=streak<3;
   }
   function say(text){
     const node=$('versus-status');
@@ -357,8 +363,8 @@
     });
     sparks.forEach(s => { s.x += s.vx; s.y += s.vy; s.vy += 0.15; s.life -= 1; ctx.fillStyle = s.color; ctx.globalAlpha = Math.max(0, s.life / 18); ctx.fillRect(s.x, s.y, 4, 4); ctx.globalAlpha = 1; });
     for (let i = sparks.length - 1; i >= 0; i--) if (sparks[i].life <= 0) sparks.splice(i, 1);
-    player(visualPose(state.jozef,'jozef'), jozefKit(), room.practice && room.who!=='Jozef' ? 'Rival' : 'Jozef');
-    player(visualPose(state.dad,'dad'), '#d7ff4a', room.practice && room.who!=='Dad' ? 'Rival' : 'Dad');
+    player(visualPose(state.jozef,'jozef'), jozefKit(), room.practice && room.who!=='Jozef' ? 'Rovers' : 'Jozef');
+    player(visualPose(state.dad,'dad'), '#d7ff4a', room.practice && room.who!=='Dad' ? 'Rovers' : 'Dad');
     keeper('left', '#f4f7f2');
     keeper('right', '#f4f7f2');
     ctx.fillStyle = 'rgba(0,0,0,.25)';
@@ -378,6 +384,7 @@
     ctx.textAlign = 'center';
     ctx.fillText(state.score.jozef + '  ·  ' + state.score.dad + '   ' + Math.ceil(state.matchLeft || 0) + 's', W / 2, 22);
     */
+    if (/scores/.test(state.call)) { ctx.fillStyle='rgba(255,255,255,.35)'; ctx.beginPath(); ctx.ellipse(state.ball.x<W/2?20:W-20, state.ball.y, 16, 28, 0, 0, Math.PI*2); ctx.fill(); }
     if (state.call) {
       const pop = /scores|Full time/.test(state.call) ? 1.15 : 1;
       ctx.save();
@@ -460,9 +467,12 @@
       x:Math.max(70,Math.min(W-70, go ? ball.x + (who==='Dad'?-lead:lead) : homeX)),
       y:Math.max(50,Math.min(H-50, go ? ball.y : 210))
     };
-    if(distance<52&&kickLock===0&&tick-lastBotKick>(cpuDifficulty==='legend'?36:64)){
-      shotOptions[who]={aim:state.ball.y<185?0:state.ball.y>235?2:1, power:1.1};
-      state.kick=who;lastBotKick=tick;
+    if(distance<40) bot.carry=(bot.carry||0)+1; else bot.carry=0;
+    if(bot.carry>18&&kickLock===0&&tick-lastBotKick>50){
+      const miss=cpuDifficulty==='pro'&&Math.random()<0.3;
+      const aim=cpuDifficulty==='legend'?(state.keepers?.[who==='Dad'?'left':'right']>210?0:2):(miss?1:(state.ball.y<185?0:state.ball.y>235?2:1));
+      shotOptions[who]={aim, power:cpuDifficulty==='legend'?1.2:1.05};
+      state.kick=who;lastBotKick=tick;bot.carry=0;
     }
     return cpuDifficulty==='legend'?4.6:cpuDifficulty==='rookie'?3.2:4.0;
   }
@@ -488,7 +498,11 @@
     mindKeepers();
     physics.walls(state.ball, W, H, inGoal);
     state.matchLeft = Math.max(0, state.matchLeft - 1/60);
-    if (state.matchLeft <= 0 && state.call !== 'Full time') { state.call = 'Full time'; room.phase='finished'; state.ball.vx = 0; state.ball.vy = 0; finishPractice(); syncUI(); say(state.score.dad===state.score.jozef?'Full time — a draw. Rematch?':(state.score.dad>state.score.jozef?'Dad':'Jozef')+' wins! Ready for a rematch?'); }
+    if ((state.score.dad>=3||state.score.jozef>=3) && state.call!=='Full time') { state.call='Full time'; room.phase='finished'; finishPractice(); syncUI(); say((state.score.dad>state.score.jozef?'Dad':'Jozef')+' wins, first to 3.'); }
+    else if (state.matchLeft <= 0 && state.call !== 'Full time') {
+      if (state.score.dad===state.score.jozef) { state.call='Penalties'; state.ball={x:room.who==='Dad'?180:540,y:210,vx:0,vy:0}; say('Level. Penalties. Shoot.'); }
+      else { state.call='Full time'; room.phase='finished'; finishPractice(); syncUI(); say((state.score.dad>state.score.jozef?'Dad':'Jozef')+' wins! Ready for a rematch?'); }
+    }
     if (state.call === 'Full time') { broadcast(); return; }
     const post = state.ball.y < GOAL.y + 6 || state.ball.y > GOAL.y + GOAL.h - 6;
     if (state.ball.x < 30 && inGoal(state.ball.y) && !post) {
@@ -499,7 +513,7 @@
       if (save('right')) { state.saves += 1; state.ball.vx = -5.5; state.ball.vy *= 0.4; state.call = 'Saved'; kickLock = 20; }
       else { state.score.jozef += 1; state.call = 'Jozef scores'; state.freeze = 40; }
     }
-    else if ((state.ball.x < 34 || state.ball.x > W - 34) && post && inGoal(state.ball.y)) { state.ball.vx *= -1; state.call = 'Off the post'; }
+    else if ((state.ball.x < 34 || state.ball.x > W - 34) && post && inGoal(state.ball.y)) { state.ball.x = state.ball.x < W/2 ? 70 : W-70; state.ball.y = 60; state.ball.vx = 0; state.ball.vy = 0; state.call = 'Corner'; }
     else if (state.ball.x < 34) { state.ball.x = 34; state.ball.vx = Math.abs(state.ball.vx) + 0.6; }
     else if (state.ball.x > W - 34) { state.ball.x = W - 34; state.ball.vx = -Math.abs(state.ball.vx) - 0.6; }
     if (state.ball.x < 70 && state.ball.y < 70 && Math.hypot(state.ball.vx, state.ball.vy) < 1) { state.ball.vx += 1.4; state.ball.vy += 1.4; }
@@ -626,13 +640,23 @@
     nub.style.left=(r.width-nub.offsetWidth)/2+x*travel+'px';
     nub.style.top=(r.height-nub.offsetHeight)/2+y*travel+'px';
   }
-  stick.addEventListener('pointerdown',e=>{stick.setPointerCapture(e.pointerId);fromStick(e);});stick.addEventListener('pointermove',e=>{if(stick.hasPointerCapture(e.pointerId))fromStick(e);});
+  let lastStick=0;
+  stick.addEventListener('pointerdown',e=>{
+    stick.setPointerCapture(e.pointerId);fromStick(e);
+    const now=performance.now();
+    if(now-lastStick<280){
+      const me=room.who==='Dad'?state.dad:state.jozef;
+      me.y += 28; state.ball.y += 28; state.ball.vx += 1.2;
+    }
+    lastStick=now;
+  });stick.addEventListener('pointermove',e=>{if(stick.hasPointerCapture(e.pointerId))fromStick(e);});
   for(const event of ['pointerup','pointercancel','lostpointercapture'])stick.addEventListener(event,stopInput);
   function shoot(){
     localKick(1+chargeFill*.6);chargeFill=0;chargingSince=0;
     $('versus-kick').style.setProperty('--shot-charge','0%');
   }
   $('versus-aim').addEventListener('click',()=>pickAim((selectedAim+1)%3));
+  $('versus-pass')?.addEventListener('click', () => localKick(0.7));
   $('versus-sprint')?.addEventListener('click',sprint);
   const shootButton=$('versus-kick');
   shootButton.addEventListener('pointerdown',e=>{
