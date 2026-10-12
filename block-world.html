@@ -7,6 +7,16 @@
 <meta name="description" content="Explore, build, craft, and unlock new realms together in Daddy & Jozef Block World.">
 <meta name="theme-color" content="#0b2339">
 <link rel="stylesheet" href="./block-world.css">
+<style>
+#coop-panel{display:none;position:fixed;inset:0;background:#061c28ee;z-index:50;place-items:center;padding:16px}
+#coop-panel.open{display:grid}
+#coop-card{width:min(420px,100%);background:#0f3841;border:1px solid #7fe4be63;border-radius:14px;padding:18px;text-align:center;color:#eefff2;font-family:system-ui}
+#coop-card h3{margin:0 0 8px}
+#coop-card p{font-size:13px;color:#c0e5d3;margin:0 0 12px}
+#coop-card input{width:100%;padding:10px;border-radius:8px;border:1px solid #83e5d6;background:#183d49;color:#fff;margin:6px 0}
+#coop-card button,#coop-card a{display:inline-block;margin:4px;padding:10px 14px;border-radius:8px;border:1px solid #83e5d6;background:#183d49;color:#fff;font-weight:700;text-decoration:none;cursor:pointer}
+#coop-status{margin-top:10px;font-size:12px;color:#d6ff7f}
+</style>
 </head>
 <body>
 <canvas id="game"></canvas>
@@ -44,6 +54,7 @@
 <div id="toolbar" role="toolbar" aria-label="Block World actions">
  <a class="bw-hq-link" href="./" aria-label="Return to Jozef World headquarters">← HQ</a>
  <a class="bw-hq-link" href="./block-world-select.html" aria-label="Choose 2D or 3D mode">MODE</a>
+ <button type="button" class="bw-hq-link" id="open-coop" aria-label="Play with Jozef on another phone">PLAY TOGETHER</button>
  <a class="bw-hq-link" href="./block-world-3d.html" aria-label="Play Block World in full 3D">▣ PLAY 3D</a>
  <button id="mode" type="button" aria-label="Toggle creative or survival mode">CREATIVE</button>
  <button id="inventory" type="button">🎒 Inventory</button>
@@ -51,6 +62,77 @@
  <button id="reset" type="button">New World</button>
 </div>
 <div id="notice" role="status" aria-live="polite"></div>
+
+<div id="coop-panel" aria-label="Two-phone co-op">
+ <div id="coop-card">
+  <h3>PLAY TOGETHER</h3>
+  <p>One phone hosts. Share the invite with the other phone. Both need internet.</p>
+  <div>
+   <button id="coop-host">HOST GAME</button>
+   <button id="coop-share" disabled>SHARE LINK</button>
+  </div>
+  <label>Or paste invite code<br><input id="coop-code" placeholder="Paste invite code" autocomplete="off"></label>
+  <div>
+   <button id="coop-join">JOIN GAME</button>
+   <button id="coop-close">CLOSE</button>
+  </div>
+  <div id="coop-status">Offline · solo play</div>
+ </div>
+</div>
+
+<script src="./peerjs.min.js" defer></script>
 <script src="./block-world.js" defer></script>
+<script>
+(function(){
+ const panel=document.getElementById('coop-panel');
+ const status=document.getElementById('coop-status');
+ const codeInput=document.getElementById('coop-code');
+ const shareBtn=document.getElementById('coop-share');
+ let peer=null,conn=null,invite='';
+ function setStatus(msg){status.textContent=msg;}
+ function closePanel(){panel.classList.remove('open');}
+ document.getElementById('open-coop').addEventListener('click',()=>panel.classList.add('open'));
+ document.getElementById('coop-close').addEventListener('click',closePanel);
+ document.getElementById('coop-host').addEventListener('click',()=>{
+  if(peer){setStatus('Already connected');return;}
+  setStatus('Starting host…');
+  peer=new Peer();
+  peer.on('open',id=>{
+   invite=id;
+   shareBtn.disabled=false;
+   setStatus('Hosting · share the link');
+  });
+  peer.on('connection',c=>{
+   conn=c;
+   c.on('open',()=>setStatus('Jozef connected!'));
+   c.on('data',data=>{if(window.BlockWorld2D&&window.BlockWorld2D.onRemote)window.BlockWorld2D.onRemote(data);});
+   c.on('close',()=>setStatus('Disconnected'));
+  });
+  peer.on('error',e=>setStatus('Error: '+e.type));
+ });
+ shareBtn.addEventListener('click',()=>{
+  const url=location.origin+location.pathname+'?join='+encodeURIComponent(invite);
+  if(navigator.share)navigator.share({title:'Join Block World',url}).catch(()=>{});
+  else{navigator.clipboard?.writeText(url);setStatus('Link copied');}
+ });
+ document.getElementById('coop-join').addEventListener('click',()=>{
+  const id=codeInput.value.trim();
+  if(!id){setStatus('Paste an invite code');return;}
+  setStatus('Joining…');
+  peer=new Peer();
+  peer.on('open',()=>{
+   conn=peer.connect(id);
+   conn.on('open',()=>setStatus('Connected to host!'));
+   conn.on('data',data=>{if(window.BlockWorld2D&&window.BlockWorld2D.onRemote)window.BlockWorld2D.onRemote(data);});
+   conn.on('close',()=>setStatus('Disconnected'));
+  });
+  peer.on('error',e=>setStatus('Error: '+e.type));
+ });
+ const params=new URLSearchParams(location.search);
+ if(params.has('join')){codeInput.value=params.get('join');panel.classList.add('open');}
+ window.BlockWorld2D=window.BlockWorld2D||{};
+ window.BlockWorld2D.send=function(data){if(conn&&conn.open)conn.send(data);};
+})();
+</script>
 </body>
 </html>
