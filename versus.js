@@ -126,9 +126,11 @@
   buildStadium();
   function pitch(){ctx.drawImage(stadium,0,0,W,H);}
   function player(p,color,name){
-    const moving=Math.hypot(p.vx,p.vy)>.25;
-    const stride=moving?Math.sin(tick*.23)*5:0;
-    ctx.save();ctx.translate(p.x,p.y);if(portrait)ctx.rotate(-Math.PI/2);ctx.scale(p.face||1,1);ctx.scale(1.3,1.3);
+    const speed=Math.hypot(p.vx,p.vy);
+    const moving=speed>.25;
+    const stride=moving?Math.sin(tick*(0.18+speed*0.12))* (4+speed):0;
+    const bob=moving?Math.abs(Math.sin(tick*(0.18+speed*0.12)))*-2:0;
+    ctx.save();ctx.translate(p.x,p.y+bob);if(portrait)ctx.rotate(-Math.PI/2);ctx.scale(p.face||1,1);ctx.rotate(Math.max(-0.25,Math.min(0.25,p.vy*0.08)));ctx.scale(1.3,1.3);
     ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.ellipse(2,18,12,4,0,0,Math.PI*2);ctx.fill();
     if(name===room.who){ctx.strokeStyle=color;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(0,16,18,8,0,0,Math.PI*2);ctx.stroke();ctx.strokeStyle=color+'88';ctx.beginPath();ctx.arc(0,0,24,-Math.PI*.83,-Math.PI*.17);ctx.stroke();}
     else if(room.practice){ctx.strokeStyle='#ffb37a99';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(0,16,18,8,0,0,Math.PI*2);ctx.stroke();}
@@ -214,17 +216,19 @@
   }
 
   function move(p, target, pace = 3.1) {
-    if (!target) { p.vx *= 0.8; p.vy *= 0.8; }
+    const speed = Math.hypot(p.vx, p.vy);
+    if (!target) { p.vx *= 0.86; p.vy *= 0.86; }
     else {
       const dx = target.x - p.x, dy = target.y - p.y;
       const dist = Math.hypot(dx, dy) || 1;
-      const want = dist < 8 ? 0 : Math.min(pace, dist * 0.08);
-      p.vx += (dx / dist * want - p.vx) * 0.25;
-      p.vy += (dy / dist * want - p.vy) * 0.25;
-      if (Math.abs(p.vx) > 0.3) p.face = p.vx > 0 ? 1 : -1;
+      const want = dist < 10 ? 0 : Math.min(pace, 1.2 + dist * 0.03);
+      const turn = speed > 1 && (p.vx * dx + p.vy * dy) < 0 ? 0.08 : 0.16;
+      p.vx += (dx / dist * want - p.vx) * turn;
+      p.vy += (dy / dist * want - p.vy) * turn;
+      if (Math.abs(p.vx) > 0.35) p.face = p.vx > 0 ? 1 : -1;
     }
-    p.x = Math.max(46, Math.min(W - 46, p.x + p.vx * (25/60)));
-    p.y = Math.max(40, Math.min(H - 40, p.y + p.vy * (25/60)));
+    p.x = Math.max(46, Math.min(W - 46, p.x + p.vx));
+    p.y = Math.max(40, Math.min(H - 40, p.y + p.vy));
   }
 
   function touch(p, forced) {
