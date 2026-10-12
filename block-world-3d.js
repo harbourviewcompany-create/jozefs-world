@@ -146,12 +146,42 @@ function render(){
  gl.uniform3fv(ue,new Float32Array(cam));gl.uniform3fv(us,new Float32Array(sky));gl.uniform1f(ud,day);
  for(const chunk of chunks.values())renderBuffer(chunk.buffer,chunk.count);
  const v=[];
- const figure=(p,role)=>{cube(v,p.x-.28,p.y+.55,p.z-.2,role?1:10,.55);cube(v,p.x-.25,p.y+1.14,p.z-.19,6,.5);
-  cube(v,p.x-.20,p.y+.02,p.z-.17,3,.18);cube(v,p.x+.07,p.y+.02,p.z-.17,3,.18);};
+ // Layered voxel character rigs with skins, sleeves, hair, shoes and
+ // subtle leg animation. Shared GPU batch; no external models or CDN.
+ const figure=(p,role)=>{
+  const stride=Math.sin(clock*8+(role?1.5:0))*.075;
+  cube(v,p.x-.25,p.y+.68,p.z-.25,role?8:1,.51); // jersey
+  cube(v,p.x-.25,p.y+1.18,p.z-.25,6,.50);       // face
+  cube(v,p.x-.29,p.y+1.57,p.z-.27,role?3:4,.57);// hair
+  cube(v,p.x-.35,p.y+.82,p.z-.22,6,.13);       // hands
+  cube(v,p.x+.22,p.y+.82,p.z-.22,6,.13);
+  cube(v,p.x-.19,p.y+.19,p.z-.15+stride,3,.20); // stride
+  cube(v,p.x+.06,p.y+.19,p.z-.15-stride,3,.20);
+  cube(v,p.x-.21,p.y+.04,p.z-.20+stride,7,.23); // shoes
+  cube(v,p.x+.06,p.y+.04,p.z-.20-stride,7,.23);
+  cube(v,p.x-.12,p.y+1.35,p.z-.30,11,.10);    // eyes
+  cube(v,p.x+.10,p.y+1.35,p.z-.30,11,.10);
+ };
  figure(companion,companion.role);if(third)figure(hero,hero.role);
- for(const m of mobs)if(m.hp>0){cube(v,m.x-.3,m.y,m.z-.3,m.kind?8:5,.6);cube(v,m.x-.14,m.y+.48,m.z-.17,m.kind?7:1,.28);}
- if(boss.alive){cube(v,boss.x-.8,boss.y,boss.z-.8,3,1.6);cube(v,boss.x-.55,boss.y+1.51,boss.z-.55,8,1.1);}
- cube(v,40,height(40,40)+.1,40,8,.9);cube(v,40,height(40,40)+1.1,40,11,.9);
+ for(const m of mobs)if(m.hp>0&&Math.hypot(m.x-hero.x,m.z-hero.z)<52){
+  const bob=Math.sin(clock*2.4+m.x)*.08;
+  cube(v,m.x-.3,m.y+bob,m.z-.3,m.kind?8:5,.6);
+  cube(v,m.x-.18,m.y+.53+bob,m.z-.22,m.kind?7:1,.35);
+  cube(v,m.x-.16,m.y+.63+bob,m.z-.26,8,.09);
+  cube(v,m.x+.10,m.y+.63+bob,m.z-.26,8,.09);
+ }
+ if(boss.alive&&Math.hypot(boss.x-hero.x,boss.z-hero.z)<72){
+  const breath=Math.sin(clock*1.8)*.08;
+  cube(v,boss.x-.8,boss.y,boss.z-.8,3,1.6);
+  cube(v,boss.x-.55,boss.y+1.51+breath,boss.z-.55,8,1.1);
+  cube(v,boss.x-.26,boss.y+.86,boss.z-.83,8,.48);
+  cube(v,boss.x-1.02,boss.y+.72,boss.z-.68,3,.42);
+  cube(v,boss.x+.59,boss.y+.72,boss.z-.68,3,.42);
+ }
+ if(Math.hypot(hero.x-40,hero.z-40)<84){
+  cube(v,40,height(40,40)+.1,40,8,.9);
+  cube(v,40,height(40,40)+1.1+Math.sin(clock*2)*.12,40,11,.9);
+ }
  gl.bindBuffer(gl.ARRAY_BUFFER,dynamic);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(v),gl.DYNAMIC_DRAW);renderBuffer(dynamic,v.length/6);renderOk=true;
 }
 function ground(x,z){return height(Math.floor(x),Math.floor(z))+1.02;}
