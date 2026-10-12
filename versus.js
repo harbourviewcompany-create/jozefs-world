@@ -64,6 +64,13 @@
   let lastCall = '';
   let shake = 0;
 
+  function voice(line) {
+    try { if (localStorage.getItem('jozefs-world-commentary') !== 'on' || !window.speechSynthesis) return; } catch { return; }
+    window.speechSynthesis.cancel();
+    const call = new SpeechSynthesisUtterance(line);
+    call.rate = 0.95;
+    window.speechSynthesis.speak(call);
+  }
   function say(text) {
     const node = $('versus-status');
     const line = text;
@@ -135,7 +142,7 @@
     ctx.save();
     if (shake > 0 && !reduced.matches) { ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake); shake -= 1; }
     pitch();
-    if (state.call && state.call !== lastCall && /scores|Full time|post/.test(state.call)) { burst(ball.x, ball.y, state.call.includes('Dad') ? '#d7ff4a' : '#7ee0ff', 24); shake = 10; }
+    if (state.call && state.call !== lastCall && /scores|Full time|post/.test(state.call)) { burst(ball.x, ball.y, state.call.includes('Dad') ? '#d7ff4a' : '#7ee0ff', 24); shake = 10; voice(state.call); }
     lastCall = state.call;
     trail.push({ x: ball.x, y: ball.y });
     if (trail.length > 8) trail.shift();

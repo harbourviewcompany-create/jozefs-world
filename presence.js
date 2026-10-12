@@ -7,6 +7,14 @@
   };
   const other = () => (me() === 'Dad' ? 'Jozef' : 'Dad');
   const dot = who => document.getElementById('dot-' + who.toLowerCase());
+  let wasOnline = false;
+  function voice(line) {
+    try { if (localStorage.getItem('jozefs-world-commentary') !== 'on' || !window.speechSynthesis) return; } catch { return; }
+    window.speechSynthesis.cancel();
+    const say = new SpeechSynthesisUtterance(line);
+    say.rate = 0.95;
+    window.speechSynthesis.speak(say);
+  }
   function paint(online) {
     const mine = dot(me());
     const theirs = dot(other());
@@ -14,6 +22,9 @@
     if (theirs) theirs.classList.toggle('on', online);
     const line = document.getElementById('hq-versus');
     if (line) line.textContent = online ? other() + ' is here.' : 'Waiting for ' + other() + '.';
+    if (online && !wasOnline) voice(other() + ' is here.');
+    if (!online && wasOnline) voice(other() + ' left.');
+    wasOnline = online;
   }
   function watch() {
     if (!window.Peer) return;
