@@ -1,0 +1,29 @@
+name: Block World mobile gameplay QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'block-world.html'
+      - 'tests/block-world.test.cjs'
+      - 'tests/block-world-mobile-smoke.cjs'
+      - '.github/workflows/block-world-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  play:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate deterministic cooperative quest
+        run: node --test tests/block-world.test.cjs
+      - name: Install browser engines
+        run: |
+          npm ci --prefix prime --no-audit --no-fund
+          npm exec --prefix prime -- playwright install --with-deps chromium webkit
+      - name: Play the full island story in Chromium and WebKit
+        run: node tests/block-world-mobile-smoke.cjs
