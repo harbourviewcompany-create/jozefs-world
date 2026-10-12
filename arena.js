@@ -10,7 +10,7 @@ const W=420,H=600,GOAL={left:148,right:272,top:16},MATCH_LENGTH=75;
 const KEY='jozefs-world-arena-v1', MATCH_SNAPSHOT_KEY='jozef-arena-match-snapshot-v1';
 const systems=window.JozefArenaSystems;
 if(!systems){$('arena-status').textContent='Arena game systems unavailable. Refresh to retry.';return;}
-let experience=null, camera={x:210,y:300,zoom:1},replay=null,replayHistory=[],replayWait=0,joystick={x:0,y:0};
+let experience=null, camera={x:210,y:300,zoom:1},replay=null,replayHistory=[],replayWait=0,joystick={x:0,y:0},lastStickSteer=0;
 let padVector={x:0,y:0},padPrevious={},padConnected=false,padRaf=0;
 const clamp=(n,lo,hi)=>Math.max(lo,Math.min(hi,n));
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
@@ -854,7 +854,22 @@ window.addEventListener('jozef:squad-updated',()=>{squad=getSquad();hud();});
 experience=window.JozefArenaExperience?.mount({
  lifetime,getMode:()=>mode,pause,start,
  saveLifetime:()=>{try{localStorage.setItem(KEY,JSON.stringify(lifetime));}catch(_){}},
- setJoystick:(x,y)=>{joystick={x,y};if(x||y){target=null;if(replay)finishReplay();}},
+ setJoystick:(x,y)=>{
+  joystick={x,y};
+  if(x||y){
+   target=null;if(replay)finishReplay();
+   // A delayed render must not make the thumb appear unresponsive.
+   // Normally physics advances in the frame loop; this runs only when
+   // a frame has been delayed and uses the same collision-clamped move().
+   const now=performance.now();
+   if(mode==='playing'&&!replay&&now-lastFrameTick>45&&now-lastStickSteer>16){
+    const dt=lastStickSteer?Math.min(.033,(now-lastStickSteer)/1000):.018;
+    move(x,y,dt);
+    if(ball.owner==='actor'){ball.x=actor.x;ball.y=actor.y-15;}
+   }
+   lastStickSteer=now;
+  }else lastStickSteer=0;
+ },
  refreshGraphics,
  refreshSquad:()=>{squad=getSquad();hud();}
 })||null;
