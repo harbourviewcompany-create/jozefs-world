@@ -30,6 +30,9 @@ canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; 
 button { margin: 4px; padding: 6px 12px; background: #444; color: #fff; border: 1px solid #666; cursor: pointer; }
 
 /* Block World playable HUD: portrait, landscape and safe-area support */
+html,body{touch-action:auto}
+.hotbar{touch-action:pan-x;-webkit-overflow-scrolling:touch}
+
 :root{color-scheme:dark;font-family:system-ui,-apple-system,sans-serif}
 html,body{overscroll-behavior:none;background:#0d253e}
 #game{position:fixed;inset:0;width:100%;height:100%;image-rendering:pixelated;touch-action:none}
@@ -236,7 +239,7 @@ function update(dt){
   if(!p.ground&&collision(p,p.x,p.y+1)){p.ground=true;p.vy=0;}
  });
  ticks++;
- if(ticks%150===0)queueSave();
+ if(ticks%150===0&&players.some(p=>Math.abs(p.vx)>1||Math.abs(p.vy)>1))queueSave();
 }
 function blockCoords(){const p=players[active];return {x:Math.floor((p.x+p.w/2+p.facing*TILE*1.15)/TILE),y:Math.floor((p.y+p.h*.65)/TILE)};}
 function reachable(x,y){const p=players[active];return Math.hypot((x+.5)*TILE-(p.x+p.w/2),(y+.5)*TILE-(p.y+p.h/2))<TILE*4.3;}
