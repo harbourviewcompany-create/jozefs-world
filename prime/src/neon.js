@@ -148,7 +148,7 @@ class NeonCity extends Phaser.Scene {
  refresh(){
   this.items.forEach(({kind,i,item})=>{
    const key=kind==='switch'?'switches':kind==='star'?'stars':'secrets';
-   const id=code(kind==='switch'?'switch':kind,i);
+   const id=itemCode(kind==='switch'?'switch':kind,i);
    item.setVisible(!this.save[key].includes(id));
   });
   this.goal.setVisible(!this.save.completed.includes(0));
