@@ -19,6 +19,10 @@
   };
   const targets = { Dad: null, Jozef: null };
   let kickLock = 0;
+  const trail = [];
+  const sparks = [];
+  let tick = 0;
+  let lastCall = '';
 
   function say(text) {
     const node = $('versus-status');
@@ -62,6 +66,8 @@
     ctx.beginPath(); ctx.ellipse(0, 18, 11, 4, 0, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = color; ctx.lineWidth = 4;
     ctx.beginPath(); ctx.moveTo(-5, 8); ctx.lineTo(-7, 18); ctx.moveTo(5, 8); ctx.lineTo(7, 18); ctx.stroke();
+    const bob = Math.abs(p.vx) + Math.abs(p.vy) > 0.4 ? Math.sin(tick / 3) * 2 : 0;
+    ctx.translate(0, bob);
     ctx.fillStyle = color;
     ctx.beginPath(); ctx.roundRect(-9, -4, 18, 16, 4); ctx.fill();
     ctx.fillStyle = '#f3d3b8';
@@ -71,9 +77,23 @@
     ctx.fillText(name, p.x, p.y - 24);
   }
 
+  function burst(x, y, color, n) {
+    for (let i = 0; i < n; i++) sparks.push({ x, y, vx: (Math.random() - 0.5) * 6, vy: (Math.random() - 0.8) * 6, life: 18, color });
+  }
   function draw() {
     if (!ctx) return;
+    tick += 1;
     pitch();
+    if (state.call && state.call !== lastCall && /scores|Full time|post/.test(state.call)) burst(state.ball.x, state.ball.y, state.call.includes('Dad') ? '#d7ff4a' : '#7ee0ff', 24);
+    lastCall = state.call;
+    trail.push({ x: state.ball.x, y: state.ball.y });
+    if (trail.length > 8) trail.shift();
+    trail.forEach((bit, i) => {
+      ctx.fillStyle = 'rgba(255,255,255,' + (i / trail.length * 0.35) + ')';
+      ctx.beginPath(); ctx.arc(bit.x, bit.y, 3 + i * 0.3, 0, Math.PI * 2); ctx.fill();
+    });
+    sparks.forEach(s => { s.x += s.vx; s.y += s.vy; s.vy += 0.15; s.life -= 1; ctx.fillStyle = s.color; ctx.globalAlpha = Math.max(0, s.life / 18); ctx.fillRect(s.x, s.y, 4, 4); ctx.globalAlpha = 1; });
+    for (let i = sparks.length - 1; i >= 0; i--) if (sparks[i].life <= 0) sparks.splice(i, 1);
     player(state.jozef, '#2f6fed', 'Jozef');
     player(state.dad, '#d7ff4a', 'Dad');
     ctx.fillStyle = 'rgba(0,0,0,.25)';
@@ -88,10 +108,15 @@
     ctx.textAlign = 'center';
     ctx.fillText(state.score.jozef + '  ·  ' + state.score.dad + '   ' + Math.ceil(state.matchLeft || 0) + 's', W / 2, 22);
     if (state.call) {
-      ctx.fillStyle = 'rgba(8,20,15,.72)';
-      ctx.fillRect(W / 2 - 90, H / 2 - 18, 180, 32);
+      const pop = /scores|Full time/.test(state.call) ? 1.15 : 1;
+      ctx.save();
+      ctx.translate(W / 2, H / 2);
+      ctx.scale(pop, pop);
+      ctx.fillStyle = 'rgba(8,20,15,.78)';
+      ctx.fillRect(-96, -18, 192, 34);
       ctx.fillStyle = '#fff';
-      ctx.fillText(state.call, W / 2, H / 2 + 4);
+      ctx.fillText(state.call, 0, 4);
+      ctx.restore();
     }
   }
 
@@ -119,6 +144,7 @@
       state.ball.vx = face * 7.4 + p.vx;
       state.ball.vy = p.vy * 0.6;
       kickLock = 12;
+      burst(state.ball.x, state.ball.y, '#fff', 10);
       return;
     }
     const ahead = 18;
