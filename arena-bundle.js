@@ -1570,13 +1570,8 @@ function loop(t){
   return;
  }
  lastFrameTick=t;
- // The existing gameplay RAF also drives hold-to-power feedback, so no
- // second animation loop or timer is needed while the thumb stays still.
- if(shootTouch){
-  const charge=systems.shotCharge(Date.now()-shootTouch.at);
-  shootButton?.style.setProperty('--arena-charge',Math.round(charge*100)+'%');
-  if(charge>=1&&!shootTouch.full){shootTouch.full=true;experience?.haptic(12);}
- }
+ // Thumb charging is driven by a lightweight pointer-held timer, independent
+ // of physics frame throttling. Gameplay should never freeze the power meter.
  const dt=last?clamp((t-last)/1000,0,.037):0;last=t;
  if(replay){
   replay.elapsed+=dt;
@@ -1622,7 +1617,13 @@ $('arena-skill')?.addEventListener('click',skillMove);
 $('arena-pass')?.addEventListener('click',pass);
 // Swipe left/right on SHOOT for the target corner. Holding briefly charges
 // a modest power bonus. Classic clicks, keyboard and gamepads still shoot.
-let shootTouch=null,suppressShootClickUntil=0;
+let shootTouch=null,suppressShootClickUntil=0,shootChargeTimer=0;
+function paintShotCharge(){
+ if(!shootTouch||mode!=='playing'){clearCharge();return;}
+ const charge=systems.shotCharge(Date.now()-shootTouch.at);
+ shootButton?.style.setProperty('--arena-charge',Math.round(charge*100)+'%');
+ if(charge>=1&&!shootTouch.full){shootTouch.full=true;experience?.haptic(12);}
+}
 const shootButton=$('arena-shoot');
 shootButton?.addEventListener('pointerdown',ev=>{
  if(experience?.prefs.mobileLayout!=='immersive'||mode!=='playing'||replay)return;
@@ -1631,6 +1632,8 @@ shootButton?.addEventListener('pointerdown',ev=>{
  shootTouch={id:ev.pointerId,x:ev.clientX,at:Date.now()};
  shootButton.classList.add('is-charging');
  shootButton.style.setProperty('--arena-charge','0%');
+ if(shootChargeTimer)clearInterval(shootChargeTimer);
+ shootChargeTimer=setInterval(paintShotCharge,40);
  try{shootButton.setPointerCapture(ev.pointerId);}catch(_){}
 });
 shootButton?.addEventListener('pointermove',ev=>{
@@ -1640,10 +1643,11 @@ shootButton?.addEventListener('pointermove',ev=>{
  if(dx<-19&&aim!==0)setAim(0);
  else if(dx>19&&aim!==2)setAim(2);
  else if(Math.abs(dx)<10&&aim!==1)setAim(1);
- const charge=systems.shotCharge(Date.now()-shootTouch.at);
- shootButton.style.setProperty('--arena-charge',Math.round(charge*100)+'%');
+ paintShotCharge();
 });
 function clearCharge(){
+ if(shootChargeTimer)clearInterval(shootChargeTimer);
+ shootChargeTimer=0;
  shootTouch=null;
  shootButton?.classList.remove('is-charging');
  shootButton?.style.setProperty('--arena-charge','0%');
