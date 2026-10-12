@@ -7,6 +7,10 @@ const core=fs.readFileSync(path.join(__dirname,'../block-world.js'),'utf8');
 const coop=fs.readFileSync(path.join(__dirname,'../block-world-coop.js'),'utf8');
 const html=fs.readFileSync(path.join(__dirname,'../block-world.html'),'utf8');
 assert.match(html,/block-world-coop\.js/);
+assert.ok(core.length>58000,'Complete 2D engine required; reject truncated builds');
+assert.ok(coop.length>9000,'Full multiplayer engine required; reject a fake overlay');
+for(const id of ['coop-host','coop-join','coop-disconnect','coop-share','coop-live'])assert.match(html,new RegExp('id="'+id+'"'));
+assert.doesNotMatch(html,/setStatus\('Starting host…'\)/,'Legacy duplicate PeerJS handlers must not return');
 new vm.Script(core);new vm.Script(coop);
 const peers=new Map(),tasks=[];
 class Channel {
@@ -100,6 +104,14 @@ for(let i=0;i<8;i++){guest.advance(1);host.advance(1);}
 const now=host.game().getState().players[1].x;
 assert.ok(now>start+10,'Jozef really moved inside the host physics engine: '+start+' -> '+now);
 assert.ok(Math.abs(guest.game().getState().players[1].x-now)<5,'host sent Jozef position to guest');
+const dadStart=host.game().getState().players[0].x,joStart=host.game().getState().players[1].x;
+host.key('KeyD',true);guest.key('ArrowRight',true);
+for(let i=0;i<25;i++){guest.advance(1);host.advance(1);}
+host.key('KeyD',false);guest.key('ArrowRight',false);
+for(let i=0;i<8;i++){guest.advance(1);host.advance(1);}
+assert.ok(host.game().getState().players[0].x>dadStart+12,'Daddy moves while Jo moves simultaneously');
+assert.ok(host.game().getState().players[1].x>joStart+12,'Jo moves while Daddy moves simultaneously');
+
 const p=host.game().getState().players[1];
 const tileX=Math.floor(p.x/40)+2,tileY=Math.floor((p.y+37)/40);
 const hostBefore=host.game().getWorld().world[tileY][tileX];
