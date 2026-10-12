@@ -126,6 +126,28 @@ function camera(eye,target){
  return new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-dot(x,eye),-dot(y,eye),-dot(z,eye),1]);
 }
 function renderBuffer(buf,n){if(!n)return;gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.enableVertexAttribArray(ap);gl.enableVertexAttribArray(ac);gl.vertexAttribPointer(ap,3,gl.FLOAT,false,24,0);gl.vertexAttribPointer(ac,3,gl.FLOAT,false,24,12);gl.drawArrays(gl.TRIANGLES,0,n);}
+// Aim highlight shares the terrain shader but uses GPU line geometry.
+// No raycast on the main world buffer and no re-mesh when the cursor moves.
+const aimBuffer=gl.createBuffer();
+function drawAimOutline(){
+ const ray=target();
+ if(frames%12===0){
+  const ret=$('target');if(ret){ret.textContent=ray?.hit?'□':'+';ret.classList.toggle('aimed',!!ray?.hit);}
+ }
+ if(!ray?.hit)return;
+ const {x,y,z}=ray.hit,a=-.026,b=1.026;
+ const p=[[a,a,a],[b,a,a],[b,b,a],[a,b,a],[a,a,b],[b,a,b],[b,b,b],[a,b,b]];
+ const edges=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+ const v=[];for(const [i,j] of edges){
+  for(const k of [i,j])v.push(x+p[k][0],y+p[k][1],z+p[k][2],.85,1.,.44);
+ }
+ gl.bindBuffer(gl.ARRAY_BUFFER,aimBuffer);
+ gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(v),gl.DYNAMIC_DRAW);
+ gl.enableVertexAttribArray(ap);gl.enableVertexAttribArray(ac);
+ gl.vertexAttribPointer(ap,3,gl.FLOAT,false,24,0);
+ gl.vertexAttribPointer(ac,3,gl.FLOAT,false,24,12);
+ gl.drawArrays(gl.LINES,0,v.length/6);
+}
 function render(){
  const dpr=Math.min(devicePixelRatio||1,renderCap),w=Math.max(1,Math.floor(innerWidth*dpr)),h=Math.max(1,Math.floor(innerHeight*dpr));
  if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}gl.viewport(0,0,w,h);
@@ -183,7 +205,7 @@ function render(){
   cube(v,40,height(40,40)+.1,40,8,.9);
   cube(v,40,height(40,40)+1.1+Math.sin(clock*2)*.12,40,11,.9);
  }
- gl.bindBuffer(gl.ARRAY_BUFFER,dynamic);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(v),gl.DYNAMIC_DRAW);renderBuffer(dynamic,v.length/6);renderOk=true;
+ gl.bindBuffer(gl.ARRAY_BUFFER,dynamic);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(v),gl.DYNAMIC_DRAW);renderBuffer(dynamic,v.length/6);drawAimOutline();renderOk=true;
 }
 function ground(x,z){return height(Math.floor(x),Math.floor(z))+1.02;}
 function resetPose(){hero.x=2.5;hero.z=2.5;hero.y=ground(hero.x,hero.z);hero.vy=0;hero.hp=100;companion.x=4.5;companion.z=4.5;companion.y=ground(4.5,4.5);}
