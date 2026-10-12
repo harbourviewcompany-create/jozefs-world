@@ -1,0 +1,51 @@
+/* NEON CITY // 2026 · Premium phone-first scene. No external fonts, art CDN or trackers. */
+:root{font-family:system-ui,-apple-system,sans-serif;color:#edfff5;background:#05131d;--lime:#cbff76;--teal:#8bfbe9}
+*{box-sizing:border-box}html,body{margin:0;min-width:300px;width:100%;overflow-x:hidden}
+body{background:radial-gradient(ellipse at 70% -5%,#185158,transparent 55%),linear-gradient(#081d2a,#06121c)}
+button,a{font:inherit}button{cursor:pointer;touch-action:manipulation}a{color:inherit;text-decoration:none}
+button:focus-visible,a:focus-visible{outline:3px solid var(--lime);outline-offset:3px}
+.shell{max-width:1150px;margin:auto;min-height:100dvh;padding:env(safe-area-inset-top,0px) 9px env(safe-area-inset-bottom,0px);display:flex;flex-direction:column;gap:6px}
+.header{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #91f0dd52;min-height:62px}
+.header button,.back{border:1px solid #8cf2db80;border-radius:10px;background:#123744;color:#effff6;padding:10px 8px;min-height:40px;font-size:10px;font-weight:900;white-space:nowrap}
+.header button{color:var(--lime)}
+.brand{display:flex;flex-direction:column;gap:2px;min-width:0}.brand span{font-size:8px;letter-spacing:.09em;font-weight:900;color:#aed8c7}
+.brand strong{font:900 clamp(23px,5.5vw,38px)/1 Impact,"Arial Narrow",system-ui,sans-serif;letter-spacing:.04em}.brand em{color:var(--lime);font-style:normal}
+main{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+.mission{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px;border-radius:12px;border:1px solid #89cfc26b;background:#0e303b}
+.mission>div{display:grid;gap:3px;min-width:0}.mission small{font-size:9px;font-weight:850;color:#9cf3e2}
+.mission strong{font-size:clamp(11px,2.7vw,16px);font-weight:950;line-height:1.2}
+.count{text-align:right;white-space:nowrap}.count b{font-size:10px;color:var(--lime)}.count small{font-size:8px}
+.world{position:relative;width:100%;min-width:0;overflow:hidden;border:1px solid #a0fbe97e;border-radius:16px;background:#081e2a;box-shadow:0 15px 45px #0008}
+.stage{display:block;position:relative;width:100%;height:clamp(290px,calc(100dvh - 336px),625px);touch-action:none;overflow:hidden}
+.stage canvas{display:block;max-width:100%;touch-action:none}
+.world-stamp{pointer-events:none;position:absolute;top:8px;left:8px;right:8px;display:flex;align-items:center;gap:8px;border:1px solid #baffc950;border-radius:7px;padding:5px 9px;font-size:9px;letter-spacing:.08em;font-weight:900;background:#061724df}
+.world-stamp span{margin-left:auto;font-size:8px;color:#a9d8c5}
+.status{margin:0;min-height:31px;padding:7px 9px;border-left:4px solid var(--lime);border-radius:7px;background:#143740;font-size:11px;font-weight:850;line-height:1.35}
+.controls{display:grid;grid-template-columns:159px minmax(0,1fr);gap:9px;align-items:center;min-width:0;padding:8px;border:1px solid #78c8c46b;border-radius:13px;background:#0a2632}
+.dpad{display:grid;grid-template:repeat(3,49px)/repeat(3,49px);gap:3px;place-content:center;touch-action:manipulation}
+.dpad button{min-height:49px;min-width:49px;padding:0;border:1px solid #95f2e4a6;border-radius:11px;background:linear-gradient(135deg,#255868,#153a51);color:#f6fff8;font-size:24px;font-weight:900}
+.dpad button:active{background:#3b786c;transform:scale(.96)}
+.up{grid-area:1/2}.left{grid-area:2/1}.right{grid-area:2/3}.down{grid-area:3/2}
+.actions{display:grid;grid-template-columns:1fr;gap:6px;min-width:0}
+.actions button,.actions a{display:grid;place-content:center;text-align:center;min-width:0;width:100%;min-height:43px;padding:6px 5px;border-radius:9px;font-size:10px;font-weight:900;line-height:1.2}
+.actions button{border:1px solid #86d6c7b5;background:#173a46;color:#e5fcef}
+.actions .go{background:linear-gradient(125deg,#d4ff8a,#80e8b6);border-color:#edffa6;color:#102b2d;font-size:15px}
+.actions .go span{font-size:9px}
+.actions a{min-height:24px;font-size:10px;color:#99f1dc}
+footer{text-align:center;font-size:8px;font-weight:800;letter-spacing:.07em;color:#92bcb3;line-height:1.3;padding:4px 0 8px}
+.finale[hidden]{display:none}.finale{position:absolute;inset:0;z-index:15;display:grid;place-items:center;padding:13px;background:#06141de8;backdrop-filter:blur(5px)}
+.finale-card{width:min(480px,100%);border:1px solid #b8ff9d;padding:19px 14px;text-align:center;border-radius:17px;background:linear-gradient(140deg,#17434c,#0c2234);box-shadow:0 20px 60px #000a}
+.finale-card small{font-size:10px;font-weight:900;letter-spacing:.1em;color:#c4ffe2}
+.finale-card h2{margin:8px 0;color:var(--lime);font:900 clamp(25px,6vw,41px)/1 Impact,system-ui,sans-serif}
+.finale-card p{color:#ebb7ff;font-weight:850}.finale-card b{font-size:13px}
+.lanes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:17px 0}
+.lanes button{border:1px solid #d7ff87;border-radius:10px;min-width:0;min-height:54px;background:var(--lime);color:#08282b;font-size:12px;font-weight:900}
+@media(max-width:600px){.shell{padding-left:7px;padding-right:7px}.header{min-height:54px}.header button,.back{font-size:9px;padding:7px}.brand strong{font-size:26px}.brand span{font-size:7px}
+.mission{padding:7px;gap:5px}.count b{font-size:9px}.count small{font-size:8px}
+.stage{height:clamp(290px,calc(100dvh - 317px),610px)}
+.controls{grid-template-columns:145px minmax(0,1fr);gap:6px;padding:5px}.dpad{grid-template:repeat(3,45px)/repeat(3,45px);gap:3px}
+.dpad button{min-width:45px;min-height:45px;font-size:21px}
+.actions button{min-height:42px}.actions .go{font-size:13px}.actions .go span{font-size:8px}}
+@media(max-width:360px){.count small{display:none}.stage{height:clamp(270px,calc(100dvh - 315px),550px)}.controls{grid-template-columns:140px minmax(0,1fr)}.dpad{grid-template:repeat(3,44px)/repeat(3,44px);gap:3px}.dpad button{min-height:44px;min-width:44px}.actions button{font-size:9px}}
+@media(min-width:900px){.stage{height:min(65dvh,680px)}.actions{grid-template-columns:1.2fr 1fr 1fr;align-items:center}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
