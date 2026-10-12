@@ -133,7 +133,7 @@ function character(c,x,y,hero,selected,time,moving){
  c.fillText(hero===0?'JOZEF':'DAD',x,y-45);
 }
 function draw(input){
- const {ctx:c,canvas,stage:stageValue,targets,positions:players,selected=0,time=0,reducedMotion=false,clues=[false,false],battle=null,won=false,fragments=[],difficulty='story'}=input||{};
+ const {ctx:c,canvas,stage:stageValue,targets,positions:players,selected=0,time=0,reducedMotion=false,clues=[false,false],signals=[false,false],battle=null,won=false,fragments=[],difficulty='story'}=input||{};
  if(!c||!canvas)return false;
  const stage=Math.max(0,Math.min(4,stageValue|0)),s=SCENES[stage],w=canvas.width,h=canvas.height,tw=w/12,th=h/8;
  c.save();c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;c.shadowBlur=0;
@@ -159,7 +159,7 @@ function draw(input){
  }
  if(stage<3){
   (targets||[]).forEach(([x,y],i)=>{
-   const filled=stage===0&&clues[i],cx=(x+.5)*tw,cy=(y+.5)*th;
+   const filled=stage===0&&clues[i]||stage===1&&signals[i],cx=(x+.5)*tw,cy=(y+.5)*th;
    const col=i===0?'#caff6a':'#81ddff',size=reducedMotion?0:Math.sin(t*.004+i)*2;
    bloom(c,cx,cy,57,col,filled?.13:.32);
    c.strokeStyle=col;c.lineWidth=filled?1.6:3;
@@ -171,7 +171,7 @@ function draw(input){
    shard(c,cx,cy-12+size*.6,t*.9+i*500,filled?'#ffffff':col,filled?7:12);
    rounded(c,cx-29,cy-44,58,16,7);c.fillStyle='#051628f4';c.fill();
    c.font='900 10px system-ui';c.textBaseline='middle';c.textAlign='center';c.fillStyle=col;
-   c.fillText(filled?'FOUND':i===0?'JOZEF':'DAD',cx,cy-36);
+   c.fillText(filled?stage===1?'CHARGED':'FOUND':i===0?'JOZEF':'DAD',cx,cy-36);
   });
  }
  // Ambient particulate matter is deterministic; no random allocations per frame.

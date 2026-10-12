@@ -88,13 +88,17 @@ const close=()=>new Promise(resolve=>server.close(resolve));
         await page.evaluate(id=>{window.JozefTogether.choose(id);window.JozefTogether.guide();},who);
         if(stage===0&&who===0)
          await page.waitForFunction(()=>window.JozefTogether.progress().clues[0],null,{timeout:6500});
-        else if(who===1)
+        else if(who===1){
+         if(stage===1)await page.evaluate(()=>window.JozefTogether.teamPulse(1));
          await page.waitForFunction(s=>window.JozefTogether.progress().stage>s,stage,{timeout:6500});
-        else
+        }
+        else {
          await page.waitForFunction(s=>{
           const p=window.JozefTogether.progress().positions[0],t=[[3,2],[3,5],[5,2]][s];
           return p.x===t[0]&&p.y===t[1];
          },stage,{timeout:6500});
+         if(stage===1)await page.evaluate(()=>window.JozefTogether.teamPulse(0));
+        }
        }
       }
       assert.equal(await page.evaluate(()=>window.JozefTogether.progress().stage),3,'two people opened the finale');

@@ -5,7 +5,7 @@ const KEY='jozefs-world-together-v1', W=12,H=8;
 const WALLS=[[4,2],[4,3],[7,4],[7,5],[8,2]];
 const STAGES=[
  {title:'01 / THE HIDDEN CLUES',detail:'Jozef finds the lime clue. Dad finds the blue clue. Each of you must reach your own marker.',targets:[[3,2],[9,5]]},
- {title:'02 / RESTORE THE LIGHTS',detail:'Stand on both illuminated consoles at the same time. Moving off a console turns it off.',targets:[[3,5],[9,2]]},
+ {title:'02 / RESTORE THE LIGHTS',detail:'Stand on your own console and charge it with TEAM PULSE. Both heroes must hold their pads to restore power.',targets:[[3,5],[9,2]]},
  {title:'03 / THE CHAMPION VAULT',detail:'Find both vault pads together to open the final arena.',targets:[[5,2],[6,5]]},
  {title:'04 / THE TAG-TEAM FINALE',detail:'Take turns choosing a free shot. Jozef and Dad must each score twice.',targets:[]},
  {title:'CHAPTER CLEARED',detail:'The Midnight Stadium Cup belongs to both Jozef and Dad.',targets:[]}
@@ -20,7 +20,9 @@ const allFragments=FRAGMENTS.flat().map(x=>x.id);
 const own=(x,y)=>x>=1&&x<W-1&&y>=1&&y<H-1&&!WALLS.some(([a,b])=>a===x&&b===y);
 const clamp=(n,min,max)=>Number.isInteger(n)?Math.max(min,Math.min(max,n)):min;
 const at=(p,t)=>p.x===t[0]&&p.y===t[1];
-function fresh(){return {stage:0,clues:[false,false],won:false,positions:HEROES.map(h=>({x:h.start[0],y:h.start[1]})),fragments:[],bestFragments:0,perfect:false,difficulty:'story',bestCombo:0};}
+function canPulse(stage,who,positions){return stage===1&&(who===0||who===1)&&Array.isArray(positions)&&positions.length===2&&at(positions[who],STAGES[1].targets[who]);}
+function consolesReady(positions,signals){return Array.isArray(signals)&&signals.length===2&&signals.every(Boolean)&&STAGES[1].targets.every((pad,i)=>at(positions[i],pad));}
+function fresh(){return {stage:0,clues:[false,false],won:false,positions:HEROES.map(h=>({x:h.start[0],y:h.start[1]})),fragments:[],bestFragments:0,perfect:false,difficulty:'story',bestCombo:0,signals:[false,false]};}
 function sanitize(input){
  const s=fresh();
  if(!input||typeof input!=='object'||Array.isArray(input))return s;
@@ -32,6 +34,7 @@ function sanitize(input){
  s.difficulty=input.difficulty==='challenge'?'challenge':'story';
  s.bestCombo=clamp(input.bestCombo,0,99);
  s.stage=clamp(input.stage,0,4);
+ s.signals=Array.isArray(input.signals)?[input.signals[0]===true,input.signals[1]===true]:[false,false];
  if(s.stage>0&&!s.clues.every(Boolean))s.stage=0;
  if(s.stage===4&&!s.won)s.stage=2;
  if(s.stage===3)s.stage=2; // A refreshed boss fight always starts at a safe checkpoint.
@@ -39,6 +42,8 @@ function sanitize(input){
   const p=input.positions.map((v,i)=>({x:Number.isInteger(v?.x)?v.x:HEROES[i].start[0],y:Number.isInteger(v?.y)?v.y:HEROES[i].start[1]}));
   if(p.every(v=>own(v.x,v.y))&&!(p[0].x===p[1].x&&p[0].y===p[1].y))s.positions=p;
  }
+ if(s.stage!==1)s.signals=[false,false];
+ else for(let i=0;i<2;i++)if(!at(s.positions[i],STAGES[1].targets[i]))s.signals[i]=false;
  return s;
 }
 function pathTo(a,b,occupied){
@@ -73,7 +78,7 @@ function readPad(pad){
  const horizontal=dpadHorizontal?x:dpadVertical?0:Math.abs(axis(0))>=Math.abs(axis(1))?x:0;
  return {dx:horizontal,dy:horizontal?0:y,act:pressed(0),switchHero:pressed(2)};
 }
-const rules=Object.freeze({KEY,W,H,WALLS,STAGES,HEROES,FRAGMENTS,own,fresh,sanitize,pathTo,shieldFor,readPad});
+const rules=Object.freeze({KEY,W,H,WALLS,STAGES,HEROES,FRAGMENTS,own,fresh,sanitize,pathTo,canPulse,consolesReady,shieldFor,readPad});
 if(typeof module!=='undefined'&&module.exports)module.exports=rules;
 if(typeof document==='undefined')return;
 const $=id=>document.getElementById(id);
@@ -105,7 +110,7 @@ function persist(){
  root.dispatchEvent?.(new Event('jozef:together-updated'));
 }
 function stop(){walkToken++;if(walking!==null)clearTimeout(walking);walking=null;}
-function progress(){return {stage:state.stage,clues:state.clues.slice(),won:state.won,positions:state.positions.map(p=>({...p})),selected,opened,shots:battle?battle.hits.slice():null,fragments:state.fragments.slice(),bestFragments:state.bestFragments,perfect:state.perfect,difficulty:state.difficulty,bestCombo:state.bestCombo};}
+function progress(){return {stage:state.stage,clues:state.clues.slice(),won:state.won,positions:state.positions.map(p=>({...p})),selected,opened,shots:battle?battle.hits.slice():null,fragments:state.fragments.slice(),bestFragments:state.bestFragments,perfect:state.perfect,difficulty:state.difficulty,bestCombo:state.bestCombo,signals:state.signals.slice()};}
 function toggleDifficulty(){
  if(state.stage>=3){notify('Choose a play style before the finale.');return false;}
  state.difficulty=state.difficulty==='story'?'challenge':'story';persist();hud();
@@ -143,6 +148,14 @@ function replay(){
  return true;
 }
 function choose(i){if(i!==0&&i!==1)return false;stop();selected=i;hud();draw(performance.now?.()||0);return true;}
+function teamPulse(who=selected){
+ if(!opened||state.stage!==1){notify('Team Pulse powers the twin consoles. Reach the power room to use it.');return false;}
+ if(!canPulse(state.stage,who,state.positions)){notify((who===0?'Jozef':'Dad')+' must stand on their glowing console to activate it.');return false;}
+ if(state.signals[who]){notify((who===0?'Jozef':'Dad')+' has already charged their console. Now help your teammate.');return true;}
+ state.signals[who]=true;cue(true);persist();hud();
+ if(!checkpoint())notify((who===0?'Jozef':'Dad')+' CONSOLE CHARGED! Keep this hero on the pad; switch to the other player for the second signal.');
+ draw(performance.now?.()||0);return true;
+}
 function checkpoint(){
  if(state.stage===0){
   let found=false;
@@ -154,9 +167,9 @@ function checkpoint(){
  }
  if(state.stage===1||state.stage===2){
   const targets=STAGES[state.stage].targets;
-  if(targets.every((point,i)=>at(state.positions[i],point))){
+  if(targets.every((point,i)=>at(state.positions[i],point))&&(state.stage!==1||consolesReady(state.positions,state.signals))){
    state.stage++;
-   stop();persist();hud();cue(true);
+   state.signals=[false,false];stop();persist();hud();cue(true);
    if(state.stage===2)notify('THE LIGHTS ARE ON! Both heroes must enter the champion vault.');
    else {battle={turn:0,hits:[0,0],blocks:0,round:0,combo:0,overdrive:false};controllerLane=1;notify('FINALE UNLOCKED! Jozef shoots first. Each of you needs two scores.');}
    return true;
@@ -169,6 +182,7 @@ function move(who,dx,dy){
  const p=state.positions[who],other=state.positions[1-who],x=p.x+dx,y=p.y+dy;
  if(!own(x,y)||other.x===x&&other.y===y)return false;
  p.x=x;p.y=y;
+ if(state.stage===1&&!at(p,STAGES[1].targets[who]))state.signals[who]=false;
  const found=collectFragments();persist();checkpoint();hud();draw(performance.now?.()||0);
  if(found&&root.navigator?.vibrate)root.navigator.vibrate(15);
  return true;
@@ -180,7 +194,7 @@ function guide(){
  const target=STAGES[state.stage].targets[selected];
  const path=pathTo(state.positions[selected],target,state.positions[1-selected]);
  if(!path){notify('Your teammate is blocking this route. Move their character first.');return false;}
- if(!path.length){notify('Ready! Switch to the other hero and guide them to their marker.');checkpoint();return true;}
+ if(!path.length){if(state.stage===1&&!state.signals[selected]){notify('Now press TEAM PULSE to activate '+HEROES[selected].name+'’s console.');return true;}notify('Player ready. Switch to the other hero and find their marker.');checkpoint();return true;}
  stop();const token=walkToken,hero=selected,phase=state.stage;
  notify('Guiding '+HEROES[hero].name+' to their glowing objective.');
  let i=0;
@@ -224,6 +238,8 @@ function hud(){
  const score=$('jw-together-score');
  if(score)score.textContent=state.stage===3&&battle?'JOZEF '+battle.hits[0]+'/2 · DAD '+battle.hits[1]+'/2 · BLOCKS '+battle.blocks+'/'+(state.difficulty==='challenge'?2:3):state.stage===4?'JOZEF + DAD / CHAMPIONS':'CHAPTER 01 / '+(state.stage+1)+' OF 5';
  const sparks=$('jw-together-sparks');if(sparks)sparks.textContent='STADIUM SPARKS '+state.fragments.length+'/6'+(state.perfect?' · PERFECT TEAM':'');
+ const pulse=$('jw-together-pulse');if(pulse){pulse.hidden=state.stage!==1;pulse.disabled=state.stage!==1||!canPulse(state.stage,selected,state.positions)||state.signals[selected];pulse.textContent='TEAM PULSE / '+(state.signals[selected]?'CHARGED':HEROES[selected].name);}
+ const signal=$('jw-together-signal');if(signal)signal.textContent=state.stage===1?'JOZEF '+(state.signals[0]?'POWER ON':'STANDBY')+' · DAD '+(state.signals[1]?'POWER ON':'STANDBY'):'';
  const difficulty=$('jw-together-difficulty');if(difficulty){difficulty.textContent=state.difficulty==='challenge'?'CHALLENGE / ON':'STORY / GUIDED';difficulty.setAttribute('aria-pressed',String(state.difficulty==='challenge'));}
  const snd=$('jw-together-sound');if(snd){snd.textContent=soundEnabled?'SOUND ON':'SOUND OFF';snd.setAttribute('aria-pressed',String(soundEnabled));}
  const perfect=$('jw-together-perfect');if(perfect)perfect.hidden=!state.perfect;
@@ -252,7 +268,7 @@ function hud(){
 }
 function draw(t){
  if(!ctx||!opened)return;
- if(root.JozefTogetherRenderer?.draw({ctx,canvas,stage:state.stage,targets:STAGES[state.stage].targets,positions:state.positions,selected,time:t,reducedMotion:motionReduced,clues:state.clues,battle,won:state.won,difficulty:state.difficulty,fragments:state.stage<3?FRAGMENTS[state.stage].map(item=>({...item,collected:state.fragments.includes(item.id)})):[]}))return;
+ if(root.JozefTogetherRenderer?.draw({ctx,canvas,stage:state.stage,targets:STAGES[state.stage].targets,positions:state.positions,selected,time:t,reducedMotion:motionReduced,clues:state.clues,battle,won:state.won,difficulty:state.difficulty,signals:state.signals,fragments:state.stage<3?FRAGMENTS[state.stage].map(item=>({...item,collected:state.fragments.includes(item.id)})):[]}))return;
  const tw=canvas.width/W,th=canvas.height/H;
  const bg=ctx.createLinearGradient(0,0,canvas.width,canvas.height);
  bg.addColorStop(0,'#102d47');bg.addColorStop(1,'#050e1b');ctx.fillStyle=bg;ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -319,8 +335,9 @@ function pollGamepads(t){
     hud();
    }
    if(input.act&&!prior.act&&(!two||i===battle.turn))shoot(controllerLane);
-  }else if(input.dx||input.dy){
-   stop();move(hero,input.dx,input.dy);
+  }else{
+   if(input.act&&!prior.act&&state.stage===1)teamPulse(hero);
+   if(input.dx||input.dy){stop();move(hero,input.dx,input.dy);}
   }
   lastPadButtons[i]={act:input.act,switchHero:input.switchHero};
  }
@@ -335,6 +352,7 @@ function init(){
  $('jw-together-guide')?.addEventListener('click',guide);
  $('jw-together-difficulty')?.addEventListener('click',toggleDifficulty);
  $('jw-together-sound')?.addEventListener('click',toggleSound);
+ $('jw-together-pulse')?.addEventListener('click',()=>teamPulse(selected));
  for(let i=0;i<2;i++)$('jw-together-hero-'+i)?.addEventListener('click',()=>choose(i));
  document.querySelectorAll('[data-together-step]').forEach(button=>button.addEventListener('click',()=>{
   const [dx,dy]=button.dataset.togetherStep.split(',').map(Number);stop();move(selected,dx,dy);
@@ -357,6 +375,7 @@ function init(){
  document.addEventListener('keydown',e=>{
   if(!opened||!$('adventure')?.classList.contains('active')||e.repeat||e.metaKey||e.ctrlKey||e.altKey)return;
   if(e.target.closest('button,input,select,textarea,dialog'))return;
+  if(state.stage===1&&['e','E','p','P',' '].includes(e.key)){e.preventDefault();teamPulse(e.key.toLowerCase()==='e'?0:e.key.toLowerCase()==='p'?1:selected);return;}
   if(state.stage===3&&['1','2','3'].includes(e.key)){e.preventDefault();controllerLane=Number(e.key)-1;shoot(controllerLane);return;}
   if(state.stage===3&&[' ','Enter'].includes(e.key)){e.preventDefault();shoot(controllerLane);return;}
   if(state.stage===3&&['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();controllerLane=(controllerLane+(e.key==='ArrowLeft'?2:1))%3;hud();return;}
@@ -366,6 +385,6 @@ function init(){
  });
  hud();
 }
-root.JozefTogether=Object.freeze({start,close,replay,choose,move,guide,shoot,progress,toggleDifficulty,toggleSound});
+root.JozefTogether=Object.freeze({start,close,replay,choose,move,guide,shoot,progress,toggleDifficulty,toggleSound,teamPulse});
 init();
 })(typeof window!=='undefined'?window:globalThis);

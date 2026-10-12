@@ -3914,3 +3914,8 @@ body.versus-focused #versus.is-playing .versus-scoreboard{position:absolute;top:
 body.versus-focused #versus.is-playing .versus-play{position:absolute;left:8px;right:8px;bottom:max(8px,env(safe-area-inset-bottom));z-index:2}
 body.versus-focused #versus.is-playing .versus-head,
 body.versus-focused #versus.is-playing #versus-leave{display:none}
+/* Charged relays require independent team input. */
+.jw-together-signal{display:block;flex-basis:100%;color:#a8f8e4;font:900 10px/1.3 var(--sf-ui);letter-spacing:.06em}
+#jw-together-pulse{width:100%;min-height:47px;border:1px solid #dffba2;border-radius:11px;background:linear-gradient(135deg,#ccff79,#71dfe9);color:#102d2c;font:900 12px/1.2 var(--sf-ui);box-shadow:0 3px 18px #acff7940}
+#jw-together-pulse:disabled{opacity:.48;box-shadow:none}
+#jw-together-pulse[hidden]{display:none!important}

@@ -40,6 +40,21 @@ test('saved co-op chapter resumes only from validated checkpoints',()=>{
  const bad=rules.sanitize({positions:[{x:4,y:2},{x:4,y:2}],stage:0});
  assert.deepEqual(bad.positions,fresh.positions);
 });
+test('team relay requires both heroes to activate consoles independently',()=>{
+ const pos=[{x:3,y:5},{x:1,y:6}];
+ assert.equal(rules.canPulse(1,0,pos),true);
+ assert.equal(rules.canPulse(1,1,pos),false);
+ assert.equal(rules.consolesReady(pos,[true,false]),false);
+ pos[1]={x:9,y:2};
+ assert.equal(rules.canPulse(1,1,pos),true);
+ assert.equal(rules.consolesReady(pos,[true,true]),true);
+ assert.equal(rules.consolesReady(pos,[true,false]),false);
+ pos[0]={x:3,y:4};
+ assert.equal(rules.consolesReady(pos,[true,true]),false);
+ assert.equal(rules.canPulse(1,0,pos),false);
+ const saved=rules.sanitize({stage:1,clues:[true,true],positions:[{x:3,y:4},{x:9,y:2}],signals:[true,true]});
+ assert.deepEqual(saved.signals,[false,true]);
+});
 test('controllers and finalist shield use deterministic valid inputs',()=>{
  const pad={connected:true,axes:[.8,.1],buttons:Array.from({length:16},(_,i)=>({pressed:i===0}))};
  assert.deepEqual(rules.readPad(pad),{dx:1,dy:0,act:true,switchHero:false});
