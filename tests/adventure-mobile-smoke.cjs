@@ -37,6 +37,9 @@ const close=()=>new Promise(resolve=>server.close(resolve));
       assert.equal(await page.locator('#jw-adventure-outfits button').count(),5,'five earned outfits');
       assert.equal(await page.locator('#jw-adventure-worlds button').nth(1).isDisabled(),true,'future stages begin locked');
       assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'adventure has no horizontal overflow');
+      const touchTarget=await page.locator('.jw-adventure-dpad .up').boundingBox();
+      assert.ok(touchTarget?.width>=43&&touchTarget?.height>=43,
+        'direction pad should provide usable thumb targets even on 320px phones');
       const layout=await page.evaluate(()=>{
        const selectors=['#adventure','.jw-adventure-board','.jw-adventure-sidebar','.jw-adventure-controls',
          '#jw-adventure-interact','#jw-adventure-guide','#jw-adventure-coop','#jw-adventure-retry','.jw-adventure-exit'];

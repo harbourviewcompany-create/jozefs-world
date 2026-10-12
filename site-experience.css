@@ -3838,3 +3838,17 @@ body.versus-focused #versus-tip{font-weight:800;letter-spacing:.03em;color:#e4ff
   #adventure .jw-adventure-controls{grid-template-columns:minmax(95px,33%) minmax(0,1fr)}
   #adventure .jw-adventure-main-actions button{min-height:42px;font-size:9px;padding:3px 2px}
 }
+
+/* Real thumb targets without growing the screen horizontally. */
+@media(max-width:640px){
+ #adventure .jw-adventure-controls{grid-template-columns:138px minmax(0,1fr)}
+ #adventure .jw-adventure-dpad{width:138px;max-width:138px;height:138px;grid-template:repeat(3,44px)/repeat(3,44px);gap:3px}
+ #adventure .jw-adventure-dpad button{width:44px;height:44px;min-width:44px;min-height:44px}
+ #adventure .jw-adventure-main-actions button{min-height:48px}
+}
+@media(max-width:360px){
+ #adventure .jw-adventure-controls{grid-template-columns:138px minmax(0,1fr)}
+ #adventure .jw-adventure-dpad{height:138px;grid-template:repeat(3,44px)/repeat(3,44px)}
+ #adventure .jw-adventure-dpad button{width:44px;height:44px;min-width:44px;min-height:44px}
+ #adventure .jw-adventure-main-actions button{min-height:44px}
+}
