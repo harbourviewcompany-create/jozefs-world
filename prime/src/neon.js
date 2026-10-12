@@ -29,7 +29,7 @@ class NeonCity extends Phaser.Scene {
   this.grid=[1,1];this.route=[];this.moving=false;this.active=true;
   this.round=0;this.goals=0;this.shots=0;this.finale=false;this.padAt=0;this.padOld=false;
   this.staticScene();this.placeObjects();this.hero=this.makeAthlete('JOZEF',0xcdfa63,11);
-  this.partner=this.makeAthlete('DAD',0x60ecf4,2);this.partner.setVisible(false);
+  this.partner=this.makeAthlete('DAD',0x60ecf4,2);this.partner.setAlpha(.88);
   this.partner.setPosition(...xy([1,2]));this.hero.setPosition(...xy(this.grid));
   this.cameras.main.setBounds(0,0,W,H);this.cameras.main.setZoom(this.scale.width<900?1.25:1.08);
   this.cameras.main.startFollow(this.hero,true,.1,.1);
@@ -197,7 +197,7 @@ class NeonCity extends Phaser.Scene {
   this.hero.setRotation(Math.max(-.12,Math.min(.12,(x-fromX)/TILE*.07)));
   this.tweens.add({targets:this.hero,x,y,duration:reduce?85:160,ease:'Sine.easeInOut',onComplete:()=>{
    this.hero.setRotation(0);this.grid=next;this.moving=false;
-   this.partner.setPosition(fromX,fromY);
+   this.tweens.add({targets:this.partner,x:fromX,y:fromY,duration:reduce?70:170,ease:'Sine.easeInOut'});
    this.reached();this.drawRoute();this.advance();
   }});
  }
@@ -301,4 +301,17 @@ function boot(){
  const resize=new ResizeObserver(()=>{if(!game)return;const height=gameHeight();if(Math.abs(game.scale.height-height)>12)game.scale.resize(960,height)});
  resize.observe(stage);window.addEventListener('pagehide',()=>{resize.disconnect();game?.destroy(true);game=null},{once:true});
 }
+// The same-origin service worker caches only public code, never personal progress.
+async function prepareOffline(){
+ if(!('serviceWorker' in navigator)||!('caches' in window))return;
+ try{
+  await navigator.serviceWorker.register('../sw.js',{scope:'../'});
+  const cache=await caches.open('jozef-neon-public-v1');
+  const entry=new URL(location.href);entry.search='';entry.hash='';
+  const urls=[entry.href,...[...document.querySelectorAll('script[src],link[rel="stylesheet"][href]')].map(node=>node.src||node.href)]
+   .filter(url=>new URL(url).origin===location.origin);
+  await Promise.all(urls.map(async url=>{try{await cache.add(url)}catch{/* network may be unavailable */}}));
+ }catch{/* Never interrupt live play if offline setup fails. */}
+}
+window.addEventListener('load',()=>{void prepareOffline()});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
