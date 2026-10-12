@@ -6,7 +6,7 @@ export default defineConfig({
     emptyOutDir: true,
     target: 'es2022',
     cssCodeSplit: true,
-    rolldownOptions: { input: 'source.html' },
+    rolldownOptions: { input: { source:'source.html', neon:'neon-source.html' } },
     assetsInlineLimit: 0
   }
 });
