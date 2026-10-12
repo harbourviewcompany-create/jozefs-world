@@ -32,6 +32,12 @@ const server=http.createServer((req,res)=>{
      assert.equal(state.selected,'adventure');
      assert.equal(await page.locator('.studio-hero').isVisible(),false,'old marketing hero remains optional');
      assert.ok(state.webgl||state.fallback,'game is usable even without graphics support');
+     await page.locator('#jw-worldcore-next').click();
+     assert.equal(await page.locator('#jw-worldcore-selected-title').textContent(),'Together','next plate previews without navigating');
+     await page.locator('#jw-worldcore-prev').click();
+     assert.equal(await page.locator('#jw-worldcore-selected-title').textContent(),'Adventure');
+     const nextBox=await page.locator('#jw-worldcore-enter').boundingBox();
+     assert.ok(nextBox.height>=40,'primary CTA stays tappable');
      await page.locator('#jw-worldcore-list-toggle').click();
      assert.equal(await page.locator('#jw-worldcore-index button').count(),12,'all plates in the accessible index');
      await page.locator('#jw-worldcore-index button[data-world="1"]').click();

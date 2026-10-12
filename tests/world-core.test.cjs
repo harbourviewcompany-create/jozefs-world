@@ -50,5 +50,11 @@ test('offline shell caches the HQ and safely preserves existing game code',()=>{
  assert.match(js,/JozefTogether/);assert.match(js,/showSection/);
  assert.match(css,/@media\(max-width:600px\)/);assert.match(css, /prefers-reduced-motion:reduce/);
  assert.match(css,/\.jw-worldcore-index/);
+ assert.match(html,/id="jw-worldcore-prev"/);
+ assert.match(html,/id="jw-worldcore-next"/);
+ assert.match(js,/jw-worldcore-prev/);
+ assert.match(js,/jw-worldcore-next/);
+ assert.match(js,/float fresnel=/);
+ assert.match(js,/float edge=exp/);
  assert.doesNotMatch(js,/XMLHttpRequest|fetch\(|WebSocket|analytics|sendBeacon/);
 });

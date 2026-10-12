@@ -49,34 +49,38 @@ function hitTest(nx,ny,yaw,pitch){
  return best;
 }
 function plateGeometry(normal){
- // A pentagonal cast-metal tile with three real radial bevel levels, all on
- // one globe surface. Underlying sphere is separate; the plate casts its own
- // surface highlight and dark under-rim.
+ // Inset carbon gaskets, brushed titanium ribs and a recessed enamel face.
+ // Seven concentric, real 3D rings give each destination its own metal edge.
  const pole=Math.abs(normal[1])>.93?[1,0,0]:[0,1,0];
  const u=norm(cross(pole,normal)),v=norm(cross(normal,u));
  const pt=(angle,r,height)=>{
   const tang=add(u.map(x=>x*Math.cos(angle)),v,Math.sin(angle));
   return norm(add(normal.map(x=>x*Math.cos(r)),tang,Math.sin(r))).map(x=>x*height);
  };
- const rings=[[.505,1.022],[.465,1.032],[.418,1.074],[.392,1.081]];
+ const rings=[
+  [.518,1.010,.04],[.495,1.016,.15],[.479,1.045,.46],
+  [.462,1.066,.65],[.445,1.073,.82],[.425,1.074,.98],
+  [.409,1.075,1.]
+ ];
  const verts=[],normals=[],colors=[];
- const triangle=(a,b,c,tint)=>{
+ const triangle=(a,b,c,fa,fb,fc)=>{
   const n=norm(cross(add(b,a,-1),add(c,a,-1)));
-  for(const p of [a,b,c]){verts.push(...p);normals.push(...n);colors.push(tint);}
+  const points=[a,b,c],face=[fa,fb,fc];
+  for(let i=0;i<3;i++){verts.push(...points[i]);normals.push(...n);colors.push(face[i]);}
  };
  const radial=5,rot=Math.PI/2;
  for(let k=0;k<rings.length-1;k++){
-  const [r1,h1]=rings[k],[r2,h2]=rings[k+1];
+  const [r1,h1,f1]=rings[k],[r2,h2,f2]=rings[k+1];
   for(let j=0;j<radial;j++){
    const a=rot+(j/radial)*Math.PI*2,b=rot+((j+1)/radial)*Math.PI*2;
    const p1=pt(a,r1,h1),p2=pt(b,r1,h1),q1=pt(a,r2,h2),q2=pt(b,r2,h2);
-   triangle(p1,p2,q1,k===0?.52:k===1?.7:.92);
-   triangle(p2,q2,q1,k===0?.52:k===1?.7:.92);
+   triangle(p1,p2,q1,f1,f1,f2);
+   triangle(p2,q2,q1,f1,f2,f2);
   }
  }
  for(let j=0;j<radial;j++){
   const a=rot+(j/radial)*Math.PI*2,b=rot+((j+1)/radial)*Math.PI*2;
-  triangle(pt(a,.392,1.081),pt(b,.392,1.081),normal.map(x=>x*1.087),1);
+  triangle(pt(a,.409,1.075),pt(b,.409,1.075),normal.map(x=>x*1.083),1,1,1);
  }
  return {positions:new Float32Array(verts),normals:new Float32Array(normals),tints:new Float32Array(colors)};
 }
@@ -110,23 +114,50 @@ function glRenderer(canvas){
  uniform vec3 color;uniform float core;uniform float selected;uniform float time;
  varying vec3 normal;varying vec3 point;varying float finish;
  void main(){
- vec3 n=normalize(normal);
- float light=max(dot(n,normalize(vec3(-.54,.79,1.0))),0.);
- float fill=max(dot(n,normalize(vec3(.85,-.35,.32))),0.);
- float rim=pow(1.-max(n.z,0.),2.6);
- float speck=pow(max(dot(reflect(normalize(vec3(.54,-.79,-1.)),n),vec3(0.,0.,1.)),0.),48.);
- float brushed=sin(point.x*156.+sin(point.y*184.)*.7)*.016;
- vec3 base=mix(color*vec3(.24,.36,.44),color*1.17,light*.82+fill*.13);
- base+=vec3(.44,.67,.82)*rim*.22 + vec3(.86,.94,1.)*speck*.46;
- if(core>.5){
-  float bands=pow(abs(sin(atan(point.x,point.z)*9.)),42.);
-  base=mix(base,vec3(.015,.09,.14),bands*.48);
-  base+=vec3(.016,.023,.028)*sin(point.y*140.)*sin(point.x*90.);
- }else{
-  base=mix(base*.4,base,finish);
-  base+=vec3(brushed)+color*selected*(.18+.13*sin(time*2.));
- }
- gl_FragColor=vec4(base,1.);
+  vec3 n=normalize(normal);
+  vec3 keyDir=normalize(vec3(-.58,.76,1.08));
+  vec3 fillDir=normalize(vec3(.79,-.32,.62));
+  float key=max(dot(n,keyDir),0.);
+  float fill=max(dot(n,fillDir),0.);
+  float fresnel=pow(1.-clamp(n.z,0.,1.),3.);
+  float specA=pow(max(dot(reflect(-keyDir,n),vec3(0.,0.,1.)),0.),31.);
+  float specB=pow(max(dot(reflect(-fillDir,n),vec3(0.,0.,1.)),0.),84.);
+  float reflection=pow(max(1.-abs(point.y*.95+point.x*.42),0.),8.);
+  float grain=sin(point.x*312.+sin(point.y*198.)*.9)*sin(point.y*347.)*.011;
+  vec3 metal=vec3(.035,.083,.116)*(0.45+key*.9+fill*.25);
+  metal+=vec3(.20,.42,.56)*fresnel*.62+vec3(.6,.84,.92)*specA*.55;
+  metal+=vec3(.21,.34,.38)*specB*.34+reflection*vec3(.035,.083,.11);
+  vec3 result;
+  if(core>.5){
+   float longitude=atan(point.x,point.z);
+   float parallel=acos(clamp(point.y,-1.,1.));
+   float seams=pow(abs(sin(longitude*17.)),65.)*.24
+              +pow(abs(sin(parallel*22.)),80.)*.18;
+   float micro=sin(longitude*138.)*sin(parallel*122.)*.017;
+   vec3 carbon=vec3(.009,.027,.042)+metal*.44;
+   carbon+=vec3(micro+grain);
+   carbon=mix(carbon,vec3(.018,.078,.106),clamp(seams,0.,.65));
+   carbon+=vec3(.036,.10,.12)*fresnel+vec3(.12,.31,.42)*specA*.48;
+   result=carbon;
+  }else{
+   float gasket=1.-smoothstep(.10,.29,finish);
+   float frame=smoothstep(.17,.36,finish)*(1.-smoothstep(.76,.98,finish));
+   float edge=exp(-pow((finish-.67)*13.,2.));
+   float face=smoothstep(.85,.99,finish);
+   float machining=sin(point.x*240.+point.y*75.)*.011;
+   vec3 titanium=metal*1.26+vec3(.105,.19,.23)*(key*.25);
+   vec3 enamel=vec3(.032,.075,.103)+color*.13;
+   enamel*=.44+key*.54+fill*.12;
+   enamel+=vec3(.12,.21,.24)*specA*.24+vec3(grain+machining);
+   result=mix(titanium,enamel,face);
+   result=mix(result,vec3(.006,.017,.025),gasket);
+   result+=frame*vec3(.065,.11,.135)*specB;
+   result+=edge*color*(.31+selected*.43);
+   result+=face*color*selected*(.095+.055*sin(time*2.2));
+   result+=fresnel*color*.05;
+  }
+  result+=grain*.35;
+  gl_FragColor=vec4(clamp(result,0.,1.),1.);
  }`;
  function shader(type,source){const sh=gl.createShader(type);gl.shaderSource(sh,source);gl.compileShader(sh);if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(sh)||'Shader compile failed');return sh;}
  const prog=gl.createProgram();gl.attachShader(prog,shader(gl.VERTEX_SHADER,vertex));gl.attachShader(prog,shader(gl.FRAGMENT_SHADER,fragment));gl.linkProgram(prog);
@@ -154,7 +185,7 @@ function glRenderer(canvas){
   gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
   gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);
   const rotation=[yaw,pitch];
-  drawMesh(globe,rgb('#1b3b4a'),1,0,rotation,scale,time);
+  drawMesh(globe,rgb('#112935'),1,0,rotation,scale,time);
   for(let i=0;i<panels.length;i++)drawMesh(panels[i],colors[i],0,i===selected?1:0,rotation,scale,time);
   return true;
  };
@@ -176,6 +207,7 @@ function isActive(){return !!document.getElementById('home')?.classList.contains
 function setDetail(){
  const d=DESTINATIONS[selected];
  $('jw-worldcore-selected-type').textContent=d.tag;
+ const position=$('jw-worldcore-position');if(position)position.textContent=String(selected+1).padStart(2,'0')+' / '+String(DESTINATIONS.length).padStart(2,'0');
  $('jw-worldcore-selected-title').textContent=d.title;
  $('jw-worldcore-selected-description').textContent=d.description;
  $('jw-worldcore-enter').textContent='ENTER '+d.title.toUpperCase()+' ↗';
@@ -331,6 +363,8 @@ function pointerUp(e){
 function init(){
  makeLabels();setDetail();
  $('jw-worldcore-enter').addEventListener('click',()=>enter());
+ $('jw-worldcore-prev')?.addEventListener('click',()=>focusPlate((selected+DESTINATIONS.length-1)%DESTINATIONS.length));
+ $('jw-worldcore-next')?.addEventListener('click',()=>focusPlate((selected+1)%DESTINATIONS.length));
  $('jw-worldcore-list-toggle').addEventListener('click',()=>{
   const opened=list.hidden;list.hidden=!opened;
   $('jw-worldcore-list-toggle').setAttribute('aria-expanded',String(opened));
