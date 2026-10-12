@@ -15,6 +15,7 @@ let selected=4,creative=true,third=false,sound=false,stage=0,stats={wood:0,place
 const hero={x:2.5,y:12,z:2.5,vy:0,yaw:0,pitch:-.07,role:0,hp:100,ground:false,double:false,inventory:{}};
 const companion={x:4.5,y:12,z:4.5,role:1,hp:100};
 let boss={x:32.5,y:12,z:32.5,hp:120,alive:true},mobs=[],clock=0,last=0,frames=0,dirty=false,saveClock=0,skyPhase=0;
+let guestActive=false;
 let keys={},joy={x:0,y:0},gamepadHeld={mine:false,place:false,attack:false},jumpWasDown=false,look=null,peer=null,conn=null,host=false,invite='',lastNet=0,remote=false,noticeTo=0,renderOk=false;
 const rnd=(x,z,s)=>{let n=Math.imul(x,374761393)+Math.imul(z,668265263)+Math.imul(s|0,2246822519);n=Math.imul(n^(n>>>13),1274126177);return((n^(n>>>16))>>>0)/4294967296;};
 function noise(x,z,s){let X=Math.floor(x/s),Z=Math.floor(z/s),u=x/s-X,v=z/s-Z;
@@ -236,7 +237,7 @@ function portal(){
  resetPose();spawn();dirty=true;save();announce('PORTAL OPEN · REALM '+(realm+1),3300);
 }
 function captureDimension(){dimensions[realm]={seed,edits:[...edits].slice(-14000),bossHp:boss.hp};}
-function save(){if(!dirty)return;try{
+function save(){if(!dirty||guestActive)return;try{
  captureDimension();
  localStorage.setItem(DIMKEY,JSON.stringify({version:1,baseSeed,dimensions}));
  localStorage.setItem(KEY,JSON.stringify({version:1,seed,realm,edits:[...edits].slice(-14000),hero:{x:hero.x,y:hero.y,z:hero.z,role:hero.role,inventory:hero.inventory},stage,stats,rewards,discovered,defeated,portalOpened,creative}));
@@ -259,7 +260,7 @@ async function importFile(file){try{if(!file||file.size>3e6)throw Error('Select 
  }catch(e){announce('Import failed: '+e.message,3200);}}
 function send(v){try{if(conn?.open)conn.send(v);}catch(_){}}
 function status(s){$('pairStatus').textContent=s;}
-function detach(){try{conn?.close();peer?.destroy();}catch(_){}peer=conn=null;host=false;invite='';$('share').disabled=true;status('Offline · local play');}
+function detach(){const wasGuest=guestActive;guestActive=false;try{conn?.close();peer?.destroy();}catch(_){}peer=conn=null;host=false;invite='';$('share').disabled=true;status('Offline · local play');if(wasGuest){dirty=false;location.reload();}}
 function receive(m){
  if(!m||typeof m!=='object')return;
  if(JSON.stringify(m).length>550000)return;
@@ -285,9 +286,9 @@ function receive(m){
 }
 function attach(c){
  if(conn?.open){c.close();return;}conn=c;
- c.on('open',()=>{status('Connected · private encrypted session');if(host)send({t:'hello',seed,edits:[...edits].slice(-14000),x:hero.x,y:hero.y,z:hero.z,stage,stats,defeated,portalOpened});
+ c.on('open',()=>{if(!host)guestActive=true;status('Connected · private encrypted session');if(host)send({t:'hello',seed,edits:[...edits].slice(-14000),x:hero.x,y:hero.y,z:hero.z,stage,stats,defeated,portalOpened});
   else{hero.role=1;companion.role=0;}announce('Two-device co-op connected');});
- c.on('data',receive);c.on('close',()=>{conn=null;status('Disconnected · local play');});
+ c.on('data',receive);c.on('close',()=>{conn=null;status('Disconnected · local play');if(guestActive){guestActive=false;dirty=false;location.reload();}});
  c.on('error',()=>status('Connection error · try a fresh invite'));
 }
 function createRoom(){
@@ -300,6 +301,7 @@ function createRoom(){
  peer.on('connection',attach);peer.on('error',()=>status('Signalling server unreachable'));
 }
 function joinRoom(code){
+ dirty=true;save();
  const token=String(code||'').trim().toLowerCase();if(!/^[0-9a-f]{32}$/.test(token)){status('Paste a valid 32-character invite');return;}
  if(!window.Peer){status('PeerJS signalling unavailable');return;}
  detach();peer=new Peer();peer.on('open',()=>{status('Connecting privately…');attach(peer.connect('jw-block-'+token,{reliable:true}));});
