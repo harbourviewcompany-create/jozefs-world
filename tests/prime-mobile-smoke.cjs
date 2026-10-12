@@ -80,7 +80,7 @@ const poll=async(page,fn)=>page.waitForFunction(fn,null,{timeout:20000});
     await poll(page,async()=>{
       const cache=await caches.open('jozef-prime-public-v2');
       const entry=new URL(location.href);entry.search='';entry.hash='';
-      const assets=[entry.href,...[...document.querySelectorAll('script[src],link[rel="stylesheet"][href]')].map(el=>el.src||el.href)];
+      const assets=[entry.href,...[...document.querySelectorAll('script[src],link[rel="stylesheet"][href],link[rel="modulepreload"][href]')].map(el=>el.src||el.href)];
       return assets.length>=3&&(await Promise.all(assets.map(url=>cache.match(url)))).every(Boolean);
     });
     await page.locator('[data-mode="hockey"]').click();

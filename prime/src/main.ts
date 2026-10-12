@@ -395,7 +395,7 @@ async function prepareOffline(){
   await navigator.serviceWorker.register('../sw.js',{scope:'../'});
   const cache=await caches.open('jozef-prime-public-v2');
   const entry=new URL(location.href);entry.search='';entry.hash='';
-  const urls=[entry.href,...[...document.querySelectorAll<HTMLScriptElement|HTMLLinkElement>('script[src],link[rel="stylesheet"][href]')].map(el=>el instanceof HTMLScriptElement?el.src:el.href)]
+  const urls=[entry.href,...[...document.querySelectorAll<HTMLScriptElement|HTMLLinkElement>('script[src],link[rel="stylesheet"][href],link[rel="modulepreload"][href]')].map(el=>el instanceof HTMLScriptElement?el.src:el.href)]
    .filter(url=>new URL(url).origin===location.origin);
   await Promise.all(urls.map(async url=>{
    await cache.add(url);

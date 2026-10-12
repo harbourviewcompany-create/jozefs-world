@@ -308,7 +308,7 @@ async function prepareOffline(){
   await navigator.serviceWorker.register('../sw.js',{scope:'../'});
   const cache=await caches.open('jozef-neon-public-v1');
   const entry=new URL(location.href);entry.search='';entry.hash='';
-  const urls=[entry.href,...[...document.querySelectorAll('script[src],link[rel="stylesheet"][href]')].map(node=>node.src||node.href)]
+  const urls=[entry.href,...[...document.querySelectorAll('script[src],link[rel="stylesheet"][href],link[rel="modulepreload"][href]')].map(node=>node.src||node.href)]
    .filter(url=>new URL(url).origin===location.origin);
   await Promise.all(urls.map(async url=>{try{await cache.add(url)}catch{/* network may be unavailable */}}));
  }catch{/* Never interrupt live play if offline setup fails. */}
