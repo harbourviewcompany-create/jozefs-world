@@ -273,28 +273,38 @@
   }
 
   function touch(p, forced) {
-    // Give a struck ball time to leave the player's dribble radius.
     if (!forced && kickLock > 0) return;
     const dx = state.ball.x - p.x, dy = state.ball.y - p.y;
     const dist = Math.hypot(dx, dy) || 1;
     if (dist > (forced ? 64 : 30)) return;
     if (forced) {
       if (kickLock > 0) return;
-      const goalX = p === state.dad ? 20 : W-20;
       const who=p===state.dad?'Dad':'Jozef',shot=shotOptions[who];
-      const goalY=Math.max(GOAL.y+8,Math.min(GOAL.y+GOAL.h-8,SHOT_LANES[shot.aim]+p.vy*1.25));
-      const dx=goalX-state.ball.x,dy=goalY-state.ball.y,length=Math.hypot(dx,dy)||1;
-      const speed=11.5*Math.max(.9,Math.min(1.6,shot.power));
-      state.ball.vx=dx/length*speed;state.ball.vy=dy/length*speed;
-      shot.power=1;kickLock=22;
+      const charged = shot.power > 1.15;
+      let vx, vy;
+      if (charged) {
+        const goalX = p === state.dad ? 24 : W-24;
+        const goalY=Math.max(GOAL.y+10,Math.min(GOAL.y+GOAL.h-10,SHOT_LANES[shot.aim]));
+        const sx=goalX-state.ball.x, sy=goalY-state.ball.y, length=Math.hypot(sx,sy)||1;
+        const speed=12.4*shot.power;
+        vx=sx/length*speed; vy=sy/length*speed;
+      } else {
+        const face = p.face || 1;
+        vx = face * 6.2 + p.vx;
+        vy = p.vy * 0.8;
+      }
+      state.ball.vx=vx; state.ball.vy=vy;
+      shot.power=1; kickLock=16;
       burst(state.ball.x, state.ball.y, '#fff', 10);
       return;
     }
-    const ahead = 18;
-    state.ball.x += ((p.x + (p.face || 1) * ahead) - state.ball.x) * 0.35;
-    state.ball.y += (p.y - state.ball.y) * 0.35;
-    state.ball.vx = p.vx;
-    state.ball.vy = p.vy;
+    const speed = Math.hypot(p.vx, p.vy);
+    if (speed < 0.4) return;
+    const ahead = 16;
+    state.ball.x += ((p.x + (p.face || 1) * ahead) - state.ball.x) * 0.28;
+    state.ball.y += (p.y - state.ball.y) * 0.28;
+    state.ball.vx = p.vx * 0.9;
+    state.ball.vy = p.vy * 0.9;
   }
 
   function inGoal(y) { return y > GOAL.y && y < GOAL.y + GOAL.h; }
@@ -336,7 +346,14 @@
     // Match shot and runner movement to the same 60Hz pixel scale.
     state.ball.x+=state.ball.vx;state.ball.y+=state.ball.vy;
     state.ball.vx*=.992;state.ball.vy*=.992;
-    if(!kickLock){separate(state.dad);separate(state.jozef);}
+    if(!kickLock){
+      separate(state.dad);separate(state.jozef);
+      const gap = Math.hypot(state.dad.x-state.jozef.x, state.dad.y-state.jozef.y);
+      if (gap < 26) {
+        state.ball.vx += (state.ball.x - (state.dad.x+state.jozef.x)/2) * 0.15;
+        state.ball.vy += (state.ball.y - (state.dad.y+state.jozef.y)/2) * 0.15;
+      }
+    }
     if (state.ball.y < 34) { state.ball.y = 34; state.ball.vy = Math.abs(state.ball.vy) + 0.4; }
     if (state.ball.y > H - 34) { state.ball.y = H - 34; state.ball.vy = -Math.abs(state.ball.vy) - 0.4; }
     state.matchLeft = Math.max(0, state.matchLeft - 1/60);
