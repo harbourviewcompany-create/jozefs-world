@@ -99,11 +99,12 @@ function glRenderer(canvas){
  ||canvas.getContext('experimental-webgl',{alpha:true,antialias:true,depth:true});
  if(!gl)return null;
  const vertex=`attribute vec3 p;attribute vec3 n;attribute float bevel;
- uniform vec2 rotation;uniform float scale;
+ uniform vec2 rotation;uniform float scale;uniform float selected;
  varying vec3 normal;varying vec3 point;varying float finish;
  void main(){
  float cy=cos(rotation.x),sy=sin(rotation.x),cx=cos(rotation.y),sx=sin(rotation.y);
- vec3 a=vec3(p.x*cy+p.z*sy,p.y,p.z*cy-p.x*sy);
+ vec3 position=p*(1.0+selected*.018);
+ vec3 a=vec3(position.x*cy+position.z*sy,position.y,position.z*cy-position.x*sy);
  vec3 b=vec3(a.x,a.y*cx-a.z*sx,a.y*sx+a.z*cx);
  vec3 nn=vec3(n.x*cy+n.z*sy,n.y,n.z*cy-n.x*sy);
  normal=normalize(vec3(nn.x,nn.y*cx-nn.z*sx,nn.y*sx+nn.z*cx));
@@ -244,7 +245,7 @@ function graphicsFallback(message){
 }
 function resize(){
  if(!graphics||forceFallback)return;
- const box=canvas.getBoundingClientRect(),size=clamp(Math.round(box.width*(root.devicePixelRatio||1)),300,1350);
+ const box=canvas.getBoundingClientRect(),size=clamp(Math.round(box.width*Math.min(root.devicePixelRatio||1,1.9)),300,1200);
  if(canvas.width!==size||canvas.height!==size){canvas.width=size;canvas.height=size;}
 }
 function makeLabels(){
