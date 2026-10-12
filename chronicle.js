@@ -14,7 +14,7 @@
     return Number.isFinite(d.getTime())?d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}):'CLUB EDITION';
   };
   const number=x=>String(count(x)).padStart(2,'0');
-  const TYPES=new Set(['arena','street','career','tour','honours','cup','multisport']);
+  const TYPES=new Set(['arena','street','career','tour','honours','cup','multisport','versus']);
   function current(){
     const a=window.JozefArena?.getProgress?.()||{};
     const s=window.JozefStreet?.getProgress?.()||{};
@@ -151,6 +151,15 @@
         rival?'RIVAL DEFEATED: '+rival+'.':names[last.sport]+' UNDER THE LIGHTS.',
         'Jozef FC finished '+last.sport+' with '+last.score+' / 5 points.'+
         (rival?' Earned another victory over '+rival+'.':' Another chapter in the all-sport adventure.'));
+      sync();
+    });
+    window.addEventListener?.('jozef:versus-completed',event=>{
+      const d=event.detail;
+      if(!d?.practice||!['Dad','Jozef','Draw'].includes(d.winner)||
+        !['rookie','pro','legend'].includes(d.difficulty)||!Number.isInteger(d.dad)||
+        !Number.isInteger(d.jozef)||d.dad<0||d.jozef<0||d.dad>99||d.jozef>99)return;
+      add('versus',d.winner==='Draw'?'RIVAL NIGHT ENDS LEVEL.':d.winner.toUpperCase()+' WINS RIVAL NIGHT.',
+        'Completed a '+d.difficulty+' Solo Challenge. Final score: Jozef '+d.jozef+' – Dad '+d.dad+'.');
       sync();
     });
     window.addEventListener?.('jozef:profile-updated',sync);

@@ -47,7 +47,14 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  await guest.locator('#versus-again').click();await host.waitForFunction(()=>!document.querySelector('#versus-ready').disabled);
  await host.locator('#versus-ready').click();await guest.locator('#versus-ready').click();await host.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
  await host.locator('#versus-leave').click();await guest.waitForFunction(()=>document.querySelector('#versus-status').textContent.includes('disconnected'));
- await guest.locator('#versus-practice').click();await guest.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);await guest.locator('#versus-leave').click();
+ await guest.locator('#versus-cpu-difficulty').selectOption('legend');
+ await guest.locator('#versus-practice').click();await guest.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
+ await guest.evaluate(()=>{window.__versusTest.state.matchLeft=.02;});
+ await guest.waitForFunction(()=>!document.querySelector('#versus-again').hidden);
+ const solo=await guest.evaluate(()=>JSON.parse(localStorage.getItem('jozefs-world-versus-v1')));
+ assert.equal(solo.played,1,'one full-time Solo Challenge equals one local record');
+ assert.match(await guest.locator('#versus-practice-record').textContent(),/1 PLAYED/);
+ await guest.locator('#versus-leave').click();
  assert.deepEqual(errors,[]);console.log(engine+' '+viewport.width+'x'+viewport.height+' versus PASS');await context.close();
  }
  }finally{await browser.close();}

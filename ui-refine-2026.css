@@ -872,3 +872,20 @@ body.versus-focused #versus:not(.is-playing) .versus-card{grid-template-rows:aut
 
 #versus .versus-stage{background:radial-gradient(ellipse at center,#214445,#06121d 75%);box-shadow:inset 0 0 40px #0006}
 #versus .versus-stage canvas{filter:drop-shadow(0 8px 16px #0008)}
+
+/* 2026 Rival Night: responsive practice HUD and restrained pitch lighting. */
+#versus .versus-practice-settings{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 12px;border:1px solid #80d6d134;border-radius:14px;background:linear-gradient(115deg,#15333a,#0a1b26)}
+#versus .versus-practice-settings label{display:flex;align-items:center;gap:12px;font:800 10px/1.3 var(--sf-ui);letter-spacing:.07em;color:#a5d9d4}
+#versus .versus-practice-settings select{min-height:44px;padding:9px 14px;color:#eafde8;background:#14353a;border:1px solid #a3edb955;border-radius:10px}
+#versus #versus-practice-record{font:800 10px/1.4 var(--sf-ui);letter-spacing:.04em;color:#d5efb4}
+#versus #versus-cpu-label{font:900 9px/1 var(--sf-ui);letter-spacing:.14em;color:#ffc28f;position:absolute;bottom:2px;left:50%;transform:translateX(-50%);white-space:nowrap}
+#versus .versus-scoreboard{position:relative;background:linear-gradient(90deg,#102836,#06151e 48%,#192d27);border-color:#d6fb9536}
+#versus .versus-stage{position:relative;border:1px solid #86e5ce75;box-shadow:inset 0 0 35px #001017,inset 0 0 2px #cefff4,0 12px 45px #0005}
+#versus .versus-stage::after{content:'';position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(180deg,#cbffff08,transparent 28%,transparent 78%,#a1eaff0a)}
+#versus #versus-stick{flex-shrink:0;outline-offset:3px;user-select:none;-webkit-user-select:none;box-shadow:inset 0 0 20px #0009,0 4px 16px #0006}
+#versus #versus-stick:focus-visible{outline:3px solid #c8ff5a}
+#versus #versus-nub{pointer-events:none;box-shadow:inset 0 1px 4px #fff6,0 4px 12px #0009}
+#versus #versus-kick:not(:disabled){box-shadow:0 8px 24px #b2ef5730,inset 0 1px 0 #fff8}
+@media(max-width:600px){#versus .versus-practice-settings{gap:5px;padding:8px 10px}#versus .versus-practice-settings label{font-size:9px}#versus #versus-practice-record{font-size:9px}}
+@media(max-height:700px) and (orientation:portrait){body.versus-focused #versus .versus-card{gap:4px;padding:7px}body.versus-focused #versus .versus-scoreboard{padding:6px 10px}body.versus-focused #versus h2{font-size:19px}}
+@media(prefers-reduced-motion:reduce){#versus .versus-stage,#versus #versus-nub,#versus #versus-kick{animation:none!important;transition:none!important}}
