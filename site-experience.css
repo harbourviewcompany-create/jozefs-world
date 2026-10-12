@@ -3964,3 +3964,8 @@ body.versus-focused #versus.is-playing .versus-stage{position:relative;inset:aut
 body.versus-focused #versus.is-playing .versus-scoreboard{position:relative;top:auto;left:auto;right:auto;margin:6px 8px 0;z-index:2}
 body.versus-focused #versus.is-playing .versus-play{position:relative;left:auto;right:auto;bottom:auto;margin:0;padding:8px;background:#07141c;z-index:2}
 body.versus-focused #versus.is-playing #versus-tip{display:none}
+
+body.versus-focused #versus.is-playing .versus-stage{position:relative!important;inset:auto!important;height:auto!important;min-height:0!important;flex:1}
+body.versus-focused #versus.is-playing .versus-play{position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;z-index:3;background:#07141c;padding:8px 8px max(8px,env(safe-area-inset-bottom))}
+body.versus-focused #versus.is-playing .versus-scoreboard{position:relative!important;top:auto!important}
+body.versus-focused #versus.is-playing .versus-card{display:flex!important;flex-direction:column!important;height:100dvh}
