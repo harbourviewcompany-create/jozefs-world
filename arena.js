@@ -27,6 +27,36 @@ function load(){
  }catch(_){return fresh();}
 }
 const lifetime=load();
+// Wacky Rules and Ghost Races: optional, device-only extras for fun.
+const WACKY_KEY='jozefs-world-wacky-v1',GHOST_KEY='jozefs-world-ghost-v1';
+function loadWacky(){
+ const out={choice:'off',played:0,wins:0};
+ try{
+  const d=JSON.parse(localStorage.getItem(WACKY_KEY)||'null');
+  if(d&&typeof d==='object'&&!Array.isArray(d)){
+   if(systems?.wackyChoiceValid?.(d.choice))out.choice=d.choice;
+   out.played=clamp(Math.floor(Number(d.played))||0,0,99999);out.wins=clamp(Math.floor(Number(d.wins))||0,0,99999);
+  }
+ }catch(_){}
+ return out;
+}
+function loadGhosts(){
+ const out={mode:'off',name:'JOZEF',best:null,last:null,friend:null};
+ try{
+  const d=JSON.parse(localStorage.getItem(GHOST_KEY)||'null');
+  if(d&&typeof d==='object'&&!Array.isArray(d)){
+   if(['off','best','last','friend'].includes(d.mode))out.mode=d.mode;
+   out.name=systems?.cleanGhostName?.(d.name)||'JOZEF';
+   for(const k of ['best','last','friend'])out[k]=typeof d[k]==='string'&&d[k].length<=2600&&systems?.decodeGhost?.(d[k])?d[k]:null;
+  }
+ }catch(_){}
+ return out;
+}
+const wackyPrefs=loadWacky(),ghostStore=loadGhosts();
+const saveWacky=()=>{try{localStorage.setItem(WACKY_KEY,JSON.stringify(wackyPrefs));}catch(_){}};
+const saveGhosts=()=>{try{localStorage.setItem(GHOST_KEY,JSON.stringify(ghostStore));}catch(_){}};
+const saveLifetime=()=>{try{localStorage.setItem(KEY,JSON.stringify(lifetime));}catch(_){}};
+let fx=systems.wackyEffects([]),coinState=systems.freshCoins(),activeGhost=null,ghostRec=null,ghostClock=0;
 const venues=[
   {name:'NEIGHBOURHOOD COURT',accent:'#cafa60',need:0,rival:'THE ROOFTOP ROVERS',story:'The neighbourhood knows your name. Earn two wins to unlock the lights of Neon City.'},
   {name:'NEON CITY',accent:'#73f7da',need:2,rival:'MIDNIGHT CITY FC',story:'The city has heard about Jozef. Earn five total victories to enter the Legend Arena.'},
@@ -136,6 +166,17 @@ function hud(){
  const chance=systems.flowShotProfile(systems.shotProfile(shooter.y,passChain,squad.shot+Math.min(.18,counterTime*.033),experience?.prefs.difficulty||'pro'),flow);
  put('arena-shot-quality',ball.owner==='rival'?'DEFEND':Math.round(chance.onTarget*100)+'%');
  const chanceLabel=$('arena-shot-quality');if(chanceLabel)chanceLabel.title=chance.label+' · Pass and move forward to improve your shooting chance.';
+
+ const wackyChip=$('arena-wacky-chip');
+ if(wackyChip){
+  const label=fx.rules.map(id=>systems.WACKY_RULES.find(r=>r.id===id)).filter(Boolean).map(r=>r.icon+' '+r.label).join(' + ');
+  wackyChip.hidden=!label||mode==='ready';wackyChip.textContent=label;
+ }
+ const ghostChip=$('arena-ghost-chip');
+ if(ghostChip){
+  const show=Boolean(activeGhost)&&mode!=='ready';ghostChip.hidden=!show;
+  if(show)ghostChip.textContent='👻 '+activeGhost.name+' '+systems.ghostScoreAt(activeGhost,MATCH_LENGTH-time)+' · YOU '+us;
+ }
  put('arena-skill-status',skillCooldown>0?'READY IN '+Math.ceil(skillCooldown)+'s':'SKILL READY');
  const skillButton=$('arena-skill');if(skillButton){skillButton.disabled=mode!=='playing'||skillCooldown>0;skillButton.textContent=experience?.prefs.mobileLayout==='immersive'?(ball.owner==='rival'?'TACKLE':'BOOST'):(ball.owner==='rival'?'TACKLE BURST L':'SKILL BURST L');}
  for(let i=0;i<3;i++){const b=$('arena-aim-'+i);if(b){b.setAttribute('aria-pressed',String(aim===i));b.classList.toggle('selected',aim===i);}}
@@ -155,7 +196,7 @@ function saveMatchSnapshot(){
    version:1,savedAt:Date.now(),time,us,them,shots,keeperSaves,
    actor,mate,ball,defenders,keeper,aim,skillCooldown,skillTime,
    shotCooldown,tackleCooldown,passCooldown,passChain,
-   rivalCarrier,rivalElapsed,counterTime,counterRecoveries,rivalAttacks,flow
+   rivalCarrier,rivalElapsed,counterTime,counterRecoveries,rivalAttacks,flow,wacky:fx.rules
   }));
  }catch(_){}
 }
@@ -187,6 +228,7 @@ function restoreMatchSnapshot(){
   counterRecoveries=clamp(Number(old.counterRecoveries)||0,0,99);
   rivalAttacks=clamp(Number(old.rivalAttacks)||0,0,99);
   flow=clamp(Number(old.flow)||0,0,100);
+  fx=systems.wackyEffects(Array.isArray(old.wacky)?old.wacky.slice(0,2):[]);coinState=systems.freshCoins();activeGhost=null;ghostRec=null;
   if(ball.owner==='rival'&&rivalCarrier<0)return false;
   squad=getSquad();mode='paused';playerVelocity={x:0,y:0};last=0;lastFrameTick=0;rawFrameTick=0;
   return true;
@@ -197,8 +239,14 @@ function start(){
  mode='playing';time=MATCH_LENGTH;us=0;them=0;streak=0;flash=0;last=0;
  shots=0;keeperSaves=0;blockedShots=0;counterRecoveries=0;rivalAttacks=0;flow=0;skillCooldown=0;skillTime=0;lastHudTick=-1;
  camera={x:210,y:300,zoom:1};replay=null;replayHistory=[];replayWait=0;joystick={x:0,y:0};padVector={x:0,y:0};experience?.reset();
- squad=getSquad();resetPositions();hud();cue('start');
- msg('KICK OFF! Move, pass to your teammate, and shoot into the top goal.');
+ squad=getSquad();resetPositions();
+ fx=systems.wackyEffects(systems.rulesForChoice(wackyPrefs.choice,Math.random));coinState=systems.freshCoins();
+ activeGhost=ghostStore.mode==='off'?null:systems.decodeGhost(ghostStore[ghostStore.mode]);
+ ghostRec={samples:[[actor.x,actor.y]],goals:[]};ghostClock=0;
+ hud();cue('start');
+ const twist=fx.rules.map(id=>systems.WACKY_RULES.find(r=>r.id===id)).filter(Boolean).map(r=>r.icon+' '+r.label).join(' + ');
+ msg(twist?'WACKY RULES: '+twist+'! '+(activeGhost?'Race the ghost too!':'Have fun!'):
+  activeGhost?'KICK OFF! Race '+activeGhost.name+"'s ghost — beat its goals!":'KICK OFF! Move, pass to your teammate, and shoot into the top goal.');
  last=0;lastFrameTick=0;rawFrameTick=0;
  cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
 }
@@ -229,23 +277,54 @@ function end(){
  window.JozefWorld?.record?.('arena',{result:won?'win':us===them?'draw':'loss',goals:us});
  if(won)cue('victory');
  const result=won?'VICTORY!':us===them?'A HARD-FOUGHT DRAW.':'FULL TIME. REMATCH?';
- msg(result+' '+us+'–'+them+'. '+(unlocked?'NEW STADIUM UNLOCKED!':won?'Your club has earned a win!':'Every match builds your skills.'));
+ let extra='';
+ try{extra=finishExtras(won);}catch(_){/* Wacky Rules and ghosts are extras: a full-time result never depends on them. */}
+ msg(result+' '+us+'–'+them+'. '+(unlocked?'NEW STADIUM UNLOCKED!':won?'Your club has earned a win!':'Every match builds your skills.')+extra);
  finishReplay();
  window.dispatchEvent?.(new Event('jozef:progress'));
  // A fully finished match counts toward today's shared HQ activities.
  window.dispatchEvent?.(new Event('jozef:arena-completed'));
  hud();draw();experience?.finish({won,us,them,shots,saves:keeperSaves});
 }
+function finishExtras(won){
+ let text='';
+ const played=fx.rules.length>0;
+ if(played){
+  wackyPrefs.played=Math.min(99999,wackyPrefs.played+1);
+  if(won){wackyPrefs.wins=Math.min(99999,wackyPrefs.wins+1);text+=' WACKY WIN #'+wackyPrefs.wins+'!';}
+  saveWacky();
+ }
+ if(coinState.collected>0)text+=' '+coinState.collected+' GOLD COIN'+(coinState.collected===1?'':'S')+' GRABBED!';
+ if(activeGhost){
+  const mine={us,them},theirs={us:activeGhost.us,them:activeGhost.them};
+  const better=systems.ghostRank(mine)>systems.ghostRank(theirs);
+  text+=better?' YOU BEAT '+activeGhost.name+"'S GHOST ("+activeGhost.us+'–'+activeGhost.them+')!':
+   systems.ghostRank(mine)===systems.ghostRank(theirs)?' YOU TIED THE GHOST!':' THE GHOST WON '+activeGhost.us+'–'+activeGhost.them+'. TRY AGAIN!';
+ }
+ if(ghostRec){
+  const rec={name:ghostStore.name,us,them,goals:ghostRec.goals,rules:fx.rules,samples:ghostRec.samples};
+  const code=systems.encodeGhost(rec);
+  if(code){
+   ghostStore.last=code;
+   const old=ghostStore.best?systems.decodeGhost(ghostStore.best):null;
+   if(!old||systems.ghostRank(rec)>systems.ghostRank(old))ghostStore.best=code;
+   saveGhosts();
+  }
+  ghostRec=null;
+ }
+ refreshExtrasUI();
+ return text;
+}
 function move(deltaX,deltaY,dt){
  const position=systems.movePlayer(actor,playerVelocity,
-  {x:deltaX,y:deltaY},dt,190*(1+squad.speed),skillTime>0?1.85:1);
+  {x:deltaX,y:deltaY},dt,190*(1+squad.speed),skillTime>0?1.85:1,fx.grip);
  actor.x=position.x;actor.y=position.y;
  playerVelocity={x:position.vx,y:position.vy};
 }
 function receive(){
  if(ball.owner!=='free')return;
- if(dist(ball,actor)<25){ball.owner='actor';passChain=0;msg('POSSESSION! Advance or pass to find a better shot.');}
- else if(dist(ball,mate)<24){ball.owner='mate';passChain=0;msg('Great recovery! Get closer to goal for the shot.');}
+ if(dist(ball,actor)<25*fx.pickup){ball.owner='actor';passChain=0;msg('POSSESSION! Advance or pass to find a better shot.');}
+ else if(dist(ball,mate)<24*fx.pickup){ball.owner='mate';passChain=0;msg('Great recovery! Get closer to goal for the shot.');}
 }
 function setAim(i){
  if(!Number.isInteger(i)||i<0||i>=SHOT_ZONES.length)return;
@@ -394,7 +473,7 @@ function finishReplay(){
 }
 function goal(){
  const finish=passChain>=2?'ONE-TWO MAGIC!':passChain>=1?'TEAMWORK GOAL!':counterTime>0?'FAST-BREAK FINISH!':'GOOOOOAL!';
- us+=1;flow=systems.flowChange(flow,'goal');flash=.75;cue('goal');experience?.haptic([40,40,40]);experience?.record('goals');startReplay('GOAL');
+ us+=1;ghostRec?.goals?.push(Math.round((MATCH_LENGTH-time)*10)/10);flow=systems.flowChange(flow,'goal');flash=.75;cue('goal');experience?.haptic([40,40,40]);experience?.record('goals');startReplay('GOAL');
  msg(finish+' JOZEF FC SCORES! '+us+'–'+them);
  if(us>=5){resetPositions();end();return;}
  resetPositions();
@@ -403,6 +482,18 @@ function update(dt){
  time-=dt;flash=flash>0?Math.max(0,flash-dt):Math.min(0,flash+dt);
  skillCooldown=Math.max(0,skillCooldown-dt);skillTime=Math.max(0,skillTime-dt);
  counterTime=Math.max(0,counterTime-dt);
+ if(ghostRec){
+  ghostClock+=dt;
+  while(ghostClock>=systems.GHOST_STEP){ghostClock-=systems.GHOST_STEP;if(ghostRec.samples.length<380)ghostRec.samples.push([actor.x,actor.y]);}
+ }
+ if(fx.coins){
+  const grabbed=systems.stepCoins(coinState,dt,actor,Math.random);
+  if(grabbed){
+   lifetime.coins=Math.min(99999,lifetime.coins+grabbed);saveLifetime();
+   flow=systems.flowChange(flow,'feint');cue('pass');experience?.haptic(10);
+   msg('GOLD COIN! +'+grabbed+' STAR'+(grabbed===1?'':'S')+' · '+coinState.collected+' THIS MATCH');
+  }
+ }
  keeperReact=Math.max(0,keeperReact-dt);
  shotCooldown=Math.max(0,shotCooldown-dt);passCooldown=Math.max(0,passCooldown-dt);
  tackleCooldown=Math.max(0,tackleCooldown-dt);
@@ -412,6 +503,7 @@ function update(dt){
   const td=dist(actor,target);
   if(td>10){dx=target.x-actor.x;dy=target.y-actor.y;}else target=null;
  }
+ if(fx.mirror){dx=-dx;dy=-dy;}
  move(dx,dy,dt);
  const difficulty=systems.DIFFICULTIES[experience?.prefs.difficulty||'pro']||systems.DIFFICULTIES.pro;
  if(ball.owner==='rival'){
@@ -497,7 +589,7 @@ function update(dt){
     const winner=defenders.findIndex(d=>dist(d,ball)<22*difficulty.pressure);
     if(winner>=0){rivalTakeover(winner,'RIVAL COLLECTS THE REBOUND! CHASE HIM!');return;}
    }
-   ball.vx*=Math.max(0,1-1.0*dt);ball.vy*=Math.max(0,1-1.0*dt);
+   ball.vx*=Math.max(0,1-fx.friction*dt);ball.vy*=Math.max(0,1-fx.friction*dt);
    receive();
    if(ball.owner==='free'){
     looseBallElapsed+=dt;
@@ -515,7 +607,7 @@ function update(dt){
     if(ball.x>GOAL.left&&ball.x<GOAL.right){goal();return;}
     resetAfterMiss();return;
   }
-  if(ball.x<14||ball.x>406){ball.x=clamp(ball.x,14,406);ball.vx*=-.55;}
+  if(ball.x<14||ball.x>406){ball.x=clamp(ball.x,14,406);ball.vx*=-fx.bounce;}
   if(ball.y>578){
    if(ball.owner==='free'){
     resetPositions();shotCooldown=.65;
@@ -540,7 +632,12 @@ function draw(){
  // an older device, fall back to the original playable canvas renderer.
  if(window.JozefArenaGraphics?.render){
   try{
+   const phaseNow=sample?.phase??(MATCH_LENGTH-time);
+   const ghostPos=activeGhost&&(mode==='playing'||mode==='paused')?systems.ghostAt(activeGhost,phaseNow):null;
+   const clubDesign=window.JozefClubDesign?.get?.();
    window.JozefArenaGraphics.render(ctx,{
+    wacky:fx,coins:coinState.list,ghost:ghostPos?{x:ghostPos.x,y:ghostPos.y,name:activeGhost.name}:null,
+    club:clubDesign&&clubDesign.custom?{primary:clubDesign.primary,secondary:clubDesign.secondary}:null,
     venue:venues[Math.min(lifetime.stadium,2)].name,stadium:lifetime.stadium,
     actor:sample?.actor||actor,mate:sample?.mate||mate,ball:sample?.ball||ball,
     defenders:sample?.defenders||defenders,keeper:sample?.keeper||keeper,
@@ -842,6 +939,70 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode==='pl
 window.addEventListener('blur',()=>{if(mode==='playing'){pause();draw();}});
 window.addEventListener('pagehide',()=>{if(mode==='playing')pause();});
 window.addEventListener('jozef:squad-updated',()=>{squad=getSquad();hud();});
+
+// Settings for Wacky Rules and Ghost Races.
+let ghostNote='';
+function ghostSummary(code){
+ const g=code?systems.decodeGhost(code):null;
+ return g?g.name+' '+g.us+'–'+g.them:'';
+}
+function refreshExtrasUI(){
+ const choice=$('arena-wacky-choice');
+ if(choice&&choice.value!==wackyPrefs.choice)choice.value=wackyPrefs.choice;
+ const note=$('arena-wacky-note');
+ if(note){
+  const rule=systems.WACKY_RULES.find(r=>r.id===wackyPrefs.choice);
+  const base=wackyPrefs.choice==='off'?'Normal football.':wackyPrefs.choice==='spin'?'A surprise twist every match!':
+   wackyPrefs.choice==='double'?'TWO surprise twists every match!':rule?rule.icon+' '+rule.blurb:'Normal football.';
+  note.textContent=base+(wackyPrefs.wins?' Wacky wins: '+wackyPrefs.wins+'.':'');
+ }
+ const mode=$('arena-ghost-mode');if(mode&&mode.value!==ghostStore.mode)mode.value=ghostStore.mode;
+ const name=$('arena-ghost-name');if(name&&document.activeElement!==name)name.value=ghostStore.name;
+ const slot=$('arena-ghost-share-slot'),share=$('arena-ghost-share');
+ if(share){
+  const code=ghostStore[slot?.value==='last'?'last':'best'];
+  share.value=code||'';
+  share.placeholder=code?'':'Finish a match to record a ghost';
+ }
+ const gn=$('arena-ghost-note');
+ if(gn){
+  gn.textContent=ghostNote||(ghostStore.best?'Best ghost: '+ghostSummary(ghostStore.best)+(ghostStore.friend?' · Friend: '+ghostSummary(ghostStore.friend):'')+'.':
+   'Finish a match to record your first ghost.');
+ }
+}
+function mountExtras(){
+ $('arena-wacky-choice')?.addEventListener('change',ev=>{
+  if(!systems.wackyChoiceValid(ev.target.value))return;
+  wackyPrefs.choice=ev.target.value;saveWacky();refreshExtrasUI();
+  if(mode==='ready'||mode==='over')msg(wackyPrefs.choice==='off'?'Wacky Rules off.':'Wacky Rules ready for the next kick-off!');
+ });
+ $('arena-ghost-mode')?.addEventListener('change',ev=>{
+  if(!['off','best','last','friend'].includes(ev.target.value))return;
+  ghostStore.mode=ev.target.value;
+  ghostNote=ghostStore.mode!=='off'&&!ghostStore[ghostStore.mode]?'No ghost saved there yet. Play a match first, or load a friend’s code.':'';
+  saveGhosts();refreshExtrasUI();
+ });
+ $('arena-ghost-name')?.addEventListener('change',ev=>{
+  ghostStore.name=systems.cleanGhostName(ev.target.value)||'JOZEF';ev.target.value=ghostStore.name;saveGhosts();
+ });
+ $('arena-ghost-share-slot')?.addEventListener('change',refreshExtrasUI);
+ $('arena-ghost-copy')?.addEventListener('click',()=>{
+  const box=$('arena-ghost-share'),text=box?.value||'';
+  if(!text){ghostNote='Nothing to copy yet. Finish a match first!';refreshExtrasUI();return;}
+  const done=()=>{ghostNote='Copied! Send this ghost code to a friend.';refreshExtrasUI();};
+  const fallback=()=>{try{box.select();document.execCommand?.('copy');done();}catch(_){ghostNote='Select the code and copy it by hand.';refreshExtrasUI();}};
+  try{navigator.clipboard?.writeText?navigator.clipboard.writeText(text).then(done,fallback):fallback();}catch(_){fallback();}
+ });
+ $('arena-ghost-load')?.addEventListener('click',()=>{
+  const box=$('arena-ghost-import'),ghost=systems.decodeGhost(box?.value||'');
+  if(!ghost){ghostNote='That ghost code did not work. Paste the whole code.';refreshExtrasUI();return;}
+  ghostStore.friend=systems.encodeGhost(ghost);ghostStore.mode='friend';
+  ghostNote='Loaded '+ghost.name+"'s ghost ("+ghost.us+'–'+ghost.them+'). Kick off to race it!';
+  if(box)box.value='';saveGhosts();refreshExtrasUI();
+ });
+ refreshExtrasUI();
+}
+mountExtras();
 experience=window.JozefArenaExperience?.mount({
  lifetime,getMode:()=>mode,pause,start,
  saveLifetime:()=>{try{localStorage.setItem(KEY,JSON.stringify(lifetime));}catch(_){}},

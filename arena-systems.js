@@ -75,11 +75,11 @@
   function shotCharge(elapsedMs) {
     return clamp((Number(elapsedMs)||0)/900,0,1);
   }
-  function movePlayer(player,velocity,input,dt,speed=190,boost=1) {
+  function movePlayer(player,velocity,input,dt,speed=190,boost=1,grip=1) {
     const step=clamp(dt,0,.05);
     const mag=Math.hypot(Number(input?.x)||0,Number(input?.y)||0);
     const normalized=mag>.001?{x:(Number(input.x)||0)/Math.max(1,mag),y:(Number(input.y)||0)/Math.max(1,mag)}:{x:0,y:0};
-    const response=1-Math.exp(-(mag>.08?15:22)*step);
+    const response=1-Math.exp(-(mag>.08?15:22)*clamp(grip,.1,1)*step);
     const limit=clamp(speed*boost,0,450);
     const vx=(Number(velocity?.x)||0)+(normalized.x*limit-(Number(velocity?.x)||0))*response;
     const vy=(Number(velocity?.y)||0)+(normalized.y*limit-(Number(velocity?.y)||0))*response;
@@ -294,9 +294,155 @@
     ];
     return {points,level,badges,earned:badges.filter(b=>b.earned).length};
   }
+
+  // ---- Wacky Rules: optional silly match twists. Pure helpers, no storage. ----
+  const WACKY_RULES=Object.freeze([
+    Object.freeze({id:'moon',label:'MOON GRAVITY',icon:'🌙',blurb:'The ball floats and bounces on and on.'}),
+    Object.freeze({id:'giant',label:'GIANT BALL',icon:'⚽',blurb:'A huge ball that is easy to grab.'}),
+    Object.freeze({id:'tiny',label:'TINY BALL',icon:'🔸',blurb:'A teeny ball. Stay close to keep it!'}),
+    Object.freeze({id:'banana',label:'BANANA PITCH',icon:'🍌',blurb:'Everybody slides on the slippery grass.'}),
+    Object.freeze({id:'bighead',label:'BIG HEADS',icon:'🤪',blurb:'Every head is enormous. Just for laughs.'}),
+    Object.freeze({id:'goldrain',label:'GOLD RAIN',icon:'🪙',blurb:'Coins fall from the sky. Grab them for stars!'}),
+    Object.freeze({id:'mirror',label:'MIRROR MODE',icon:'🪞',blurb:'Your controls are flipped. Good luck!'})
+  ]);
+  const WACKY_IDS=WACKY_RULES.map(r=>r.id);
+  function wackyChoiceValid(choice){return choice==='off'||choice==='spin'||choice==='double'||WACKY_IDS.includes(choice);}
+  function rulesForChoice(choice,rand=Math.random) {
+    if(choice==='spin'||choice==='double'){
+      const pool=WACKY_IDS.slice(),want=choice==='double'?2:1,out=[];
+      while(out.length<want&&pool.length){
+        const index=Math.min(pool.length-1,Math.floor(clamp(rand(),0,.9999)*pool.length));
+        const id=pool.splice(index,1)[0];
+        // A giant and a tiny ball would cancel out, so never pair them.
+        if((id==='giant'&&out.includes('tiny'))||(id==='tiny'&&out.includes('giant')))continue;
+        out.push(id);
+      }
+      return out;
+    }
+    return WACKY_IDS.includes(choice)?[choice]:[];
+  }
+  function wackyEffects(ids) {
+    const set=new Set(Array.isArray(ids)?ids.filter(id=>WACKY_IDS.includes(id)):[]);
+    return {
+      rules:WACKY_IDS.filter(id=>set.has(id)),
+      friction:set.has('moon')?.25:1,
+      bounce:set.has('moon')?.9:.55,
+      pickup:set.has('giant')?1.45:set.has('tiny')?.72:1,
+      ballScale:set.has('giant')?1.7:set.has('tiny')?.6:1,
+      grip:set.has('banana')?.28:1,
+      headScale:set.has('bighead')?1.9:1,
+      mirror:set.has('mirror'),
+      coins:set.has('goldrain')
+    };
+  }
+  // Gold Rain: at most three coins on the pitch, each lasts eight seconds.
+  const COIN_LIMIT=3,COIN_LIFE=8;
+  const freshCoins=()=>({list:[],clock:1.8,collected:0});
+  function spawnCoin(rand=Math.random) {
+    return {x:Math.round(46+clamp(rand(),0,1)*328),y:Math.round(130+clamp(rand(),0,1)*350),age:0};
+  }
+  function stepCoins(state,dt,player,rand=Math.random,radius=24) {
+    if(!state||!Array.isArray(state.list))return 0;
+    const step=clamp(dt,0,.1);let got=0;
+    state.clock+=step;
+    for(const coin of state.list)coin.age+=step;
+    state.list=state.list.filter(coin=>{
+      if(player&&distance(coin,player)<radius){got++;return false;}
+      return coin.age<COIN_LIFE;
+    });
+    if(state.clock>=2.6&&state.list.length<COIN_LIMIT){state.clock=0;state.list.push(spawnCoin(rand));}
+    state.collected=(state.collected||0)+got;
+    return got;
+  }
+
+  // ---- Ghost races: a compact recording of one match that can be raced again,
+  // or shared as a short text code. Decoding treats every code as untrusted. ----
+  const GHOST_STEP=.2,GHOST_MAX=380,GHOST_PREFIX='JG1.';
+  const asInt=(n,lo,hi)=>Math.round(clamp(Number(n),lo,hi));
+  function cleanGhostName(name) {
+    return String(name==null?'':name).replace(/[^A-Za-z0-9 ]/g,'').replace(/\s+/g,' ').trim().slice(0,12).toUpperCase();
+  }
+  const B64='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+  // Self-contained base64url: works in any browser or test runtime, with no Buffer or btoa needed.
+  function b64Encode(bytes) {
+    let out='';
+    for(let i=0;i<bytes.length;i+=3){
+      const a=bytes[i],b=i+1<bytes.length?bytes[i+1]:0,c=i+2<bytes.length?bytes[i+2]:0;
+      const n=(a<<16)|(b<<8)|c;
+      out+=B64[(n>>18)&63]+B64[(n>>12)&63];
+      if(i+1<bytes.length)out+=B64[(n>>6)&63];
+      if(i+2<bytes.length)out+=B64[n&63];
+    }
+    return out;
+  }
+  function b64Decode(text) {
+    if(typeof text!=='string'||!/^[A-Za-z0-9_-]*$/.test(text)||text.length%4===1)return null;
+    const out=[];
+    let bits=0,count=0;
+    for(let i=0;i<text.length;i++){
+      bits=(bits<<6)|B64.indexOf(text[i]);count+=6;
+      if(count>=8){count-=8;out.push((bits>>count)&255);bits&=(1<<count)-1;}
+    }
+    return new Uint8Array(out);
+  }
+  function encodeGhost(rec) {
+    const samples=(Array.isArray(rec?.samples)?rec.samples:[]).slice(0,GHOST_MAX);
+    if(samples.length<10)return null;
+    const bytes=new Uint8Array(samples.length*2);
+    samples.forEach((p,i)=>{
+      bytes[i*2]=Math.round(clamp(Array.isArray(p)?p[0]:0,0,420)/2);
+      bytes[i*2+1]=Math.round(clamp(Array.isArray(p)?p[1]:0,0,600)/3);
+    });
+    const header={
+      n:cleanGhostName(rec.name)||'GHOST',u:asInt(rec.us,0,99),t:asInt(rec.them,0,99),
+      g:(Array.isArray(rec.goals)?rec.goals:[]).slice(0,9).map(x=>Math.round(clamp(x,0,80)*10)/10),
+      w:wackyEffects(rec.rules).rules,l:samples.length
+    };
+    const json=JSON.stringify(header),head=new Uint8Array(json.length);
+    for(let i=0;i<json.length;i++)head[i]=json.charCodeAt(i)&127;
+    return GHOST_PREFIX+b64Encode(head)+'.'+b64Encode(bytes);
+  }
+  function decodeGhost(code) {
+    if(typeof code!=='string')return null;
+    const text=code.trim();
+    if(text.length>2600||!text.startsWith(GHOST_PREFIX))return null;
+    const parts=text.slice(GHOST_PREFIX.length).split('.');
+    if(parts.length!==2)return null;
+    const hb=b64Decode(parts[0]),db=b64Decode(parts[1]);
+    if(!hb||!db||hb.length>400||db.length%2||db.length<20||db.length>GHOST_MAX*2)return null;
+    let header;
+    try{header=JSON.parse(String.fromCharCode.apply(null,Array.from(hb)));}catch(_){return null;}
+    if(!header||typeof header!=='object'||Array.isArray(header)||header.l!==db.length/2)return null;
+    const samples=[];
+    for(let i=0;i<db.length;i+=2){
+      const x=db[i]*2,y=db[i+1]*3;
+      if(x>420||y>600)return null;
+      samples.push([x,y]);
+    }
+    const goals=(Array.isArray(header.g)?header.g:[]).slice(0,9).map(Number).filter(Number.isFinite).map(x=>clamp(x,0,80));
+    return {
+      name:cleanGhostName(header.n)||'GHOST',us:asInt(header.u,0,99),them:asInt(header.t,0,99),
+      goals,rules:wackyEffects(header.w).rules,samples
+    };
+  }
+  function ghostAt(ghost,seconds) {
+    const samples=ghost?.samples;
+    if(!Array.isArray(samples)||!samples.length)return null;
+    const position=clamp(seconds,0,1e6)/GHOST_STEP;
+    const last=samples.length-1,index=Math.min(last,Math.floor(position));
+    const next=Math.min(last,index+1),mix=Math.min(1,position-index);
+    const a=samples[index],b=samples[next];
+    return {x:a[0]+(b[0]-a[0])*mix,y:a[1]+(b[1]-a[1])*mix,finished:position>=last};
+  }
+  function ghostScoreAt(ghost,seconds) {
+    return (Array.isArray(ghost?.goals)?ghost.goals:[]).filter(t=>t<=seconds).length;
+  }
+  const ghostRank=rec=>(Number(rec?.us)||0)-(Number(rec?.them)||0)+(Number(rec?.us)||0)/100;
   return Object.freeze({
     clamp,distance,DIFFICULTIES,joystickVector,
     defenderDestination,teammateDestination,rivalRunTarget,counterSupportTarget,rivalThreatChance,shotCharge,movePlayer,feintTargets,findShotBlocker,bestShotLane,tacticalRead,shotAccuracy,shotProfile,shotTarget,keeperCommit,readGamepad,
-    flowChange,flowShotProfile,cameraFor,screenToWorld,dailyKey,CHALLENGES,freshDaily,normalizeDaily,awardDaily,progression
+    flowChange,flowShotProfile,cameraFor,screenToWorld,dailyKey,CHALLENGES,freshDaily,normalizeDaily,awardDaily,progression,
+    WACKY_RULES,wackyChoiceValid,rulesForChoice,wackyEffects,freshCoins,spawnCoin,stepCoins,
+    GHOST_STEP,cleanGhostName,encodeGhost,decodeGhost,ghostAt,ghostScoreAt,ghostRank
   });
 });

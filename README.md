@@ -7,6 +7,11 @@ Jozef FC // After Dark is a private football universe. Play an actual Arena matc
 
 ## The experience
 
+### Wacky Rules, Ghost Races and Design Your Club (October 2026)
+- **Wacky Rules** (Arena ⚙ settings): pick a silly twist for each match, or let the game surprise you with one or two. Moon Gravity (the ball floats and bounces), Giant Ball and Tiny Ball (easier or harder to grab), Banana Pitch (everyone slides), Big Heads (pure fun), Gold Rain (grab falling coins for real stars) and Mirror Mode (flipped controls). Twists change only the feel of the match; scoring, XP and difficulty are unchanged, and **Off** is always one tap away. Wacky matches and wins are counted in `jozefs-world-wacky-v1`, which is included in the Club backup.
+- **Ghost Race:** every finished match records a faint 5-per-second path of your run. Race your **best** or **last** match as a translucent ghost with its own live goal count, or paste a friend's **ghost code** to race Dad (or Jozef) even when you are not online together. Ghost codes are about 1 KB of text, are fully validated before use, and never leave the device unless you copy them yourself. Ghosts live in `jozefs-world-ghost-v1` and are shared by code rather than by the Club backup file.
+- **Design Your Club** (Club tab): choose a club name, crest shape, two colours and a mascot (with a name). The crest appears on the Arena scoreboard and the Chronicle poster, the club name replaces "Jozef FC" in those places, and your teammates wear your colours. Saved in `jozefs-world-club-design-v1` (included in the Club backup). Nothing is uploaded and there are no purchases or accounts.
+
 ### Visual and mobile UX polish (October 2026)
 - Four original CSS sports posters now give hockey, baseball, basketball and wrestling distinct equipment artwork instead of generic rectangular launchers. Sport launchers and event tabs show each game's **actual saved personal best** and All-Sport Cup qualification.
 - The Coach's Playbook home preview displays the next live objective. Its new **Show Unfinished** control focuses on remaining challenges, with a useful empty state when a category is complete. Filtering never changes XP, stored achievements or progress.
