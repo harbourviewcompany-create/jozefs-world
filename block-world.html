@@ -323,14 +323,16 @@ function drawBackground(){
   ctx.lineTo(cssW,cssH);ctx.closePath();ctx.fill();
  }
 }
+let cameraZoom=1;
 function draw(){
- ctx.setTransform(dpr,0,0,dpr,0,0);ctx.imageSmoothingEnabled=false;
- const p=players[active],goalX=p.x+p.w/2-cssW*.5,goalY=p.y+p.h/2-cssH*.52;
- camX+=(Math.max(0,Math.min(W*TILE-cssW,goalX))-camX)*.14;
- camY+=(Math.max(0,Math.min(H*TILE-cssH,goalY))-camY)*.14;
+ ctx.setTransform(dpr*cameraZoom,0,0,dpr*cameraZoom,0,0);ctx.imageSmoothingEnabled=false;
+ const viewW=cssW/cameraZoom,viewH=cssH/cameraZoom;
+ const p=players[active],goalX=p.x+p.w/2-viewW*.5,goalY=p.y+p.h/2-viewH*.52;
+ camX+=(Math.max(0,Math.min(W*TILE-viewW,goalX))-camX)*.14;
+ camY+=(Math.max(0,Math.min(H*TILE-viewH,goalY))-camY)*.14;
  drawBackground();
- const sx=Math.max(0,Math.floor(camX/TILE)-1),ex=Math.min(W,Math.ceil((camX+cssW)/TILE)+1);
- const sy=Math.max(0,Math.floor(camY/TILE)-1),ey=Math.min(H,Math.ceil((camY+cssH)/TILE)+1);
+ const sx=Math.max(0,Math.floor(camX/TILE)-1),ex=Math.min(W,Math.ceil((camX+viewW)/TILE)+1);
+ const sy=Math.max(0,Math.floor(camY/TILE)-1),ey=Math.min(H,Math.ceil((camY+viewH)/TILE)+1);
  for(let y=sy;y<ey;y++)for(let x=sx;x<ex;x++){const id=world[y][x];if(!id)continue;ctx.drawImage(tex(id),Math.round(x*TILE-camX),Math.round(y*TILE-camY),TILE+1,TILE+1);}
  players.forEach((q,i)=>{
   const x=Math.round(q.x-camX),y=Math.round(q.y-camY),bob=q.ground&&Math.abs(q.vx)>5?Math.sin(q.walk)*1.8:0;
@@ -513,13 +515,13 @@ generate=function(){
 const baseRead=readSave;
 readSave=function(){
  const wasLoaded=baseRead();
- try{const s=JSON.parse(localStorage.getItem(advSaveKey)||'null');if(s){adventureSeed=s.adventureSeed||adventureSeed;questStage=Math.max(0,Math.min(Q.length,s.questStage||0));goals=Object.assign(goals,s.goals||{});explored=s.explored||{};achievements=s.achievements||[];portalUnlocked=!!s.portalUnlocked;teamFollow=s.teamFollow!==false;}}catch(_){}
+ try{const s=JSON.parse(localStorage.getItem(advSaveKey)||'null');if(s){adventureSeed=s.adventureSeed||adventureSeed;questStage=Math.max(0,Math.min(Q.length,s.questStage||0));goals=Object.assign(goals,s.goals||{});explored=s.explored||{};achievements=s.achievements||[];portalUnlocked=!!s.portalUnlocked;teamFollow=s.teamFollow!==false;cameraZoom=Math.max(1,Math.min(2,Number(s.cameraZoom)||1));}}catch(_){}
  return wasLoaded;
 };
 const baseSave=save;
 save=function(){
  const should=dirty;baseSave();
- if(should)try{localStorage.setItem(advSaveKey,JSON.stringify({adventureSeed,questStage,goals,explored,achievements,portalUnlocked,teamFollow}));}catch(_){}
+ if(should)try{localStorage.setItem(advSaveKey,JSON.stringify({adventureSeed,questStage,goals,explored,achievements,portalUnlocked,teamFollow,cameraZoom}));}catch(_){}
 };
 const baseMine=mine;
 mine=function(){
@@ -638,15 +640,86 @@ createAdventureUi();
  };
 })();
 
+
+/* Gamepad, camera UI and player role abilities. */
+(function(){
+ const toolbar=$('bw-actions');
+ function addAction(label,callback){if(!toolbar)return;const b=document.createElement('button');b.type='button';b.textContent=label;b.addEventListener('click',callback);toolbar.appendChild(b);}
+ addAction('ZOOM +',()=>setCameraZoom(cameraZoom+.2));
+ addAction('ZOOM −',()=>setCameraZoom(cameraZoom-.2));
+ const gamepadHeld={mine:false,place:false,switch:false,inventory:false};
+ const baseInputUpdate=update;
+ update=function(dt){
+  if(typeof navigator!=='undefined'&&navigator.getGamepads){
+   const pad=Array.from(navigator.getGamepads()||[]).find(Boolean);
+   if(pad){
+    const axis=pad.axes?.[0]||0;
+    touch.left=axis<-.28;touch.right=axis>.28;
+    touch.jump=!!pad.buttons?.[0]?.pressed;
+    for(const [name,button,act] of [['mine',2,()=>mine()],['place',3,()=>place()],['switch',4,()=>playerSwitch()],['inventory',9,()=>craftingOpen?closeCrafting():openCrafting()]]){
+     const pressed=!!pad.buttons?.[button]?.pressed;
+     if(pressed&&!gamepadHeld[name])act();
+     gamepadHeld[name]=pressed;
+    }
+   }
+  }
+  baseInputUpdate(dt);
+ };
+ const oldMineHeavy=mine;
+ mine=function(){const a=aim(),id=get(a.x,a.y);oldMineHeavy();
+  if(active===0&&id===3&&get(a.x,a.y)===0){const p=players[0];p.inventory[8]=(p.inventory[8]||0)+1;renderHotbar();say('Daddy bonus: +1 Cobblestone',950);}
+ };
+ let secondJumpUsed=false;
+ const extraJump=()=>{
+  if(active!==1)return;
+  const p=players[1];
+  if(!p.ground&&!secondJumpUsed&&p.vy>0){secondJumpUsed=true;p.vy=-370;spark(p.x,p.y+p.h,8);say('Jozef double jump!',850);}
+ };
+ $('btn-jump').addEventListener('pointerdown',extraJump);
+ addEventListener('keydown',e=>{if(e.code==='ArrowUp'&&!e.repeat)extraJump();});
+ const baseUpdateJump=update;
+ update=function(dt){baseUpdateJump(dt);if(players[1].ground)secondJumpUsed=false;};
+})();
+
 bindButton('left','left');bindButton('right','right');bindButton('jump','jump');
 bindButton('mine',null,mine);bindButton('place',null,place);bindButton('switch',null,playerSwitch);
-canvas.addEventListener('pointerdown',e=>{
+const canvasTouches=new Map();let tapTimer=0,pinchGap=0;
+function doWorldTap(clientX,clientY){
  if(craftingOpen)return;
  const rect=canvas.getBoundingClientRect();
- const x=Math.floor((e.clientX-rect.left+camX)/TILE),y=Math.floor((e.clientY-rect.top+camY)/TILE);
+ const x=Math.floor(((clientX-rect.left)/cameraZoom+camX)/TILE),y=Math.floor(((clientY-rect.top)/cameraZoom+camY)/TILE);
  if(!reachable(x,y)){say('Move closer to interact');return;}
  focus={x,y};if(get(x,y)!==0)mine();else place();
+}
+function setCameraZoom(v){cameraZoom=Math.max(1,Math.min(2,Math.round(v*20)/20));queueSave();say('Camera '+Math.round(cameraZoom*100)+'%',800);}
+canvas.addEventListener('pointerdown',e=>{
+ if(craftingOpen)return;
+ if(e.pointerType==='touch'){
+  canvasTouches.set(e.pointerId,{x:e.clientX,y:e.clientY,ox:e.clientX,oy:e.clientY});
+  if(canvasTouches.size===2){
+   clearTimeout(tapTimer);
+   const v=[...canvasTouches.values()];pinchGap=Math.hypot(v[0].x-v[1].x,v[0].y-v[1].y);return;
+  }
+  if(canvasTouches.size===1){tapTimer=setTimeout(()=>{if(canvasTouches.size<=1)doWorldTap(e.clientX,e.clientY);},130);return;}
+ }
+ doWorldTap(e.clientX,e.clientY);
 });
+canvas.addEventListener('pointermove',e=>{
+ if(!canvasTouches.has(e.pointerId))return;
+ const p=canvasTouches.get(e.pointerId);p.x=e.clientX;p.y=e.clientY;
+ if(Math.hypot(p.x-p.ox,p.y-p.oy)>14)clearTimeout(tapTimer);
+ if(canvasTouches.size===2){
+  clearTimeout(tapTimer);
+  const v=[...canvasTouches.values()],d=Math.hypot(v[0].x-v[1].x,v[0].y-v[1].y);
+  if(pinchGap>4&&d>4)cameraZoom=Math.max(1,Math.min(2,cameraZoom*d/pinchGap));
+  pinchGap=d;
+ }
+});
+for(const ev of ['pointerup','pointercancel','lostpointercapture']){
+ canvas.addEventListener(ev,e=>{canvasTouches.delete(e.pointerId);if(!canvasTouches.size)pinchGap=0;});
+}
+canvas.addEventListener('wheel',e=>{e.preventDefault();setCameraZoom(cameraZoom+(e.deltaY<0?.1:-.1));},{passive:false});
+addEventListener('keydown',e=>{if(e.code==='Equal'||e.code==='NumpadAdd')setCameraZoom(cameraZoom+.15);if(e.code==='Minus'||e.code==='NumpadSubtract')setCameraZoom(cameraZoom-.15);});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('keydown',e=>{
  if(['ArrowLeft','ArrowRight','ArrowUp','Space','Tab'].includes(e.code))e.preventDefault();
