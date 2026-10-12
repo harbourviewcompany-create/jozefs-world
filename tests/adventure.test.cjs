@@ -41,3 +41,13 @@ test('adventure is wired into public navigation, offline shell and Club backup',
  assert.match(read('clubhouse.js'),/'jozefs-world-adventure-v1'/);
  assert.ok(read('site-experience.css').includes('/* BEGIN adventure.css */'));
 });
+
+test('cooperative pathfinder avoids the other player without blocking the mission',()=>{
+ const route=rules.shortestPath(0,1,1,5,4,2,1);
+ assert.ok(route&&route.length>0);
+ assert.ok(route.every(([x,y])=>!(x===2&&y===1)));
+ assert.equal(rules.shortestPath(0,1,1,2,1,2,1),null);
+ const script=read('adventure.js');
+ assert.match(script,/function guideToObjective\(/);
+ assert.match(read('index.html'),/id="jw-adventure-guide"/);
+});

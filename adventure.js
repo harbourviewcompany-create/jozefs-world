@@ -52,9 +52,10 @@
   function canChallenge(state,zone){return earnedCount(state,zone,'stars')>=2&&earnedCount(state,zone,'switches')===2}
   function bossGuard(zone,round,attempt){return (zone*2+round+attempt+1)%3}
   // Grid BFS gives touch players a predictable, obstacle-safe route without teleporting.
-  function shortestPath(zone,sx,sy,tx,ty){
+  function shortestPath(zone,sx,sy,tx,ty,avoidX=-1,avoidY=-1){
     if(!Number.isInteger(zone)||zone<0||zone>=WORLDS.length||
-      ![sx,sy,tx,ty].every(Number.isInteger)||!canMove(zone,sx,sy)||!canMove(zone,tx,ty))return null;
+      ![sx,sy,tx,ty].every(Number.isInteger)||!canMove(zone,sx,sy)||!canMove(zone,tx,ty)||
+      (tx===avoidX&&ty===avoidY))return null;
     if(sx===tx&&sy===ty)return [];
     const start=sy*WIDTH+sx,goal=ty*WIDTH+tx;
     const queue=[start],seen=new Set([start]),previous=new Map();
@@ -62,7 +63,7 @@
       const key=queue[i],x=key%WIDTH,y=Math.floor(key/WIDTH);
       for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]){
         const nx=x+dx,ny=y+dy,nk=ny*WIDTH+nx;
-        if(!canMove(zone,nx,ny)||seen.has(nk))continue;
+        if(!canMove(zone,nx,ny)||(nx===avoidX&&ny===avoidY)||seen.has(nk))continue;
         seen.add(nk);previous.set(nk,key);queue.push(nk);
         if(nk===goal){
           const path=[];let current=goal;
@@ -246,6 +247,48 @@
       });
     }
   }
+  function followRoute(route){
+    stopWalking();
+    if(!Array.isArray(route)||!route.length)return;
+    const token=walkingToken,which=active,zone=state.zone;
+    let index=0;
+    function walk(){
+      if(token!==walkingToken||battle||state.zone!==zone||active!==which||index>=route.length)return;
+      const next=route[index++],current=players[which];
+      if(!move(which,next[0]-current.x,next[1]-current.y))return;
+      if(index<route.length&&!battle&&state.zone===zone)walkingTimer=setTimeout(walk,125);
+    }
+    walk();
+  }
+  function routeFor(x,y){
+    const current=players[active],other=state.coop?players[1-active]:null;
+    return shortestPath(state.zone,current.x,current.y,x,y,other?.x??-1,other?.y??-1);
+  }
+  function guideToObjective(){
+    if(battle){message('Choose an unguarded shooting lane to beat the champion.');return;}
+    const zone=state.zone,done=state.completed.includes(zone);
+    let candidates;
+    if(done)candidates=[[14,8,'gold portal']];
+    else if(earnedCount(state,zone,'stars')<2)
+      candidates=STAR_POS.map(([x,y],i)=>[x,y,'energy star',pointId(zone,'star',i)])
+        .filter(v=>!state.stars.includes(v[3]));
+    else if(earnedCount(state,zone,'switches')<2)
+      candidates=SWITCH_POS.map(([x,y],i)=>[x,y,'beacon',pointId(zone,'switch',i)])
+        .filter(v=>!state.switches.includes(v[3]));
+    else candidates=[[13,7,'champion arena']];
+    const choices=candidates.map(([x,y,name])=>({x,y,name,path:routeFor(x,y)}))
+      .filter(v=>v.path!==null).sort((a,b)=>a.path.length-b.path.length);
+    if(!choices.length){message('No open route. Switch players or move the other player out of the way.');return;}
+    const next=choices[0];
+    if(!next.path.length){
+      if(next.name==='champion arena')interact();
+      else if(next.name==='gold portal')exitWorld();
+      else message('You are standing on the objective.');
+      return;
+    }
+    message('Following the shortest clear route to the '+next.name+'.');
+    followRoute(next.path);
+  }
   function initInput(){
     const keys=new Set(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d','W','A','S','D',' ','Enter']);
     document.addEventListener('keydown',e=>{
@@ -261,7 +304,8 @@
       const parts=b.dataset.adventureStep.split(',').map(Number);stopWalking();move(active,parts[0],parts[1]);canvas.focus();
     }));
     document.querySelectorAll('[data-adventure-lane]').forEach(b=>b.addEventListener('click',()=>shoot(Number(b.dataset.adventureLane))));
-    $('jw-adventure-interact')?.addEventListener('click',()=>{interact();canvas.focus();});
+    $('jw-adventure-interact')?.addEventListener('click',()=>{stopWalking();interact();canvas.focus();});
+    $('jw-adventure-guide')?.addEventListener('click',()=>{guideToObjective();canvas.focus();});
     $('jw-adventure-coop')?.addEventListener('click',toggleCoop);
     $('jw-adventure-switch')?.addEventListener('click',()=>{active=1-active;renderHud();canvas.focus();});
     $('jw-adventure-retry')?.addEventListener('click',()=>{battle=null;resetPlayers();message('World restarted. Your collected stars and progress are safe.');render();});
@@ -270,18 +314,10 @@
       const rect=canvas.getBoundingClientRect();
       const x=Math.floor((e.clientX-rect.left)/rect.width*WIDTH),y=Math.floor((e.clientY-rect.top)/rect.height*HEIGHT);
       const p=players[active],dx=x-p.x,dy=y-p.y;
-      stopWalking();
-      if(Math.abs(dx)+Math.abs(dy)===0){interact();return;}
-      const route=shortestPath(state.zone,p.x,p.y,x,y);
+      if(Math.abs(dx)+Math.abs(dy)===0){stopWalking();interact();return;}
+      const route=routeFor(x,y);
       if(!route){message('That square is blocked. Tap an open path.');return;}
-      const token=walkingToken,which=active,zone=state.zone;
-      function walk(){
-        if(token!==walkingToken||battle||state.zone!==zone||active!==which||!route.length)return;
-        const next=route.shift(),current=players[which];
-        if(!move(which,next[0]-current.x,next[1]-current.y))return;
-        if(route.length&&!battle&&state.zone===zone)walkingTimer=setTimeout(walk,125);
-      }
-      walk();
+      followRoute(route);
     });
     window.addEventListener('storage',e=>{if(e.key!==KEY)return;try{state=sanitize(JSON.parse(e.newValue||'null'));resetPlayers();render();}catch(_){}});
   }
