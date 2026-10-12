@@ -6,7 +6,8 @@ const vm=require('node:vm');
 const assert=require('node:assert/strict');
 const html=fs.readFileSync(require('node:path').join(__dirname,'..','block-world.html'),'utf8');
 const js=fs.readFileSync(require('node:path').join(__dirname,'..','block-world.js'),'utf8');
-assert.match(html,/src="\.\/block-world\.js"/,'HTML loads the extracted gameplay module');
+assert.match(html,/src="\.\/block-world\.js(?:\?v=[A-Za-z0-9._-]+)?"/,'HTML loads the extracted gameplay module');
+assert.match(html,/src="\.\/block-world-coop\.js(?:\?v=[A-Za-z0-9._-]+)?"/,'HTML loads the real co-op runtime');
 assert.ok(js,'Block World script must exist');
 new vm.Script(js,{filename:'block-world.html'});
 function boot(storage=new Map()){
