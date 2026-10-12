@@ -81,6 +81,16 @@ function boot(store=new Map()){
  return{window,doc,store,clock,click,advance,key,trace,location,
   game:()=>window.BlockWorld2D,session:()=>window.BlockWorldCoop};
 }
+// Without a network, two people on one keyboard can independently control both heroes.
+const keyboard=boot();keyboard.advance(3);
+const keyboardBefore=keyboard.game().getState().players.map(p=>p.x);
+keyboard.key('KeyD',true);keyboard.key('ArrowRight',true);
+keyboard.advance(25);
+keyboard.key('KeyD',false);keyboard.key('ArrowRight',false);
+const keyboardAfter=keyboard.game().getState().players.map(p=>p.x);
+assert.ok(keyboardAfter[0]>keyboardBefore[0]+20,'Daddy controls movement with D');
+assert.ok(keyboardAfter[1]>keyboardBefore[1]+20,'Jo controls movement with Right simultaneously');
+
 const host=boot(),guest=boot();
 host.advance(3);guest.advance(3);
 host.click('save');guest.click('save');
@@ -131,4 +141,4 @@ assert.equal(JSON.parse(host.store.get('jozefs-world-block-v3')).world[tileY][ti
 assert.ok(host.game().getWorld().players[0].x>0,'Daddy remains independently present');
 guest.session().disconnect();
 assert.ok(guest.trace.includes('reload'),'guest reload restores own solo world on disconnect');
-console.log('Block World 2D co-op: private invite, two-player physics, live positions, shared mining/building, host saves, guest save isolation PASS');
+console.log('Block World 2D co-op: local keyboard co-op, private invite, two-player physics, live positions, shared mining/building, host saves, guest save isolation PASS');
