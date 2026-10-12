@@ -128,11 +128,11 @@ function start(){
  selected=0;
  checkpoint();hud();
  notify(state.stage===4?'Your shared Stadium Cup is ready. Replay to start a new mission.':'Story ready. Both players have equal challenges and a turn in the finale.');
- draw(performance.now?.()||0);
+ draw(performance.now?.()||0);startFrames();
  return true;
 }
 function close(){
- opened=false;lastPadButtons=[{act:false,switchHero:false},{act:false,switchHero:false}];rootGame.hidden=true;$('adventure')?.classList.remove('together-focused');stop();battle=null;
+ opened=false;if(frameHandle)root.cancelAnimationFrame?.(frameHandle);frameHandle=0;lastPadButtons=[{act:false,switchHero:false},{act:false,switchHero:false}];rootGame.hidden=true;$('adventure')?.classList.remove('together-focused');stop();battle=null;
  if(state.stage===3){state.stage=2;persist();} // Re-enter the vault for a fresh, fair match.
  hud();notify('Together Mode paused. Your progress is saved on this device.');
  return true;
@@ -195,17 +195,19 @@ function guide(){
 function shoot(lane){
  if(!opened||state.stage!==3||!battle||!Number.isInteger(lane)||lane<0||lane>2)return false;
  const actor=battle.turn,blocked=lane===shieldFor(battle.round);
- if(blocked)battle.blocks++;else battle.hits[actor]++;
+ if(blocked){battle.blocks++;battle.combo=0;}
+ else{battle.hits[actor]++;battle.combo++;state.bestCombo=Math.max(state.bestCombo,battle.combo);cue();}
  battle.round++;battle.turn=1-actor;
  if(battle.hits.every(n=>n>=2)){
-  state.stage=4;state.won=true;battle=null;persist();hud();
-  notify('STADIUM CUP WON! Jozef and Dad both scored and saved the Midnight Stadium!');
+  state.stage=4;state.won=true;state.perfect=state.perfect||state.fragments.length===6;
+  battle=null;persist();hud();cue(true);
+  notify('STADIUM CUP WON! '+(state.perfect?'PERFECT TEAM TROPHY UNLOCKED!':'Jozef and Dad saved the stadium together.'));
   root.dispatchEvent?.(new CustomEvent('jozef:together-completed',{detail:{chapter:'The Midnight Stadium Mystery'}}));
- }else if(battle.blocks>=3){
+ }else if(battle.blocks>=(state.difficulty==='challenge'?2:3)){
   battle=null;state.stage=2;state.positions=HEROES.map(h=>({x:h.start[0],y:h.start[1]}));selected=0;
   persist();hud();notify('Three blocks. The vault checkpoint is safe — return together and try again.');
  }else{
-  hud();notify((blocked?'BLOCKED! ':'SCORED! ')+HEROES[battle.turn].name+' has the next shot.');
+  persist();hud();notify((blocked?'BLOCKED! ':'SCORED! ')+HEROES[battle.turn].name+' has the next shot. '+(battle.combo>1?'TEAM COMBO ×'+battle.combo+'!':''));
  }
  draw(performance.now?.()||0);return true;
 }
@@ -215,7 +217,12 @@ function hud(){
  if(phase)phase.textContent=st.title;
  if(detail)detail.textContent=st.detail;
  const score=$('jw-together-score');
- if(score)score.textContent=state.stage===3&&battle?'JOZEF '+battle.hits[0]+'/2 · DAD '+battle.hits[1]+'/2 · BLOCKS '+battle.blocks+'/3':state.stage===4?'JOZEF + DAD / CHAMPIONS':'CHAPTER 01 / '+(state.stage+1)+' OF 5';
+ if(score)score.textContent=state.stage===3&&battle?'JOZEF '+battle.hits[0]+'/2 · DAD '+battle.hits[1]+'/2 · BLOCKS '+battle.blocks+'/'+(state.difficulty==='challenge'?2:3):state.stage===4?'JOZEF + DAD / CHAMPIONS':'CHAPTER 01 / '+(state.stage+1)+' OF 5';
+ const sparks=$('jw-together-sparks');if(sparks)sparks.textContent='STADIUM SPARKS '+state.fragments.length+'/6'+(state.perfect?' · PERFECT TEAM':'');
+ const difficulty=$('jw-together-difficulty');if(difficulty){difficulty.textContent=state.difficulty==='challenge'?'CHALLENGE / ON':'STORY / GUIDED';difficulty.setAttribute('aria-pressed',String(state.difficulty==='challenge'));}
+ const snd=$('jw-together-sound');if(snd){snd.textContent=soundEnabled?'SOUND ON':'SOUND OFF';snd.setAttribute('aria-pressed',String(soundEnabled));}
+ const perfect=$('jw-together-perfect');if(perfect)perfect.hidden=!state.perfect;
+ const clubPerfect=$('jw-together-club-perfect');if(clubPerfect)clubPerfect.hidden=!state.perfect;
  const trophy=$('jw-together-trophy');if(trophy)trophy.hidden=!state.won;
  const clubCup=$('jw-together-club-cup');if(clubCup)clubCup.hidden=!state.won;
  const clubPending=$('jw-together-club-pending');if(clubPending)clubPending.hidden=state.won;
@@ -240,7 +247,7 @@ function hud(){
 }
 function draw(t){
  if(!ctx||!opened)return;
- if(root.JozefTogetherRenderer?.draw({ctx,canvas,stage:state.stage,targets:STAGES[state.stage].targets,positions:state.positions,selected,time:t,reducedMotion:motionReduced,clues:state.clues,battle,won:state.won,fragments:[]}))return;
+ if(root.JozefTogetherRenderer?.draw({ctx,canvas,stage:state.stage,targets:STAGES[state.stage].targets,positions:state.positions,selected,time:t,reducedMotion:motionReduced,clues:state.clues,battle,won:state.won,difficulty:state.difficulty,fragments:FRAGMENTS[Math.min(state.stage,2)].map(item=>({...item,collected:state.fragments.includes(item.id)}))}))return;
  const tw=canvas.width/W,th=canvas.height/H;
  const bg=ctx.createLinearGradient(0,0,canvas.width,canvas.height);
  bg.addColorStop(0,'#102d47');bg.addColorStop(1,'#050e1b');ctx.fillStyle=bg;ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -313,13 +320,16 @@ function pollGamepads(t){
   lastPadButtons[i]={act:input.act,switchHero:input.switchHero};
  }
 }
-function tick(t){if(opened&&!document.hidden&&$('adventure')?.classList.contains('active')){pollGamepads(t);if(t-lastFrame>=34){draw(t);lastFrame=t;}}root.requestAnimationFrame?.(tick);}
+function tick(t){if(!opened){frameHandle=0;return;}if(!document.hidden&&$('adventure')?.classList.contains('active')){pollGamepads(t);if(t-lastFrame>=(batteryMode||motionReduced?55:25)){draw(t);lastFrame=t;}}frameHandle=root.requestAnimationFrame?.(tick)||0;}
+function startFrames(){if(!frameHandle)frameHandle=root.requestAnimationFrame?.(tick)||0;}
 function init(){
  document.querySelectorAll('[data-start-together]').forEach(el=>el.addEventListener('click',start));
  $('jw-together-start')?.addEventListener('click',start);
  $('jw-together-close')?.addEventListener('click',close);
  $('jw-together-replay')?.addEventListener('click',replay);
  $('jw-together-guide')?.addEventListener('click',guide);
+ $('jw-together-difficulty')?.addEventListener('click',toggleDifficulty);
+ $('jw-together-sound')?.addEventListener('click',toggleSound);
  for(let i=0;i<2;i++)$('jw-together-hero-'+i)?.addEventListener('click',()=>choose(i));
  document.querySelectorAll('[data-together-step]').forEach(button=>button.addEventListener('click',()=>{
   const [dx,dy]=button.dataset.togetherStep.split(',').map(Number);stop();move(selected,dx,dy);
@@ -349,8 +359,8 @@ function init(){
   if(!direction)return;
   e.preventDefault();stop();move(e.key.startsWith('Arrow')?1:0,...direction);
  });
- hud();root.requestAnimationFrame?.(tick);
+ hud();
 }
-root.JozefTogether=Object.freeze({start,close,replay,choose,move,guide,shoot,progress});
+root.JozefTogether=Object.freeze({start,close,replay,choose,move,guide,shoot,progress,toggleDifficulty,toggleSound});
 init();
 })(typeof window!=='undefined'?window:globalThis);
