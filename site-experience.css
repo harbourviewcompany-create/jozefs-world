@@ -3852,3 +3852,5 @@ body.versus-focused #versus-tip{font-weight:800;letter-spacing:.03em;color:#e4ff
  #adventure .jw-adventure-dpad button{width:44px;height:44px;min-width:44px;min-height:44px}
  #adventure .jw-adventure-main-actions button{min-height:44px}
 }
+
+#versus-deke{min-height:48px;border-radius:14px;font-weight:800;background:#ffb703;color:#1b1404;border:0}

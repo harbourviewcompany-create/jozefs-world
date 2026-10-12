@@ -460,7 +460,8 @@
     const ballInHisHalf = who==='Dad' ? ball.x > 300 : ball.x < 420;
     const go = ballInHisHalf || distance < 240;
     const lead = go ? 18 : 0;
-    targets[who]={
+    if(bot.stun>0){bot.stun--;targets[who]=null;}
+    else targets[who]={
       x:Math.max(70,Math.min(W-70, go ? ball.x + (who==='Dad'?-lead:lead) : homeX)),
       y:Math.max(50,Math.min(H-50, go ? ball.y : 210))
     };
@@ -663,18 +664,27 @@
   stick.addEventListener('pointerdown',e=>{
     stick.setPointerCapture(e.pointerId);fromStick(e);
     const now=performance.now();
-    if(now-lastStick<280){
-      const me=room.who==='Dad'?state.dad:state.jozef;
-      me.y += 28; state.ball.y += 28; state.ball.vx += 1.2;
-    }
+    if(now-lastStick<280) deke();
     lastStick=now;
   });stick.addEventListener('pointermove',e=>{if(stick.hasPointerCapture(e.pointerId))fromStick(e);});
   for(const event of ['pointerup','pointercancel','lostpointercapture'])stick.addEventListener(event,stopInput);
+  function deke(){
+    if(room.phase!=='playing')return;
+    const me=room.who==='Dad'?state.dad:state.jozef;
+    const other=room.who==='Dad'?state.jozef:state.dad;
+    const gap=Math.hypot(me.x-other.x, me.y-other.y);
+    const step=(me.face||1)*46;
+    me.x+=step; me.y+= (other.y>me.y?-18:18);
+    state.ball.x=me.x+(me.face||1)*16; state.ball.y=me.y; state.ball.vx=me.vx; state.ball.vy=0;
+    if(gap<70){ other.stun=40; other.vy+=(other.y>me.y?3:-3); state.call='Ankles'; burst(other.x, other.y, '#ffe14a', 16); navigator.vibrate?.(25); }
+    else state.call='Deke';
+  }
   function shoot(){
     localKick(1+chargeFill*.6);chargeFill=0;chargingSince=0;
     $('versus-kick').style.setProperty('--shot-charge','0%');
   }
   $('versus-aim').addEventListener('click',()=>pickAim((selectedAim+1)%3));
+  $('versus-deke')?.addEventListener('click', deke);
   $('versus-pass')?.addEventListener('click', () => localKick(0.7));
   $('versus-sprint')?.addEventListener('click',sprint);
   const shootButton=$('versus-kick');
