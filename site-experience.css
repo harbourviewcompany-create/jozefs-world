@@ -3974,3 +3974,18 @@ body.versus-focused #versus.is-playing .versus-stage{position:absolute!important
 body.versus-focused #versus.is-playing .versus-play{position:absolute!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;height:176px;background:#07141c;z-index:5;padding:8px}
 body.versus-focused #versus.is-playing .versus-scoreboard{position:absolute!important;top:6px!important;left:8px!important;right:8px!important;z-index:5}
 body.versus-focused #versus.is-playing #versus-tip{display:none!important}
+
+/* Match layout: score, pitch, buttons. Nothing overlaps. */
+body.versus-focused #versus.is-playing{padding:0!important;overflow:hidden}
+body.versus-focused #versus.is-playing .versus-card{display:flex!important;flex-direction:column!important;height:100dvh!important;max-height:100dvh!important;padding:0!important;gap:0!important;overflow:hidden!important;position:relative!important}
+body.versus-focused #versus.is-playing .versus-head,
+body.versus-focused #versus.is-playing #versus-status,
+body.versus-focused #versus.is-playing #versus-season-line,
+body.versus-focused #versus.is-playing #versus-trophy,
+body.versus-focused #versus.is-playing .versus-help,
+body.versus-focused #versus.is-playing #versus-tip,
+body.versus-focused #versus.is-playing #versus-leave{display:none!important}
+body.versus-focused #versus.is-playing .versus-scoreboard{position:relative!important;top:auto!important;left:auto!important;right:auto!important;flex:0 0 auto;margin:6px 8px 4px!important;z-index:1}
+body.versus-focused #versus.is-playing .versus-stage{position:relative!important;inset:auto!important;top:auto!important;bottom:auto!important;left:auto!important;right:auto!important;flex:1 1 auto;min-height:0!important;height:auto!important;overflow:hidden}
+body.versus-focused #versus.is-playing #versus-canvas{width:100%!important;height:100%!important;max-height:100%!important;object-fit:contain!important}
+body.versus-focused #versus.is-playing .versus-play{position:relative!important;top:auto!important;bottom:auto!important;left:auto!important;right:auto!important;flex:0 0 auto;height:auto;min-height:132px;z-index:1;background:#07141c;padding:8px 8px max(10px,env(safe-area-inset-bottom));margin:0!important}
