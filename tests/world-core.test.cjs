@@ -56,6 +56,7 @@ test('offline shell caches the HQ and safely preserves existing game code',()=>{
  assert.match(js,/jw-worldcore-next/);
  assert.match(js,/float fresnel=/);
  assert.match(js,/float edge=exp/);
+ assert.match(js,/uniform mediump float selected;/,'shared shader uniform precision must match on WebGL1');
  assert.match(js,/position=p\*\(1\.0\+selected\*\.018\)/);
  assert.match(js,/Math\.min\(root\.devicePixelRatio\|\|1,1\.9\)/);
  assert.doesNotMatch(js,/XMLHttpRequest|fetch\(|WebSocket|analytics|sendBeacon/);
