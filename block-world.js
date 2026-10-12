@@ -909,6 +909,7 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
   },
   useState:s=>{
    if(!s||!Array.isArray(s.players)||s.players.length!==2)return;
+   const oldInventory=JSON.stringify(players[1].inventory),oldCreative=creative;
    players.forEach((p,i)=>{
     const q=s.players[i];if(!q)return;
     for(const k of ['x','y','vx','vy','facing','health'])if(Number.isFinite(q[k]))p[k]=q[k];
@@ -918,7 +919,9 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
    if(typeof s.creative==='boolean')creative=s.creative;
    if(Number.isInteger(s.questStage))questStage=s.questStage;
    if(s.goals&&typeof s.goals==='object')goals={...s.goals};
-   portalUnlocked=!!s.portalUnlocked;renderHotbar();questHud();
+   portalUnlocked=!!s.portalUnlocked;
+   if(oldInventory!==JSON.stringify(players[1].inventory)||oldCreative!==creative)renderHotbar();
+   questHud();
   },
   useEdit:(x,y,id)=>{if(Number.isInteger(x)&&Number.isInteger(y)&&x>=0&&x<W&&y>=0&&y<H&&get(x,y)!==14&&Number.isInteger(id)&&id>=0&&id<=31)world[y][x]=id;},
   role:id=>{active=id===1?1:0;focus=null;touch.left=touch.right=touch.jump=false;down.clear();renderHotbar();questHud();},
