@@ -139,7 +139,7 @@ function gain(kind,n=1){
  while(stage<missions.length&&stats[missions[stage][2]]>=missions[stage][3]){
   const m=missions[stage];award('block3d-'+stage,m[4]);announce('MISSION COMPLETE · '+m[0]+' +'+m[4]+' XP',3500);stage++;
  }
- dirty=true;hud();
+ dirty=true;hud();if(host&&conn?.open)send({t:'progress',stage,stats,rewards,defeated,portalOpened});
 }
 function hud(){
  const s=JSON.parse(localStorage.getItem('jozefs-world-player-v1')||'{}');
@@ -184,7 +184,16 @@ function spawn(){
  boss={x:32.5,z:32.5,y:ground(32.5,32.5),hp:defeated?0:120,alive:!defeated};
 }
 function step(dt){
- clock+=dt;saveClock+=dt;const f=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-joy.y;
+ clock+=dt;saveClock+=dt;
+ const gp=navigator.getGamepads?.()?.find(Boolean);
+ if(gp){joy.x=Math.abs(gp.axes?.[0]||0)>.2?gp.axes[0]:0;joy.y=Math.abs(gp.axes?.[1]||0)>.2?gp.axes[1]:0;
+  hero.yaw+=(Math.abs(gp.axes?.[2]||0)>.15?gp.axes[2]:0)*dt*2.4;
+  hero.pitch=clamp(hero.pitch-(Math.abs(gp.axes?.[3]||0)>.15?gp.axes[3]:0)*dt*1.8,-1.38,1.38);
+  if(gp.buttons?.[0]?.pressed)keys.Space=true;else if(!document.activeElement||document.activeElement.id!=='jump')keys.Space=false;
+  if(gp.buttons?.[2]?.pressed&&!gp._mineHeld)change('mine');gp._mineHeld=!!gp.buttons?.[2]?.pressed;
+  if(gp.buttons?.[3]?.pressed&&!gp._placeHeld)change('place');gp._placeHeld=!!gp.buttons?.[3]?.pressed;
+  if(gp.buttons?.[1]?.pressed&&!gp._attackHeld)attack();gp._attackHeld=!!gp.buttons?.[1]?.pressed;
+ }const f=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-joy.y;
  const a=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+joy.x;
  let dx=Math.sin(hero.yaw)*f+Math.cos(hero.yaw)*a,dz=-Math.cos(hero.yaw)*f+Math.sin(hero.yaw)*a;
  const len=Math.hypot(dx,dz);if(len>1){dx/=len;dz/=len;}const speed=hero.role?5.6:4.8;
@@ -198,7 +207,7 @@ function step(dt){
  }
  if(!visible(hero.x,hero.y-.055,hero.z))hero.ground=false;
  if(hero.y< -4||hero.hp<=0){resetPose();announce('Returned safely to camp');}
- if(!conn?.open||host){companion.x+=(hero.x+2-companion.x)*Math.min(1,dt*1.4);companion.z+=(hero.z+1-companion.z)*Math.min(1,dt*1.4);companion.y=ground(companion.x,companion.z);}
+ if(!conn?.open){companion.x+=(hero.x+2-companion.x)*Math.min(1,dt*1.4);companion.z+=(hero.z+1-companion.z)*Math.min(1,dt*1.4);companion.y=ground(companion.x,companion.z);}
  for(const m of mobs){if(m.hp<=0)continue;const d=Math.hypot(m.x-hero.x,m.z-hero.z);if(d<11&&d>1){
   m.x+=(hero.x-m.x)/d*.7*dt;m.z+=(hero.z-m.z)/d*.7*dt;m.y=ground(m.x,m.z);}
   if(d<1.3&&!creative&&clock-(m.last||0)>1.3){hero.hp=Math.max(0,hero.hp-7);m.last=clock;}
@@ -240,10 +249,11 @@ function status(s){$('pairStatus').textContent=s;}
 function detach(){try{conn?.close();peer?.destroy();}catch(_){}peer=conn=null;host=false;invite='';$('share').disabled=true;status('Offline · local play');}
 function receive(m){
  if(!m||typeof m!=='object')return;
+ if(JSON.stringify(m).length>550000)return;
  if(m.t==='hello'&&!host){
   if(!Number.isInteger(m.seed)||!Array.isArray(m.edits)||m.edits.length>14000)return;
   seed=m.seed;edits=new Map(m.edits.filter(a=>Array.isArray(a)&&typeof a[0]==='string'&&Number.isInteger(a[1])));
-  hero.role=1;companion.role=0;companion.x=m.x;companion.y=m.y;companion.z=m.z;
+  hero.role=1;companion.role=0;stage=clamp(Number(m.stage)||0,0,6);stats=Object.assign(stats,m.stats||{});defeated=!!m.defeated;portalOpened=!!m.portalOpened;companion.x=m.x;companion.y=m.y;companion.z=m.z;
   hero.x=companion.x+2;hero.z=companion.z+2;hero.y=ground(hero.x,hero.z);
   chunks.forEach(c=>gl.deleteBuffer(c.buffer));chunks.clear();lastCX=Infinity;hotbar();hud();announce('Connected · Jozef is ready');
  }else if(m.t==='move'){
@@ -251,6 +261,7 @@ function receive(m){
   companion.x=m.x;companion.y=m.y;companion.z=m.z;companion.hp=m.hp;
  }else if(m.t==='edit'&&!host){modify(m.x,m.y,m.z,m.id,false);}
  else if(m.t==='boss'&&!host){boss.hp=clamp(Number(m.hp)||0,0,120);boss.alive=boss.hp>0;if(!boss.alive)defeated=true;}
+ else if(m.t==='progress'&&!host){stage=clamp(Number(m.stage)||0,0,6);stats=Object.assign(stats,m.stats||{});defeated=!!m.defeated;portalOpened=!!m.portalOpened;hud();dirty=true;}
  else if(m.t==='request'&&host){
   if(!Number.isFinite(m.x+m.z))return;
   if(m.op==='attack'){if(Math.hypot(companion.x-m.x,companion.z-m.z)>5)return;if(boss.alive&&Math.hypot(boss.x-m.x,boss.z-m.z)<2.5){boss.hp=Math.max(0,boss.hp-18);if(boss.hp===0){boss.alive=false;defeated=true;gain('boss');}send({t:'boss',hp:boss.hp});}return;}
@@ -261,7 +272,7 @@ function receive(m){
 }
 function attach(c){
  if(conn?.open){c.close();return;}conn=c;
- c.on('open',()=>{status('Connected · private encrypted session');if(host)send({t:'hello',seed,edits:[...edits].slice(-14000),x:hero.x,y:hero.y,z:hero.z});
+ c.on('open',()=>{status('Connected · private encrypted session');if(host)send({t:'hello',seed,edits:[...edits].slice(-14000),x:hero.x,y:hero.y,z:hero.z,stage,stats,defeated,portalOpened});
   else{hero.role=1;companion.role=0;}announce('Two-device co-op connected');});
  c.on('data',receive);c.on('close',()=>{conn=null;status('Disconnected · local play');});
  c.on('error',()=>status('Connection error · try a fresh invite'));
@@ -323,5 +334,5 @@ function loop(now){
 }
 try{if(!load())resetPose();spawn();initUi();stream();requestAnimationFrame(loop);announce('3D WORLD READY · Explore and build!',3400);}
 catch(e){console.error('3D startup failure',e);$('fallback').hidden=false;}
-window.BlockWorld3D=Object.freeze({status:()=>({renderOk,seed,loadedChunks:chunks.size,realm,stage,connected:!!conn?.open}),height,block});
+window.BlockWorld3D=Object.freeze({status:()=>({renderOk,seed,loadedChunks:chunks.size,realm,stage,connected:!!conn?.open,hero:{x:hero.x,y:hero.y,z:hero.z,hp:hero.hp,role:hero.role},bossHp:boss.hp}),height,block});
 })();
