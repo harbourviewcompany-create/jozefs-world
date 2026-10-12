@@ -2,14 +2,19 @@ name: Block World smoke tests
 on:
   push:
     branches: [main]
-    paths: &block-world-paths
+    paths:
       - 'block-world.html'
       - 'block-world.js'
       - 'block-world.css'
       - 'tests/block-world-smoke.cjs'
       - '.github/workflows/block-world-smoke.yml'
   pull_request:
-    paths: *block-world-paths
+    paths:
+      - 'block-world.html'
+      - 'block-world.js'
+      - 'block-world.css'
+      - 'tests/block-world-smoke.cjs'
+      - '.github/workflows/block-world-smoke.yml'
   workflow_dispatch:
 jobs:
   block-world:
