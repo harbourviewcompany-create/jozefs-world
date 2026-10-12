@@ -854,7 +854,7 @@ window.addEventListener('jozef:squad-updated',()=>{squad=getSquad();hud();});
 experience=window.JozefArenaExperience?.mount({
  lifetime,getMode:()=>mode,pause,start,
  saveLifetime:()=>{try{localStorage.setItem(KEY,JSON.stringify(lifetime));}catch(_){}},
- setJoystick:(x,y)=>{joystick={x,y};if(x||y)target=null;},
+ setJoystick:(x,y)=>{joystick={x,y};if(x||y){target=null;if(replay)finishReplay();}},
  refreshGraphics,
  refreshSquad:()=>{squad=getSquad();hud();}
 })||null;
