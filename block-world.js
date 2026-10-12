@@ -55,7 +55,7 @@ function tex(id){
 }
 function say(message,duration=2100){const el=$('notice');el.textContent=message;el.classList.add('visible');noticeEnd=performance.now()+duration;}
 function get(x,y){return x<0||x>=W||y>=H?14:y<0?0:world[y][x];}
-function set(x,y,id){if(x<0||x>=W||y<0||y>=H||get(x,y)===14)return false;world[y][x]=id;dirty=true;queueSave();return true;}
+function set(x,y,id){if(x<0||x>=W||y<0||y>=H||get(x,y)===14)return false;world[y][x]=id;dirty=true;window.BlockWorld2D?.onBlockChanged?.(x,y,id);queueSave();return true;}
 function generate(){
  world=Array.from({length:H},()=>Array(W).fill(0));surface=new Array(W);
  for(let x=0;x<W;x++){
@@ -118,12 +118,13 @@ function update(dt){
  if(craftingOpen)return;
  clock+=dt;actionCooldown=Math.max(0,actionCooldown-dt);
  players.forEach((p,i)=>{
-  const left=i===0?down.has('KeyA'):down.has('ArrowLeft');
-  const right=i===0?down.has('KeyD'):down.has('ArrowRight');
-  const dir=Number(right||(i===active&&touch.right))-Number(left||(i===active&&touch.left));
+  const remote=i===1&&window.BlockWorld2D?.isHost?.()?window.BlockWorld2D.remoteInput:null;
+  const left=remote?!!remote.left:(i===0?down.has('KeyA'):down.has('ArrowLeft'));
+  const right=remote?!!remote.right:(i===0?down.has('KeyD'):down.has('ArrowRight'));
+  const dir=remote?Number(right)-Number(left):Number(right||(i===active&&touch.right))-Number(left||(i===active&&touch.left));
   p.vx=dir*205;
   if(dir){p.facing=dir;p.walk+=dt*12;}
-  if((i===0?down.has('KeyW'):down.has('ArrowUp'))||(i===active&&touch.jump)){
+  if((remote?!!remote.jump:(i===0?down.has('KeyW'):down.has('ArrowUp')))||(i===active&&!remote&&touch.jump)){
    if(p.ground){p.vy=-430;p.ground=false;}
   }
   p.ground=false;p.vy=Math.min(760,p.vy+1100*dt);
@@ -161,7 +162,7 @@ function place(){
   focus=null;renderHotbar();say('Placed '+names[selected],800);
  }
 }
-function playerSwitch(){active=1-active;focus=null;dirty=true;renderHotbar();queueSave();say('Playing as '+players[active].name);}
+function playerSwitch(){if(window.BlockWorld2D?.connected?.()){say('Each device has its own player');return;}active=1-active;focus=null;dirty=true;renderHotbar();queueSave();say('Playing as '+players[active].name);}
 function renderHotbar(){
  const bar=$('hotbar');bar.replaceChildren();const ids=hotItems.includes(selected)?hotItems:[selected,...hotItems.slice(0,7)];
  ids.forEach((id,k)=>{
@@ -243,8 +244,8 @@ function draw(){
 }
 function frame(now){
  const dt=Math.min(.05,(now-lastTime)/1000);lastTime=now;acc+=dt;
- let n=0;while(acc>=1/60&&n<4){update(1/60);acc-=1/60;n++;}
- draw();requestAnimationFrame(frame);
+ let n=0;while(acc>=1/60&&n<4){if(!window.BlockWorld2D?.isGuest?.())update(1/60);acc-=1/60;n++;}
+ draw();window.BlockWorld2D?.onFrame?.(now);requestAnimationFrame(frame);
 }
 function bindButton(id,key,once){
  const el=$('btn-'+id);el.setAttribute('role','button');el.setAttribute('tabindex','0');el.setAttribute('aria-label',id==='switch'?'Switch active player':id);
@@ -440,7 +441,7 @@ update=function(dt){
  baseUpdate(dt);if(craftingOpen)return;
  nightClock+=dt;season+=dt;
  if(season>48){season=0;weatherType=noise(Math.floor(nightClock/48),1)>.68?'rain':'clear';}
- if(teamFollow){const p=players[active],q=players[1-active],dx=p.x-q.x;
+ if(teamFollow&&!window.BlockWorld2D?.connected?.()){const p=players[active],q=players[1-active],dx=p.x-q.x;
    if(Math.abs(dx)>85&&Math.abs(dx)<600){q.facing=Math.sign(dx);moveAxis(q,Math.sign(dx)*130*dt,'x');
      if(q.ground&&collision(q,q.x+q.facing*10,q.y)){q.vy=-430;q.ground=false;}}}
  friends.forEach(c=>{c.phase+=dt*2;c.x+=c.vx*dt;if(Math.abs(c.x-c.home)>TILE*3)c.vx=-c.vx;let y=0,xx=Math.max(0,Math.min(W-1,Math.floor(c.x/TILE)));while(y<H&&get(xx,y)===0)y++;c.y=y*TILE-16;});
@@ -868,11 +869,86 @@ $('inventory').addEventListener('click',()=>craftingOpen?closeCrafting():openCra
 $('save').addEventListener('click',()=>{dirty=true;save();say('World saved on this device');});
 $('mode').addEventListener('click',()=>{creative=!creative;queueSave();renderHotbar();say(creative?'Creative: unlimited building':'Survival: collect and spend materials');});
 $('reset').addEventListener('click',()=>{
+ if(window.BlockWorld2D?.connected?.()){say('Leave co-op before starting a new world');return;}
  if(!confirm('Start a new Block World? This permanently replaces the saved world on this device.'))return;
  try{const previous=localStorage.getItem(KEY);if(previous)localStorage.setItem(KEY+'-backup',previous);localStorage.removeItem(KEY);localStorage.removeItem(advSaveKey);}catch(_){}
  adventureSeed=Math.floor(Math.random()*999999)+1;generate();initPlayers();creative=true;active=0;selected=2;focus=null;camX=camY=0;queueSave();renderHotbar();say('Fresh new world created');
 });
 $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-modal','true');$('crafting').setAttribute('aria-hidden','true');
+
+/* Two-device gameplay bridge: host simulates both heroes, guest renders snapshots. */
+(function(){
+ const API={
+  remoteInput:{left:false,right:false,jump:false},
+  isHost:()=>false,isGuest:()=>false,connected:()=>false,
+  onBlockChanged:null,onFrame:null,requestAction:null,
+  getWorld:()=>({
+   w:W,h:H,world:world.map(r=>r.slice()),surface:surface.slice(),
+   players:players.map(p=>({x:p.x,y:p.y,vx:p.vx,vy:p.vy,facing:p.facing,ground:p.ground,health:p.health,inventory:{...p.inventory}})),
+   creative,adventureSeed,realmIndex,questStage,goals:{...goals},
+   achievements:achievements.slice(),explored:{...explored},portalUnlocked
+  }),
+  getState:()=>({
+   players:players.map(p=>({x:p.x,y:p.y,vx:p.vx,vy:p.vy,facing:p.facing,ground:p.ground,health:p.health,inventory:{...p.inventory}})),
+   creative,realmIndex,questStage,goals:{...goals},portalUnlocked
+  }),
+  useWorld:s=>{
+   if(!s||s.w!==W||s.h!==H)return false;
+   world=s.world.map(r=>r.slice());surface=s.surface.slice();
+   players.forEach((p,i)=>{
+    const q=s.players[i];if(!q)return;
+    for(const k of ['x','y','vx','vy','facing','health'])if(Number.isFinite(q[k]))p[k]=q[k];
+    p.ground=!!q.ground;p.inventory={...q.inventory};
+   });
+   active=1;creative=!!s.creative;adventureSeed=s.adventureSeed;
+   realmIndex=s.realmIndex;questStage=s.questStage;goals={...s.goals};
+   achievements=Array.isArray(s.achievements)?s.achievements.slice():[];
+   explored={...s.explored};portalUnlocked=!!s.portalUnlocked;
+   teamFollow=false;focus=null;dirty=false;renderHotbar();questHud();return true;
+  },
+  useState:s=>{
+   if(!s||!Array.isArray(s.players)||s.players.length!==2)return;
+   players.forEach((p,i)=>{
+    const q=s.players[i];if(!q)return;
+    for(const k of ['x','y','vx','vy','facing','health'])if(Number.isFinite(q[k]))p[k]=q[k];
+    p.ground=!!q.ground;
+    if(q.inventory&&typeof q.inventory==='object')p.inventory={...q.inventory};
+   });
+   if(typeof s.creative==='boolean')creative=s.creative;
+   if(Number.isInteger(s.questStage))questStage=s.questStage;
+   if(s.goals&&typeof s.goals==='object')goals={...s.goals};
+   portalUnlocked=!!s.portalUnlocked;renderHotbar();questHud();
+  },
+  useEdit:(x,y,id)=>{if(Number.isInteger(x)&&Number.isInteger(y)&&x>=0&&x<W&&y>=0&&y<H&&get(x,y)!==14&&Number.isInteger(id)&&id>=0&&id<=31)world[y][x]=id;},
+  role:id=>{active=id===1?1:0;focus=null;touch.left=touch.right=touch.jump=false;down.clear();renderHotbar();questHud();},
+  action:(id,kind,a,tile)=>{
+   if(!Number.isInteger(id)||id<0||id>1||!['mine','place'].includes(kind)||!a||!Number.isInteger(a.x)||!Number.isInteger(a.y))return false;
+   const previous=active,previousFocus=focus,oldSelected=selected;
+   active=id;focus={x:a.x,y:a.y};
+   if(!reachable(a.x,a.y)){active=previous;focus=previousFocus;return false;}
+   if(kind==='place'){
+    if(!blockable.includes(tile)){active=previous;focus=previousFocus;return false;}
+    selected=tile;place();
+   }else mine();
+   active=previous;focus=previousFocus;selected=oldSelected;
+   return true;
+  },
+  input:()=>({
+   left:touch.left||down.has('ArrowLeft')||down.has('KeyA'),
+   right:touch.right||down.has('ArrowRight')||down.has('KeyD'),
+   jump:touch.jump||down.has('ArrowUp')||down.has('KeyW')
+  }),
+  aim:()=>aim(),selected:()=>selected,
+  setStatus:message=>{say(message,2500);renderHotbar();},
+  saveHost:()=>{dirty=true;save();}
+ };
+ const normalMine=mine,normalPlace=place,normalSave=save;
+ mine=function(){if(API.isGuest()){API.requestAction?.('mine',aim(),selected);return;}return normalMine();};
+ place=function(){if(API.isGuest()){API.requestAction?.('place',aim(),selected);return;}return normalPlace();};
+ save=function(){if(API.isGuest())return;return normalSave();};
+ window.BlockWorld2D=API;
+})();
+
 generate();initPlayers();const restored=readSave();renderHotbar();say(restored?'Welcome back to your saved world!':'Daddy & Jozef: explore, mine and build!',3600);
 requestAnimationFrame(frame);
 })();
