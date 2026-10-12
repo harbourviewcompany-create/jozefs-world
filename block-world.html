@@ -96,57 +96,6 @@
 <script src="./peerjs.min.js" defer></script>
 <script src="./block-world.js?v=20261012-coop2" defer></script>
 <script src="./block-world-coop.js?v=20261012-coop2" defer></script>
-<script>
-(function(){
- const panel=document.getElementById('coop-panel');
- const status=document.getElementById('coop-status');
- const codeInput=document.getElementById('coop-code');
- const shareBtn=document.getElementById('coop-share');
- let peer=null,conn=null,invite='';
- function setStatus(msg){status.textContent=msg;}
- function closePanel(){panel.classList.remove('open');}
- document.getElementById('open-coop').addEventListener('click',()=>panel.classList.add('open'));
- document.getElementById('coop-close').addEventListener('click',closePanel);
- document.getElementById('coop-host').addEventListener('click',()=>{
-  if(peer){setStatus('Already connected');return;}
-  setStatus('Starting host…');
-  peer=new Peer();
-  peer.on('open',id=>{
-   invite=id;
-   shareBtn.disabled=false;
-   setStatus('Hosting · share the link');
-  });
-  peer.on('connection',c=>{
-   conn=c;
-   c.on('open',()=>setStatus('Jozef connected!'));
-   c.on('data',data=>{if(window.BlockWorld2D&&window.BlockWorld2D.onRemote)window.BlockWorld2D.onRemote(data);});
-   c.on('close',()=>setStatus('Disconnected'));
-  });
-  peer.on('error',e=>setStatus('Error: '+e.type));
- });
- shareBtn.addEventListener('click',()=>{
-  const url=location.origin+location.pathname+'?join='+encodeURIComponent(invite);
-  if(navigator.share)navigator.share({title:'Join Block World',url}).catch(()=>{});
-  else{navigator.clipboard?.writeText(url);setStatus('Link copied');}
- });
- document.getElementById('coop-join').addEventListener('click',()=>{
-  const id=codeInput.value.trim();
-  if(!id){setStatus('Paste an invite code');return;}
-  setStatus('Joining…');
-  peer=new Peer();
-  peer.on('open',()=>{
-   conn=peer.connect(id);
-   conn.on('open',()=>setStatus('Connected to host!'));
-   conn.on('data',data=>{if(window.BlockWorld2D&&window.BlockWorld2D.onRemote)window.BlockWorld2D.onRemote(data);});
-   conn.on('close',()=>setStatus('Disconnected'));
-  });
-  peer.on('error',e=>setStatus('Error: '+e.type));
- });
- const params=new URLSearchParams(location.search);
- if(params.has('join')){codeInput.value=params.get('join');panel.classList.add('open');}
- window.BlockWorld2D=window.BlockWorld2D||{};
- window.BlockWorld2D.send=function(data){if(conn&&conn.open)conn.send(data);};
-})();
-</script>
+
 </body>
 </html>
