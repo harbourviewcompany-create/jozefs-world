@@ -1,0 +1,37 @@
+name: Neon City 2026 browser QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/neon-qa.yml'
+      - 'prime/src/neon.js'
+      - 'prime/src/neon-rules.js'
+      - 'prime/src/neon.css'
+      - 'prime/neon-source.html'
+      - 'prime/vite.config.mjs'
+      - 'prime/scripts/stage-static.cjs'
+      - 'tests/neon-mobile-smoke.cjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  game:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned game dependencies
+        run: npm ci --prefix prime --no-audit --no-fund
+      - name: Compile both Prime and Neon City
+        run: |
+          npm run check --prefix prime
+          npm run test --prefix prime
+          npm run build --prefix prime
+          test -s prime/dist/neon.html
+      - name: Install browser engines
+        run: npm exec --prefix prime -- playwright install --with-deps chromium webkit
+      - name: Complete Neon City missions in Chromium and WebKit
+        run: node tests/neon-mobile-smoke.cjs

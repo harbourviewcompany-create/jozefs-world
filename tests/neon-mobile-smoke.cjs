@@ -1,6 +1,6 @@
 /* Neon City 2026: real touchscreen browser regression and legacy-save continuity. */
 'use strict';
-const {chromium,webkit}=require('playwright');
+const {chromium,webkit}=require('../prime/node_modules/playwright');
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const root=path.resolve(__dirname,'..');
 const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml'};
