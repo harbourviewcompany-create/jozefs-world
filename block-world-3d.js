@@ -332,7 +332,7 @@ function createRoom(){
  if(!crypto?.getRandomValues){status('Secure invite generation unavailable');return;}
  detach();host=true;hero.role=0;companion.role=1;
  const bytes=new Uint8Array(16);crypto.getRandomValues(bytes);invite=[...bytes].map(n=>n.toString(16).padStart(2,'0')).join('');
- peer=new Peer('jw-block-'+invite);
+ peer=new window.Peer('jw-block-'+invite);
  peer.on('open',()=>{status('Private invitation ready');$('invite').value=invite;$('share').disabled=false;});
  peer.on('connection',attach);peer.on('error',()=>status('Signalling server unreachable'));
 }
@@ -340,7 +340,7 @@ function joinRoom(code){
  dirty=true;save();
  const token=String(code||'').trim().toLowerCase();if(!/^[0-9a-f]{32}$/.test(token)){status('Paste a valid 32-character invite');return;}
  if(!window.Peer){status('PeerJS signalling unavailable');return;}
- detach();peer=new Peer();peer.on('open',()=>{status('Connecting privately…');attach(peer.connect('jw-block-'+token,{reliable:true}));});
+ detach();peer=new window.Peer();peer.on('open',()=>{status('Connecting privately…');attach(peer.connect('jw-block-'+token,{reliable:true}));});
  peer.on('error',()=>status('Cannot connect · host must be online'));
 }
 function initUi(){
