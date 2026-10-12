@@ -168,7 +168,7 @@ if(!host)return;
 const $=id=>document.getElementById(id);
 const canvas=$('jw-worldcore-canvas'),overlay=$('jw-worldcore-labels'),list=$('jw-worldcore-index');
 const reduced=!!root.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
-let graphics=null,selected=0,yaw=0,pitch=0,velocity=[0,0],target=null,zoom=1,frame=0,last=0,drag=null,visible=false,disposed=false,forceFallback=false;
+let graphics=null,selected=0,yaw=0,pitch=0,velocity=[0,0],target=null,zoom=1,frame=0,last=0,drag=null,visible=false,disposed=false,forceFallback=false,armed=-1;
 const pointers=new Map();let pinchStart=0,pinchZoom=1;
 const labels=[];
 function say(msg){const el=$('jw-worldcore-announcement');if(el)el.textContent=msg;}
@@ -185,7 +185,7 @@ function setDetail(){
 }
 function focusPlate(i,announce=true){
  if(!Number.isInteger(i)||i<0||i>=DESTINATIONS.length)return;
- selected=i;velocity=[0,0];
+ selected=i;armed=-1;velocity=[0,0];
  // Solve for the plate normal facing camera, then use the nearest revolutions.
  const raw=DESTINATIONS[i].normal;
  const wrap=(angle,current)=>angle+Math.PI*2*Math.round((current-angle)/(Math.PI*2));
@@ -299,6 +299,7 @@ function pointerMove(e){
  const dx=e.clientX-drag.lastX,dy=e.clientY-drag.lastY;
  drag.moved+=Math.abs(dx)+Math.abs(dy);
  if(drag.moved>7){
+  armed=-1;
   const radius=Math.max(120,canvas.clientWidth);
   const deltaYaw=dx/radius*3.6,deltaPitch=dy/radius*3.6;
   yaw+=deltaYaw;pitch+=deltaPitch;
@@ -318,7 +319,11 @@ function pointerUp(e){
  try{canvas.releasePointerCapture?.(e.pointerId);}catch(_){}
  if(was.moved<13&&performance.now()-was.at<700){
   const plate=pick(e);
-  if(plate>=0){if(selected===plate&&dot(rotate(DESTINATIONS[plate].normal,yaw,pitch),[0,0,1])>.92)enter(plate);else focusPlate(plate);}
+  if(plate>=0){
+   const secondTap=selected===plate&&armed===plate&&dot(rotate(DESTINATIONS[plate].normal,yaw,pitch),[0,0,1])>.92;
+   if(secondTap)enter(plate);
+   else {focusPlate(plate);armed=plate;}
+  }
   else say('Spin the globe to reveal another world plate, or open the world index.');
  }
  start();
