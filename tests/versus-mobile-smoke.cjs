@@ -19,7 +19,7 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
     other.evaluate(msg=>window.__versusBusReceive?.(msg),message).catch(()=>{}))));
   await context.route('**/peerjs*',r=>r.fulfill({contentType:'text/javascript',body:transport}));
  }
- await context.route('**/versus.js',r=>r.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(root,'versus.js'),'utf8').replace('syncUI();draw();requestAnimationFrame(frame);','window.__versusTest={state,room,step,targets,onData};syncUI();draw();requestAnimationFrame(frame);')}));
+ await context.route(url=>url.pathname.endsWith('/versus.js'),r=>r.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(root,'versus.js'),'utf8').replace('syncUI();draw();requestAnimationFrame(frame);','window.__versusTest={state,room,step,targets,onData};syncUI();draw();requestAnimationFrame(frame);')}));
  const host=await context.newPage(),guest=await context.newPage();clients.add(host);clients.add(guest);const errors=[];for(const p of [host,guest])p.on('pageerror',e=>errors.push(e.message));
  await host.goto(url+'#versus');await guest.goto(url+'#versus');
  await host.locator('#versus-open').click();await host.waitForFunction(()=>document.querySelector('#versus-room-code').textContent.length===6);
