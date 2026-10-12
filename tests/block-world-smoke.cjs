@@ -49,7 +49,7 @@ function boot(storage=new Map()){
   };
   const addEventListener=(t,fn)=>(events.get(t)||events.set(t,[]).get(t)).push(fn);
   const testScript=js.replace(/requestAnimationFrame\(frame\);\s*\}\)\(\);/,
-    'window.__inspect={players,world:()=>world,surface:()=>surface,quest:()=>({questStage,goals}),blueprint:buildBlueprint};requestAnimationFrame(frame);})();');
+    'window.__inspect={players,world:()=>world,surface:()=>surface,quest:()=>({questStage,goals}),blueprint:buildBlueprint,visitPortal:()=>{questStage=4;players.forEach(p=>{p.x=portalX*TILE;p.y=surface[portalX]*TILE-p.h;});activateTeamPortal();}};requestAnimationFrame(frame);})();');
   const sandbox={
     window,document,localStorage,
     performance:{now:()=>clock.now},
@@ -94,4 +94,19 @@ const second=boot(first.storage);
 second.advance(3);
 assert.ok(second.window.__inspect.players.every(p=>Number.isFinite(p.y)),'saved world restores playable positions');
 assert.ok(second.window.__inspect.quest().goals.build>0,'mission progress survives reload');
-console.log('Block World: rendering, character spawn, seeded world, co-op switch, blueprints and save/restore PASS');
+const game2=second.window.__inspect;
+game2.visitPortal();
+assert.match(second.document.getElementById('bw-mission').innerHTML,/Frost Moon/,'team portal actually changes realms');
+assert.equal(game2.quest().goals.portal,1,'both-player portal awards shared completion');
+const realmData={
+  format:'DaddyJozefBlockRealms',version:1,realmIndex:0,realmBaseSeed:333,
+  realms:{0:{seed:333,world:game2.world().map(row=>row.slice()),surface:game2.surface().slice(),
+    players:game2.players.map(p=>({x:p.x,y:p.y}))}},
+  questStage:5,goals:{wood:8,build:12,explore:1,diamond:1,portal:1},
+  achievements:['Forest Expedition'],portalUnlocked:true,creative:true,selected:2,active:0,
+  teamFollow:true,players:game2.players.map(p=>({x:p.x,y:p.y,health:100,inventory:p.inventory}))};
+assert.equal(typeof second.window.BlockWorldImportRealms,'function');
+second.window.BlockWorldImportRealms(realmData);
+assert.match(second.document.getElementById('bw-mission').innerHTML,/Our Homeworld/,'realm package imported');
+assert.equal(game2.quest().questStage,5);
+console.log('Block World: startup, co-op, biomes, blueprints, local saves, portal travel and realm backup import PASS');
