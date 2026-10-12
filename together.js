@@ -11,15 +11,26 @@ const STAGES=[
  {title:'CHAPTER CLEARED',detail:'The Midnight Stadium Cup belongs to both Jozef and Dad.',targets:[]}
 ];
 const HEROES=[{name:'JOZEF',shirt:'#caff6a',glow:'#92ffab',start:[1,1]},{name:'DAD',shirt:'#81dfff',glow:'#7bc7ff',start:[1,6]}];
+const FRAGMENTS=[
+ [{x:6,y:1,id:'0-0'},{x:8,y:6,id:'0-1'}],
+ [{x:2,y:4,id:'1-0'},{x:9,y:4,id:'1-1'}],
+ [{x:5,y:5,id:'2-0'},{x:8,y:3,id:'2-1'}]
+];
+const allFragments=FRAGMENTS.flat().map(x=>x.id);
 const own=(x,y)=>x>=1&&x<W-1&&y>=1&&y<H-1&&!WALLS.some(([a,b])=>a===x&&b===y);
 const clamp=(n,min,max)=>Number.isInteger(n)?Math.max(min,Math.min(max,n)):min;
 const at=(p,t)=>p.x===t[0]&&p.y===t[1];
-function fresh(){return {stage:0,clues:[false,false],won:false,positions:HEROES.map(h=>({x:h.start[0],y:h.start[1]}))};}
+function fresh(){return {stage:0,clues:[false,false],won:false,positions:HEROES.map(h=>({x:h.start[0],y:h.start[1]})),fragments:[],bestFragments:0,perfect:false,difficulty:'story',bestCombo:0};}
 function sanitize(input){
  const s=fresh();
  if(!input||typeof input!=='object'||Array.isArray(input))return s;
  s.clues=Array.isArray(input.clues)?[input.clues[0]===true,input.clues[1]===true]:s.clues;
  s.won=input.won===true;
+ s.fragments=Array.isArray(input.fragments)?[...new Set(input.fragments.filter(x=>allFragments.includes(x)))]:[];
+ s.bestFragments=clamp(input.bestFragments,0,6);
+ s.perfect=input.perfect===true;
+ s.difficulty=input.difficulty==='challenge'?'challenge':'story';
+ s.bestCombo=clamp(input.bestCombo,0,99);
  s.stage=clamp(input.stage,0,4);
  if(s.stage>0&&!s.clues.every(Boolean))s.stage=0;
  if(s.stage===4&&!s.won)s.stage=2;
@@ -62,7 +73,7 @@ function readPad(pad){
  const horizontal=dpadHorizontal?x:dpadVertical?0:Math.abs(axis(0))>=Math.abs(axis(1))?x:0;
  return {dx:horizontal,dy:horizontal?0:y,act:pressed(0),switchHero:pressed(2)};
 }
-const rules=Object.freeze({KEY,W,H,WALLS,STAGES,HEROES,own,fresh,sanitize,pathTo,shieldFor,readPad});
+const rules=Object.freeze({KEY,W,H,WALLS,STAGES,HEROES,FRAGMENTS,own,fresh,sanitize,pathTo,shieldFor,readPad});
 if(typeof module!=='undefined'&&module.exports)module.exports=rules;
 if(typeof document==='undefined')return;
 const $=id=>document.getElementById(id);
@@ -72,16 +83,46 @@ const ctx=canvas.getContext('2d');
 let state;
 try{state=sanitize(JSON.parse(localStorage.getItem(KEY)||'null'))}catch(_){state=fresh()}
 let opened=false,selected=0,battle=null,walking=null,walkToken=0,lastFrame=0;
+let audio=null,soundEnabled=false,frameHandle=0;
 let controllerLane=1,lastPadTick=0,lastPadButtons=[{act:false,switchHero:false},{act:false,switchHero:false}];
 const motionReduced=!!root.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+const batteryMode=Boolean(root.navigator?.deviceMemory&&root.navigator.deviceMemory<=2);
 function notify(s){const el=$('jw-together-status');if(el)el.textContent=s;}
+function cue(high=false){
+ if(!soundEnabled)return;
+ try{audio??=new (root.AudioContext||root.webkitAudioContext)();const start=audio.currentTime;
+  for(let i=0;i<(high?3:1);i++){
+   const tone=audio.createOscillator(),gain=audio.createGain();tone.type='sine';tone.frequency.value=(high?440:330)+i*125;
+   gain.gain.setValueAtTime(.0001,start+i*.075);gain.gain.exponentialRampToValueAtTime(.04,start+i*.075+.02);
+   gain.gain.exponentialRampToValueAtTime(.0001,start+i*.075+.21);
+   tone.connect(gain).connect(audio.destination);tone.start(start+i*.075);tone.stop(start+i*.075+.22);
+  }
+ }catch(_){soundEnabled=false;}
+}
 function persist(){
  try{localStorage.setItem(KEY,JSON.stringify(state));}
  catch(_){notify('Device storage unavailable. You can play, but this chapter may not save.');}
  root.dispatchEvent?.(new Event('jozef:together-updated'));
 }
 function stop(){walkToken++;if(walking!==null)clearTimeout(walking);walking=null;}
-function progress(){return {stage:state.stage,clues:state.clues.slice(),won:state.won,positions:state.positions.map(p=>({...p})),selected,opened,shots:battle?battle.hits.slice():null};}
+function progress(){return {stage:state.stage,clues:state.clues.slice(),won:state.won,positions:state.positions.map(p=>({...p})),selected,opened,shots:battle?battle.hits.slice():null,fragments:state.fragments.slice(),bestFragments:state.bestFragments,perfect:state.perfect,difficulty:state.difficulty,bestCombo:state.bestCombo};}
+function toggleDifficulty(){
+ if(state.stage>=3){notify('Choose a play style before the finale.');return false;}
+ state.difficulty=state.difficulty==='story'?'challenge':'story';persist();hud();
+ notify(state.difficulty==='challenge'?'CHALLENGE: find your own path, with two rival blocks allowed.':'STORY: guided routes and three chances.');
+ return true;
+}
+function toggleSound(){soundEnabled=!soundEnabled;hud();if(soundEnabled)cue(true);return soundEnabled;}
+function collectFragments(){
+ if(state.stage>2)return false;
+ let found=false;
+ for(const piece of FRAGMENTS[state.stage]){
+  if(state.fragments.includes(piece.id))continue;
+  if(state.positions.some(hero=>at(hero,[piece.x,piece.y]))){state.fragments.push(piece.id);found=true;}
+ }
+ if(found){state.bestFragments=Math.max(state.bestFragments,state.fragments.length);cue();notify('SECRET STADIUM SPARK! '+state.fragments.length+'/6. Find all six for the Perfect Team trophy.');}
+ return found;
+}
 function start(){
  opened=true;lastPadTick=0;lastPadButtons=[{act:false,switchHero:false},{act:false,switchHero:false}];rootGame.hidden=false;$('adventure')?.classList.add('together-focused');root.showSection?.('adventure');
  selected=0;
@@ -97,7 +138,7 @@ function close(){
  return true;
 }
 function replay(){
- stop();const trophyPreviouslyWon=state.won;state=fresh();state.won=trophyPreviouslyWon;battle=null;selected=0;persist();
+ stop();const record={won:state.won,perfect:state.perfect,bestFragments:state.bestFragments,bestCombo:state.bestCombo,difficulty:state.difficulty};state=fresh();Object.assign(state,record);battle=null;selected=0;persist();
  start();notify('New mystery started! Both players can explore and discover clues.');
  return true;
 }
@@ -108,16 +149,16 @@ function checkpoint(){
   for(let i=0;i<2;i++)if(!state.clues[i]&&at(state.positions[i],STAGES[0].targets[i])){state.clues[i]=true;found=true;}
   if(state.clues.every(Boolean)){state.stage=1;stop();notify('BOTH CLUES DISCOVERED! Restore the stadium lights by standing on both consoles.');}
   else if(found)notify('Clue found! '+(state.clues[0]?'Jozef ✓ ':'Jozef needs his clue. ')+(state.clues[1]?'Dad ✓':'Dad needs his clue.'));
-  if(found){persist();hud();}
+  if(found){persist();hud();cue();}
   return found;
  }
  if(state.stage===1||state.stage===2){
   const targets=STAGES[state.stage].targets;
   if(targets.every((point,i)=>at(state.positions[i],point))){
    state.stage++;
-   stop();persist();hud();
+   stop();persist();hud();cue(true);
    if(state.stage===2)notify('THE LIGHTS ARE ON! Both heroes must enter the champion vault.');
-   else {battle={turn:0,hits:[0,0],blocks:0,round:0};controllerLane=1;notify('FINALE UNLOCKED! Jozef shoots first. Each of you needs two scores.');}
+   else {battle={turn:0,hits:[0,0],blocks:0,round:0,combo:0};controllerLane=1;notify('FINALE UNLOCKED! Jozef shoots first. Each of you needs two scores.');}
    return true;
   }
  }
@@ -128,11 +169,13 @@ function move(who,dx,dy){
  const p=state.positions[who],other=state.positions[1-who],x=p.x+dx,y=p.y+dy;
  if(!own(x,y)||other.x===x&&other.y===y)return false;
  p.x=x;p.y=y;
- persist();checkpoint();hud();draw(performance.now?.()||0);
+ const found=collectFragments();persist();checkpoint();hud();draw(performance.now?.()||0);
+ if(found&&root.navigator?.vibrate)root.navigator.vibrate(15);
  return true;
 }
 function guide(){
  if(!opened||state.stage>=3){notify('The finale uses the three shot choices below.');return false;}
+ if(state.difficulty==='challenge'){notify('CHALLENGE MODE: follow the glowing landmarks without automatic guidance.');return false;}
  if(state.stage===0&&state.clues[selected])choose(1-selected);
  const target=STAGES[state.stage].targets[selected];
  const path=pathTo(state.positions[selected],target,state.positions[1-selected]);
