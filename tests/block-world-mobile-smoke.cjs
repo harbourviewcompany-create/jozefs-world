@@ -27,6 +27,13 @@ async function play(engine,width,height){
     buttons:[...document.querySelectorAll('.controls button')].map(b=>b.getBoundingClientRect().toJSON())}));
    assert.ok(boxes.scroll<=width+1,'no horizontal overflow: '+JSON.stringify(boxes));
    for(const b of boxes.buttons)assert.ok(b.left>=-1&&b.right<=width+1&&b.width>=43&&b.height>=43,'thumb controls visible: '+JSON.stringify(b));
+   const initial=await page.evaluate(()=>window.JozefBlock.view());
+   await page.keyboard.press('Equal');
+   const enlarged=await page.evaluate(()=>window.JozefBlock.view());
+   assert.ok(enlarged.zoom>initial.zoom,'keyboard zoom enlarges the 3D game camera');
+   await page.keyboard.press('Minus');
+   await page.locator('#rotate').click();
+   assert.equal(await page.evaluate(()=>window.JozefBlock.view().rotation),(initial.rotation+1)%4);
    await page.locator('#guide').click();
    await page.waitForFunction(()=>window.JozefBlock.progress().wood.length>=1,null,{timeout:6000});
    for(const at of [[2,2],[3,7],[4,5]])await travel(page,at);
