@@ -1,8 +1,1693 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><title>JOZEF FC</title></head>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JOZEF FC // AFTER DARK — Your Game. Your World.</title>
+  <meta name="description" content="Jozef FC // After Dark. An original multi-sport universe with football, hockey, baseball, basketball, wrestling showmanship, and club challenges. Your game. Your world." />
+  <meta property="og:title" content="JOZEF FC // AFTER DARK" />
+  <meta property="og:description" content="Your game. Your world. No limits. Play real football in The Arena, build your squad, and write a soccer legacy." />
+  <meta property="og:type" content="website" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Jozef FC" />
+  <meta name="theme-color" content="#07151b" />
+  <meta name="color-scheme" content="dark light" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="site-foundation.css" />
+  <link rel="stylesheet" href="site-experience.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Lilita+One&family=Nunito:wght@400;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+
+<style>
+.nav-extra{display:none}
+body.nav-open .nav-extra{display:inline-flex}
+#nav-more{font-weight:800}
+.street-layout{display:none}
+
+.team-picker{display:grid;gap:10px}
+.team-picker label{display:grid;gap:4px;font-weight:800}
+.team-picker select{min-height:44px;border-radius:10px;padding:8px}
+</style>
+
+
+<style>.live-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.live-dot{width:12px;height:12px;border-radius:50%;background:#3a4b52;display:inline-block}.live-dot.on{background:#3dff7a;box-shadow:0 0 8px #3dff7a}.live-row button{min-height:36px;border-radius:10px;font-weight:700}</style></head>
 <body>
-<p>Site restored. Please upload the full index-updated.html from the previous download to complete the Block World integration.</p>
-<a href="block-world.html">🧱 Block World</a>
+
+  <div id="walkout" class="walkout" hidden role="dialog" aria-modal="true" aria-labelledby="walkout-title">
+    <div class="walkout-card">
+      <p class="eyebrow-live">The tunnel</p>
+      <h2 id="walkout-title">JOZEF FC</h2>
+      <div class="walkout-number" id="walkout-number">11</div>
+      <p>Boots on. Crowd up. Tap to run out.</p>
+      <div class="walkout-actions">
+        <button type="button" class="studio-button-primary" id="walkout-run">Run out</button>
+        <button type="button" class="studio-button-outline" id="walkout-skip">Skip</button>
+      </div>
+    </div>
+  </div>
+  <div class="commentary-bar">
+    <button type="button" id="commentary-toggle" aria-pressed="false">Commentary off</button>
+    <button type="button" id="commentary-play" hidden>Hear the call</button>
+  </div>
+
+
+  <a href="#main" class="jw-skip">Skip to content</a>
+  <!-- Navigation -->
+  <nav class="navbar" aria-label="Jozef FC main navigation">
+<div class="nav-brand"><span class="studio-brand-mark" aria-hidden="true">J<span>11</span></span><span class="studio-brand-title">JOZEF <b>FC</b><small>THE FUTURE IS OURS</small></span></div>
+    <div class="nav-links">
+      <button class="nav-btn active" data-section="home">HQ</button>
+      <button type="button" class="nav-btn" id="nav-more">More</button>
+      <button class="nav-btn studio-arena-nav" data-section="arena">PLAY MATCH</button>
+      <a class="nav-btn studio-street-nav" href="prime/?mode=street">STREET//11</a>
+      <button class="nav-btn nav-extra" data-section="games">Games</button>
+      <button class="nav-btn nav-extra" data-section="club">My Club</button>
+      <button class="nav-btn nav-extra" data-section="playbook">Playbook</button>
+      <button class="nav-btn nav-extra" data-section="tour">World Tour</button>
+      <button class="nav-btn nav-extra" data-section="career">Career</button>
+      <button class="nav-btn nav-extra" data-section="news">Scores</button>
+      <button class="nav-btn nav-extra" data-section="sports-arcade">Sports Arcade</button>
+      <button class="nav-btn nav-extra" data-section="adventure">Adventure</button>
+      <button class="nav-btn nav-extra" data-section="sports">Sports Scores</button>
+      <button class="nav-btn" data-section="versus">Versus</button>
+      <button class="nav-btn" data-section="watch">Watch</button>
+      <button class="nav-btn nav-extra" data-section="learn">Learn</button>
+      <button class="nav-btn nav-extra" data-section="training">Training</button>
+      <button class="nav-btn nav-extra" data-section="matchday">Match Day</button>
+      <button class="nav-btn" data-section="notes">Notes <span id="note-dot" class="note-dot" hidden>●</span></button>
+      <button class="nav-btn nav-extra" data-section="album">Stickers</button>
+      <button class="nav-btn nav-extra" data-section="chronicle">Chronicle</button>
+      <button class="nav-btn nav-extra" data-section="fun">Locker Room</button>
+    </div>
+    <button class="jw-explore" id="jw-explore" type="button" aria-haspopup="dialog" aria-controls="studio-command" aria-label="Explore all games and sections">
+      <span class="jw-explore-symbol" aria-hidden="true">☷</span><span>EXPLORE</span>
+    </button>
+    <button class="jw-xp-pill" type="button" onclick="showSection('club')" aria-label="Open Jozef FC player club">
+      <span>⭐ <b data-jw-xp>0</b> XP</span><span class="jw-level-chip">LVL <b data-jw-level>1</b></span>
+    </button>
+  </nav>
+
+  <!-- HOME SECTION -->
+  <section id="home" class="section active" tabindex="-1"><div id="main"></div>
+
+    <section id="jw-worldcore" class="jw-worldcore" aria-label="Jozef's World interactive three-dimensional headquarters">
+      <header class="jw-worldcore-top">
+        <div><span class="jw-worldcore-kicker">JW / 001 — THE WORLD CORE</span><h1>JOZEF'S <em>WORLD.</em></h1></div>
+        <span class="jw-worldcore-live">12 WORLDS · ONE UNIVERSE</span>
+      </header>
+      <div class="jw-worldcore-main">
+        <div class="jw-worldcore-scene" aria-label="Rotating 3D ball with twelve raised destination plates">
+          <div class="jw-worldcore-orbit" aria-hidden="true"></div>
+          <div class="jw-worldcore-orbit jw-worldcore-orbit-two" aria-hidden="true"></div>
+          <canvas id="jw-worldcore-canvas" width="720" height="720" tabindex="0" role="img" aria-label="Interactive 3D ball. Swipe to rotate in every direction. Tap a raised plate to select it, tap the centered plate again to enter, or use the destination index. Arrow keys rotate the ball, Enter opens the selected world."></canvas>
+          <div id="jw-worldcore-labels" class="jw-worldcore-labels" aria-hidden="true"></div>
+        </div>
+        <aside id="jw-worldcore-detail" class="jw-worldcore-panel">
+          <div>
+            <span class="jw-worldcore-panel-overline">YOUR NEXT DESTINATION</span>
+            <div id="jw-worldcore-selected-type" class="jw-worldcore-selected-type">EXPLORE</div>
+            <h2 id="jw-worldcore-selected-title">Adventure</h2>
+          </div>
+          <p id="jw-worldcore-selected-description">Explore mysterious worlds, hidden routes and rival champions.</p>
+          <button type="button" id="jw-worldcore-enter">ENTER ADVENTURE ↗</button>
+          <div class="jw-worldcore-instruction"><span>DRAG TO ROTATE 360°</span><span>TAP TO SELECT</span><span>TAP TWICE TO ENTER</span></div>
+        </aside>
+      </div>
+      <div id="jw-worldcore-fallback" class="jw-worldcore-fallback" role="status" hidden><p>3D rendering is unavailable on this device. Every world remains accessible in the list below.</p></div>
+      <footer class="jw-worldcore-footer">
+        <div class="jw-worldcore-footer-actions">
+          <button type="button" id="jw-worldcore-list-toggle" aria-controls="jw-worldcore-index" aria-expanded="false">ALL WORLD PLATES ↗</button>
+          <button type="button" id="jw-worldcore-dashboard" aria-expanded="false">CLUB DASHBOARD ↗</button>
+        </div>
+        <p>SPIN THE WORLD · FIND YOUR NEXT ADVENTURE</p>
+      </footer>
+      <div id="jw-worldcore-index" class="jw-worldcore-index" role="group" aria-label="Accessible world destination index" hidden></div>
+      <p id="jw-worldcore-announcement" class="jw-sr-only" role="status" aria-live="polite"></p>
+      <noscript><nav aria-label="World destinations"><a href="#adventure">Adventure</a> · <a href="#arena">Football Arena</a> · <a href="#sports-arcade">Sports Arcade</a> · <a href="#club">My Club</a></nav></noscript>
+    </section>
+
+
+    <div class="hero studio-hero">
+      <div class="studio-hero-noise" aria-hidden="true"></div>
+      <div class="studio-hero-copy">
+        <div class="studio-overline"><span class="studio-status-dot"></span> JOZEF FC // EST. THE FUTURE <span class="studio-overline-rule"></span> PLAYER ONE</div>
+        <h1>YOUR WORLD.<br><em>LET’S PLAY.</em></h1>
+        <p class="hero-subtitle">A universe built around one player. Train under the floodlights. Own the streets. Lead your club to the top.</p>
+        <div class="hero-buttons">
+          <button type="button" class="studio-button-primary" onclick="showSection('arena')"><span class="studio-button-icon">▶</span> PLAY FOOTBALL <span aria-hidden="true">↗</span></button>
+          <button type="button" class="studio-button-primary" onclick="showSection('versus')">VERSUS <span aria-hidden="true">↗</span></button>
+          <button type="button" class="studio-button-outline" onclick="showSection('sports-arcade')">PLAY ALL SPORTS <span aria-hidden="true">↗</span></button>
+        </div>
+        <div class="studio-hero-foot"><span>01 / YOUR STORY STARTS HERE</span><span>OFFLINE-FIRST • NO ACCOUNTS • ALL YOU</span></div>
+      </div>
+      <div class="studio-hero-art" aria-label="Jozef FC illuminated stadium crest">
+        <div class="studio-light studio-light-top"></div><div class="studio-light studio-light-bottom"></div>
+        <div class="studio-art-ring studio-art-ring-one"></div><div class="studio-art-ring studio-art-ring-two"></div>
+        <div class="studio-hero-crest"><span class="studio-crest-top">THE NEXT GENERATION</span><span class="studio-crest-j">J</span><span class="studio-crest-11">/ 11</span><span class="studio-crest-bottom">JOZEF FOOTBALL CLUB</span></div>
+        <div class="studio-art-number">11</div><div class="studio-art-ticker">STRIKE FIRST / PLAY FOREVER</div>
+      </div>
+    </div>
+
+
+    <nav class="hq-launchpad" aria-label="Play Prime Arena sports">
+      <div class="hq-launch-heading"><h2>PICK YOUR GAME</h2><span>PRIME ARENA ↗</span></div>
+      <div class="hq-game-grid">
+        <a href="prime/?mode=football"><svg aria-hidden="true" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m12 7 5 4-2 6H9l-2-6 5-4Zm0-4v4m9 5-4-1m1 9-3-3m-9 3 3-3m-6-5 4-1"/></svg><strong>Football</strong><span class="hq-game-arrow" aria-hidden="true">↗</span></a>
+        <a href="prime/?mode=hockey"><svg aria-hidden="true" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m17 3-6 14H4v4h9L21 3"/><ellipse cx="19" cy="20" rx="3" ry="1.5"/></svg><strong>Hockey</strong><span class="hq-game-arrow" aria-hidden="true">↗</span></a>
+        <a href="prime/?mode=basketball"><svg aria-hidden="true" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3v18M5 6c9 2 9 10 0 12M19 6c-9 2-9 10 0 12"/></svg><strong>Basketball</strong><span class="hq-game-arrow" aria-hidden="true">↗</span></a>
+        <a href="prime/?mode=baseball"><svg aria-hidden="true" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M6 5c6 3 6 11 0 14M18 5c-6 3-6 11 0 14M7 8l3-1m-2 5h3m-4 4 3 1m7-9-3-1m2 5h-3m4 4-3 1"/></svg><strong>Baseball</strong><span class="hq-game-arrow" aria-hidden="true">↗</span></a>
+        <a href="prime/?mode=wrestling"><svg aria-hidden="true" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-6Z"/></svg><strong>Wrestling</strong><span class="hq-game-arrow" aria-hidden="true">↗</span></a>
+        <a href="prime/?mode=street"><svg aria-hidden="true" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V9h5v12m0-17h6v17m0-10h7v10M2 21h20M10 7h2m-2 4h2m-2 4h2m4 0h3M5 12h1"/></svg><strong>Street // 11</strong><span class="hq-game-arrow" aria-hidden="true">↗</span></a>
+      </div>
+      <p>One club. Every sport. Your XP comes with you.</p>
+    </nav>
+    <aside class="jw-adventure-teaser" aria-label="Explore the playable Adventure Circuit">
+      <div><strong>EXPLORE JOZEF'S WORLD.</strong><p>Four worlds, hidden collectibles, champion battles and local two-player co-op.</p></div>
+      <div class="jw-together-teaser-actions"><button type="button" data-start-together>PLAY TOGETHER ↗</button><button type="button" onclick="showSection('adventure')">SOLO ADVENTURE</button></div>
+    </aside>
+
+    <details class="hq-details">
+      <summary>Your club &amp; challenges <span>Progress · teams · more games</span></summary>
+      <div class="hq-details-body">
+    <aside class="chronicle-home" aria-label="Play the new Prime Arena sports game">
+      <div class="chronicle-home-copy">
+        <span class="studio-kicker">YOUR NEXT MATCH STARTS HERE</span>
+        <h2>ENTER <em>PRIME ARENA.</em></h2>
+        <p>Play five sports or take a Street run. Build your streak, beat your best, and earn Club XP.</p>
+      </div>
+      <a class="studio-button-primary" href="./prime/">PLAY PRIME ARENA ↗</a>
+    </aside>
+
+    
+    <section class="team-picker-card" aria-labelledby="team-picker-title">
+      <h2 id="team-picker-title">His clubs</h2>
+      <p>Pick one team for each sport. The Sports Room and Watch follow this choice.</p>
+      <div id="team-picker" class="team-picker"></div>
+    </section>
+
+    <section class="today-card" id="today-card" aria-labelledby="today-heading">
+      <div class="today-head">
+        <div>
+          <p class="eyebrow-live">YOUR SHARED CLUB / TODAY</p>
+          <h2 id="today-heading">TODAY.</h2>
+          <p class="today-intro">One match. One Street run. He picks his clubs.</p><p id="today-clubs">His clubs load here.</p><p id="today-last">No match yet.</p><p id="today-versus-result">No Versus yet.</p><p id="versus-season">Season: no matches yet.</p><p id="hq-trophy" hidden>Trophy cabinet: three wins in a row.</p><ol id="versus-season-list"></ol><p id="hq-versus" class="live-row"><span id="dot-dad" class="live-dot"></span> Dad <span id="dot-jozef" class="live-dot"></span> Jozef <span id="live-status">Waiting.</span> <button type="button" id="voice-alerts">Voice alerts</button> <button type="button" data-live-who="Dad">This phone is Dad</button> <button type="button" data-live-who="Jozef">This phone is Jozef</button></p>
+        </div>
+        <span class="today-counter" id="today-counter" aria-live="polite">0 / 2 PLAYED</span>
+      </div>
+      <div class="today-progress" id="today-progress" role="progressbar" aria-label="Today's two club activities" aria-valuemin="0" aria-valuemax="2" aria-valuenow="0"><span id="today-meter"></span></div>
+      <div class="today-tasks" aria-label="Today's activity options">
+        <div class="today-task" id="today-task-arena">
+          <div class="today-task-info"><span class="today-task-number">01 / MATCHDAY</span><strong>PLAY THE ARENA</strong><small id="today-arena-status">Not played today</small></div>
+          <button type="button" id="today-play-arena" onclick="showSection('arena')">PLAY MATCH ↗</button>
+        </div>
+        <div class="today-task" id="today-task-versus">
+          <div class="today-task-info"><span class="today-task-number">03 / VERSUS</span><strong>PLAY EACH OTHER</strong><small>Same code. Both online.</small></div>
+          <button type="button" class="studio-button-primary" id="today-play-versus" onclick="showSection('versus')">VERSUS ↗</button>
+        </div>
+        <div class="today-task" id="today-task-street">
+          <div class="today-task-info"><span class="today-task-number">02 / NIGHT RUN</span><strong>TAKE THE STREETS</strong><small id="today-street-status">Not played today</small></div>
+          <button type="button" id="today-play-street" onclick="location.href='prime/?mode=street'">RUN STREET ↗</button>
+        </div>
+      </div>
+      <div class="today-clubline">
+        <div><p id="today-note">No new club notes.</p><p id="today-street">Street best: 000</p><p class="today-parent">A parent can save this season from My Club. The file includes XP, Street, notes, stickers, and his team calls.</p></div>
+        <button type="button" class="today-notes-open" onclick="showSection('notes')">CLUB NOTES ↗</button>
+      </div>
+    </section>
+
+
+    <div class="ui-feature-duo">
+    <aside class="playbook-home" aria-label="Your Coach's Playbook">
+      <div><span class="studio-kicker">COACH'S PLAYBOOK / THE ROAD TO LEGEND</span>
+        <h2>EVERY SPORT. <em>YOUR STORY.</em></h2>
+        <p id="playbook-home-status">0 / 15 PLAYBOOK MISSIONS COMPLETED</p>
+        <p id="playbook-home-next" class="playbook-home-next" aria-live="off">NEXT UP: FIRST THREE KICKOFFS</p>
+      </div>
+      <button type="button" onclick="showSection('playbook')">SEE YOUR NEXT CHALLENGE ↗</button>
+    </aside>
+    <aside class="chronicle-home" aria-label="Your Jozef FC story">
+      <div class="chronicle-home-copy">
+        <span class="studio-kicker">THE CLUB CHRONICLE / EVERY MATCH MATTERS</span>
+        <h2>MAKE <em>HISTORY.</em></h2>
+        <p id="chronicle-home-summary">The story of Jozef FC is waiting for its next chapter.</p>
+      </div>
+      <button type="button" onclick="showSection('chronicle')">OPEN YOUR STORY ↗</button>
+    </aside>
+    </div>
+
+    
+    <section class="locker-card" id="locker-card" hidden aria-labelledby="locker-title">
+      <p class="eyebrow-live">Real matchday</p>
+      <h2 id="locker-title">Locker room</h2>
+      <p id="locker-line">No real match set.</p>
+      <p id="locker-gear">Checking Ottawa weather...</p>
+      <p id="locker-award">This week: First boot</p>
+      <button type="button" class="action-btn" id="locker-chant">Say the chant</button>
+    </section>
+
+        <button type="button" class="action-btn" id="hq-parent-line" onclick="showSection('club')">Save this season in My Club</button><p class="jw-privacy-note">The file includes XP, Street best, notes, stickers, and Sports Room calls. Move it if he uses another phone.</p>
+        <div class="jw-privacy-note" id="season-diary">No match written in the season book yet.</div>
+    <div class="studio-signal-row" aria-label="Your current progress">
+      <div class="studio-signal"><span class="studio-signal-label">PLAYER RANK</span><strong>LVL <span data-jw-level>1</span></strong><small>ALWAYS EVOLVING</small></div>
+      <div class="studio-signal"><span class="studio-signal-label">CAREER POINTS</span><strong id="studio-career-points">00</strong><small id="studio-career-stage">SEASON 01</small></div>
+      <div class="studio-signal"><span class="studio-signal-label">WORLD TOUR</span><strong id="studio-tour-stops">00 <i>/ 05</i></strong><small id="studio-tour-stage">STAMP YOUR PASSPORT</small></div>
+      <div class="studio-signal studio-signal-accent"><span class="studio-signal-label">NIGHT RUN RECORD</span><strong id="studio-street-best">000</strong><small>BEAT YOUR HIGH SCORE</small></div>
+    </div>
+
+
+    <!-- 2026 CURRENT CHALLENGE / local Arena progress, no new persistence -->
+    <section class="visual-rival-card" aria-labelledby="visual-rival-heading">
+      <div class="visual-rival-content">
+        <span class="studio-kicker">RIVAL DOSSIER / YOUR NEXT CHALLENGE</span>
+        <h2 id="visual-rival-heading">FACE <em id="visual-rival-name">THE ROOFTOP ROVERS</em></h2>
+        <p id="visual-rival-story">Your first chapter starts under the neighbourhood lights. Win two matches to light up Neon City.</p>
+        <div class="visual-rival-actions">
+          <button type="button" id="visual-rival-play">ENTER THE ARENA ↗</button>
+          <strong id="visual-rival-unlock">0 / 2 WINS · NEXT: NEON CITY</strong>
+        </div>
+      </div>
+      <div class="visual-rival-board" aria-hidden="true">
+        <span class="visual-rival-number" id="visual-rival-chapter">01</span>
+        <small id="visual-rival-venue">NEIGHBOURHOOD COURT</small>
+        <div class="visual-rival-progress" role="presentation"><span id="visual-rival-meter"></span></div>
+        <small>YOUR CHAPTER / YOUR LEGACY</small>
+      </div>
+    </section>
+
+    <div class="studio-section-heading"><div><span class="studio-kicker">CHOOSE YOUR PATH</span><h2>WHAT'S YOUR <em>NEXT MOVE?</em></h2></div><span class="studio-section-count">04 / GAME MODES</span></div>
+    <div class="studio-mode-grid">
+      <button type="button" class="studio-mode studio-mode-arena" onclick="showSection('arena')">
+        <span class="studio-mode-top"><b>00 / THE MAIN EVENT</b><span aria-hidden="true">↗</span></span>
+        <span class="studio-mode-graphic studio-mode-arena-art" aria-hidden="true"><span class="studio-arena-shirt">11</span><span class="studio-mode-tape">DRIBBLE / PASS / SHOOT</span></span>
+        <strong>THE <span>ARENA.</span></strong><small>REAL BALL CONTROL. LIVE DEFENDERS. YOUR TEAM. YOUR LEGACY.</small>
+        <span class="studio-mode-link">KICK OFF A MATCH <span>→</span></span>
+      </button>
+      <button type="button" class="studio-mode studio-mode-street" onclick="showSection('street')">
+        <span class="studio-mode-top"><b>01 / ARCADE</b><span aria-hidden="true">↗</span></span>
+        <span class="studio-mode-graphic" aria-hidden="true"><span class="studio-mode-orbit">⚽</span><span class="studio-mode-tape">STREET DIVISION</span></span>
+        <strong>STREET<span>//11</span></strong><small>55 SECONDS. THREE LIVES. EVERY MOVE COUNTS.</small><span class="studio-mode-link">TAKE THE FIELD <span>→</span></span>
+      </button>
+      <button type="button" class="studio-mode studio-mode-career" onclick="showSection('career')">
+        <span class="studio-mode-top"><b>02 / STORY</b><span aria-hidden="true">↗</span></span>
+        <span class="studio-mode-graphic" aria-hidden="true"><span class="studio-mode-shirt">11</span><span class="studio-mode-tape">ROAD TO LEGEND</span></span>
+        <strong>CAREER <span>MODE.</span></strong><small>SIX MATCHES. ONE SEASON. WRITE YOUR HISTORY.</small><span class="studio-mode-link">ENTER THE LEAGUE <span>→</span></span>
+      </button>
+      <button type="button" class="studio-mode studio-mode-world" onclick="showSection('tour')">
+        <span class="studio-mode-top"><b>03 / WORLD</b><span aria-hidden="true">↗</span></span>
+        <span class="studio-mode-graphic" aria-hidden="true"><span class="studio-mode-globe">◎</span><span class="studio-mode-tape">FIVE NATIONS</span></span>
+        <strong>WORLD <span>TOUR.</span></strong><small>FIVE COUNTRIES. ONE CUP. BECOME THE CHAMPION.</small><span class="studio-mode-link">START THE JOURNEY <span>→</span></span>
+      </button>
+    </div>
+
+    <section class="multi-home-section" aria-labelledby="multi-home-title">
+      <div class="studio-section-heading">
+        <div><span class="studio-kicker">THE NEXT CHAPTER / MORE THAN FOOTBALL</span><h2 id="multi-home-title">CHOOSE YOUR <em>SPORT.</em></h2></div>
+        <p>Hockey, baseball, basketball, or the wrestling spotlight. Four games. One shared club.</p>
+      </div>
+      <div class="multi-home">
+        <button type="button" class="multi-home-card" data-multi-start="hockey" aria-label="Play hockey, personal best shown on card"><span class="multi-home-card-label">01 / ON THE ICE</span><span class="multi-home-illustration multi-art-hockey" aria-hidden="true"><i></i></span><strong>HOCKEY SHOOTOUT.</strong><span class="multi-home-record" id="multi-home-record-hockey">FIRST CHALLENGE AWAITS</span><small>CHASE THE GOAL ↗</small></button>
+        <button type="button" class="multi-home-card" data-multi-start="baseball" aria-label="Play baseball, personal best shown on card"><span class="multi-home-card-label">02 / AT THE PLATE</span><span class="multi-home-illustration multi-art-baseball" aria-hidden="true"><i></i></span><strong>BASEBALL DERBY.</strong><span class="multi-home-record" id="multi-home-record-baseball">FIRST CHALLENGE AWAITS</span><small>SWING FOR THE FENCES ↗</small></button>
+        <button type="button" class="multi-home-card" data-multi-start="basketball" aria-label="Play basketball, personal best shown on card"><span class="multi-home-card-label">03 / ON THE COURT</span><span class="multi-home-illustration multi-art-basketball" aria-hidden="true"><i></i></span><strong>BASKETBALL SHOTS.</strong><span class="multi-home-record" id="multi-home-record-basketball">FIRST CHALLENGE AWAITS</span><small>FROM DOWNTOWN ↗</small></button>
+        <button type="button" class="multi-home-card" data-multi-start="wrestling" aria-label="Play wrestling, personal best shown on card"><span class="multi-home-card-label">04 / UNDER THE LIGHTS</span><span class="multi-home-illustration multi-art-wrestling" aria-hidden="true"><i></i></span><strong>WRESTLING SHOW.</strong><span class="multi-home-record" id="multi-home-record-wrestling">FIRST CHALLENGE AWAITS</span><small>RULE THE STAGE ↗</small></button>
+      </div>
+    </section>
+
+    <div class="studio-lower-grid">
+      <div class="jw-profile-banner studio-profile" data-jw-kit>
+        <div class="jw-avatar-circle"><span data-jw-avatar>🦁</span><span class="jw-jersey">#<b data-jw-number>10</b></span></div>
+        <div class="jw-profile-info"><span class="studio-kicker">THE PLAYER PROFILE</span><h2>JOZEF <span class="studio-name-fc">FC.</span></h2>
+          <p>Goals, trophies, XP. Every move builds your legacy.</p>
+          <div class="jw-level-track" role="progressbar" aria-label="XP to next level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div data-jw-progress></div></div>
+          <span class="jw-help">LEVEL <b data-jw-level>1</b> • <b data-jw-xp>0</b> TOTAL XP</span>
+        </div><button type="button" class="jw-profile-open" onclick="showSection('club')">PLAYER HUB ↗</button>
+      </div>
+      <div class="studio-fixture" id="studio-fixture">
+        <span class="studio-kicker">REAL-LIFE MATCHDAY</span><strong id="studio-fixture-head">NEXT KICKOFF?</strong>
+        <p id="studio-fixture-copy">Plan your next match, build a formation, and check your kit.</p>
+        <button type="button" onclick="showSection('matchday')">MATCHDAY CENTRAL ↗</button>
+      </div>
+    </div>
+    <div class="jw-missions">
+      <div class="jw-section-head"><div><span class="studio-kicker">THE DAILY CONTRACT</span><h2>THREE MISSIONS. <em>ONE PLAYER.</em></h2></div><span class="jw-mission-note">NO PRESSURE. JUST PROGRESS.</span></div>
+      <div class="jw-mission-grid">
+        <div class="jw-mission" data-jw-mission="goal"><span class="jw-mission-icon">⚽</span><div><strong>Score a goal</strong><small>Try Penalty Shootout</small><span class="mission-check">○ Ready</span></div><button data-jw-go="penalty" type="button">Play →</button></div>
+        <div class="jw-mission" data-jw-mission="quiz"><span class="jw-mission-icon">🧠</span><div><strong>Quiz time</strong><small>Finish the soccer quiz</small><span class="mission-check">○ Ready</span></div><button data-jw-go="quiz" type="button">Play →</button></div>
+        <div class="jw-mission" data-jw-mission="memory"><span class="jw-mission-icon">🏆</span><div><strong>Memory master</strong><small>Match all six pairs</small><span class="mission-check">○ Ready</span></div><button data-jw-go="memory" type="button">Play →</button></div>
+      </div>
+    </div>
+    <div class="message-box">
+      <p>💪 Keep practicing, stay kind, and always have fun — you're a star, Jozef!</p>
+    </div>
+      </div>
+    </details>
+  </section>
+
+
+
+  <!-- MAIN EVENT: FOOTBALL YOU CAN ACTUALLY PLAY -->
+  <section id="arena" class="section studio-arena" tabindex="-1" aria-labelledby="arena-heading">
+    <div class="studio-page-intro">
+      <span class="studio-kicker">THE MAIN EVENT / JOZEF FC</span>
+      <h2 id="arena-heading">THE <span>ARENA.</span></h2>
+      <p>Control Jozef on the pitch. Dribble through defenders. Play one-twos with your teammate. Find the angle and bury the shot. Every result builds your club.</p>
+    </div>
+    <div class="arena-layout">
+      <div class="arena-game">
+        <div class="arena-topbar">
+          <span class="arena-brand"><span class="studio-status-dot"></span> JOZEF FC <small id="arena-venue">NEIGHBOURHOOD COURT</small></span>
+          <div class="arena-header-actions">
+            <button id="arena-settings-toggle" type="button" aria-label="Match settings" aria-expanded="false" aria-controls="arena-settings">⚙</button>
+            <button id="arena-start" type="button" class="arena-kickoff">KICK OFF →</button>
+            <button type="button" class="play-exit" aria-label="Close game">×</button>
+          </div>
+        </div>
+        <div class="arena-scoreboard"><div><small>JOZEF FC</small><strong id="arena-score">0 : 0</strong><small>RIVALS</small></div><div><small>TIME</small><strong id="arena-clock">75s</strong><small id="arena-tactic">BALANCED</small></div></div>
+        <div class="arena-mini-ticker"><span>SHOTS <strong id="arena-shots">0</strong></span><span>SAVES <strong id="arena-keeper-saves">0</strong></span><span class="arena-chance-badge">SHOT <strong id="arena-shot-quality" aria-label="Shot on-target chance">9%</strong></span><button id="arena-daily-progress" type="button" aria-label="Open daily Arena challenges">DAILY 0/4</button></div>
+        <div class="arena-pitch-frame"><canvas id="arena-canvas" width="420" height="600" tabindex="0" role="img" aria-label="Live football game. Move using the directional pad or arrow keys. Aim with 1 2 3, pass using J, shoot using K and skill burst with L."></canvas></div>
+        <div class="arena-aim-bar" role="group" aria-label="Choose a shot target">
+          <div class="arena-aim-caption">AIM YOUR SHOT <strong id="arena-aim-label">LEFT POST</strong></div>
+          <button id="arena-aim-0" type="button" aria-pressed="true">↖ LEFT <small>1</small></button>
+          <button id="arena-aim-1" type="button" aria-pressed="false">↑ CENTRE <small>2</small></button>
+          <button id="arena-aim-2" type="button" aria-pressed="false">↗ RIGHT <small>3</small></button>
+        </div>
+        <div class="arena-controller">
+          <div class="arena-direction" aria-label="Movement controls">
+            <div id="arena-joystick" class="arena-joystick" tabindex="0" role="group" aria-label="Virtual joystick. Drag to move, or use the arrow keys."><span id="arena-joystick-knob"></span></div>
+            <button id="arena-up" type="button" aria-label="Run forward">↑</button>
+            <button id="arena-left" type="button" aria-label="Move left">←</button>
+            <button id="arena-down" type="button" aria-label="Run backward">↓</button>
+            <button id="arena-right" type="button" aria-label="Move right">→</button>
+          </div>
+          <div class="arena-actions">
+            <button type="button" id="arena-pass" class="arena-pass">PASS <small>J</small></button>
+            <button type="button" id="arena-shoot" class="arena-shoot">SHOOT <small>K</small></button>
+          </div>
+        </div>
+        <div class="arena-skill-strip"><button id="arena-skill" type="button" disabled>SKILL BURST <small>L</small></button><span id="arena-skill-status">SKILL READY</span><small>Accelerate past defenders. Recharges between moves.</small></div>
+        <aside id="scout-report" class="scout-report" hidden>
+      <h3>Scout report</h3>
+      <p id="scout-words">Brave. Fast. Ready.</p>
+      <p id="scout-tip">Finish a match to get your report.</p>
+      <p id="scout-story"></p>
+      <p id="scout-next"></p>
+    </aside>
+        <p id="arena-status" class="arena-status" role="status" aria-live="polite">Your pitch is ready.</p>
+        <section id="arena-settings" class="arena-overlay arena-settings" role="dialog" aria-label="Arena settings" aria-modal="false" hidden>
+          <div class="arena-panel-title"><strong>MATCH SETTINGS</strong><button id="arena-settings-close" type="button" aria-label="Close settings">×</button></div>
+          <label>Difficulty <select id="arena-difficulty"><option value="rookie">Rookie</option><option value="pro">Pro</option><option value="legend">Legend</option></select></label>
+          <label>Mobile layout <select id="arena-mobile-layout"><option value="immersive">Immersive (larger pitch)</option><option value="classic">Classic (separate controls)</option></select></label>
+          <label>Touch controls <select id="arena-control-mode"><option value="joystick">Virtual joystick</option><option value="arrows">Arrow buttons</option></select></label>
+          <label>Control layout <select id="arena-handedness"><option value="standard">Movement left</option><option value="flipped">Movement right</option></select></label>
+          <label>Graphics <select id="arena-graphics-mode"><option value="auto">Auto</option><option value="quality">Smooth 60 FPS</option><option value="battery">Battery saver 30 FPS</option></select></label>
+          <p>Immersive mobile: swipe on SHOOT to aim, or hold to add power. Classic aiming buttons remain available.</p>
+          <label><input id="arena-camera-toggle" type="checkbox" checked> Dynamic camera</label>
+          <label><input id="arena-haptics-toggle" type="checkbox" checked> Haptic feedback (where supported)</label>
+          <label>Player kit <select id="arena-kit-select"><option value="club">My Club kit</option><option value="night">Neon City kit · 2 wins</option><option value="gold">Legend kit · 5 wins</option></select></label>
+          <div class="arena-upgrade-row">
+            <label>Train Jozef <select id="arena-upgrade-type"><option value="speed">Speed</option><option value="shot">Finishing</option><option value="pass">Passing</option></select></label>
+            <button type="button" id="arena-buy-upgrade">UPGRADE · 3 STARS</button>
+          </div>
+          <p id="arena-earnings">0 stars · Level 1</p>
+          <div id="arena-challenge-list" class="arena-challenge-list" aria-label="Daily challenges"></div>
+          <p>Bluetooth controller: left stick or D-pad to run, A to pass, B to shoot, X for skill, shoulder buttons to aim, and Start to pause or resume. Keyboard and touch controls remain available. Sound is controlled from My Club.</p>
+        </section>
+        <section id="arena-match-report" class="arena-overlay arena-report" role="dialog" aria-label="Match results" aria-modal="false" hidden>
+          <div class="arena-panel-title"><strong id="arena-report-title">FULL TIME</strong><button id="arena-report-close" type="button" aria-label="Close match results">×</button></div>
+          <div class="arena-report-score" id="arena-report-score">0 : 0</div>
+          <p id="arena-report-summary">Match complete</p>
+          <div class="arena-report-stats" id="arena-report-stats"></div>
+          <p id="arena-report-unlocks"></p>
+          <button id="arena-rematch" type="button" class="arena-report-rematch">PLAY AGAIN →</button>
+        </section>
+        <div id="arena-replay-banner" class="arena-replay-banner" role="status" aria-live="off" hidden>INSTANT REPLAY</div>
+      </div>
+      <aside class="arena-guide">
+        <span class="studio-kicker">THE ROAD TO LEGEND</span>
+        <h3>NOT JUST A GAME.<br><em>YOUR GAME.</em></h3>
+        <p>Your football career starts right here. A real playable pitch, a teammate you can pass to, defenders hunting the ball, and an opponent goalkeeper.</p>
+        <div class="arena-rival"><span class="studio-kicker">RIVAL DOSSIER / 01</span><strong id="arena-rival">THE ROOFTOP ROVERS</strong><p id="arena-story">The neighbourhood knows your name. Earn two wins to unlock the lights of Neon City.</p></div>
+        <div class="arena-career-stats">
+          <div><small>ARENA WINS</small><strong id="arena-wins">0</strong></div>
+          <div><small>CAREER GOALS</small><strong id="arena-goals">0</strong></div>
+          <div><small>MATCHES</small><strong id="arena-matches">0</strong></div>
+        </div>
+        <div class="arena-guide-rule"><b>01 / DRIVE</b><p>Hold arrows, WASD, or the touch pad to run. Tap the field to move toward a spot.</p></div>
+        <div class="arena-guide-rule"><b>02 / CREATE</b><p>Use PASS or J to link with a teammate. Press again to request a one-two. Tap SKILL BURST or L for an evasive speed move.</p></div>
+        <div class="arena-guide-rule"><b>03 / FINISH</b><p>Pick a left, centre, or right target with buttons or 1–3, then SHOOT or K. The keeper reads your attempt, but sometimes guesses wrong.</p></div>
+        <div class="arena-guide-rule"><b>04 / LEVEL UP</b><p>Earn new players in Career and World Tour, then build a starting squad for better gameplay.</p></div>
+        <button class="studio-mini-route" type="button" onclick="showSection('club')">MANAGE YOUR SQUAD <span>↗</span></button>
+      </aside>
+    </div>
+  </section>
+
+  <!-- STREET 11: THE NIGHT-RUN SIGNATURE MODE -->
+  <section id="street" data-section="street" class="section studio-street-page" tabindex="-1" aria-labelledby="street-heading">
+    <div class="studio-page-intro"><span class="studio-kicker">JOZEF FC / THE UNDERGROUND</span><h2 id="street-heading">STREET<span>//11</span></h2>
+      <p>The night run lives in Prime. Three lanes, 55 seconds, a runner in the 11 shirt. This page is the door.</p>
+      <p><a class="action-btn" href="prime/?mode=street">Play the night run</a></p>
+    </div>
+    <button type="button" class="play-exit">Close game</button>
+    <div class="street-layout">
+      <div class="street-game-frame">
+        <div class="street-game-topline"><span><span class="studio-status-dot"></span> NIGHT RUN // SEASON 01</span><span id="street-stage">UNDERGROUND</span></div>
+        <div class="street-game-hud">
+          <div><small>RUN SCORE</small><strong id="street-score">000</strong></div>
+          <div><small>LIVES</small><strong id="street-hearts" aria-label="3 lives">♥♥♥</strong></div>
+          <div><small>TIME LEFT</small><strong><span id="street-time">55</span><em>s</em></strong></div>
+          <div><small>COMBO</small><strong id="street-combo">×1</strong></div>
+        </div>
+        <div class="street-powerup-guide" aria-label="Street run power-up status">
+          <span class="street-powerup-shield" id="street-shield">NO SHIELD</span>
+          <span>GOLD STARS = BIG COMBO · CYAN SHIELDS = ONE SAFE HIT</span>
+        </div>
+        <div class="street-canvas-shell">
+          <canvas id="street-canvas" width="360" height="520" tabindex="0" aria-label="Night Run soccer game. Use arrow keys or touch controls to switch lanes." role="img"></canvas>
+          <div class="street-side-note street-side-left" aria-hidden="true">EST. 11/JOZEF</div>
+          <div class="street-side-note street-side-right" aria-hidden="true">AFTER DARK</div>
+        </div>
+        <div class="street-controls"><button type="button" id="street-left" aria-label="Move one lane left">← LEFT</button><button type="button" id="street-start">START NIGHT RUN →</button><button type="button" id="street-right" aria-label="Move one lane right">RIGHT →</button></div>
+        <p class="street-live-message" id="street-announcement" role="status" aria-live="polite">Your next run starts here.</p>
+        <p><a href="prime/">Play the Prime night run</a>. Same rules, with a street, a runner, and sound you turn on.</p>
+        <p id="street-story" class="street-live-message"></p>
+      </div>
+      <aside class="street-side-panel">
+        <span class="studio-kicker">THE RULES OF THE STREET</span>
+        <h3>MOVE FAST.<br><em>THINK FASTER.</em></h3>
+        <div class="street-rule"><span class="street-rule-number">01</span><div><strong>CHASE THE LIGHT</strong><p>Collect neon stars to score big. Keep collecting to multiply your points.</p></div></div>
+        <div class="street-rule"><span class="street-rule-number">02</span><div><strong>DODGE THE DEFENDERS</strong><p>Red shirts block your way. You only have three lives.</p></div></div>
+        <div class="street-rule"><span class="street-rule-number">04</span><div><strong>GRAB THE POWER-UPS</strong><p>Golden stars add a bigger combo. Cyan shields protect you from one defender collision.</p></div></div>
+        <div class="street-rule"><span class="street-rule-number">03</span><div><strong>OWN YOUR RECORD</strong><p>Every run is different. Your best score stays on this device.</p></div></div>
+        <div class="street-personal-best"><small>PERSONAL BEST / ALL TIME</small><strong id="street-best">000</strong><span>THE RECORD IS YOURS TO BREAK.</span></div>
+        <div class="street-control-guide">KEYBOARD <kbd>←</kbd> <kbd>→</kbd> / <kbd>A</kbd> <kbd>D</kbd><span>OR TAP A LANE / USE THE BIG BUTTONS</span></div>
+        <button type="button" class="studio-mini-route" onclick="showSection('club')">VIEW YOUR PLAYER RECORD <span>↗</span></button>
+      </aside>
+    </div>
+  </section>
+
+  <!-- GAMES SECTION -->
+  <section id="games" class="section">
+    <button type="button" class="play-exit">Close game</button>
+    <h2 class="section-title">🎮 Soccer Games</h2>
+    <p class="section-desc">Choose a game and have a blast! 10 games ready to play.</p>
+
+    <div class="game-selector">
+      <button class="game-tab active" data-game="penalty">Penalty</button>
+      <button class="game-tab" data-game="memory">Memory</button>
+      <button class="game-tab" data-game="quiz">Quiz</button>
+      <button class="game-tab" data-game="keepy">Keepy-Uppy</button>
+      <button class="game-tab" data-game="goalie">Goalie Reaction</button>
+      <button class="game-tab" data-game="target">Target Practice</button>
+      <button class="game-tab" data-game="scramble">Word Scramble</button>
+      <button class="game-tab" data-game="gate">Gate Pass</button>
+      <button class="game-tab" data-game="header">Header Hero</button>
+      <button class="game-tab" data-game="spot">Spot the Ball</button>
+    </div>
+
+    <!-- Penalty Game -->
+    <div id="penalty-game" class="game-panel active">
+      <h3>⚽ Penalty Shootout</h3>
+      <p>Click the goal to shoot! Aim for the corners!</p>
+      <div class="score-board">
+        <span>Goals: <strong id="penalty-score">0</strong></span>
+        <span>Misses: <strong id="penalty-misses">0</strong></span>
+      </div>
+      <div class="goal-area" id="goal-area">
+        <div class="goal-post left"></div>
+        <div class="goal-post right"></div>
+        <div class="goal-net"></div>
+        <div class="keeper" id="keeper">🧤</div>
+        <div class="ball" id="penalty-ball">⚽</div>
+      </div>
+      <div class="jw-aim-panel" aria-label="Choose where to aim">
+        <span>Choose your shot:</span>
+        <button type="button" data-jw-aim="27">↖ Left corner</button>
+        <button type="button" data-jw-aim="50">↑ Centre</button>
+        <button type="button" data-jw-aim="73">↗ Right corner</button>
+      </div>
+      <p id="jw-penalty-feedback" class="jw-shot-feedback" aria-live="polite">Pick a corner and take your shot!</p>
+      <button class="action-btn" id="reset-penalty">Reset Score</button>
+      <p class="game-tip">Tip: Click different parts of the goal to aim!</p>
+    </div>
+
+    <!-- Memory Game -->
+    <div id="memory-game" class="game-panel">
+      <h3>🧠 Soccer Memory Match</h3>
+      <p>Flip the cards and find matching pairs!</p>
+      <div class="score-board">
+        <span>Matches: <strong id="memory-matches">0</strong> / 6</span>
+        <span>Moves: <strong id="memory-moves">0</strong></span>
+      </div>
+      <div class="memory-grid" id="memory-grid"></div>
+      <p id="memory-feedback" class="jw-shot-feedback" aria-live="polite"></p>
+      <button class="action-btn" id="reset-memory">New Game</button>
+    </div>
+
+    <!-- Quiz Game -->
+    <div id="quiz-game" class="game-panel">
+      <h3>❓ Soccer Quiz Challenge</h3>
+      <div id="quiz-container">
+        <div class="quiz-progress">Question <span id="quiz-num">1</span> of 8</div>
+        <div class="quiz-question" id="quiz-question">Loading...</div>
+        <div class="quiz-options" id="quiz-options"></div>
+        <div class="quiz-feedback" id="quiz-feedback"></div>
+        <div class="quiz-score">Score: <strong id="quiz-score">0</strong></div>
+      </div>
+      <button class="action-btn" id="restart-quiz" style="display:none;">Play Again</button>
+    </div>
+
+    <!-- Keepy-Uppy Game -->
+    <div id="keepy-game" class="game-panel">
+      <h3>🦵 Keepy-Uppy</h3>
+      <p>Click the ball (or press Space) to keep it in the air! How many can you do?</p>
+      <div class="score-board">
+        <span>Keep-ups: <strong id="keepy-count">0</strong></span>
+        <span>Best: <strong id="keepy-best">0</strong></span>
+      </div>
+      <div class="keepy-area" id="keepy-area">
+        <div class="keepy-ball" id="keepy-ball">⚽</div>
+        <div class="keepy-ground"></div>
+      </div>
+      <button class="action-btn" id="reset-keepy">Reset</button>
+      <p class="game-tip">Click fast when the ball is falling!</p>
+    </div>
+
+    <!-- Goalie Reaction Game -->
+    <div id="goalie-game" class="game-panel">
+      <h3>🧤 Goalie Reaction</h3>
+      <p>A ball will fly toward the goal. Click the side it's coming from to save it!</p>
+      <div class="score-board">
+        <span>Saves: <strong id="goalie-saves">0</strong></span>
+        <span>Goals Against: <strong id="goalie-goals">0</strong></span>
+      </div>
+      <div class="goalie-area" id="goalie-area">
+        <div class="goalie-net"></div>
+        <div class="goalie-keeper" id="goalie-keeper">🧤</div>
+        <div class="goalie-ball" id="goalie-ball" style="display:none;">⚽</div>
+        <div class="goalie-zones">
+          <button class="zone-btn" data-side="left">LEFT</button>
+          <button class="zone-btn" data-side="center">CENTER</button>
+          <button class="zone-btn" data-side="right">RIGHT</button>
+        </div>
+      </div>
+      <button class="action-btn" id="start-goalie">Start Round</button>
+      <p class="game-tip" id="goalie-status">Press Start, then watch carefully!</p>
+    </div>
+
+    <!-- Target Practice Game -->
+    <div id="target-game" class="game-panel">
+      <h3>🎯 Target Practice</h3>
+      <p>Click the targets as they appear! How many can you hit in 30 seconds?</p>
+      <div class="score-board">
+        <span>Hits: <strong id="target-hits">0</strong></span>
+        <span>Time: <strong id="target-time">30</strong>s</span>
+      </div>
+      <div class="target-area" id="target-area">
+        <p class="target-start-msg" id="target-start-msg">Press Start to begin!</p>
+      </div>
+      <button class="action-btn" id="start-target">Start Game</button>
+      <p class="game-tip">Bigger targets = easier. Smaller ones = more points!</p>
+    </div>
+    <!-- Word Scramble -->
+    <div id="scramble-game" class="game-panel">
+      <h3>🔤 Soccer Word Scramble</h3>
+      <p>Unscramble a soccer word with a helpful hint!</p>
+      <div class="score-board"><span>Solved: <strong id="scramble-solved">0</strong></span><span>Streak: <strong id="scramble-streak">0</strong></span></div>
+      <div class="scramble-box">
+        <div class="scramble-word" id="scramble-word" aria-label="Scrambled word"></div>
+        <p class="scramble-hint" id="scramble-hint"></p>
+        <label for="scramble-input" class="jw-eyebrow">Your answer</label>
+        <input id="scramble-input" class="scramble-input" type="text" maxlength="20" autocapitalize="characters" autocomplete="off" spellcheck="false" />
+        <p id="scramble-feedback" class="jw-shot-feedback" aria-live="polite"></p>
+        <div class="scramble-actions">
+          <button class="action-btn" type="button" id="scramble-check">Check Word</button>
+          <button class="action-btn secondary-btn" type="button" id="scramble-skip">Skip</button>
+          <button class="action-btn secondary-btn" type="button" id="scramble-new">New Word</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="gate-game" class="game-panel">
+      <h3>🚪 Gate Pass</h3>
+      <p>A gate lights up. Tap the open one before it shuts.</p>
+      <div class="score-board"><span>Found: <strong id="gate-score">0</strong></span><span>Round: <strong id="gate-round">0/8</strong></span></div>
+      <div class="arcade-grid" id="gate-board">
+        <button type="button" class="gate" data-gate="0">Left</button>
+        <button type="button" class="gate" data-gate="1">Centre</button>
+        <button type="button" class="gate" data-gate="2">Right</button>
+      </div>
+      <p id="gate-status" class="jw-shot-feedback" aria-live="polite">Press start, then tap the glowing gate.</p>
+      <button class="action-btn" type="button" id="gate-start">Start Gate Pass</button>
+    </div>
+    <div id="header-game" class="game-panel">
+      <h3>👤 Header Hero</h3>
+      <p>Jump when the ball sits in the gold box. Perfect timing scores two.</p>
+      <div class="score-board"><span>Score: <strong id="header-score">0</strong></span></div>
+      <div class="header-track" aria-hidden="true"><div class="header-zone"></div><div class="header-mark" id="header-mark"></div></div>
+      <p id="header-status" class="jw-shot-feedback" aria-live="polite">Press start, then jump five times.</p>
+      <div class="arcade-actions">
+        <button class="action-btn" type="button" id="header-start">Start Headers</button>
+        <button class="action-btn" type="button" id="header-jump">Jump</button>
+      </div>
+    </div>
+    <div id="spot-game" class="game-panel">
+      <h3>👀 Spot the Ball</h3>
+      <p>Watch which boot hides the ball, then tap it.</p>
+      <div class="score-board"><span>Found: <strong id="spot-score">0</strong></span></div>
+      <div class="arcade-grid">
+        <button type="button" class="cup" data-cup="0">1</button>
+        <button type="button" class="cup" data-cup="1">2</button>
+        <button type="button" class="cup" data-cup="2">3</button>
+      </div>
+      <p id="spot-status" class="jw-shot-feedback" aria-live="polite">Press start to hide the ball.</p>
+      <button class="action-btn" type="button" id="spot-start">Start Spot the Ball</button>
+    </div>
+
+  </section>
+
+
+  <!-- WORLD TOUR ADVENTURE -->
+  <section id="tour" class="section" tabindex="-1" aria-labelledby="tour-heading">
+    <div class="tour-hero">
+      <div>
+        <span class="tour-eyebrow">⭐ JOZEF FC PRESENTS</span>
+        <h2 id="tour-heading">The World Tour Cup <span aria-hidden="true">🏆</span></h2>
+        <p>Five countries. Five rivals. One amazing soccer adventure. Read the goalkeeper's move, take your shots and become a world champion!</p>
+        <div class="tour-summary">
+          <span>Season <b id="tour-season">1</b></span>
+          <span>Stops completed <b id="tour-current-wins">0/5</b></span>
+          <span>Cups <b id="tour-crowns">0</b></span>
+        </div>
+      </div>
+      <div class="tour-cup-art" aria-hidden="true"><span class="tour-cup-mark">J/11</span><span class="tour-cup-base">WORLD TOUR CUP</span></div>
+    </div>
+
+    <div class="tour-passport-deck" aria-label="Your five World Tour destinations">
+      <div class="campaign-track-label"><span>WORLD TOUR / CLUB PASSPORT</span><strong id="tour-passport-status">FIRST DESTINATION</strong></div>
+      <div class="tour-passport-grid" role="list">
+        <div class="tour-passport-stamp is-current" id="tour-passport-0" role="listitem"><span>01 / CAN</span><strong>CANADA</strong><small>OTTAWA</small></div>
+        <div class="tour-passport-stamp" id="tour-passport-1" role="listitem"><span>02 / JPN</span><strong>JAPAN</strong><small>TOKYO</small></div>
+        <div class="tour-passport-stamp" id="tour-passport-2" role="listitem"><span>03 / BRA</span><strong>BRAZIL</strong><small>RIO</small></div>
+        <div class="tour-passport-stamp" id="tour-passport-3" role="listitem"><span>04 / FRA</span><strong>FRANCE</strong><small>PARIS</small></div>
+        <div class="tour-passport-stamp" id="tour-passport-4" role="listitem"><span>05 / ARG</span><strong>ARGENTINA</strong><small>BUENOS AIRES</small></div>
+      </div>
+      <div class="campaign-track-footer"><strong id="tour-passport-progress">0 / 5 STAMPS</strong><span id="tour-passport-cups">0 WORLD CUPS</span></div>
+    </div>
+    <div class="tour-layout">
+      <div>
+        <div id="tour-stage" class="tour-stage" data-tier="0">
+          <div id="tour-match">
+            <div class="tour-match-intro">
+              <span class="tour-eyebrow">STOP <b id="tour-round">1</b> OF 5</span>
+              <h3><span id="tour-country-flag">🇨🇦</span> <span id="tour-destination">Canada</span></h3>
+              <p>Playing against <strong id="tour-opponent">Maple Strikers</strong> in <span id="tour-city">Ottawa</span></p>
+            </div>
+            <div class="tour-score">
+              <div><span>🦁 Jozef FC</span><strong id="tour-goals">0</strong></div>
+              <span class="tour-vs">VS</span>
+              <div><span>🏟️ Rivals</span><strong id="tour-rival">1</strong></div>
+            </div>
+            <p class="tour-rival-note">Your opponents already took 5 kicks. Beat their score with your 5 shots!</p>
+            <div class="tour-pitch" role="img" aria-label="Soccer goal, keeper and penalty spot">
+              <div class="tour-pitch-lights" aria-hidden="true">✦ ✦ ✦ ✦ ✦</div>
+              <div class="tour-net" aria-hidden="true"><span class="tour-net-frame" id="tour-keeper-glove">🧤</span></div>
+              <div class="tour-penalty-spot" aria-hidden="true"></div>
+              <div class="tour-match-ball" id="tour-ball" aria-hidden="true">⚽</div>
+            </div>
+            <p class="tour-keeper-clue">👀 Keeper is leaning: <strong id="tour-keeper">WAITING</strong></p>
+            <div class="tour-shots-label"><span>Your five kicks</span><span><b id="tour-shots-left">5</b> remaining</span></div>
+            <div id="tour-shots" class="tour-shots" role="group" aria-label="Kick results"></div>
+            <div id="tour-controls" class="tour-controls" hidden>
+              <p>Choose your shot! Aim away from the keeper.</p>
+              <div class="tour-kick-buttons">
+                <button type="button" data-tour-shoot="left">↖ Left corner</button>
+                <button type="button" data-tour-shoot="centre">↑ Centre</button>
+                <button type="button" data-tour-shoot="right">↗ Right corner</button>
+              </div>
+            </div>
+            <div class="tour-trivia" id="tour-quiz" hidden>
+              <span class="tour-eyebrow">BONUS LEARNING QUEST</span>
+              <h4>🌍 Passport Challenge</h4>
+              <p id="tour-quiz-fact"></p>
+              <strong id="tour-quiz-question"></strong>
+              <div id="tour-quiz-choices" class="tour-quiz-choices"></div>
+              <p id="tour-quiz-success" class="tour-quiz-success"></p>
+            </div>
+          </div>
+          <div id="tour-finale" class="tour-finale" hidden>
+            <div class="tour-finale-cup" aria-hidden="true">🏆</div>
+            <h3 id="tour-finale-title">World Tour Champion!</h3>
+            <p id="tour-finale-description">You did it!</p>
+            <p>Your passport is full. Your trophy cabinet has a new champion badge.</p>
+          </div>
+          <p id="tour-commentary" class="tour-commentary" role="status" aria-live="polite">Choose where to kick. Watch the goalkeeper!</p>
+          <button type="button" class="tour-main-action" id="tour-action">Kick off the match →</button>
+          <p class="tour-game-note" id="tour-save-note">This adventure saves progress on this device. No account or personal information needed.</p>
+        </div>
+      </div>
+
+      <aside class="tour-sidebar" aria-label="Your world tour progress">
+        <div class="tour-panel">
+          <span class="jw-eyebrow">YOUR HOME GROUND</span>
+          <h3 id="tour-stadium-name">🏡 Neighbourhood Pitch</h3>
+          <p id="tour-stadium-note">A little field for big dreams</p>
+          <p class="tour-stat-line">🏅 <strong id="tour-totalwins">0</strong> tour victories</p>
+          <div id="tour-stadium-list" class="tour-stadium-list"></div>
+        </div>
+        <div class="tour-panel">
+          <span class="jw-eyebrow">TRAVEL THE WORLD</span>
+          <h3>🛂 Your soccer passport</h3>
+          <p>Beat each rival to stamp your passport and discover a new country.</p>
+          <div id="tour-stops" class="tour-stops"></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+
+  <!-- CAREER MODE: FICTIONAL SIX-MATCH SEASON -->
+  <section id="career" class="section" tabindex="-1" aria-labelledby="career-heading">
+    <div class="career-hero">
+      <div>
+        <span class="career-eyebrow">JOZEF FC • PLAYER CAREER</span>
+        <h2 id="career-heading">Your Soccer League</h2>
+        <p>Train with soccer maths, help your team make smart moves, and compete in six matches. Earn 3 points for a win or 1 point for a draw. Finish with 12 points to lift the league cup!</p>
+        <div class="career-meta">
+          <span>Season <b id="career-season">1</b></span>
+          <span>League points <b id="career-points">0</b> / 18</span>
+          <span id="career-record">0W · 0D · 0L</span>
+          <span>League cups <b id="career-cups">0</b></span>
+        </div>
+      </div>
+      <div class="career-big-ball" aria-hidden="true"><span>J/11</span><small>ROAD TO GLORY</small></div>
+    </div>
+    <div class="career-season-track" aria-label="Six match season progression">
+      <div class="campaign-track-label"><span>SEASON PATH / 06 MATCHES</span><strong id="career-visual-status">READY FOR KICKOFF</strong></div>
+      <div class="career-season-rail" role="list" aria-label="Season fixtures">
+        <div class="career-season-round is-current" id="career-visual-round-0" role="listitem"><b>01</b><span>OPENING</span></div>
+        <div class="career-season-round" id="career-visual-round-1" role="listitem"><b>02</b><span>ROUND TWO</span></div>
+        <div class="career-season-round" id="career-visual-round-2" role="listitem"><b>03</b><span>MID-SEASON</span></div>
+        <div class="career-season-round" id="career-visual-round-3" role="listitem"><b>04</b><span>THE CLIMB</span></div>
+        <div class="career-season-round" id="career-visual-round-4" role="listitem"><b>05</b><span>SEMI-FINAL</span></div>
+        <div class="career-season-round" id="career-visual-round-5" role="listitem"><b>06</b><span>FINAL</span></div>
+      </div>
+      <div class="campaign-track-footer"><strong id="career-visual-points">0 LEAGUE POINTS</strong><span id="career-visual-cups">0 CUPS</span></div>
+    </div>
+    <div class="career-layout">
+      <div class="career-panel">
+        <div class="career-match-head">
+          <span class="career-eyebrow">MATCH <b id="career-match-num">1</b> OF 6</span>
+          <span id="career-opponent-flag" class="career-team-flag" aria-hidden="true">🇨🇦</span>
+          <h3>Jozef FC vs <span id="career-opponent">Capital City Cubs</span></h3>
+          <p>At <strong id="career-venue">Maple Park</strong></p>
+          <div class="career-info-strip"><span>⚽ Three match decisions</span><span id="career-training">Train before kickoff</span></div>
+        </div>
+        <div class="career-visual" id="career-field" data-scene="kickoff" aria-label="Animated soccer pitch showing team formation">
+          <div class="career-visual-header"><strong>JOZEF FC</strong><span class="career-visual-score" id="career-field-score">0 – 0</span><strong>RIVALS</strong></div>
+          <div class="career-field-grass">
+            <div class="career-halfway"></div><div class="career-centre-circle"></div>
+            <span class="career-field-player career-field-keeper" aria-hidden="true">🧤</span>
+            <span class="career-field-player career-field-back career-player-one" aria-hidden="true">🔵</span>
+            <span class="career-field-player career-field-back career-player-two" aria-hidden="true">🔵</span>
+            <span class="career-field-player career-field-mid career-player-three" aria-hidden="true">🔵</span>
+            <span class="career-field-player career-field-mid career-player-four" aria-hidden="true">🔵</span>
+            <span class="career-field-player career-field-striker" aria-hidden="true">⭐</span>
+            <span class="career-field-ball" id="career-field-ball" aria-hidden="true">⚽</span>
+            <span class="career-field-rival career-rival-one" aria-hidden="true">🔴</span>
+            <span class="career-field-rival career-rival-two" aria-hidden="true">🔴</span>
+            <span class="career-field-goal" aria-hidden="true">🥅</span>
+          </div>
+          <p id="career-field-status" class="career-field-caption">Ready for the next match</p>
+        </div>
+        <p class="career-rule">How to play: Answer a quick training question to earn a shield that blocks one rival goal. Then make three soccer decisions. Each smart attacking decision scores a goal; defending correctly blocks another rival goal. There are no penalties for trying!</p>
+        <div id="career-question-panel" class="career-step-panel" hidden>
+          <span id="career-question-label" class="jw-eyebrow">TRAINING DRILL</span>
+          <h4 id="career-question">Ready?</h4>
+          <div id="career-choices" class="career-choices" role="group" aria-label="Choose your answer"></div>
+        </div>
+        <div id="career-result" class="career-result" hidden>
+          <h3 id="career-result-title">Season Complete!</h3>
+          <p id="career-result-message"></p>
+        </div>
+        <div id="career-status" class="career-status" role="status" aria-live="polite"></div>
+        <div id="career-controls"></div>
+        <p id="career-save" class="career-save-note">Your season, scores and XP save privately on this device. No account or public leaderboard.</p>
+      </div>
+      <aside class="career-panel" aria-label="League schedule and results">
+        <span class="jw-eyebrow">YOUR ROAD TO THE CUP</span>
+        <h3>League fixture list</h3>
+        <div id="career-fixtures" class="career-fixtures"></div>
+        <p class="career-side-note">Wins = 3 pts · Draws = 1 pt · Losses = 0 pts. Your six games are against imaginary teams.</p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- JOZEF FC PLAYER CLUB -->
+  <section id="club" class="section" tabindex="-1" aria-labelledby="jw-club-title">
+    <div class="jw-section-head jw-club-heading">
+      <div><span class="jw-eyebrow">BUILD YOUR DREAM TEAM</span><h2 class="section-title" id="jw-club-title">⚽ Welcome to Jozef FC!</h2><p>Every soccer legend starts somewhere. This is your own club!</p></div>
+      <button type="button" class="jw-sound" id="jw-sound" aria-pressed="false">🔇 Sound off</button>
+    </div>
+    <div class="jw-club-grid">
+      <div class="jw-club-main">
+        <div class="jw-card jw-profile-stadium" data-jw-kit>
+          <span class="jw-eyebrow">PLAYER CARD • JOZEF FC</span>
+          <div class="jw-player-avatar"><span data-jw-avatar>🦁</span><div class="jw-player-kit"><span data-jw-number>10</span></div></div>
+          <h3>JOZEF <span class="jw-player-bolt">★</span></h3>
+          <p>Future soccer superstar</p>
+          <div class="jw-player-stats">
+            <div><strong data-jw-goals>0</strong><small>Goals</small></div>
+            <div><strong data-jw-saves>0</strong><small>Saves</small></div>
+            <div><strong data-jw-level>1</strong><small>Level</small></div>
+            <div><strong id="club-street-best">000</strong><small>Street</small></div>
+          </div>
+        </div>
+      </div>
+      <div class="jw-club-options">
+        <div class="jw-card">
+          <h3>🎨 Design your player</h3>
+          <p>Pick your own mascot</p>
+          <div class="jw-picker" aria-label="Choose your mascot">
+            <button type="button" data-choose-avatar="🦁" aria-label="Lion mascot">🦁</button>
+            <button type="button" data-choose-avatar="🐯" aria-label="Tiger mascot">🐯</button>
+            <button type="button" data-choose-avatar="🦊" aria-label="Fox mascot">🦊</button>
+            <button type="button" data-choose-avatar="🐻" aria-label="Bear mascot">🐻</button>
+            <button type="button" data-choose-avatar="⚡" aria-label="Lightning mascot">⚡</button>
+            <button type="button" data-choose-avatar="⭐" aria-label="Star mascot">⭐</button>
+          </div>
+          <p>Choose your team colours</p>
+          <div class="jw-picker jw-colors" aria-label="Choose kit colour">
+            <button type="button" data-choose-kit="#21b567" style="--swatch:#21b567" aria-label="Green kit"></button>
+            <button type="button" data-choose-kit="#246bdf" style="--swatch:#246bdf" aria-label="Blue kit"></button>
+            <button type="button" data-choose-kit="#ff8b24" style="--swatch:#ff8b24" aria-label="Orange kit"></button>
+            <button type="button" data-choose-kit="#aa59e4" style="--swatch:#aa59e4" aria-label="Purple kit"></button>
+            <button type="button" data-choose-kit="#ef4f7c" style="--swatch:#ef4f7c" aria-label="Pink kit"></button>
+          </div>
+          <label class="jw-number-label" for="jw-number">Your jersey number <input id="jw-number" type="number" min="1" max="99" value="10" inputmode="numeric" /></label>
+        </div>
+        <div class="jw-card jw-progress-card">
+          <h3>⭐ Your progress</h3>
+          <strong><span data-jw-xp>0</span> total XP</strong>
+          <p>Level <b data-jw-level>1</b></p>
+          <div class="jw-level-track" role="progressbar" aria-label="XP to next level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div data-jw-progress></div></div>
+          <p><b data-jw-badgecount>0/9</b> badges unlocked</p>
+          <p>Keepy-uppy record: <b data-jw-keepy>0</b></p>
+          <p>World Tour wins: <b data-jw-tourwins>0</b> • Cups: <b data-jw-crowns>0</b></p>
+          <p>Career matches: <b data-jw-careergames>0</b> • Wins: <b data-jw-careerwins>0</b> • League Cups: <b data-jw-leaguetitles>0</b></p>
+          <button type="button" class="jw-profile-open" onclick="showSection('career')">Play Career Mode →</button>
+          <button type="button" class="jw-profile-open" onclick="showSection('tour')">Play World Tour →</button>
+          <small>Saved privately on this device, not shared online.</small>
+        </div>
+      </div>
+    </div>
+
+
+    <aside class="jw-shared-legends" aria-label="Dad and Jozef shared trophies">
+      <div class="jw-shared-legends-mark" aria-hidden="true">J <span>+</span> D</div>
+      <div class="jw-shared-legends-copy">
+        <span class="studio-kicker">CLUB LEGACY / DAD + JOZEF</span>
+        <h3>OUR SHARED LEGENDS.</h3>
+        <p>Every chapter you conquer together becomes part of your club story.</p>
+        <strong id="jw-together-club-cup" hidden>★ MIDNIGHT STADIUM CUP · CHAMPIONS: JOZEF + DAD</strong>
+        <strong id="jw-together-club-perfect" hidden>✦ PERFECT TEAM · 6 / 6 SECRET SPARKS</strong>
+        <small id="jw-together-club-pending">Your first shared trophy is waiting in Together Mode.</small>
+      </div>
+      <button type="button" data-start-together>PLAY TOGETHER ↗</button>
+    </aside>
+
+    <div class="jw-card squad-headquarters" aria-labelledby="squad-title">
+      <div class="squad-head"><div><span class="studio-kicker">THE TACTICS BOARD / JOZEF FC</span><h3 id="squad-title">BUILD YOUR <em>STARTING FOUR.</em></h3><p>Every card you earn is a real squad option. Pick your players and a strategy. Your choices improve the way your team plays in The Arena.</p></div><button type="button" class="squad-kickoff" onclick="showSection('arena')">PLAY WITH THIS TEAM ↗</button></div>
+      <div class="squad-config"><span id="squad-available">1 / 7 players unlocked</span><label for="squad-tactic">TEAM APPROACH <select id="squad-tactic"><option value="balanced">Balanced possession</option><option value="attack">High press / attack</option><option value="defence">Compact defence</option></select></label></div>
+      <div class="squad-pitch-board" id="squad-formation-visual" data-tactic="balanced" aria-label="Your current four-player formation">
+        <div class="squad-pitch-head"><span>JOZEF FC / TACTICS</span><span>FORMATION • 1–1–1–1</span></div>
+        <div class="squad-pitch-field">
+          <div class="squad-pitch-centre" aria-hidden="true"></div>
+          <div class="squad-pitch-penalty squad-pitch-penalty-top" aria-hidden="true"></div>
+          <div class="squad-pitch-penalty squad-pitch-penalty-bottom" aria-hidden="true"></div>
+          <div class="squad-field-player squad-field-striker"><span class="squad-field-shirt" aria-hidden="true">09</span><strong id="squad-field-striker">JOZEF / ROOKIE</strong><small>STRIKER</small></div>
+          <div class="squad-field-player squad-field-mid"><span class="squad-field-shirt" aria-hidden="true">08</span><strong id="squad-field-mid">ACADEMY PLAYER</strong><small>PLAYMAKER</small></div>
+          <div class="squad-field-player squad-field-back"><span class="squad-field-shirt" aria-hidden="true">05</span><strong id="squad-field-back">ACADEMY PLAYER</strong><small>DEFENDER</small></div>
+          <div class="squad-field-player squad-field-keeper"><span class="squad-field-shirt" aria-hidden="true">01</span><strong id="squad-field-keeper">ACADEMY PLAYER</strong><small>KEEPER</small></div>
+        </div>
+        <p class="squad-pitch-foot">YOUR CLUB. YOUR TACTICS. PLAYER CARDS EARNED IN GAME.</p>
+      </div>
+      <div class="squad-grid" id="squad-grid" aria-label="Your selectable four-player starting squad"></div>
+      <div class="squad-foot"><strong id="squad-formation">PLAY TOGETHER</strong><span id="squad-bonuses">SPEED +0% • PASS +0% • SHOOT +0%</span></div>
+      <p class="squad-explain">Locked players unlock through goals, learning, Career Mode and World Tour. Empty positions are filled by academy teammates. Each collectible card can appear only once in your lineup.</p>
+    </div>
+    <div class="jw-card jw-collectibles">
+      <div class="jw-section-head"><div><span class="jw-eyebrow">YOUR PLAYERS</span><h3>✨ Jozef FC Collector Cards</h3></div><span class="jw-level-chip"><span id="clubhouse-card-count">1 / 7</span> unlocked</span></div>
+      <p>Earn these cards through goals, league matches, learning and adventures. No purchases or random prizes.</p>
+      <div class="clubhouse-card-grid" id="clubhouse-cards" aria-label="Soccer player card collection"></div>
+    </div>
+    <div class="jw-card clubhouse-backup">
+      <div class="jw-section-head"><div><span class="jw-eyebrow">KEEP YOUR CLUB SAFE</span><h3>💾 Save club progress</h3></div></div>
+      <p>Save this season. The file includes XP, badges, Street best, the squad, club notes, stickers, and Sports Room calls. It stays on this device until you move the file. Nothing is uploaded.</p>
+      <div class="clubhouse-backup-actions">
+        <button class="jw-profile-open" type="button" id="clubhouse-export">Save this season</button>
+        <button class="jw-sound" type="button" id="clubhouse-import-button">Restore from backup</button>
+        <input id="clubhouse-import" type="file" accept=".json,application/json" hidden aria-label="Choose a Jozef's World backup file" />
+      </div>
+      <p class="jw-privacy-note" id="clubhouse-backup-status" role="status" aria-live="polite">Keep the file private. Restoring a backup replaces saved progress on this device after confirmation.</p>
+    </div>
+    <div class="jw-card jw-trophy-card">
+      <div class="jw-section-head"><div><span class="jw-eyebrow">YOUR TROPHY CABINET</span><h3>🏆 Unlock awesome badges!</h3></div></div>
+      <div class="jw-badge-grid" id="jw-badges"></div>
+    </div>
+    <p class="jw-privacy-note" id="jw-status">Player progress is saved only in this browser. Clearing browser storage removes saved rewards.</p>
+  </section>
+
+  <!-- NEWS SECTION -->
+  
+<section id="sports-arcade" class="section" tabindex="-1" aria-labelledby="multi-title">
+  <div class="multi-header">
+    <div><span class="studio-kicker">JOZEF FC / THE ALL-SPORTS UNIVERSE</span>
+      <h2 id="multi-title">SPORTS <em>ARCADE.</em></h2>
+      <p>Pick a sport, play five turns, and beat your best score. One shared profile. All games can be played offline, with touch or keyboard.</p>
+    </div>
+    <span class="multi-promise">4 ORIGINAL GAMES / 1 CLUB</span>
+  </div>
+  <div class="multi-tabs" role="group" aria-label="Choose a sport">
+    <button id="multi-tab-hockey" type="button" class="multi-mode selected" data-theme="hockey" aria-pressed="true"><span class="multi-mode-tag">01 / RINK</span><strong>HOCKEY.</strong><small>SHOOTOUT CHALLENGE</small><span class="multi-mode-record" id="multi-mode-best-hockey">BEST — /5</span></button>
+    <button id="multi-tab-baseball" type="button" class="multi-mode" data-theme="baseball" aria-pressed="false"><span class="multi-mode-tag">02 / DIAMOND</span><strong>BASEBALL.</strong><small>HOME RUN DERBY</small><span class="multi-mode-record" id="multi-mode-best-baseball">BEST — /5</span></button>
+    <button id="multi-tab-basketball" type="button" class="multi-mode" data-theme="basketball" aria-pressed="false"><span class="multi-mode-tag">03 / COURT</span><strong>BASKETBALL.</strong><small>THREE-POINT CHALLENGE</small><span class="multi-mode-record" id="multi-mode-best-basketball">BEST — /5</span></button>
+    <button id="multi-tab-wrestling" type="button" class="multi-mode" data-theme="wrestling" aria-pressed="false"><span class="multi-mode-tag">04 / ARENA</span><strong>WRESTLING.</strong><small>SHOWTIME CHALLENGE</small><span class="multi-mode-record" id="multi-mode-best-wrestling">BEST — /5</span></button>
+  </div>
+  <div class="multi-difficulty" role="group" aria-label="Choose challenge difficulty">
+    <div><strong>CHOOSE YOUR CHALLENGE</strong><small id="multi-difficulty-note">PRO / Classic challenge. Change difficulty to restart this event.</small></div>
+    <div class="multi-difficulty-options">
+      <button id="multi-difficulty-rookie" type="button" aria-pressed="false">ROOKIE</button>
+      <button id="multi-difficulty-pro" type="button" class="selected" aria-pressed="true">PRO</button>
+      <button id="multi-difficulty-legend" type="button" aria-pressed="false">LEGEND</button>
+    </div>
+  </div>
+  <div class="multi-game-layout">
+    <div class="multi-game">
+      <div class="multi-hud">
+        <div><small>EVENT</small><strong id="multi-name">HOCKEY SHOOTOUT</strong></div>
+        <div><small>TURN</small><strong class="multi-turn" id="multi-round">1 / 5</strong></div>
+        <div><small>SCORE</small><strong id="multi-score">0 / 5 GOALS</strong></div>
+      </div>
+      <div class="multi-stage" id="multi-stage" data-sport="hockey">
+        <div class="multi-scene-art" aria-hidden="true"></div>
+        <canvas id="multi-action-canvas" class="multi-action-canvas" width="640" height="320" role="img" aria-label="Animated rink, ballpark, basketball court, or wrestling ring during play"></canvas>
+        <strong class="multi-stage-title" id="multi-stage-label">AIM FOR THE OPEN CORNER</strong>
+        <span id="multi-scene-text" aria-hidden="true"></span>
+        <p id="multi-message" class="multi-commentary" role="status" aria-live="polite">Choose LEFT, CENTRE or RIGHT to beat the keeper.</p>
+      </div>
+      <div class="multi-timing" id="multi-timing" hidden>
+        <label for="multi-meter">SWEET SPOT / TIME YOUR MOVE</label>
+        <div class="multi-meter" id="multi-meter" role="img" aria-label="Power timing zone, aim for the centre">
+          <span class="multi-meter-marker" id="multi-meter-marker"></span>
+        </div>
+      </div>
+      <div id="multi-round-markers" class="multi-round-markers" role="group" aria-label="Five-turn match progress"></div>
+      <div id="multi-controls" class="multi-controls" aria-label="Sport game controls"></div>
+      <p class="multi-key-help" id="multi-keyhelp">Use 1, 2, 3 or tap a choice.</p>
+    </div>
+    <aside class="multi-sidebar">
+      <span class="studio-kicker">YOUR CLUB / ALL-SPORT RECORDS</span>
+      <h3>THE RECORD BOOK.</h3>
+      <div class="multi-records">
+        <div class="multi-record"><div><strong>Hockey</strong><small id="multi-played-hockey">0 PLAYED</small></div><b id="multi-best-hockey">0/5</b></div>
+        <div class="multi-record"><div><strong>Baseball</strong><small id="multi-played-baseball">0 PLAYED</small></div><b id="multi-best-baseball">0/5</b></div>
+        <div class="multi-record"><div><strong>Basketball</strong><small id="multi-played-basketball">0 PLAYED</small></div><b id="multi-best-basketball">0/5</b></div>
+        <div class="multi-record"><div><strong>Wrestling</strong><small id="multi-played-wrestling">0 PLAYED</small></div><b id="multi-best-wrestling">0/5</b></div>
+      </div>
+      <section class="multi-rivals" id="multi-rivals" aria-labelledby="multi-rivals-heading">
+        <div class="multi-rivals-intro">
+          <span class="multi-rivals-kicker">JOZEF FC / THE RIVAL CIRCUIT</span>
+          <h4 id="multi-rivals-heading">BEAT THE <em>RIVALS.</em></h4>
+          <p>Three escalating challenges in each sport. Score 2, then 3, then 4 out of 5 to clear the circuit. No deadline or lost progress.</p>
+        </div>
+        <div class="multi-rival-fixture">
+          <span>NEXT CHALLENGE / YOUR SPORT</span>
+          <strong id="multi-rival-fixture">JOZEF FC vs FROST WOLVES</strong>
+          <small id="multi-rival-target">NEXT RIVAL TARGET · 2 / 5</small>
+        </div>
+        <div class="multi-rival-list" role="list" aria-label="Rival progression by sport">
+          <div id="multi-rival-hockey" class="multi-rival-item" role="listitem"><span>HOCKEY <strong id="multi-rival-hockey-name">FROST WOLVES</strong></span><small id="multi-rival-hockey-status">0 / 3 BEATEN</small></div>
+          <div id="multi-rival-baseball" class="multi-rival-item" role="listitem"><span>BASEBALL <strong id="multi-rival-baseball-name">DIAMOND COMETS</strong></span><small id="multi-rival-baseball-status">0 / 3 BEATEN</small></div>
+          <div id="multi-rival-basketball" class="multi-rival-item" role="listitem"><span>BASKETBALL <strong id="multi-rival-basketball-name">SKYLINE FIVE</strong></span><small id="multi-rival-basketball-status">0 / 3 BEATEN</small></div>
+          <div id="multi-rival-wrestling" class="multi-rival-item" role="listitem"><span>WRESTLING <strong id="multi-rival-wrestling-name">SHADOW SHOWMEN</strong></span><small id="multi-rival-wrestling-status">0 / 3 BEATEN</small></div>
+        </div>
+        <div class="multi-rival-progress" id="multi-rival-progress" role="progressbar" aria-label="Rival challenges completed" aria-valuemin="0" aria-valuemax="12" aria-valuenow="0"><span id="multi-rival-meter"></span></div>
+        <p id="multi-rival-overall" class="multi-rival-overall" aria-live="polite">0 / 12 RIVAL CHALLENGES WON</p>
+        <button type="button" class="multi-rival-next" id="multi-rival-next">FACE NEXT RIVAL ↗</button>
+      </section>
+      <section class="multi-cup" id="multi-cup" aria-labelledby="multi-cup-heading">
+        <div class="multi-cup-heading">
+          <span>JFC / ALL-SPORT CHAMPIONSHIP</span>
+          <h4 id="multi-cup-heading">FOUR SPORTS. <em>ONE CUP.</em></h4>
+          <p>Score at least 3 out of 5 in every sport to earn the All-Sport Cup. No deadline.</p>
+        </div>
+        <div class="multi-cup-progress" role="progressbar" id="multi-cup-progress" aria-label="Qualified sports for the All-Sport Cup" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0">
+          <span id="multi-cup-meter"></span>
+        </div>
+        <div class="multi-cup-stamps" role="list" aria-label="Sports Cup qualification">
+          <div role="listitem" class="multi-cup-stamp" id="multi-cup-hockey"><span>01 / HOCKEY</span><strong id="multi-cup-hockey-state">NOT YET</strong></div>
+          <div role="listitem" class="multi-cup-stamp" id="multi-cup-baseball"><span>02 / BASEBALL</span><strong id="multi-cup-baseball-state">NOT YET</strong></div>
+          <div role="listitem" class="multi-cup-stamp" id="multi-cup-basketball"><span>03 / BASKETBALL</span><strong id="multi-cup-basketball-state">NOT YET</strong></div>
+          <div role="listitem" class="multi-cup-stamp" id="multi-cup-wrestling"><span>04 / WRESTLING</span><strong id="multi-cup-wrestling-state">NOT YET</strong></div>
+        </div>
+        <div class="multi-cup-finale" id="multi-cup-finale">
+          <div class="multi-cup-medal" aria-hidden="true"><span>J11</span></div>
+          <p id="multi-cup-status" aria-live="polite">0 OF 4 QUALIFIED</p>
+          <strong id="multi-cup-title">THE CUP AWAITS.</strong>
+          <button type="button" class="multi-cup-next" id="multi-cup-next">PLAY FOR THE CUP ↗</button>
+        </div>
+      </section>
+      <section class="multi-wrestling-career" id="multi-wrestling-career" aria-labelledby="multi-wrestling-heading" hidden>
+        <span class="multi-career-kicker">WRESTLING / MY CAREER</span>
+        <h4 id="multi-wrestling-heading">THE ROAD TO <em>THE MAIN EVENT.</em></h4>
+        <div class="multi-career-belt" aria-hidden="true"><span>J11</span></div>
+        <div class="multi-career-fixture">
+          <div><small>CURRENT RANK</small><strong id="multi-wrestling-rank">OPENING ACT</strong></div>
+          <div><small>FICTIONAL RIVAL</small><strong id="multi-wrestling-rival">NEON TITAN</strong></div>
+        </div>
+        <div class="multi-career-progress" role="progressbar" id="multi-wrestling-progress" aria-label="Progress to next wrestling show rank" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="multi-wrestling-meter"></span></div>
+        <p id="multi-wrestling-wins" class="multi-career-wins">0 SHOW WINS</p>
+        <p id="multi-wrestling-story" class="multi-career-story">Win your opening show with 3 or more crowd pops to move up the card.</p>
+      </section>
+      <section class="multi-form" id="multi-form" aria-labelledby="multi-form-title">
+        <span class="multi-form-kicker">COACHING DESK / YOUR RECENT FORM</span>
+        <h4 id="multi-form-title">EVERY GAME COUNTS.</h4>
+        <p class="multi-form-description">Your last five completed games in this sport. Results are private and saved on this device.</p>
+        <div class="multi-form-results" id="multi-form-scores" role="list" aria-label="Most recent five completed scores"></div>
+        <div class="multi-form-stats">
+          <div><small>AVERAGE</small><strong id="multi-form-average">—</strong></div>
+          <div><small>RECENT FORM</small><strong id="multi-form-trend">FIRST GAME AWAITS</strong></div>
+        </div>
+        <p class="multi-form-tip" id="multi-form-tip" aria-live="polite">Finish a game to get advice based on your actual results.</p>
+        <button type="button" id="multi-form-replay" class="multi-form-replay">PRACTICE THIS SPORT ↗</button>
+      </section>
+      <h4>HOW TO PLAY</h4>
+      <p class="multi-instructions" id="multi-instructions">Choose a direction and shoot!</p>
+      <p class="multi-unofficial">Wrestling Showdown is an original pretend sports-entertainment challenge inspired by wrestling shows. It is not affiliated with or endorsed by WWE. No contact moves to copy.</p>
+    </aside>
+  </div>
+</section>
+<section id="watch" class="section" tabindex="-1" aria-labelledby="watch-title">
+    <div class="watch-card">
+      <p class="eyebrow-live">Official video only</p>
+      <h2 id="watch-title">Watch</h2>
+      <p>Paste a YouTube, Vimeo, or Twitch link. Those are the public embed APIs. NHL, NBA, and MLB game rights are not available here. No pirate feeds.</p>
+      <label for="watch-link">Video link</label>
+      <input id="watch-link" type="url" inputmode="url" maxlength="240" placeholder="YouTube, Vimeo, or Twitch link" autocomplete="off" />
+      <button type="button" class="action-btn" id="watch-save">Save and play</button>
+      <p id="watch-status" role="status">Paste a YouTube, Vimeo, or Twitch link. No pirate feeds.</p>
+      <iframe id="watch-frame" class="watch-frame" title="Saved video" hidden allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      
+      
+      <p id="watch-tonight">Checking the Senators board...</p>
+      <h3>Latest</h3>
+      <p>These are the newest stories for the Ottawa Senators, Atlético Ottawa, the Toronto Raptors, and the Buffalo Bills. This list refreshes every minute while Watch is open. Clips stay on the official pages.</p>
+      <button type="button" class="action-btn" id="watch-refresh">Refresh latest</button>
+      <div id="watch-latest" class="watch-latest"></div>
+      <div class="watch-links">
+        <a data-watch-out href="https://www.youtube.com/@NHL/videos" target="_blank" rel="noopener">Latest NHL clips</a>
+        <a data-watch-out href="https://www.nhl.com/senators/video" target="_blank" rel="noopener">Latest Sens clips</a>
+        <a data-watch-out href="https://www.youtube.com/@mls/videos" target="_blank" rel="noopener">Latest MLS clips</a>
+        <a data-watch-out href="https://www.youtube.com/@TorontoRaptors/videos" target="_blank" rel="noopener">Latest Raptors clips</a>
+        <a data-watch-out href="https://www.youtube.com/@buffalobills/videos" target="_blank" rel="noopener">Latest Bills clips</a>
+      </div>
+      <h3>Senators highlights</h3>
+      <p>Official clips. These are recaps, not the live game.</p>
+      <div class="watch-links">
+        <button type="button" data-highlight="https://www.youtube.com/watch?v=qqvG5WgX84Y">Flyers at Sens, Oct 8</button>
+        <button type="button" data-highlight="https://www.youtube.com/watch?v=K7xdSycjZyo">Home-opener winner</button>
+        <button type="button" data-highlight="https://www.youtube.com/watch?v=fxzrzhmujQ4">Sens at Detroit, Oct 6</button>
+        <button type="button" data-highlight="https://www.youtube.com/watch?v=pIvOxFWKpTA">Sens at Boston, Oct 5</button>
+        <a data-watch-out href="https://www.nhl.com/senators/video" target="_blank" rel="noopener">NHL.com clips</a>
+        <a data-watch-out href="https://www.tsn.ca/nhl/video/" target="_blank" rel="noopener">TSN clips</a>
+      </div>
+      
+      <h3>Soccer highlights</h3>
+      <p>Official clips from Inter Miami, MLS, and the Premier League.</p>
+      <div class="watch-links">
+        <button type="button" data-highlight="https://www.youtube.com/watch?v=yzJcLhbba5o">Inter Miami vs San Diego</button>
+        <button type="button" data-highlight="https://www.youtube.com/watch?v=FWYtjkEJXqk">Inter Miami vs Atlanta</button>
+        <button type="button" data-highlight="https://www.youtube.com/watch?v=wVdH_KCbpmc">Inter Miami vs Montreal</button>
+        <button type="button" data-highlight="https://www.youtube.com/watch?v=qj9eXliDCW4">Chicago vs Inter Miami</button>
+        <button type="button" data-highlight="https://www.youtube.com/watch?v=pghK2A4fW3Q">Premier League goals, 2026</button>
+        
+        <button type="button" data-highlight="https://www.youtube.com/watch?v=guHiXnYequQ">Inter Miami Campeones Cup</button>
+        <button type="button" data-highlight="https://www.youtube.com/watch?v=dVFiXhUKXmI">Man City 5-3 Sunderland</button>
+        <a data-watch-out href="https://www.youtube.com/@mls" target="_blank" rel="noopener">MLS channel</a>
+        <a data-watch-out href="https://www.youtube.com/@premierleague" target="_blank" rel="noopener">Premier League</a>
+      </div>
+      
+      <h3>Raptors and Bills</h3>
+      <p>Official clips. The Raptors host the Clippers tonight at 6:30 pm ET on TSN.</p>
+      <div class="watch-links">
+        <button type="button" data-highlight="https://www.youtube.com/watch?v=y8js21UYKz4">Heat at Raptors, Oct 3</button>
+        <button type="button" data-highlight="https://www.youtube.com/watch?v=SomRd5rsD6Y">NBA top 10, Oct 8</button>
+        <button type="button" data-highlight="https://www.youtube.com/watch?v=jBN4Wp4CJpI">Bills vs Texans, Week 1</button>
+        <button type="button" data-highlight="https://www.youtube.com/watch?v=z_0tp4jfNg0">Bills vs Lions</button>
+        <a data-watch-out href="https://www.nba.com/raptors/" target="_blank" rel="noopener">Raptors</a>
+        <a data-watch-out href="https://www.buffalobills.com/video/highlights" target="_blank" rel="noopener">Bills clips</a>
+      </div>
+      <h3>Ottawa Senators</h3>
+      <p>From Ottawa, most games are on TSN5 or TSN+. Saturday Night Hockey is on Sportsnet. Monday Night Hockey is on Sportsnet+. Wednesday national games are on Prime Video. The TV feed cannot be embedded here.</p>
+      <p>Every Senators game is on TSN 1200. That radio call can play in this room.</p>
+      <audio id="sens-radio" controls preload="none" src="https://playerservices.streamtheworld.com/api/livestream-redirect/CFGOAMAAC.aac"></audio>
+      <div class="watch-links">
+        <a data-watch-out href="https://www.tsn.ca/" target="_blank" rel="noopener">TSN</a>
+        <a data-watch-out href="https://watch.sportsnet.ca/team/Ottawa_Senators_155346" target="_blank" rel="noopener">Sportsnet Sens</a>
+        <a data-watch-out href="https://www.primevideo.com/" target="_blank" rel="noopener">Prime Video</a>
+        <a data-watch-out href="https://www.tsn.ca/radio/ottawa-1200" target="_blank" rel="noopener">TSN 1200</a>
+        <a data-watch-out href="https://www.nhl.com/senators" target="_blank" rel="noopener">Senators</a>
+      </div>
+    </div>
+  </section>
+<section id="sports" class="section" tabindex="-1" aria-labelledby="sports-title">
+    <h2 id="sports-title" class="section-title">Sports Room</h2>
+    <p class="section-desc">Pick your teams and call the game. No odds and no betting. Scores can be delayed.</p>
+    <button type="button" class="action-btn" id="sports-refresh">Refresh games</button>
+    <div id="sports-board" class="sports-board"></div>
+    <p id="sports-log" class="section-desc">Your calls stay on this device.</p>
+    <h3 class="sub-heading">Every team</h3>
+    <div id="team-directory" class="team-directory"></div>
+  </section>
+<section id="news" class="section">
+    <h2 class="section-title">📰 News & Live Scores</h2>
+    <p class="section-desc">Explore soccer stories and check available match updates.</p>
+    <p class="jw-privacy-note">Major-sport scores can be delayed. This is not every sport in the world, and these are not guaranteed live updates. Stories below are learning features.</p>
+
+    <!-- Live Scores -->
+    <div class="live-scores-box">
+      <div class="live-header">
+        <h3>Live and recent scores</h3>
+        <button class="action-btn small-btn" id="refresh-scores">Refresh</button>
+      </div>
+      <div class="sport-tabs" id="sport-tabs">
+        <button type="button" data-sport="all" class="active">All</button>
+        <button type="button" data-sport="Soccer">Soccer</button>
+        <button type="button" data-sport="NFL">NFL</button>
+        <button type="button" data-sport="NBA">NBA</button>
+        <button type="button" data-sport="NHL">NHL</button>
+        <button type="button" data-sport="MLB">MLB</button>
+      </div>
+      <div id="live-scores" class="live-scores-grid">
+        <p class="loading-msg">Loading live scores...</p>
+      </div>
+      <p class="powered-by">Soccer, NFL, NBA, NHL and MLB scores from ESPN. No betting lines. A refresh asks ESPN again.</p>
+    </div>
+
+    <h3 class="sub-heading">Cool Soccer Stories</h3>
+    <div class="news-grid" id="news-grid">
+      <!-- Filled by JS -->
+    </div>
+  </section>
+
+  <!-- LEARN SECTION -->
+  <section id="learn" class="section">
+    <h2 class="section-title">📚 Learn About Soccer</h2>
+    <p class="section-desc">Become a soccer superstar with these cool lessons!</p>
+
+    <div class="learn-tabs">
+      <button class="learn-tab active" data-learn="rules">Rules</button>
+      <button class="learn-tab" data-learn="players">Famous Players</button>
+      <button class="learn-tab" data-learn="world">Soccer Around the World</button>
+      <button class="learn-tab" data-learn="vocab">Cool Words</button>
+      <button class="learn-tab" data-learn="math">Soccer Math</button>
+      <button class="learn-tab" data-learn="positions">Field Positions</button>
+    </div>
+
+    <div class="learn-content">
+      <div id="learn-rules" class="learn-panel active">
+        <h3>⚽ Basic Soccer Rules</h3>
+        <ul class="fun-list">
+          <li><strong>11 players</strong> on each team (including the goalkeeper)</li>
+          <li>The ball can only be kicked or headed — no hands (except the goalkeeper!)</li>
+          <li>A game is usually <strong>90 minutes</strong> long (two halves of 45 minutes)</li>
+          <li>You score a <strong>goal</strong> by getting the ball into the other team's net</li>
+          <li>If the ball goes out of bounds on the side → <strong>throw-in</strong></li>
+          <li>If it goes out behind the goal → <strong>goal kick</strong> or <strong>corner kick</strong></li>
+          <li>No pushing, tripping, or being mean — that's a <strong>foul</strong></li>
+          <li>Yellow card = warning • Red card = you're out of the game!</li>
+        </ul>
+      </div>
+
+      <div id="learn-players" class="learn-panel">
+        <h3>🌟 Famous Soccer Stars</h3>
+        <div class="player-cards">
+          <div class="player-card">
+            <div class="player-emoji">🐐</div>
+            <h4>Lionel Messi</h4>
+            <p>From Argentina. Many people call him the greatest of all time. He has won the World Cup!</p>
+          </div>
+          <div class="player-card">
+            <div class="player-emoji">👑</div>
+            <h4>Cristiano Ronaldo</h4>
+            <p>From Portugal. Super fast, jumps incredibly high, and scores tons of goals.</p>
+          </div>
+          <div class="player-card">
+            <div class="player-emoji">🇧🇷</div>
+            <h4>Pelé</h4>
+            <p>Brazilian legend. Won 3 World Cups. Many say he was the first true soccer superstar.</p>
+          </div>
+          <div class="player-card">
+            <div class="player-emoji">🇫🇷</div>
+            <h4>Kylian Mbappé</h4>
+            <p>French speedster. Super young and already one of the best players in the world.</p>
+          </div>
+          <div class="player-card">
+            <div class="player-emoji">🇺🇸</div>
+            <h4>Alex Morgan</h4>
+            <p>American soccer hero. Scored amazing goals for the US Women's National Team.</p>
+          </div>
+          <div class="player-card">
+            <div class="player-emoji">🏴󠁧󠁢󠁥󠁮󠁧󠁿</div>
+            <h4>Harry Kane</h4>
+            <p>England's goal machine. Great at scoring from almost anywhere!</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="learn-world" class="learn-panel">
+        <h3>🌍 Soccer Around the World</h3>
+        <p>Soccer (or "football" in most countries) is the most popular sport on Earth!</p>
+        <ul class="fun-list">
+          <li><strong>Brazil</strong> – 5 World Cup wins. Home of the "beautiful game"</li>
+          <li><strong>Germany</strong> – 4 World Cups. Known for teamwork and strong defense</li>
+          <li><strong>Argentina</strong> – Home of Messi. Passionate fans everywhere</li>
+          <li><strong>France</strong> – Won the World Cup in 2018. Lots of fast, skilled players</li>
+          <li><strong>England</strong> – Where modern soccer began. Home of the Premier League</li>
+          <li><strong>Spain</strong> – Famous for "tiki-taka" – lots of short, quick passes</li>
+          <li><strong>USA</strong> – Growing fast! Strong women's team and exciting MLS</li>
+          <li><strong>Japan & South Korea</strong> – Super disciplined and technical players</li>
+        </ul>
+        <p class="fun-fact">💡 Did you know? Over 250 million people play soccer around the world!</p>
+      </div>
+
+      <div id="learn-vocab" class="learn-panel">
+        <h3>🗣️ Cool Soccer Words</h3>
+        <div class="vocab-grid">
+          <div class="vocab-item"><strong>Goal</strong> – When the ball goes into the net!</div>
+          <div class="vocab-item"><strong>Assist</strong> – A pass that helps a teammate score</div>
+          <div class="vocab-item"><strong>Hat-trick</strong> – Scoring 3 goals in one game</div>
+          <div class="vocab-item"><strong>Clean sheet</strong> – When the goalkeeper doesn't let any goals in</div>
+          <div class="vocab-item"><strong>Dribble</strong> – Running with the ball using your feet</div>
+          <div class="vocab-item"><strong>Pass</strong> – Kicking the ball to a teammate</div>
+          <div class="vocab-item"><strong>Tackle</strong> – Taking the ball away from an opponent</div>
+          <div class="vocab-item"><strong>Offside</strong> – Being too far forward when the ball is passed</div>
+          <div class="vocab-item"><strong>Corner</strong> – A kick from the corner of the field</div>
+          <div class="vocab-item"><strong>Free kick</strong> – A kick awarded after a foul</div>
+          <div class="vocab-item"><strong>Penalty</strong> – A special free kick from the penalty spot</div>
+          <div class="vocab-item"><strong>Stadium</strong> – The big place where games are played</div>
+        </div>
+      </div>
+
+      <div id="learn-math" class="learn-panel">
+        <h3>🧮 Soccer Math Fun</h3>
+        <p>Practice your math with soccer!</p>
+        <div class="math-challenges">
+          <div class="math-card">
+            <p>If a team scores 3 goals in the first half and 2 in the second half, how many goals did they score in total?</p>
+            <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Show Answer</button>
+            <p class="answer" style="display:none;">5 goals! ⚽</p>
+          </div>
+          <div class="math-card">
+            <p>A game is 90 minutes. How many minutes is each half?</p>
+            <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Show Answer</button>
+            <p class="answer" style="display:none;">45 minutes each half</p>
+          </div>
+          <div class="math-card">
+            <p>If Messi scores 2 goals in 4 games, how many goals does he average per game?</p>
+            <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Show Answer</button>
+            <p class="answer" style="display:none;">0.5 goals per game (2 ÷ 4)</p>
+          </div>
+          <div class="math-card">
+            <p>There are 11 players on a team. How many players are on the field if both teams are playing?</p>
+            <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Show Answer</button>
+            <p class="answer" style="display:none;">22 players!</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="learn-positions" class="learn-panel">
+        <h3>🗺️ Positions on the Soccer Field</h3>
+        <p>Tap a player to find out what they do for the team.</p>
+        <div class="pitch-diagram">
+          <div class="pitch-field" aria-label="Soccer eleven-player formation">
+            <button class="pitch-pos" data-pos="st" style="left:50%;top:14%" type="button" aria-label="Striker">ST</button>
+            <button class="pitch-pos" data-pos="lw" style="left:18%;top:22%" type="button" aria-label="Left winger">LW</button>
+            <button class="pitch-pos" data-pos="rw" style="left:82%;top:22%" type="button" aria-label="Right winger">RW</button>
+            <button class="pitch-pos" data-pos="lm" style="left:19%;top:45%" type="button" aria-label="Left midfielder">LM</button>
+            <button class="pitch-pos" data-pos="cm" style="left:50%;top:46%" type="button" aria-label="Central midfielder">CM</button>
+            <button class="pitch-pos" data-pos="rm" style="left:81%;top:45%" type="button" aria-label="Right midfielder">RM</button>
+            <button class="pitch-pos" data-pos="lb" style="left:16%;top:72%" type="button" aria-label="Left back">LB</button>
+            <button class="pitch-pos" data-pos="cb" style="left:38%;top:73%" type="button" aria-label="Center back">CB</button>
+            <button class="pitch-pos" data-pos="cb2" style="left:62%;top:73%" type="button" aria-label="Second center back">CB</button>
+            <button class="pitch-pos" data-pos="rb" style="left:84%;top:72%" type="button" aria-label="Right back">RB</button>
+            <button class="pitch-pos" data-pos="gk" style="left:50%;top:91%" type="button" aria-label="Goalkeeper">GK</button>
+          </div>
+        </div>
+        <div class="position-info" id="position-info" aria-live="polite"><h4>Pick a position</h4><p>Discover how the team works together!</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FUN ZONE SECTION -->
+  
+
+
+<section id="adventure" class="section jw-adventure" tabindex="-1" aria-labelledby="jw-adventure-heading">
+  <header class="jw-adventure-heading">
+    <div><span class="studio-kicker">JOZEF'S WORLD / THE ADVENTURE CIRCUIT</span>
+      <h2 id="jw-adventure-heading">FOUR WORLDS. <em>ONE LEGEND.</em></h2>
+      <p>Explore original sports worlds, collect stars, activate beacons and beat each champion. Play solo or together on one device. Progress stays on your device.</p>
+    </div>
+    <strong id="jw-adventure-stats" aria-live="polite">0/20 STARS · 0/8 SECRETS · 0/4 CUPS</strong>
+    <button type="button" class="jw-adventure-exit" aria-label="Exit Adventure and return to Club HQ" onclick="showSection('home')">← EXIT</button>
+  </header>
+
+  <section id="jw-together-game" class="jw-together-game" aria-label="Dad and Jozef together story" hidden>
+    <header class="jw-together-head">
+      <div class="jw-together-eyebrow">CHAPTER ONE / DAD + JOZEF / COOPERATIVE STORY</div>
+      <div class="jw-together-titlebar"><h3>THE MIDNIGHT STADIUM <em>MYSTERY</em></h3><button type="button" id="jw-together-close" aria-label="Pause cooperative story">PAUSE &amp; SAVE ×</button></div>
+      <p>Two heroes. Two stories. One mystery that neither can solve alone. Play side by side, or take turns on a phone. Two Bluetooth controllers can move Jozef and Dad independently; A confirms a finale shot.</p>
+    </header>
+    <div class="jw-together-progress">
+      <strong id="jw-together-phase">01 / THE HIDDEN CLUES</strong>
+      <span id="jw-together-score">CHAPTER 01 / 1 OF 5</span>
+      <span id="jw-together-sparks" class="jw-together-sparks">STADIUM SPARKS 0/6</span>
+      <span id="jw-together-signal" class="jw-together-signal" aria-live="polite"></span>
+      <p id="jw-together-detail">Jozef finds the lime clue. Dad finds the blue clue.</p>
+    </div>
+    <div class="jw-together-layout">
+      <div class="jw-together-pitch">
+        <div class="jw-together-maphead"><span>CO-OP ADVENTURE / LOCAL PLAY</span><span>JOZEF <b>11</b> + DAD <b>02</b></span></div>
+        <canvas id="jw-together-canvas" width="720" height="480" tabindex="0" role="img" aria-label="Cooperative stadium map. Tap an open square to move the selected hero. WASD moves Jozef and arrow keys move Dad."></canvas>
+        <p id="jw-together-status" role="status" aria-live="polite">Find your character's glowing mission marker.</p>
+      </div>
+      <aside class="jw-together-controls">
+        <div class="jw-together-settings"><button type="button" id="jw-together-difficulty" aria-pressed="false">STORY / GUIDED</button><button type="button" id="jw-together-sound" aria-pressed="false">SOUND OFF</button></div>
+        <span class="jw-together-controls-label">PICK YOUR HERO</span>
+        <div class="jw-together-heroes" role="group" aria-label="Select which hero to control on touch">
+          <button type="button" id="jw-together-hero-0" aria-pressed="true">JOZEF · CONTROLLING</button>
+          <button type="button" id="jw-together-hero-1" aria-pressed="false">DAD · SWITCH</button>
+        </div>
+        <div class="jw-together-motion">
+          <div class="jw-together-pad" role="group" aria-label="Move your selected hero">
+            <button type="button" data-together-step="0,-1" class="up" aria-label="Go up">↑</button>
+            <button type="button" data-together-step="-1,0" class="left" aria-label="Go left">←</button>
+            <button type="button" data-together-step="0,1" class="down" aria-label="Go down">↓</button>
+            <button type="button" data-together-step="1,0" class="right" aria-label="Go right">→</button>
+          </div>
+          <button type="button" id="jw-together-guide">FIND MY NEXT CLUE ↗</button>
+          <button type="button" id="jw-together-pulse" hidden aria-label="Charge the selected character's power console" disabled>TEAM PULSE</button>
+        </div>
+        <div id="jw-together-shots" class="jw-together-shots" hidden>
+          <strong>TAG-TEAM CHAMPIONSHIP</strong>
+          <p id="jw-together-defender">JOZEF SHOOTS · RIVAL BLOCKS CENTRE</p>
+          <div role="group" aria-label="Choose an unguarded shot lane">
+            <button type="button" data-together-shot="0">LEFT</button>
+            <button type="button" data-together-shot="1">CENTRE</button>
+            <button type="button" data-together-shot="2">RIGHT</button>
+          </div>
+          <small>Alternate turns. Two goals each wins. A defended lane counts as a block.</small>
+        </div>
+        <div id="jw-together-trophy" class="jw-together-trophy" hidden><span aria-hidden="true">★</span><div><strong>THE MIDNIGHT STADIUM CUP</strong><p>CHAMPIONS: JOZEF + DAD</p></div></div>
+        <strong id="jw-together-perfect" class="jw-together-perfect" hidden>✦ PERFECT TEAM · ALL SIX STADIUM SPARKS</strong>
+        <button type="button" id="jw-together-replay" hidden>REPLAY OUR ADVENTURE ↻</button>
+        <p class="jw-together-hint">Desktop: WASD moves Jozef, arrows move Dad. E activates Jozef’s console and P activates Dad’s console. On mobile, pick a hero, move, then use TEAM PULSE. Two controllers: A activates the corresponding console. Progress saves privately on this device.</p>
+      </aside>
+    </div>
+  </section>
+  <div id="jw-adventure-worlds" class="jw-adventure-worlds" role="group" aria-label="Choose an unlocked adventure world"></div>
+  <a class="jw-neon-launch" href="./prime/neon.html" aria-label="Play Neon City 2026 in the enhanced game engine"><span class="jw-neon-glyph" aria-hidden="true">J11</span><span><strong>PLAY NEON CITY 2026</strong><small>ANIMATED CHARACTERS · LIVE LIGHTS · CAMERA FOLLOW</small></span><span class="jw-neon-arrow" aria-hidden="true">↗</span></a>
+  <a class="jw-neon-launch" href="./block-world.html" aria-label="Play Daddy and Jozef Block World, a building adventure">
+    <span class="jw-neon-glyph" aria-hidden="true">▦</span>
+    <span><strong>BLOCK WORLD · DAD + JOZEF</strong><small>BUILD BRIDGES · FIND STARS · WIN TOGETHER</small></span>
+    <span class="jw-neon-arrow" aria-hidden="true">↗</span>
+  </a>
+  <div class="jw-adventure-layout">
+    <div class="jw-adventure-board">
+      <div class="jw-adventure-boardhead"><strong id="jw-adventure-zone-title">Neon City</strong><span id="jw-adventure-active">Solo adventure</span></div>
+      <canvas id="jw-adventure-canvas" width="960" height="600" tabindex="0" aria-label="Adventure map. Tap any open tile to walk there, or use the direction pad." role="img"></canvas>
+      <p id="jw-adventure-status" class="jw-adventure-status" role="status" aria-live="polite">Choose a path. Collect stars and find the champion.</p>
+    </div>
+    <aside class="jw-adventure-sidebar" aria-label="Adventure mission and controls">
+      <div class="jw-adventure-mission">
+        <span class="studio-kicker">ACTIVE MISSION</span>
+        <p id="jw-adventure-objective">Find two stars and activate two beacons.</p>
+      </div>
+      <div class="jw-adventure-controls">
+        <div class="jw-adventure-dpad" role="group" aria-label="Walk around the world">
+          <button type="button" data-adventure-step="0,-1" class="up" aria-label="Move up">↑</button>
+          <button type="button" data-adventure-step="-1,0" class="left" aria-label="Move left">←</button>
+          <button type="button" data-adventure-step="0,1" class="down" aria-label="Move down">↓</button>
+          <button type="button" data-adventure-step="1,0" class="right" aria-label="Move right">→</button>
+        </div>
+        <div class="jw-adventure-main-actions">
+          <button type="button" id="jw-adventure-interact" aria-label="Interact with objects or challenge the champion">INTERACT</button>
+          <button type="button" id="jw-adventure-guide" aria-label="Find and walk to the next objective">FIND NEXT</button>
+          <button type="button" id="jw-adventure-coop" aria-pressed="false">2 PLAYER: OFF</button>
+          <button type="button" id="jw-adventure-switch" hidden>SWITCH PLAYER</button>
+          <button type="button" id="jw-adventure-retry" aria-label="Restart player position without losing collected items">RESET</button>
+        </div>
+      </div>
+      <div id="jw-adventure-battle" class="jw-adventure-battle" hidden>
+        <strong id="jw-adventure-battle-score">POINTS 0/5 · BLOCKS 0/3</strong>
+        <p id="jw-adventure-shield">CHAMPION SHIELD</p>
+        <div role="group" aria-label="Choose a free lane">
+          <button type="button" data-adventure-lane="0">TOP</button>
+          <button type="button" data-adventure-lane="1">MIDDLE</button>
+          <button type="button" data-adventure-lane="2">BOTTOM</button>
+        </div>
+      </div>
+      <details class="jw-adventure-collection" open>
+        <summary class="studio-kicker">EARNED KITS <span aria-hidden="true">⌄</span></summary>
+        <div id="jw-adventure-outfits" class="jw-adventure-outfits"></div>
+      </details>
+      <details class="jw-adventure-help"><summary>How to play</summary><p>Tap any open tile to follow a safe path. Use the arrows to move one step. On desktop, WASD controls Jozef and arrow keys control Dad in two-player mode. Space or Enter interacts. In champion showdowns, press 1–3 to choose a move, or use ←/→ and Enter. Gamepad: stick/D-pad moves; A interacts, X swaps player, Y finds the next objective.</p></details>
+    </aside>
+  </div>
+</section>
+
+<section id="versus" class="section" tabindex="-1" aria-labelledby="versus-title">
+  <div class="versus-card">
+    <header class="versus-head"><div><span class="versus-eyebrow">AFTER DARK / 1 v 1</span><h2 id="versus-title">RIVAL NIGHT.</h2></div><button type="button" id="versus-leave" hidden>Leave match</button></header>
+    <p id="versus-status" role="status">Create a room, join with a code, or warm up solo.</p>
+    <p id="versus-season-line">Season: no matches yet.</p>
+    <p id="versus-trophy" hidden>Trophy: three in a row.</p>
+    <div id="versus-lobby">
+      <div class="versus-roles" role="group" aria-label="Your player name">
+        <button type="button" class="versus-role is-on" data-who="Dad" id="light-dad" aria-pressed="true">Dad</button>
+        <button type="button" class="versus-role" data-who="Jozef" id="light-jozef" aria-pressed="false">Jozef</button>
+      </div><input id="versus-who" value="Dad" hidden>
+      <div class="versus-spots" role="group" aria-label="Your position">
+        <button type="button" class="versus-spot is-on" data-spot="forward">Forward</button>
+        <button type="button" class="versus-spot" data-spot="keeper">Keeper</button>
+      </div>
+      <div class="versus-join"><button type="button" id="versus-open">Create room</button><button type="button" id="versus-practice">Play the rival</button><button type="button" id="versus-together">Same team</button></div>
+      <div class="versus-practice-settings">
+        <label for="versus-cpu-difficulty">SOLO RIVAL DIFFICULTY
+          <select id="versus-cpu-difficulty"><option value="rookie">Rookie</option><option value="pro" selected>Pro</option><option value="legend">Legend</option></select>
+        </label>
+        <label for="versus-practice-length">MATCH LENGTH
+          <select id="versus-practice-length"><option value="60">Quick / 60 sec</option><option value="120" selected>Classic / 2 min</option></select>
+        </label>
+        <output id="versus-practice-record" aria-live="polite">0 PLAYED / 0 WON / BEST STREAK 0</output>
+      </div>
+      <label class="versus-code-label" for="versus-code">Have a room code?</label>
+      <div class="versus-join"><input id="versus-code" placeholder="6-letter code" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false"><button type="button" id="versus-join">Join room</button></div>
+    </div>
+    <div id="versus-room" hidden><div class="versus-room-row"><strong id="versus-room-code"></strong><button type="button" id="versus-share">Copy invite</button></div><button type="button" id="versus-ready" disabled>Waiting for opponent</button></div>
+    <div class="versus-scoreboard" aria-label="Match score"><span id="versus-cpu-label" hidden>RIVAL</span><span class="versus-blue">Jozef <b id="versus-score-jozef">0</b></span><strong id="versus-clock">2:00</strong><span class="versus-lime"><b id="versus-score-dad">0</b> Dad</span><small id="versus-stats">0 shots · 0 saves</small></div>
+    <div class="versus-stage"><canvas id="versus-canvas" width="420" height="720" tabindex="0" aria-label="Football pitch. Drag to move. Arrow keys or WASD move; Space shoots."></canvas></div>
+    <div class="versus-play">
+      <div id="versus-stick" aria-label="Movement joystick" role="group" tabindex="0"><span id="versus-nub"></span></div>
+      <p id="versus-tip">Move with the stick<br>Get close to shoot</p>
+      <div class="versus-actions"><button type="button" id="versus-aim" aria-label="Aim middle. Tap to change.">MIDDLE ↻</button><button type="button" id="versus-deke">DEKE</button><button type="button" id="versus-pass">PASS</button><button type="button" id="versus-kick" disabled>SHOOT ↗</button><button type="button" id="versus-again" hidden>Rematch</button></div>
+    </div>
+    <p class="versus-help">Move with the stick. Tap AIM or keys 1–3 for a target. Hold SHOOT to charge and release to strike. Space fires on desktop.</p>
+  </div>
+</section>
+
+<section id="notes" class="section" tabindex="-1" aria-labelledby="notes-title">
+    <div class="notes-card">
+      <h2 id="notes-title">Family notes</h2>
+      <p>Everyone using this device sees the same club notes. They are not sent to the internet.</p>
+      <form id="note-form">
+        <label for="note-text">New note</label>
+        <input id="note-text" maxlength="120" autocomplete="off" placeholder="Good luck today" />
+        <button type="submit" class="action-btn">Leave note</button>
+      </form>
+      <div id="note-list" aria-live="polite"></div>
+    </div>
+  </section>
+
+<section id="playbook" class="section" tabindex="-1" aria-labelledby="playbook-title">
+  <header class="playbook-hero">
+    <div><span class="studio-kicker">JOZEF'S WORLD / THE COACH'S BOARD</span>
+      <h2 id="playbook-title">THE <em>PLAYBOOK.</em></h2>
+      <p>One club. Every sport. Every match moves your journey forward. Complete challenges at your own pace to rise from Academy Rookie to Club Legend.</p>
+    </div>
+    <div class="playbook-badge" aria-label="Your Playbook rank"><span>YOUR RANK</span><strong id="playbook-rank">ACADEMY ROOKIE</strong>
+      <small id="playbook-next-rank">3 TO NEXT RANK</small></div>
+  </header>
+  <div class="playbook-summary">
+    <div><span class="studio-kicker">LEGACY PROGRESS</span><strong id="playbook-count">0 / 15 COMPLETE</strong></div>
+    <div class="playbook-progress" id="playbook-progress" role="progressbar" aria-label="Challenges completed" aria-valuemin="0" aria-valuemax="15" aria-valuenow="0"><span id="playbook-meter"></span></div>
+    <p>Progress is read from completed games, saved scores, your squad, and actual Chronicle entries. Existing achievements count automatically.</p>
+  </div>
+  <div class="playbook-coach" aria-label="Your next recommended challenge">
+    <div><span class="studio-kicker">THE COACH'S PICK / YOUR NEXT MOVE</span>
+      <h3 id="playbook-coach-title">FIRST THREE KICKOFFS</h3>
+      <p id="playbook-coach-tip">Play a full Arena match to start building your club.</p>
+      <span id="playbook-coach-progress" class="playbook-coach-stat">0 / 3</span>
+    </div>
+    <button type="button" id="playbook-coach-go">PLAY FOOTBALL ↗</button>
+  </div>
+  <div class="playbook-filter" role="group" aria-label="Filter Playbook challenges">
+    <button type="button" class="selected" aria-pressed="true" id="playbook-filter-all">ALL CHALLENGES</button>
+    <button type="button" aria-pressed="false" id="playbook-filter-football">FOOTBALL</button>
+    <button type="button" aria-pressed="false" id="playbook-filter-sports">ALL SPORTS</button>
+    <button type="button" aria-pressed="false" id="playbook-filter-club">MY CLUB</button>
+    <button type="button" class="playbook-open-filter" id="playbook-toggle-open" aria-pressed="false">SHOW UNFINISHED</button>
+  </div>
+  <div id="playbook-missions" class="playbook-missions" aria-label="Current playable missions"></div>
+  <p class="playbook-privacy">NO DEADLINES. NO PURCHASES. NO ONLINE ACCOUNT. COACHING AND PROGRESS STAY ON THIS DEVICE.</p>
+</section>
+
+<section id="chronicle" class="section" tabindex="-1" aria-labelledby="chronicle-title">
+  <div class="chronicle-heading">
+    <div><p class="studio-kicker">JOZEF FC / CLUB HISTORY</p>
+      <h2 id="chronicle-title">YOUR <em>FOOTBALL STORY.</em></h2>
+      <p>A personal record of your matches, victories and big moments. Saved only on this device, shared by everyone here.</p>
+    </div>
+    <div class="chronicle-label">VOL. 01 <span>/</span> THE JOURNEY</div>
+  </div>
+  <div class="chronicle-dashboard" aria-label="Your current club record">
+    <div><span>ARENA MATCHES</span><strong id="chronicle-games">0</strong></div>
+    <div><span>ARENA WINS</span><strong id="chronicle-wins">0</strong></div>
+    <div><span>CAREER MATCHES</span><strong id="chronicle-career">0</strong></div>
+    <div><span>WORLD TOUR WINS</span><strong id="chronicle-tour">0</strong></div>
+  </div>
+  <div class="chronicle-layout">
+    <div class="chronicle-ledger">
+      <div class="chronicle-ledger-heading">
+        <h3>MATCHDAY ARCHIVE</h3>
+        <p>New chapters appear after games and milestones. Earlier progress is reflected in your club record above.</p>
+      </div>
+      <div id="chronicle-list" class="chronicle-list" aria-label="Saved football highlights"></div>
+      <p class="chronicle-storage-note">PRIVATE CLUB MEMORY · This archive is kept locally in this browser, not uploaded. Save a Club backup to keep it safe.</p>
+    </div>
+    <div class="chronicle-preview">
+      <div class="chronicle-preview-actions">
+        <span class="studio-kicker">YOUR MATCHDAY COVER</span>
+        <button type="button" id="chronicle-print">PRINT POSTER ↗</button>
+      </div>
+      <article class="chronicle-poster" id="chronicle-poster" aria-label="Print-ready Jozef FC matchday poster">
+        <div class="chronicle-poster-top"><span>JOZEF FC <b>// AFTER DARK</b></span><span>EST. THE FUTURE</span></div>
+        <div class="chronicle-poster-field" aria-hidden="true"><span class="chronicle-poster-shield">J <b>/ 11</b></span></div>
+        <div class="chronicle-poster-body">
+          <p id="chronicle-cover-category">THE CLUB CHRONICLE / ISSUE 01</p>
+          <h3 id="chronicle-cover-headline">THE STORY STARTS HERE.</h3>
+          <p id="chronicle-cover-story">Every football story begins with a first touch. Play a match to create your first highlight.</p>
+          <div class="chronicle-poster-stats">
+            <span>JFC <strong id="chronicle-cover-wins">00 WINS</strong></span>
+            <span>LEVEL <strong id="chronicle-cover-level">01</strong></span>
+          </div>
+        </div>
+        <div class="chronicle-poster-footer"><span>BUILT FOR JOZEF FC</span><span id="chronicle-cover-date">CLUB EDITION</span></div>
+      </article>
+      <p class="chronicle-print-help">Use Print Poster to print or save your cover as a PDF using your device’s print menu. No online sharing is required.</p>
+    </div>
+  </div>
+</section>
+<section id="album" class="section" tabindex="-1" aria-labelledby="album-title">
+    <h2 id="album-title" class="section-title">Sticker album</h2>
+    <p class="section-desc">Finish matches and Street runs to fill the book. <span id="album-count">0 / 11</span></p>
+    <p id="album-story">Empty slots stay hidden until you earn them.</p>
+    <div id="album-board" class="album-board"></div>
+  </section>
+<section id="fun" class="section">
+    <h2 class="section-title">THE LOCKER ROOM</h2>
+    <p class="section-desc">Off-pitch stories, jokes, and surprises. A place to relax between games.</p>
+
+    <div class="fun-grid">
+      <div class="fun-card">
+        <h3>😂 Soccer Jokes</h3>
+        <div id="joke-box">
+          <p id="joke-text">Click the button for a joke!</p>
+          <button class="action-btn" id="new-joke">Tell Me a Joke!</button>
+        </div>
+      </div>
+
+      <div class="fun-card">
+        <h3>🤯 Amazing Facts</h3>
+        <div id="fact-box">
+          <p id="fact-text">Click for a cool soccer fact!</p>
+          <button class="action-btn" id="new-fact">Surprise Me!</button>
+        </div>
+      </div>
+
+      <div class="fun-card wide">
+        <h3>🌈 Random Encouragement</h3>
+        <div id="encourage-box">
+          <p id="encourage-text">You're awesome, Jozef!</p>
+          <button class="action-btn" id="new-encourage">Get Motivated!</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="trophy-message">
+      <p>🏆 Remember: Every great player started just like you — with practice, smiles, and love for the game!</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>Made with ❤️ for Jozef • Keep playing, keep learning, keep shining! ⚽</p>
+  </footer>
+
+  
+  <nav class="phone-dock" aria-label="Primary phone navigation">
+    <button type="button" data-dock-section="home" onclick="showSection('home')"><span class="jw-dock-symbol" aria-hidden="true">⌂</span><span>HQ</span></button>
+    <button type="button" data-dock-section="arena" onclick="showSection('arena')"><span class="jw-dock-symbol" aria-hidden="true">⚽</span><span>Football</span></button>
+    <button type="button" data-dock-section="sports-arcade" onclick="showSection('sports-arcade')"><span class="jw-dock-symbol" aria-hidden="true">✦</span><span>Sports</span></button>
+    <button type="button" data-dock-section="playbook" onclick="showSection('playbook')"><span class="jw-dock-symbol" aria-hidden="true">◆</span><span>Playbook</span></button>
+    <button type="button" data-dock-section="versus" onclick="showSection('versus')"><span class="jw-dock-symbol" aria-hidden="true">⚡</span><span>Versus</span></button>
+    <button type="button" data-dock-section="club" onclick="showSection('club')"><span class="jw-dock-symbol" aria-hidden="true">★</span><span>Club</span></button>
+  </nav>
+
+  <div id="jw-toast" class="jw-toast" aria-live="polite" role="status"></div>
+  <script src="site-core.js"></script>
+  <script src="tournament.js" defer></script>
+  <script src="career.js" defer></script>
+  <script src="clubhouse.js"></script>
+  <script src="squad.js"></script>
+  <script src="arena-bundle.js"></script>
+  <script src="scramble-positions.js" defer></script>
+  <script src="celebrate.js" defer></script>
+  <script src="training.js" defer></script>
+  <script src="jersey-bingo.js" defer></script>
+  <script src="matchday.js" defer></script>
+  <script src="site-features.js"></script>
+  <script src="arcade.js" defer></script>
+  <script src="phaser.min.js"></script>
+  <script src="street-phaser.js"></script>
+  <script src="street.js"></script>
+  <script src="peerjs.min.js"></script>
+  <script src="versus-physics.js"></script>
+  <script src="versus.js?v=85"></script>
+  <script src="adventure.js"></script>
+  <script src="together-renderer.js"></script>
+  <script src="together.js"></script>
+  <script src="presence.js"></script>
+  <script src="visual-2026.js" defer></script>
+  <script src="campaign-2026.js" defer></script>
+  <script src="club-hq.js"></script>
+<script src="world-core.js"></script>
+  <script src="chronicle.js" defer></script>
+  <script src="playbook.js" defer></script>
+
+<script>
+document.getElementById('nav-more')?.addEventListener('click',()=>document.body.classList.toggle('nav-open'));
+</script>
 </body>
 </html>
