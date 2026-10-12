@@ -31,6 +31,7 @@
  <nav class="menu">
   <a href="./" class="home" aria-label="Back to the world headquarters">← HQ</a>
   <a href="./block-world-select.html" class="home" aria-label="Choose 2D or 3D mode">MODE</a>
+  <button id="pair" type="button" class="home" aria-label="Play with Jozef on another phone">PLAY TOGETHER</button>
   <button id="options" type="button" aria-expanded="false">☰ MENU</button>
  </nav>
  <section id="drawer" class="drawer" hidden aria-label="Game options">
@@ -40,19 +41,19 @@
    <button id="swap">SWITCH HERO</button><button id="perspective">3RD PERSON</button>
    <button id="creative">CREATIVE ON</button><button id="save">SAVE WORLD</button>
    <button id="sound">SOUND OFF</button><button id="export">EXPORT SAVE</button>
-   <button id="import">IMPORT SAVE</button><button id="pair">PLAY TOGETHER</button>
+   <button id="import">IMPORT SAVE</button>
    <a href="./block-world.html">PLAY CLASSIC 2D</a>
    <a href="./block-world-select.html">CHOOSE MODE</a>
   </div>
   <button id="close" type="button">CLOSE</button>
  </section>
  <section id="pairPanel" class="drawer" hidden aria-label="Private two-device session">
-  <h2>PRIVATE DADDY + JOZEF CO-OP</h2>
-  <p>One adult hosts. Share a random invitation link privately with the second device. No public room directory, chat, camera or microphones.</p>
-  <div class="buttons"><button id="host">HOST PRIVATE GAME</button><button id="share" disabled>SHARE INVITE</button><button id="disconnect">DISCONNECT</button></div>
-  <label>Invitation code <input id="invite" autocomplete="off" spellcheck="false" placeholder="Paste private invite code" /></label>
-  <div class="buttons"><button id="join">JOIN PRIVATE GAME</button><button id="pairClose">CLOSE</button></div>
-  <p id="pairStatus" aria-live="polite">Offline · local play</p>
+  <h2>PLAY TOGETHER</h2>
+  <p>One phone hosts. Share the invite link with the other phone. No accounts needed.</p>
+  <div class="buttons"><button id="host">HOST GAME</button><button id="share" disabled>SHARE LINK</button><button id="disconnect">DISCONNECT</button></div>
+  <label>Or paste an invite code <input id="invite" autocomplete="off" spellcheck="false" placeholder="Paste invite code" /></label>
+  <div class="buttons"><button id="join">JOIN GAME</button><button id="pairClose">CLOSE</button></div>
+  <p id="pairStatus" aria-live="polite">Offline · solo play</p>
  </section>
  <div class="toast" id="toast" role="status" aria-live="polite"></div>
  <div id="fallback" role="alert" hidden><strong>Block World 3D could not start.</strong><p id="fallback-reason">The game did not finish loading.</p><div class="recover-actions"><button id="retry-3d" type="button">RETRY 3D</button><a href="./block-world.html">PLAY CLASSIC 2D</a></div></div>
@@ -76,7 +77,7 @@
   if(ready)return;
   if(e.target&&e.target.tagName==='SCRIPT'){
    if((e.target.src||'').includes('block-world-3d.js'))fail('The 3D game file could not load. Check your connection and retry.');
-   return; // PeerJS is optional; solo play must work without its signalling library.
+   return;
   }
   if((e.filename||'').includes('peerjs.min.js'))return;
   if(e.error||e.message)fail('A game startup error occurred. Reloading may help.');
