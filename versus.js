@@ -408,7 +408,7 @@
   document.addEventListener('visibilitychange',activity);window.addEventListener('blur',stopInput);
   new MutationObserver(activity).observe($('versus'),{attributes:true,attributeFilter:['class']});
   const invite=new URLSearchParams(location.search).get('room');if(invite&&/^[A-Z]{6}$/.test(invite))$('versus-code').value=invite;
-  let previous=performance.now(),accumulator=0,heartbeat=0,uiTime=0;
+  let previous=performance.now(),accumulator=0,heartbeat=0,uiTime=0,lastPaint=0;
   function frame(now){
     const dt=Math.min((now-previous)/1000,.1);previous=now;activity();
     if(localActive){
@@ -416,7 +416,15 @@
       const x=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),y=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);
       const vector=stickVector||(x||y?{x,y}:null);
       if(vector&&now-lastSent>40){aim(me.x+(portrait?vector.y:vector.x)*90,me.y+(portrait?-vector.x:vector.y)*90);lastSent=now;}
-      accumulator+=dt;while(accumulator>=1/60){step();accumulator-=1/60;}draw();
+      // Skip idle physics and lower render frequency in the lobby or after full time.
+      // Live matches retain their deterministic 60 Hz simulation and animation.
+      if(room.phase==='playing'&&room.remoteActive){
+        accumulator=Math.min(.1,accumulator+dt);
+        while(accumulator>=1/60){step();accumulator-=1/60;}
+      }else accumulator=0;
+      if((room.phase==='playing'&&room.remoteActive)||room.phase==='countdown'||now-lastPaint>120){
+        draw();lastPaint=now;
+      }
       if(now-uiTime>100){$('versus-score-dad').textContent=state.score.dad;$('versus-score-jozef').textContent=state.score.jozef;const seconds=Math.ceil(state.matchLeft);$('versus-clock').textContent=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');uiTime=now;}
     }else accumulator=0;
     // Retransmit an unacknowledged room invitation: initial WebRTC packets can be lost.
