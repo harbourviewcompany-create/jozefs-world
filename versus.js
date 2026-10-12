@@ -51,17 +51,18 @@
   function player(p, color, name) {
     ctx.save();
     ctx.translate(p.x, p.y);
-    ctx.fillStyle = 'rgba(0,0,0,.25)';
-    ctx.beginPath(); ctx.ellipse(0, 16, 12, 5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.scale(p.face || 1, 1);
+    ctx.fillStyle = 'rgba(0,0,0,.28)';
+    ctx.beginPath(); ctx.ellipse(0, 18, 11, 4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = color; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(-5, 8); ctx.lineTo(-7, 18); ctx.moveTo(5, 8); ctx.lineTo(7, 18); ctx.stroke();
     ctx.fillStyle = color;
-    ctx.fillRect(-8, -6, 16, 22);
-    ctx.fillStyle = '#f2d2b6';
-    ctx.beginPath(); ctx.arc(0, -12, 8, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.font = '700 11px system-ui';
-    ctx.textAlign = 'center';
-    ctx.fillText(name, 0, -24);
+    ctx.beginPath(); ctx.roundRect(-9, -4, 18, 16, 4); ctx.fill();
+    ctx.fillStyle = '#f3d3b8';
+    ctx.beginPath(); ctx.arc(0, -10, 7, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
+    ctx.fillStyle = '#fff'; ctx.font = '700 11px system-ui'; ctx.textAlign = 'center';
+    ctx.fillText(name, p.x, p.y - 24);
   }
 
   function draw() {
@@ -69,9 +70,11 @@
     pitch();
     player(state.jozef, '#2f6fed', 'Jozef');
     player(state.dad, '#d7ff4a', 'Dad');
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = 'rgba(0,0,0,.25)';
+    ctx.beginPath(); ctx.ellipse(state.ball.x + 2, state.ball.y + 5, 6, 3, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#f7f7f2';
     ctx.beginPath(); ctx.arc(state.ball.x, state.ball.y, 7, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = '#111'; ctx.stroke();
+    ctx.strokeStyle = '#222'; ctx.stroke();
     ctx.fillStyle = '#08140f';
     ctx.fillRect(W / 2 - 78, 4, 156, 26);
     ctx.fillStyle = '#fff';
@@ -87,26 +90,36 @@
   }
 
   function move(p, target) {
-    if (!target) return;
-    const dx = target.x - p.x, dy = target.y - p.y;
-    const dist = Math.hypot(dx, dy) || 1;
-    const speed = Math.min(3.4, dist * 0.12);
-    p.vx = dx / dist * speed;
-    p.vy = dy / dist * speed;
-    if (Math.abs(p.vx) > 0.2) p.face = p.vx > 0 ? 1 : -1;
-    p.x = Math.max(40, Math.min(W - 40, p.x + p.vx));
-    p.y = Math.max(36, Math.min(H - 36, p.y + p.vy));
+    if (!target) { p.vx *= 0.8; p.vy *= 0.8; }
+    else {
+      const dx = target.x - p.x, dy = target.y - p.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const want = dist < 8 ? 0 : Math.min(3.1, dist * 0.08);
+      p.vx += (dx / dist * want - p.vx) * 0.25;
+      p.vy += (dy / dist * want - p.vy) * 0.25;
+      if (Math.abs(p.vx) > 0.3) p.face = p.vx > 0 ? 1 : -1;
+    }
+    p.x = Math.max(46, Math.min(W - 46, p.x + p.vx));
+    p.y = Math.max(40, Math.min(H - 40, p.y + p.vy));
   }
 
   function touch(p, forced) {
     const dx = state.ball.x - p.x, dy = state.ball.y - p.y;
-    const dist = Math.hypot(dx, dy);
-    if (dist > (forced ? 70 : 28) || kickLock > 0) return;
-    const power = (forced ? 6.2 : 4.2) + Math.hypot(p.vx, p.vy) * 0.6;
-    const face = p.face || 1;
-    state.ball.vx = (dx / (dist || 1)) * power + face * 1.2;
-    state.ball.vy = (dy / (dist || 1)) * power;
-    kickLock = 10;
+    const dist = Math.hypot(dx, dy) || 1;
+    if (dist > (forced ? 64 : 30)) return;
+    if (forced) {
+      if (kickLock > 0) return;
+      const face = p.face || 1;
+      state.ball.vx = face * 7.4 + p.vx;
+      state.ball.vy = p.vy * 0.6;
+      kickLock = 12;
+      return;
+    }
+    const ahead = 18;
+    state.ball.x += ((p.x + (p.face || 1) * ahead) - state.ball.x) * 0.35;
+    state.ball.y += (p.y - state.ball.y) * 0.35;
+    state.ball.vx = p.vx;
+    state.ball.vy = p.vy;
   }
 
   function inGoal(y) { return y > GOAL.y && y < GOAL.y + GOAL.h; }
