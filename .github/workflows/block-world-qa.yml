@@ -3,7 +3,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'block-world.html'
+      - 'block-quest.html'
       - 'tests/block-world.test.cjs'
       - 'tests/block-world-mobile-smoke.cjs'
       - '.github/workflows/block-world-qa.yml'
