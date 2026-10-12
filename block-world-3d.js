@@ -380,11 +380,11 @@ function initUi(){
 }
 function loop(now){
  const dt=clamp((now-last)/1000,0,.045);last=now;frames++;
- try{step(dt);render();if(noticeTo&&now>noticeTo){$('toast').classList.remove('on');noticeTo=0;}}
- catch(e){console.error('3D frame failure',e);announce('3D rendering problem · reload or use Classic');}
+ try{step(dt);render();if(renderOk)window.__bw3dReady?.();if(noticeTo&&now>noticeTo){$('toast').classList.remove('on');noticeTo=0;}}
+ catch(e){console.error('3D frame failure',e);window.__bw3dFail?.('3D rendering stopped unexpectedly. Retry or play Classic 2D.');announce('3D rendering problem · reload or use Classic');}
  requestAnimationFrame(loop);
 }
 try{if(!load())resetPose();spawn();initUi();stream();requestAnimationFrame(loop);announce('3D WORLD READY · Explore and build!',3400);}
-catch(e){console.error('3D startup failure',e);$('fallback').hidden=false;}
+catch(e){console.error('3D startup failure',e);window.__bw3dFail?.('Could not initialize the 3D engine. Retry or play Classic 2D.');$('fallback').hidden=false;}
 window.BlockWorld3D=Object.freeze({status:()=>({renderOk,seed,loadedChunks:chunks.size,realm,stage,connected:!!conn?.open,hero:{x:hero.x,y:hero.y,z:hero.z,hp:hero.hp,role:hero.role},bossHp:boss.hp}),height,block});
 })();
