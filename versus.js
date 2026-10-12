@@ -65,10 +65,12 @@
   let shake = 0;
 
   function voice(line) {
-    try { if (localStorage.getItem('jozefs-world-commentary') !== 'on' || !window.speechSynthesis) return; } catch { return; }
+    try { if (localStorage.getItem('jozefs-world-voice-alerts') === 'off' || !window.speechSynthesis) return; } catch { /* speak */ }
+    if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const call = new SpeechSynthesisUtterance(line);
     call.rate = 0.95;
+    call.pitch = /Dad/.test(line) ? 0.75 : 1.25;
     window.speechSynthesis.speak(call);
   }
   function say(text) {
