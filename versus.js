@@ -42,6 +42,7 @@
     matchLeft: 120,
     call: 'Kickoff'
   };
+  const keepers = { left: { x: 52, y: 210 }, right: { x: 668, y: 210 } };
   const targets = { Dad: null, Jozef: null };
   let kickLock = 0;
   // Host-authoritative stamina keeps two-player matches fair.
@@ -195,6 +196,35 @@
     ctx.restore();
   }
 
+  function keeper(k, color) {
+    ctx.save();
+    ctx.translate(k.x, k.y);
+    ctx.fillStyle = 'rgba(0,0,0,.3)';
+    ctx.beginPath(); ctx.ellipse(0, 16, 10, 3, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = color;
+    ctx.fillRect(-8, -6, 16, 18);
+    ctx.fillStyle = '#e7b898';
+    ctx.beginPath(); ctx.arc(0, -12, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#111';
+    ctx.fillRect(-11, -2, 5, 5);
+    ctx.fillRect(6, -2, 5, 5);
+    ctx.restore();
+  }
+  function mindKeepers() {
+    const ball = state.ball;
+    for (const [side, k] of Object.entries(keepers)) {
+      const home = side === 'left' ? 52 : 668;
+      const threat = side === 'left' ? ball.vx < -1 && ball.x < 280 : ball.vx > 1 && ball.x > 440;
+      const target = threat ? ball.y : 210;
+      k.y += (target - k.y) * (threat ? 0.18 : 0.06);
+      k.y = Math.max(GOAL.y + 8, Math.min(GOAL.y + GOAL.h - 8, k.y));
+      k.x = home;
+    }
+  }
+  function save(side) {
+    const k = keepers[side];
+    return Math.abs(state.ball.y - k.y) < 22;
+  }
   function burst(x, y, color, n) {
     if(reduced.matches)return;
     for (let i = 0; i < n; i++) sparks.push({ x, y, vx: (Math.random() - 0.5) * 6, vy: (Math.random() - 0.8) * 6, life: 18, color });
@@ -239,6 +269,8 @@
     for (let i = sparks.length - 1; i >= 0; i--) if (sparks[i].life <= 0) sparks.splice(i, 1);
     player(visualPose(state.jozef,'jozef'), '#60c5ff', 'Jozef');
     player(visualPose(state.dad,'dad'), '#d7ff4a', 'Dad');
+    keeper(keepers.left, '#f4f7f2');
+    keeper(keepers.right, '#f4f7f2');
     ctx.fillStyle = 'rgba(0,0,0,.25)';
     ctx.beginPath(); ctx.ellipse(ball.x + 2, ball.y + 5, 6, 3, 0, 0, Math.PI * 2); ctx.fill();
     ctx.shadowColor='#e2faff';ctx.shadowBlur=Math.hypot(state.ball.vx,state.ball.vy)>4?15:4;
@@ -366,13 +398,20 @@
       physics.collide(state.jozef, state.ball, physics.PLAYER, physics.BALL);
       physics.collide(state.dad, state.jozef, physics.PLAYER, physics.PLAYER);
     }
+    mindKeepers();
     physics.walls(state.ball, W, H, inGoal);
     state.matchLeft = Math.max(0, state.matchLeft - 1/60);
     if (state.matchLeft <= 0 && state.call !== 'Full time') { state.call = 'Full time'; room.phase='finished'; state.ball.vx = 0; state.ball.vy = 0; finishPractice(); syncUI(); say(state.score.dad===state.score.jozef?'Full time — a draw. Rematch?':(state.score.dad>state.score.jozef?'Dad':'Jozef')+' wins! Ready for a rematch?'); }
     if (state.call === 'Full time') { broadcast(); return; }
     const post = state.ball.y < GOAL.y + 6 || state.ball.y > GOAL.y + GOAL.h - 6;
-    if (state.ball.x < 30 && inGoal(state.ball.y) && !post) { state.score.dad += 1; state.call = 'Dad scores'; reset(1); }
-    else if (state.ball.x > W - 30 && inGoal(state.ball.y) && !post) { state.score.jozef += 1; state.call = 'Jozef scores'; reset(-1); }
+    if (state.ball.x < 30 && inGoal(state.ball.y) && !post) {
+      if (save('left')) { state.ball.vx = 4; state.call = 'Save'; }
+      else { state.score.dad += 1; state.call = 'Dad scores'; reset(1); }
+    }
+    else if (state.ball.x > W - 30 && inGoal(state.ball.y) && !post) {
+      if (save('right')) { state.ball.vx = -4; state.call = 'Save'; }
+      else { state.score.jozef += 1; state.call = 'Jozef scores'; reset(-1); }
+    }
     else if ((state.ball.x < 34 || state.ball.x > W - 34) && post && inGoal(state.ball.y)) { state.ball.vx *= -1; state.call = 'Off the post'; }
     else if (state.ball.x < 34) { state.ball.x = 34; state.ball.vx = Math.abs(state.ball.vx) + 0.6; }
     else if (state.ball.x > W - 34) { state.ball.x = W - 34; state.ball.vx = -Math.abs(state.ball.vx) - 0.6; }
