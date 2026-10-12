@@ -253,11 +253,44 @@ function load(){try{const data=JSON.parse(localStorage.getItem(KEY)||'null');if(
  stage=clamp(data.stage||0,0,6);stats=Object.assign(stats,data.stats||{});rewards=Array.isArray(data.rewards)?data.rewards:[];
  discovered=data.discovered||{};defeated=!!data.defeated;portalOpened=!!data.portalOpened;creative=data.creative!==false;return true;
  }catch(e){console.warn('Save could not load',e);return false;}}
-function exportFile(){dirty=true;save();const b=new Blob([localStorage.getItem(KEY)||'{}'],{type:'application/json'}),url=URL.createObjectURL(b),a=document.createElement('a');a.href=url;a.download='jozef-block-3d-'+seed+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1200);}
-async function importFile(file){try{if(!file||file.size>3e6)throw Error('Select a backup smaller than 3 MB');const raw=await file.text(),data=JSON.parse(raw);
- if(data.version!==1||!Number.isFinite(data.seed)||!Array.isArray(data.edits)||data.edits.length>14000)throw Error('Invalid backup');
- if(!confirm('Replace your 3D world with this backup?'))return;const before=localStorage.getItem(KEY);if(before)localStorage.setItem(KEY+'-backup',before);localStorage.setItem(KEY,raw);location.reload();
- }catch(e){announce('Import failed: '+e.message,3200);}}
+/* Backup packs preserve all visited realms and use strict import validation. */
+function validEditRows(list){
+ return Array.isArray(list)&&list.length<=14000&&list.every(a=>Array.isArray(a)&&a.length===2&&
+  typeof a[0]==='string'&&/^[-0-9]+,[-0-9]+,[-0-9]+$/.test(a[0])&&
+  Number.isInteger(a[1])&&a[1]>=0&&a[1]<types.length);
+}
+function validatePack(pack){
+ if(!pack||pack.format!=='DaddyJozefBlock3D'||pack.version!==2||
+ !pack.active||pack.active.version!==1||!Number.isFinite(pack.active.seed)||
+ !validEditRows(pack.active.edits)||!pack.dimensionSave||pack.dimensionSave.version!==1||
+ !Number.isFinite(pack.dimensionSave.baseSeed)||!pack.dimensionSave.dimensions||typeof pack.dimensionSave.dimensions!=='object')return false;
+ return Object.entries(pack.dimensionSave.dimensions).every(([k,v])=>
+  ['0','1','2'].includes(k)&&v&&Number.isFinite(v.seed)&&validEditRows(v.edits)&&Number.isFinite(v.bossHp));
+}
+function exportFile(){
+ dirty=true;save();
+ const pack={format:'DaddyJozefBlock3D',version:2,active:JSON.parse(localStorage.getItem(KEY)||'{}'),
+  dimensionSave:JSON.parse(localStorage.getItem(DIMKEY)||'null')};
+ if(!validatePack(pack)){announce('Backup could not be prepared');return;}
+ const b=new Blob([JSON.stringify(pack)],{type:'application/json'}),url=URL.createObjectURL(b),a=document.createElement('a');
+ a.href=url;a.download='daddy-jozef-block-3d-all-realms.json';a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1200);announce('All realms included in backup');
+}
+async function importFile(file){
+ try{
+  if(!file||file.size>5000000)throw Error('Select a backup under 5 MB');
+  const raw=await file.text(),data=JSON.parse(raw);
+  let active,archive;
+  if(data.format==='DaddyJozefBlock3D'){
+   if(!validatePack(data))throw Error('Invalid multi-realm backup');active=JSON.stringify(data.active);archive=JSON.stringify(data.dimensionSave);
+  }else if(data.version===1&&Number.isFinite(data.seed)&&validEditRows(data.edits)){
+   active=raw;archive=JSON.stringify({version:1,baseSeed:data.seed,dimensions:{[String(data.realm||0)]:{seed:data.seed,edits:data.edits,bossHp:data.defeated?0:120}}});
+  }else throw Error('Unrecognized save format');
+  if(!confirm('Restore this backup? Existing 3D worlds will be replaced.'))return;
+  const before=localStorage.getItem(KEY);if(before)localStorage.setItem(KEY+'-backup',before);
+  localStorage.setItem(DIMKEY,archive);localStorage.setItem(KEY,active);location.reload();
+ }catch(e){announce('Import failed: '+e.message,3600);}
+}
 function send(v){try{if(conn?.open)conn.send(v);}catch(_){}}
 function status(s){$('pairStatus').textContent=s;}
 function detach(){const wasGuest=guestActive;guestActive=false;try{conn?.close();peer?.destroy();}catch(_){}peer=conn=null;host=false;invite='';$('share').disabled=true;status('Offline · local play');if(wasGuest){dirty=false;location.reload();}}
