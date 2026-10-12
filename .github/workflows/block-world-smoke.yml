@@ -1,0 +1,27 @@
+name: Block World smoke tests
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'block-world.html'
+      - 'tests/block-world-smoke.cjs'
+      - '.github/workflows/block-world-smoke.yml'
+  pull_request:
+    paths:
+      - 'block-world.html'
+      - 'tests/block-world-smoke.cjs'
+      - '.github/workflows/block-world-smoke.yml'
+  workflow_dispatch:
+jobs:
+  block-world:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate Block World
+        run: node tests/block-world-smoke.cjs
