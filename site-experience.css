@@ -3500,3 +3500,11 @@ body.versus-focused #versus:not(.is-playing) .versus-card{grid-template-rows:aut
 @media(max-height:480px) and (orientation:landscape){#versus #versus-aim,#versus #versus-sprint{min-height:32px}#versus #versus-kick{min-height:44px}}
 
 #versus-stats{position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);font:700 10px/1 var(--sf-ui);letter-spacing:.08em;color:#d5efb4}
+
+/* Oct 2026 / quick-match settings and live coaching. */
+#versus .versus-practice-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:center;gap:8px 12px}
+#versus .versus-practice-settings label{min-width:0;display:grid;grid-template-columns:minmax(0,1fr);gap:5px}
+#versus .versus-practice-settings select{display:block;min-width:0;width:100%;height:44px;font:800 12px/1.2 var(--sf-ui)}
+#versus #versus-practice-record{grid-column:1/-1;padding-top:1px;letter-spacing:.06em}
+body.versus-focused #versus-tip{font-weight:800;letter-spacing:.03em;color:#e4fff1}
+@media(max-width:375px){#versus .versus-practice-settings{gap:6px}#versus .versus-practice-settings select{font-size:11px}}

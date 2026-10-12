@@ -66,7 +66,7 @@
   }
   const PRACTICE_KEY='jozefs-world-versus-v1';
   const cpuOptions={rookie:1.55,pro:2.45,legend:3.2};
-  let cpuDifficulty='pro',lastBotKick=-100,savedMatch=false;
+  let cpuDifficulty='pro',lastBotKick=-100,savedMatch=false,practiceSeconds=120,kickoffHold=0;
   const safeCount=n=>Number.isSafeInteger(n)&&n>=0?Math.min(n,99999):0;
   function readPractice(){
     try{const r=JSON.parse(localStorage.getItem(PRACTICE_KEY)||'null');
@@ -269,6 +269,13 @@
       ctx.setLineDash([6,9]);ctx.beginPath();ctx.moveTo(ball.x,ball.y);ctx.lineTo(gx,gy);ctx.stroke();
       ctx.setLineDash([]);ctx.globalAlpha=1;ctx.beginPath();ctx.arc(gx,gy,12,0,Math.PI*2);ctx.stroke();ctx.restore();
     }
+    // Readable possession halo makes it clear when shooting is possible.
+    if(room.phase==='playing'&&Math.hypot(me.x-ball.x,me.y-ball.y)<45){
+      ctx.save();ctx.strokeStyle=room.who==='Dad'?'#d7ff4a':'#77e4ff';
+      ctx.globalAlpha=.7;ctx.lineWidth=2.2;
+      ctx.beginPath();ctx.ellipse(me.x,me.y+23,30,11,0,0,Math.PI*2);ctx.stroke();
+      ctx.restore();
+    }
     const sweep = (Math.sin(tick * 0.02) + 1) / 2;
     const glow = ctx.createRadialGradient(80 + sweep * 560, 8, 10, 360, 180, 420);
     glow.addColorStop(0, 'rgba(180,255,255,0.10)');
@@ -404,6 +411,9 @@
   function step() {
     if (!room.host || room.phase !== 'playing' || !localActive || !room.remoteActive) return;
     if (state.freeze > 0) { state.freeze -= 1; state.ball.vx = 0; state.ball.vy = 0; if (state.freeze === 1) reset(state.score.dad >= state.score.jozef ? 1 : -1); broadcast(); return; }
+    // Freeze the simulation briefly after a goal: players can read the score,
+    // the clock stays fair, and the fresh kickoff does not instantly deflect.
+    if(kickoffHold>0){kickoffHold--;broadcast();return;}
     const cpuPace=practiceRival();
     const now=performance.now();
     move(state.dad,targets.Dad,room.practice&&room.who!=='Dad'?cpuPace:(now<sprintUntil.Dad?5.4:3.1));
@@ -442,6 +452,7 @@
 
   function reset(dir) {
     state.ball = { x: 360, y: 210, vx: dir * 1.4, vy: 0 };
+    kickoffHold=dir?36:0;
     state.dad.x = 560; state.dad.y = 210;
     state.jozef.x = 160; state.jozef.y = 210;
     targets.Dad = null; targets.Jozef = null;
@@ -472,7 +483,9 @@
   function stopInput(){keys.clear();stickVector=null;targets[room.who]=null;send({type:'aim',x:null,y:null});const nub=$('versus-nub'),stick=$('versus-stick');nub.style.left=(stick.clientWidth-nub.offsetWidth)/2+'px';nub.style.top=(stick.clientHeight-nub.offsetHeight)/2+'px';}
   function cleanup(){clearTimeout(connectTimer);clearTimeout(countdownTimer);const oldConn=room.conn,oldPeer=room.peer;room.conn=null;room.peer=null;oldConn?.close();oldPeer?.destroy();room.other='';room.ready=false;room.remoteReady=false;room.host=false;room.practice=false;room.remoteActive=true;room.phase='lobby';stopInput();syncUI();}
   function fail(message){cleanup();say(message);}
-  function freshMatch(){state.kick='';state.score={dad:0,jozef:0};state.matchLeft=120;state.call='Kickoff';kickLock=0;lastBotKick=-100;savedMatch=false;nextLocalSprint=0;sprintUntil.Dad=sprintUntil.Jozef=0;sprintReady.Dad=sprintReady.Jozef=0;reset(0);}
+  function freshMatch(){state.kick='';state.score={dad:0,jozef:0};state.matchLeft=room.practice?practiceSeconds:120;state.call='Kickoff';kickLock=0;lastBotKick=-100;savedMatch=false;nextLocalSprint=0;sprintUntil.Dad=sprintUntil.Jozef=0;sprintReady.Dad=sprintReady.Jozef=0;reset(0);
+    const length=Math.ceil(state.matchLeft);$('versus-clock').textContent=Math.floor(length/60)+':'+String(length%60).padStart(2,'0');
+  }
   function startMatch(){
     if(!room.host||!room.ready||!room.remoteReady||room.phase==='countdown')return;
     freshMatch();room.phase='countdown';let count=3;state.call='3';syncUI();broadcast();
@@ -535,6 +548,7 @@
   $('versus-practice').addEventListener('click',()=>{
     const chosen=$('versus-cpu-difficulty').value;
     cpuDifficulty=Object.hasOwn(cpuOptions,chosen)?chosen:'pro';
+    practiceSeconds=$('versus-practice-length').value==='60'?60:120;
     cleanup();room.host=true;room.practice=true;room.ready=room.remoteReady=true;room.phase='waiting';startMatch();
   });
   $('versus-share').addEventListener('click',async()=>{const url=new URL(location.href);url.hash='versus';url.searchParams.set('room',room.code);try{await navigator.clipboard.writeText(url.href);say('Invite copied. Send it to your opponent.');}catch{say('Your room code is '+room.code+'. Share it with your opponent.');}});
@@ -598,6 +612,13 @@
         draw();lastPaint=now;
       }
       if(now-uiTime>100){
+        if(room.phase==='playing'){
+          const distance=Math.hypot(me.x-state.ball.x,me.y-state.ball.y);
+          const tip=$('versus-tip');
+          const advice=distance<38?'BALL CONTROL / AIM & SHOOT':
+            distance<65?'SHOT RANGE / HOLD TO CHARGE':'CHASE THE BALL / SPRINT TO CLOSE';
+          if(tip.dataset.guide!==advice){tip.dataset.guide=advice;tip.textContent=advice;}
+        }
         const remain=Math.max(0,Math.ceil((nextLocalSprint-now)/1000));
         $('versus-sprint').disabled=room.phase!=='playing'||!localActive||!room.remoteActive||remain>0;
         $('versus-sprint').textContent=remain?'SPRINT '+remain+'s':'SPRINT';

@@ -48,7 +48,9 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  await host.locator('#versus-ready').click();await guest.locator('#versus-ready').click();await host.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
  await host.locator('#versus-leave').click();await guest.waitForFunction(()=>document.querySelector('#versus-status').textContent.includes('disconnected'));
  await guest.locator('#versus-cpu-difficulty').selectOption('legend');
+ await guest.locator('#versus-practice-length').selectOption('60');
  await guest.locator('#versus-practice').click();await guest.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
+ assert.ok(await guest.evaluate(()=>window.__versusTest.state.matchLeft<=60&&window.__versusTest.state.matchLeft>55),'Quick practice starts with a one-minute clock');
  await guest.evaluate(()=>{window.__versusTest.state.matchLeft=.02;});
  await guest.waitForFunction(()=>!document.querySelector('#versus-again').hidden);
  const solo=await guest.evaluate(()=>JSON.parse(localStorage.getItem('jozefs-world-versus-v1')));
