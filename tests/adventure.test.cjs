@@ -51,3 +51,10 @@ test('cooperative pathfinder avoids the other player without blocking the missio
  assert.match(script,/function guideToObjective\(/);
  assert.match(read('index.html'),/id="jw-adventure-guide"/);
 });
+
+test('each champion has an unblocked bonus choice',()=>{
+ for(let zone=0;zone<4;zone++)for(let round=0;round<12;round++){
+  const b=rules.powerLane(zone,round);
+  assert.ok(b>=0&&b<=2);assert.notEqual(b,rules.bossGuard(zone,round,0));
+ }
+});

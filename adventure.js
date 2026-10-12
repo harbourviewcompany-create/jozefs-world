@@ -51,6 +51,7 @@
   function earnedCount(state,zone,kind){const name=kind==='stars'?'star':kind==='secrets'?'secret':'switch';return state[kind].filter(k=>k.startsWith(zone+'-'+name+'-')).length}
   function canChallenge(state,zone){return earnedCount(state,zone,'stars')>=2&&earnedCount(state,zone,'switches')===2}
   function bossGuard(zone,round,attempt){return (zone*2+round+attempt+1)%3}
+  function powerLane(zone,round){return (bossGuard(zone,round,0)+1+(zone%2))%3;}
   // Grid BFS gives touch players a predictable, obstacle-safe route without teleporting.
   function shortestPath(zone,sx,sy,tx,ty,avoidX=-1,avoidY=-1){
     if(!Number.isInteger(zone)||zone<0||zone>=WORLDS.length||
@@ -77,7 +78,7 @@
     }
     return null;
   }
-  const api=Object.freeze({KEY,WORLDS,OUTFITS,STAR_POS,SECRET_POS,SWITCH_POS,newState,sanitize,tileAt,canMove,canChallenge,bossGuard,pointId,earnedCount,shortestPath});
+  const api=Object.freeze({KEY,WORLDS,OUTFITS,STAR_POS,SECRET_POS,SWITCH_POS,newState,sanitize,tileAt,canMove,canChallenge,bossGuard,pointId,earnedCount,shortestPath,powerLane});
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
   if(typeof document==='undefined')return;
   root.JozefAdventureRules=api;
@@ -93,6 +94,8 @@
   let displayed=[{x:1,y:1},{x:1,y:2}];
   let toast='Explore the arena. Collect two energy stars and activate both beacons.',soundOff=true;
   const hits=['LEFT','CENTRE','RIGHT'];
+  const sportMoves=[['LEFT POST','CENTRE','RIGHT POST'],['GLOVE','FIVE-HOLE','BLOCKER'],['LAYUP','JUMPER','THREE-POINT'],['ENTRANCE','CROWD','FINALE']];
+  function moveName(lane){return sportMoves[state.zone][lane];}
   function save(){
     try{localStorage.setItem(KEY,JSON.stringify(state))}catch(_){message('Progress cannot be saved on this device. You can still explore.')}
     root.dispatchEvent&&root.dispatchEvent(new Event('jozef:adventure-updated'));
@@ -157,7 +160,7 @@
       if(state.completed.includes(state.zone)){message('Champion already beaten. Find the golden portal!');return true;}
       if(!canChallenge(state,state.zone)){message('Collect at least two stars and activate both beacons to challenge the champion.');return true;}
       battle={goals:0,misses:0,round:0,attempt:0,shield:bossGuard(state.zone,0,0)};
-      message('CHAMPION SHOWDOWN! Read the shield and pick a different lane.');
+      message('CHAMPION SHOWDOWN! Avoid the shield; highlighted plays earn double points.');
       render();return true;
     }
     if(near(p,14,8))return exitWorld();
@@ -167,9 +170,10 @@
   function shoot(lane){
     if(!battle||!Number.isInteger(lane)||lane<0||lane>2)return false;
     const blocked=lane===battle.shield;
+    const bonus=!blocked&&lane===powerLane(state.zone,battle.round);
     battle.round++;
-    if(blocked)battle.misses++;else battle.goals++;
-    if(battle.goals>=3){
+    if(blocked)battle.misses++;else battle.goals=Math.min(5,battle.goals+(bonus?2:1));
+    if(battle.goals>=5){
       const name=WORLDS[state.zone].name;
       if(!state.completed.includes(state.zone)){state.completed.push(state.zone);state.completed.sort();save();}
       battle=null;message('CHAMPION DEFEATED! '+name+' trophy earned. Enter the portal to continue.');
@@ -177,9 +181,9 @@
     }else if(battle.misses>=3){
       battle=null;message('Great effort! The champion saved three shots. Go to the arena to try again.');
     }else{
-      const last=blocked?'SAVED! The champion guarded '+hits[lane]+'. ':'GOAL! Great choice. ';
+      const last=blocked?'BLOCKED: '+moveName(lane)+'. ':bonus?'POWER PLAY! Double points for '+moveName(lane)+'! ':'GOOD PLAY! One point. ';
       battle.shield=bossGuard(state.zone,battle.round,0);
-      message(last+'Score '+battle.goals+'/3 before three saves. Shield: '+hits[battle.shield]+'.');
+      message(last+'Earn 5 points before 3 blocks. Avoid '+moveName(battle.shield)+'.');
     }
     render();return true;
   }
@@ -237,11 +241,14 @@
     if(battlePanel){
       battlePanel.hidden=!battle;
       const stats=$('jw-adventure-battle-score');
-      if(stats)stats.textContent=battle?'GOALS '+battle.goals+'/3  •  SAVES '+battle.misses+'/3':'';
+      if(stats)stats.textContent=battle?'POINTS '+battle.goals+'/5  •  BLOCKS '+battle.misses+'/3':'';
       const shield=$('jw-adventure-shield');
-      if(shield)shield.textContent=battle?'CHAMPION SHIELDS '+hits[battle.shield]+' — AIM ELSEWHERE':'';
+      if(shield)shield.textContent=battle?'BLOCKED: '+moveName(battle.shield)+' | DOUBLE POINTS: '+moveName(powerLane(state.zone,battle.round)):'';
       document.querySelectorAll('[data-adventure-lane]').forEach(b=>{
         const guarded=Boolean(battle&&Number(b.dataset.adventureLane)===battle.shield);
+        const lane=Number(b.dataset.adventureLane),power=Boolean(battle&&!guarded&&lane===powerLane(state.zone,battle.round));
+        b.textContent=moveName(lane)+(power?' ★ 2 POINTS':'');
+        b.style.background=power?'#ffe19b':'';b.style.color=power?'#132b30':'';
         b.classList.toggle('is-guarded',guarded);
         b.setAttribute('aria-label',hits[Number(b.dataset.adventureLane)]+(guarded?' — guarded':' — open'));
       });
