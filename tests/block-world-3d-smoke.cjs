@@ -42,11 +42,13 @@ function boot(shared=new Map()){
   Blob:class{},URL:{createObjectURL:()=>'/blob',revokeObjectURL(){}},confirm:()=>false,
   crypto:{getRandomValues:a=>a.fill(37)}
  };
- vm.runInNewContext(script,sandbox,{timeout:15000});
+ const instrumented=script.replace('window.BlockWorld3D=Object.freeze','window.__block3dTests={award,modify,portal};window.BlockWorld3D=Object.freeze');
+  assert.notEqual(instrumented,script,'test instrumentation inserted');
+  vm.runInNewContext(instrumented,sandbox,{timeout:15000});
  const status=()=>window.BlockWorld3D?.status();
  const tick=(n=1)=>{for(let i=0;i<n;i++){clock.now+=17;assert.ok(clock.raf);clock.raf(clock.now);}};
  const click=id=>{const el=document.getElementById(id);if(el.onclick)el.onclick({});else for(const f of(el.events.click||[]))f({preventDefault(){}});};
- return {status,tick,click,document,events,errors,shared};
+ return {status,tick,click,document,events,errors,shared,testHooks:window.__block3dTests};
 }
 const test=boot();
 assert.ok(test.status(),'3D API initialized');
@@ -60,10 +62,16 @@ for(const fn of test.events.get('keyup')||[])fn({code:'KeyW'});
 assert.ok(test.status().hero.z<start,'movement changes position');
 test.click('save');
 assert.ok(test.shared.get('jozefs-block-3d-v1'),'world persisted locally');
+assert.ok(test.status().hero,'player pose exposed for diagnostics');
+const xpStart=JSON.parse(test.shared.get('jozefs-world-player-v1')||'{}').xp||0;
+// Milestone XP must never be farmable by triggering the same completion twice.
+test.testHooks.award('block3d-test-once',25);
+test.testHooks.award('block3d-test-once',25);
+assert.equal(JSON.parse(test.shared.get('jozefs-world-player-v1')).xp,xpStart+25,'XP awarded once per milestone');
 const next=boot(test.shared);
 next.tick(2);
 assert.ok(next.status().renderOk,'saved world renders after relaunch');
 assert.equal(next.status().seed,test.status().seed,'saved seed preserved');
 assert.ok(test.document.getElementById('mission').innerHTML.includes('MISSION'),'mission HUD initialized');
 assert.equal(test.errors.length,0,'no startup/frame errors: '+test.errors.join('; '));
-console.log('Block World 3D: WebGL startup, chunk streaming, movement, HUD, save and reload PASS');
+console.log('Block World 3D: WebGL, chunks, movement, save/reload and one-time HQ XP PASS');
