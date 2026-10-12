@@ -45,6 +45,15 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  await host.evaluate(()=>{window.__versusTest.state.matchLeft=.02;});
  await host.waitForFunction(()=>!document.querySelector('#versus-again').hidden);await guest.waitForFunction(()=>!document.querySelector('#versus-again').hidden);
  await host.waitForTimeout(150);assert.equal(await host.locator('#versus-clock').textContent(),'0:00');
+ const finalState=await host.evaluate(()=>JSON.parse(JSON.stringify(window.__versusTest.state)));
+ await guest.evaluate(state=>{
+   const t=window.__versusTest;
+   for(let i=0;i<4;i++)t.onData({type:'state',state,phase:'finished',active:true});
+ },finalState);
+ for(const p of [host,guest]){
+   const scores=await p.evaluate(()=>JSON.parse(localStorage.getItem('jozefs-world-season')||'[]'));
+   assert.equal(scores.length,1,'one match only counts once despite repeated finished packets');
+ }
  await guest.locator('#versus-again').click();await host.waitForFunction(()=>!document.querySelector('#versus-ready').disabled);
  await host.locator('#versus-ready').click();await guest.locator('#versus-ready').click();await host.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
  await host.locator('#versus-leave').click();await guest.waitForFunction(()=>document.querySelector('#versus-status').textContent.includes('disconnected'));

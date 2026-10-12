@@ -161,34 +161,40 @@
     call.pitch = /Dad/.test(line) ? 0.75 : 1.25;
     window.speechSynthesis.speak(call);
   }
-  function paintSeason() {
-    let season = [];
-    try { season = JSON.parse(localStorage.getItem('jozefs-world-season') || '[]'); } catch { season = []; }
-    const list = $('versus-season-list');
-    const line = $('versus-season');
-    if (list) list.innerHTML = season.map(score => '<li>' + score + '</li>').join('');
-    if (!line) return;
-    const dad = season.filter(s => { const [j, d] = s.split('-').map(Number); return d > j; }).length;
-    const jozef = season.filter(s => { const [j, d] = s.split('-').map(Number); return j > d; }).length;
-    line.textContent = season.length ? 'Season: Jozef ' + jozef + ' · Dad ' + dad : 'Season: no matches yet.';
+  // Imported device backups are user-controlled data: validate before rendering.
+  function readSeason(){
+    try{
+      const raw=JSON.parse(localStorage.getItem('jozefs-world-season')||'[]');
+      return Array.isArray(raw)?raw.filter(s=>typeof s==='string'&&/^\d{1,2}-\d{1,2}$/.test(s)).slice(0,5):[];
+    }catch(_){return [];}
   }
-  function say(text) {
-    const node = $('versus-status');
-    const line = text;
-    if (node) node.textContent = line;
-    const stats = $('versus-stats');
-    if (stats) stats.textContent = (state.shots||0) + ' shots · ' + (state.saves||0) + ' saves';
-    const result = $('today-versus-result');
-    if (result && /wins|draw/.test(text)) {
-      result.textContent = text;
-      try {
-        localStorage.setItem('jozefs-world-versus-result', text);
-        const season = JSON.parse(localStorage.getItem('jozefs-world-season') || '[]');
-        season.unshift(state.score.jozef + '-' + state.score.dad);
-        localStorage.setItem('jozefs-world-season', JSON.stringify(season.slice(0, 5)));
-      } catch { /* this phone */ }
-      paintSeason();
-    }
+  let resultRecorded=false;
+  function paintSeason(){
+    const season=readSeason(),list=$('versus-season-list'),line=$('versus-season');
+    if(list)list.replaceChildren(...season.map(score=>{
+      const li=document.createElement('li');li.textContent=score;return li;
+    }));
+    if(!line)return;
+    const dad=season.filter(s=>{const [j,d]=s.split('-').map(Number);return d>j;}).length;
+    const jozef=season.filter(s=>{const [j,d]=s.split('-').map(Number);return j>d;}).length;
+    line.textContent=season.length?'Season: Jozef '+jozef+' · Dad '+dad:'Season: no matches yet.';
+  }
+  function say(text){
+    const node=$('versus-status');
+    if(node)node.textContent=text;
+    const stats=$('versus-stats');
+    if(stats)stats.textContent=(state.shots||0)+' shots · '+(state.saves||0)+' saves';
+    const result=$('today-versus-result');
+    if(!result||room.phase!=='finished'||resultRecorded||!/wins|draw/.test(text))return;
+    resultRecorded=true; // A repeated state packet must not count as another match.
+    result.textContent=text;
+    try{
+      localStorage.setItem('jozefs-world-versus-result',text);
+      const season=readSeason();
+      season.unshift(state.score.jozef+'-'+state.score.dad);
+      localStorage.setItem('jozefs-world-season',JSON.stringify(season.slice(0,5)));
+    }catch(_){/* Device storage can be disabled or full. */}
+    paintSeason();
   }
   function lights() {
     $('light-dad')?.classList.toggle('on', room.who === 'Dad' || room.other === 'Dad');
@@ -533,7 +539,7 @@
   function stopInput(){keys.clear();stickVector=null;targets[room.who]=null;send({type:'aim',x:null,y:null});const nub=$('versus-nub'),stick=$('versus-stick');nub.style.left=(stick.clientWidth-nub.offsetWidth)/2+'px';nub.style.top=(stick.clientHeight-nub.offsetHeight)/2+'px';}
   function cleanup(){clearTimeout(connectTimer);clearTimeout(countdownTimer);const oldConn=room.conn,oldPeer=room.peer;room.conn=null;room.peer=null;oldConn?.close();oldPeer?.destroy();room.other='';room.ready=false;room.remoteReady=false;room.host=false;room.practice=false;room.remoteActive=true;room.phase='lobby';stopInput();syncUI();}
   function fail(message){cleanup();say(message);}
-  function freshMatch(){state.kick='';state.score={dad:0,jozef:0};state.matchLeft=room.practice?practiceSeconds:120;state.call='Kickoff';kickLock=0;lastBotKick=-100;savedMatch=false;nextLocalSprint=0;sprintUntil.Dad=sprintUntil.Jozef=0;sprintReady.Dad=sprintReady.Jozef=0;reset(0);
+  function freshMatch(){state.kick='';state.score={dad:0,jozef:0};state.matchLeft=room.practice?practiceSeconds:120;state.call='Kickoff';kickLock=0;lastBotKick=-100;savedMatch=false;resultRecorded=false;nextLocalSprint=0;sprintUntil.Dad=sprintUntil.Jozef=0;sprintReady.Dad=sprintReady.Jozef=0;reset(0);
     const length=Math.ceil(state.matchLeft);$('versus-clock').textContent=Math.floor(length/60)+':'+String(length%60).padStart(2,'0');
   }
   function startMatch(){
@@ -561,11 +567,12 @@
       state.kick=room.other;
     }
     else if(msg.type==='state'&&!room.host&&validState(msg.state)&&['waiting','countdown','playing','finished'].includes(msg.phase)){
+      if(msg.phase==='countdown'&&room.phase!=='countdown')resultRecorded=false;
       Object.assign(state,msg.state);const changed=room.phase!==msg.phase||room.remoteActive!==(msg.active!==false);room.phase=msg.phase;room.remoteActive=msg.active!==false;if(changed){syncUI();if(!room.remoteActive)say('Paused — opponent switched away.');}
       if(room.phase==='finished')say(state.score.dad===state.score.jozef?'Full time — a draw. Rematch?':(state.score.dad>state.score.jozef?'Dad':'Jozef')+' wins! Ready for a rematch?');
     }else if(msg.type==='active'){room.remoteActive=msg.active===true;if(!room.remoteActive)targets[room.other]=null;syncUI();say(room.remoteActive?'Opponent is back.':'Paused — opponent switched away.');}
     else if(msg.type==='rematch'&&room.host&&room.phase==='finished'){prepareRematch();}
-    else if(msg.type==='lobby'&&!room.host){room.phase='waiting';room.ready=false;room.remoteReady=false;syncUI();say('Rematch — both players tap Ready.');}
+    else if(msg.type==='lobby'&&!room.host){room.phase='waiting';room.ready=false;room.remoteReady=false;resultRecorded=false;syncUI();say('Rematch — both players tap Ready.');}
     else if(msg.type==='ping')send({type:'pong'});
   }
   function prepareRematch(){if(room.practice){room.ready=room.remoteReady=true;startMatch();return;}room.phase='waiting';room.ready=false;room.remoteReady=false;syncUI();send({type:'lobby'});say('Rematch — both players tap Ready.');}
