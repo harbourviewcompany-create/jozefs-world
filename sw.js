@@ -1,5 +1,5 @@
 /* Jozef FC offline shell: only same-origin public game assets. Never caches personal progress. */
-const CACHE='jozef-fc-app-shell-v92';
+const CACHE='jozef-fc-app-shell-v93';
 const CORE=[
  './','./index.html','./world.html','./site-foundation.css','./site-experience.css',
  './favicon.svg','./manifest.webmanifest','./matchday.css','./training.css','./jersey-bingo.css',
@@ -7,7 +7,7 @@ const CORE=[
  './training.js','./jersey-bingo.js','./matchday.js','./street.js','./adventure.js','./together-renderer.js','./together.js','./versus-physics.js','./versus.js','./presence.js','./peerjs.min.js','./street-phaser.js','./phaser.min.js','./arcade.js',
  './roblox.js','./squad.js','./site-core.js','./site-features.js','./arena-bundle.js',
  './visual-2026.js','./campaign-2026.js','./club-hq.js','./chronicle.js','./playbook.js',
- './prime/','./prime/neon.html'
+ './prime/'
 ];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(async cache=>{
@@ -21,7 +21,8 @@ self.addEventListener('install',event=>{
   const assetUrls=new Set();
   for(const page of ['./prime/','./prime/neon.html']){
    const pageUrl=new URL(page,self.registration.scope);
-   const response=await cache.match(pageUrl);
+   let response=await cache.match(pageUrl);
+   if(!response){try{await cache.add(pageUrl);response=await cache.match(pageUrl);}catch(_){/* Optional generated chapter. */}}
    if(!response)continue;
    const html=await response.text();
    for(const match of html.matchAll(/(?:src|href)="(\.\/assets\/[A-Za-z0-9._-]+\.(?:js|css))"/g)){
