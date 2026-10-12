@@ -1061,3 +1061,4 @@ body.versus-focused #versus-tip{font-weight:800;letter-spacing:.03em;color:#e4ff
 /* Keep one game's controls active at a time. */
 #adventure.together-focused .jw-adventure-worlds,#adventure.together-focused .jw-adventure-layout{display:none!important}
 #adventure.together-focused .jw-together-game{display:block}
+#adventure.together-focused .jw-adventure-heading{display:none!important}

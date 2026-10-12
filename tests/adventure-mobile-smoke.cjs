@@ -71,6 +71,8 @@ const close=()=>new Promise(resolve=>server.close(resolve));
        }
       }
       assert.equal(await page.evaluate(()=>window.JozefTogether.progress().stage),3,'two people opened the finale');
+      await page.evaluate(()=>{window.JozefTogether.close();window.JozefTogether.start();});
+      assert.equal(await page.evaluate(()=>window.JozefTogether.progress().stage),3,'pausing and resuming restores a fair finale');
       for(let round=0;round<4;round++){
        const guarded=(round*2+1)%3;
        assert.equal(await page.evaluate(lane=>window.JozefTogether.shoot(lane),(guarded+1)%3),true);

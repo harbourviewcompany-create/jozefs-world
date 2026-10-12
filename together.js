@@ -92,7 +92,8 @@ function start(){
 }
 function close(){
  opened=false;lastPadButtons=[{act:false,switchHero:false},{act:false,switchHero:false}];rootGame.hidden=true;$('adventure')?.classList.remove('together-focused');stop();battle=null;
- notify('Together Mode paused. Your progress is saved on this device.');
+ if(state.stage===3){state.stage=2;persist();} // Re-enter the vault for a fresh, fair match.
+ hud();notify('Together Mode paused. Your progress is saved on this device.');
  return true;
 }
 function replay(){
