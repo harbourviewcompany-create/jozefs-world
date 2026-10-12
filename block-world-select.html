@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b2339">
+<title>Block World · Choose Mode | Daddy + Jozef</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100dvh;display:grid;place-items:center;background:#061c28;color:#eefff2;font-family:system-ui,-apple-system,sans-serif;padding:20px}
+.card{width:min(480px,100%);background:#0f3841;border:1px solid #7fe4be63;border-radius:16px;padding:24px;text-align:center}
+h1{margin:0 0 6px;font-size:clamp(28px,6vw,40px);font-weight:900;letter-spacing:.02em}
+h1 em{font-style:normal;color:#d6ff7f}
+p{color:#c0e5d3;margin:0 0 20px;font-size:14px}
+.modes{display:grid;gap:12px}
+.mode{display:grid;gap:4px;padding:16px;border-radius:12px;border:1px solid #83e5d6a3;background:#183d49;color:inherit;text-decoration:none;font-weight:800;transition:transform .1s}
+.mode:active{transform:scale(.98)}
+.mode strong{font-size:18px}
+.mode small{font-weight:600;color:#9fcfc5;font-size:12px}
+.mode.d3d{background:linear-gradient(145deg,#235365,#113241);border-color:#dcff98}
+.back{display:inline-block;margin-top:16px;color:#d7ff94;font-size:13px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="card">
+ <h1>BLOCK <em>WORLD</em></h1>
+ <p>Choose how you and Jozef want to play.</p>
+ <div class="modes">
+  <a class="mode" href="./block-world.html"><strong>Classic 2D</strong><small>Side-view building · Crafting · Mobile controls</small></a>
+  <a class="mode d3d" href="./block-world-3d.html"><strong>Block World 3D</strong><small>Full 3D voxel world · Explore · Boss · Realms</small></a>
+ </div>
+ <a class="back" href="./">← Back to HQ</a>
+</div>
+</body>
+</html>
