@@ -314,7 +314,13 @@ function createAdventureUi(){
   const input=document.createElement('input');input.type='file';input.accept='.json,application/json';panel.appendChild(input);
   const b=document.createElement('button');b.textContent='Restore selected file';b.onclick=async()=>{
     try{const file=input.files?.[0];if(!file||file.size>2000000)throw Error('Choose a backup under 2 MB.');
-      const data=JSON.parse(await file.text());if(data.format!=='DaddyJozefBlockWorld'||!Array.isArray(data.world)||data.world.length!==H||data.world.some(row=>!Array.isArray(row)||row.length!==W||row.some(id=>!Number.isInteger(id)||id<0||id>31)))throw Error('Invalid world save.');
+      const data=JSON.parse(await file.text());
+      if(data.format==='DaddyJozefBlockRealms'){
+       if(!window.BlockWorldImportRealms)throw Error('Realm importer unavailable');
+       if(!confirm('Replace this world and all saved realms with the backup?'))return;
+       window.BlockWorldImportRealms(data);panel.hidden=true;return;
+      }
+      if(data.format!=='DaddyJozefBlockWorld'||!Array.isArray(data.world)||data.world.length!==H||data.world.some(row=>!Array.isArray(row)||row.length!==W||row.some(id=>!Number.isInteger(id)||id<0||id>31)))throw Error('Invalid world save.');
       if(!confirm('Replace the current world with this backup?'))return;
       const original=localStorage.getItem(KEY);if(original)localStorage.setItem(KEY+'-backup',original);
       world=data.world;players.forEach((p,i)=>{const other=data.players?.[i];if(!other)return;p.x=Math.max(0,Math.min(W*TILE-p.w,other.x));p.y=Math.max(0,Math.min(H*TILE-p.h,other.y));p.inventory=other.inventory||{};p.vx=p.vy=0;});
@@ -746,6 +752,7 @@ createAdventureUi();
    if(s?.version===1&&s.realms&&typeof s.realms==='object'){
     realms={};for(const [key,v] of Object.entries(s.realms))if(['0','1','2','3'].includes(key)&&validRealm(v))realms[key]=v;
     realmIndex=Math.max(0,Math.min(3,Number(s.realmIndex)||0));realmBaseSeed=s.realmBaseSeed||adventureSeed;
+    const current=realms[realmIndex];if(loaded&&validRealm(current)){surface=current.surface.slice();adventureSeed=current.seed||adventureSeed;}
    }
   }catch(e){console.warn('Realm backup could not be loaded',e);}
   questHud();return loaded;
@@ -756,10 +763,45 @@ createAdventureUi();
   try{localStorage.removeItem(realmKey);}catch(_){}
   realmIndex=0;realmBaseSeed=adventureSeed;realms={};questHud();
  });
+
+ window.BlockWorldImportRealms=function(data){
+  if(data?.format!=='DaddyJozefBlockRealms'||data.version!==1||!data.realms||typeof data.realms!=='object')throw Error('Invalid realm backup format');
+  const restored={};
+  for(const [id,v] of Object.entries(data.realms)){
+   if(!['0','1','2','3'].includes(id)||!validRealm(v))throw Error('Invalid realm map dimensions');
+   if(v.world.some(row=>row.some(n=>!Number.isInteger(n)||n<0||n>31)))throw Error('Invalid realm tiles');
+   restored[id]=v;
+  }
+  const idx=Math.max(0,Math.min(3,Number(data.realmIndex)||0));
+  if(!restored[idx])throw Error('Active realm missing');
+  try{
+   const original=localStorage.getItem(realmKey),legacy=localStorage.getItem(KEY);
+   if(original)localStorage.setItem(realmKey+'-backup',original);
+   if(legacy)localStorage.setItem(KEY+'-backup',legacy);
+  }catch(_){}
+  realms=restored;realmIndex=idx;realmBaseSeed=Number(data.realmBaseSeed)||adventureSeed;
+  const stored=realms[realmIndex];world=stored.world.map(row=>row.slice());surface=stored.surface.slice();
+  adventureSeed=Number(stored.seed)||realmBaseSeed;
+  creative=!!data.creative;selected=blockable.includes(data.selected)?data.selected:2;
+  active=data.active===1?1:0;teamFollow=data.teamFollow!==false;
+  players.forEach((p,i)=>{
+   const v=data.players?.[i]||stored.players?.[i]||{};
+   p.x=Number.isFinite(v.x)?Math.max(0,Math.min(W*TILE-p.w,v.x)):(i?74:71)*TILE;
+   p.y=Number.isFinite(v.y)?Math.max(0,Math.min(H*TILE-p.h,v.y)):surface[Math.floor(p.x/TILE)]*TILE-p.h;
+   p.vx=p.vy=0;
+   p.health=Number.isFinite(v.health)?Math.max(1,Math.min(100,v.health)):100;
+   p.inventory=v.inventory&&typeof v.inventory==='object'?v.inventory:p.inventory;
+  });
+  questStage=Math.max(0,Math.min(Q.length,Number(data.questStage)||0));
+  goals=Object.assign({wood:0,build:0,explore:0,diamond:0,portal:0},data.goals||{});
+  achievements=Array.isArray(data.achievements)?data.achievements:[];portalUnlocked=!!data.portalUnlocked;
+  changedBlocks=[];renderHotbar();questHud();dirty=true;save();
+  say('All saved realms restored',3500);
+ };
  const oldBackup=backupAdventure;
  backupAdventure=function(){
   captureRealm();
-  const packageData={format:'DaddyJozefBlockRealms',version:1,realmIndex,realmBaseSeed,realms,questStage,goals,achievements,portalUnlocked};
+  const packageData={format:'DaddyJozefBlockRealms',version:1,realmIndex,realmBaseSeed,realms,questStage,goals,achievements,portalUnlocked,creative,selected,active,teamFollow,players:players.map(p=>({x:p.x,y:p.y,inventory:Object.assign({},p.inventory),health:p.health}))};
   const blob=new Blob([JSON.stringify(packageData)],{type:'application/json'});
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;
   a.download='daddy-jozef-realms-'+realmBaseSeed+'.json';a.click();
