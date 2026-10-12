@@ -1287,3 +1287,9 @@ body.versus-focused #versus.is-playing #versus-leave{display:none}
  #adventure.together-focused .jw-together-maphead{padding:4px 7px}
  #adventure.together-focused .jw-together-controls{padding:6px}
 }
+
+body.versus-focused #versus.is-playing .versus-card{display:grid;grid-template-rows:auto minmax(0,1fr) auto;height:100dvh;padding:0;background:#061018}
+body.versus-focused #versus.is-playing .versus-stage{position:relative;inset:auto;height:100%;min-height:0}
+body.versus-focused #versus.is-playing .versus-scoreboard{position:relative;top:auto;left:auto;right:auto;margin:6px 8px 0;z-index:2}
+body.versus-focused #versus.is-playing .versus-play{position:relative;left:auto;right:auto;bottom:auto;margin:0;padding:8px;background:#07141c;z-index:2}
+body.versus-focused #versus.is-playing #versus-tip{display:none}
