@@ -8,7 +8,7 @@ const g=window.BlockWorld2D,$=id=>document.getElementById(id);
 if(!g||!$('coop-panel'))return;
 let peer=null,conn=null,role='solo',invite='',ready=false,closed=false;
 let stateAt=0,inputAt=0,snapshotAt=0,lastRealm=-1,lastInput={left:false,right:false,jump:false};
-let lastPacketAt=0,editCount=0;
+let lastPacketAt=0,editCount=0,lastActionAt=0,joinTimeout=0;
 const COOP_RE=/^[0-9a-f]{32}$/i;
 const copyInput=s=>({left:!!s?.left,right:!!s?.right,jump:!!s?.jump});
 const connected=()=>!!conn?.open;
@@ -70,7 +70,7 @@ function onMessage(m){
  if(!m||typeof m!=='object')return;
  if(m.t==='world'&&role==='guest'){
   if(!validWorld(m.w)){setStatus('Invalid game data from host');return;}
-  g.useWorld(m.w);g.role(1);ready=true;lastRealm=m.w.realmIndex;
+  g.useWorld(m.w);g.role(1);ready=true;clearTimeout(joinTimeout);joinTimeout=0;lastRealm=m.w.realmIndex;
   send({t:'ready'});setStatus('Connected! You are Jozef. Both of you can play.');
   $('btn-switch').style.display='none';
   $('reset').disabled=true;$('mode').disabled=true;
@@ -83,6 +83,7 @@ function onMessage(m){
   g.remoteInput=copyInput(m.input);
   lastPacketAt=performance.now();
  }else if(m.t==='action'&&g.isHost()){
+  const now=performance.now();if(now-lastActionAt<90)return;lastActionAt=now;
   const x=m.x,y=m.y;
   if(!['mine','place'].includes(m.kind)||!Number.isInteger(x)||!Number.isInteger(y)||
     x<0||x>=180||y<0||y>=72||!Number.isInteger(m.seq))return;
@@ -112,6 +113,7 @@ function attach(connection){
  connection.on('error',()=>disconnect('Connection failed'));
 }
 function leave(options={}){
+ clearTimeout(joinTimeout);joinTimeout=0;
  const guest=role==='guest',c=conn,p=peer;
  conn=null;peer=null;ready=false;role='solo';invite='';lastRealm=-1;
  g.remoteInput={left:false,right:false,jump:false};
@@ -139,7 +141,7 @@ function startHost(){
   });
   peer.on('connection',c=>{if(conn||ready){c.close();return;}attach(c);});
   peer.on('disconnected',()=>{if(!connected())setStatus('Signalling disconnected. Waiting to reconnect…');});
-  peer.on('error',e=>{setStatus('Could not host: '+(e?.type||'network error'));});
+  peer.on('error',e=>{const reason='Could not host: '+(e?.type||'network error');leave({reason,skipReload:true});show();});
   setStatus('Creating private game…');
  }catch(e){leave({reason:e.message,skipReload:true});}
 }
@@ -161,7 +163,8 @@ function join(){
   peer.on('open',()=>{setStatus('Connecting to Daddy…');
    attach(peer.connect('jw2d-'+code,{reliable:true,serialization:'json'}));
   });
-  peer.on('error',e=>{setStatus('Unable to join: '+(e?.type||'network error')+'. Check the invitation.');});
+  peer.on('error',e=>{const reason='Unable to join: '+(e?.type||'network error')+'. Check the invitation.';leave({reason,skipReload:true});show();});
+  joinTimeout=setTimeout(()=>{if(role==='guest'&&!ready){leave({reason:'Connection timed out. Check that Daddy is still hosting.',skipReload:true});show();}},15000);
   setStatus('Opening private connection…');
  }catch(e){leave({reason:e.message,skipReload:true});}
 }
@@ -196,10 +199,10 @@ window.addEventListener('pagehide',()=>{
 const incoming=extractCode(location.hash);
 if(incoming){
  $('coop-code').value=incoming;
- show();setStatus('Invitation detected. Tap JOIN GAME to play as Jozef.');
+ show();setStatus('Invitation detected. Tap JOIN AS JOZEF to enter the shared world.');
  // Remove the invitation from the address bar to avoid accidentally sharing the secret.
  try{history.replaceState(null,'',location.pathname+location.search);}catch(_){}
 }
-setStatus('Offline · two players on keyboard, or invite Jo on another device');
+if(!incoming)setStatus('Offline · two players on keyboard, or invite Jo on another device');
 window.BlockWorldCoop=Object.freeze({role:()=>role,connected,host:startHost,join,disconnect,code:()=>invite});
 })();
