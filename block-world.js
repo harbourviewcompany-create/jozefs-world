@@ -441,7 +441,9 @@ update=function(dt){
  baseUpdate(dt);if(craftingOpen)return;
  nightClock+=dt;season+=dt;
  if(season>48){season=0;weatherType=noise(Math.floor(nightClock/48),1)>.68?'rain':'clear';}
- if(teamFollow&&!window.BlockWorld2D?.connected?.()){const p=players[active],q=players[1-active],dx=p.x-q.x;
+ if(teamFollow&&!window.BlockWorld2D?.connected?.()&&
+  !(active===0?['ArrowLeft','ArrowRight','ArrowUp'].some(k=>down.has(k)):['KeyA','KeyD','KeyW'].some(k=>down.has(k)))){
+  const p=players[active],q=players[1-active],dx=p.x-q.x;
    if(Math.abs(dx)>85&&Math.abs(dx)<600){q.facing=Math.sign(dx);moveAxis(q,Math.sign(dx)*130*dt,'x');
      if(q.ground&&collision(q,q.x+q.facing*10,q.y)){q.vy=-430;q.ground=false;}}}
  friends.forEach(c=>{c.phase+=dt*2;c.x+=c.vx*dt;if(Math.abs(c.x-c.home)>TILE*3)c.vx=-c.vx;let y=0,xx=Math.max(0,Math.min(W-1,Math.floor(c.x/TILE)));while(y<H&&get(xx,y)===0)y++;c.y=y*TILE-16;});
