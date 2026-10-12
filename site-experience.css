@@ -3903,3 +3903,5 @@ body.versus-focused #versus.is-playing #versus-canvas{width:100%;height:100%;max
 #adventure .jw-neon-launch strong{font-size:12px}
 #adventure .jw-neon-launch small{font-size:8px}
 #adventure .jw-neon-arrow{font-size:20px}}
+/* Never show locked shared legacy achievements before they have been earned. */
+#jw-together-club-cup[hidden],#jw-together-club-perfect[hidden],#jw-together-club-pending[hidden]{display:none!important}

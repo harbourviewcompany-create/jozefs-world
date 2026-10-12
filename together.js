@@ -252,7 +252,7 @@ function hud(){
 }
 function draw(t){
  if(!ctx||!opened)return;
- if(root.JozefTogetherRenderer?.draw({ctx,canvas,stage:state.stage,targets:STAGES[state.stage].targets,positions:state.positions,selected,time:t,reducedMotion:motionReduced,clues:state.clues,battle,won:state.won,difficulty:state.difficulty,fragments:FRAGMENTS[Math.min(state.stage,2)].map(item=>({...item,collected:state.fragments.includes(item.id)}))}))return;
+ if(root.JozefTogetherRenderer?.draw({ctx,canvas,stage:state.stage,targets:STAGES[state.stage].targets,positions:state.positions,selected,time:t,reducedMotion:motionReduced,clues:state.clues,battle,won:state.won,difficulty:state.difficulty,fragments:state.stage<3?FRAGMENTS[state.stage].map(item=>({...item,collected:state.fragments.includes(item.id)})):[]}))return;
  const tw=canvas.width/W,th=canvas.height/H;
  const bg=ctx.createLinearGradient(0,0,canvas.width,canvas.height);
  bg.addColorStop(0,'#102d47');bg.addColorStop(1,'#050e1b');ctx.fillStyle=bg;ctx.fillRect(0,0,canvas.width,canvas.height);
