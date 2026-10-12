@@ -74,7 +74,11 @@
  window.__bw3dFail=fail;
  window.addEventListener('error',function(e){
   if(ready)return;
-  if(e.target&&e.target.tagName==='SCRIPT'){fail('A required game file did not load. Connect to the internet and retry.');return;}
+  if(e.target&&e.target.tagName==='SCRIPT'){
+   if((e.target.src||'').includes('block-world-3d.js'))fail('The 3D game file could not load. Check your connection and retry.');
+   return; // PeerJS is optional; solo play must work without its signalling library.
+  }
+  if((e.filename||'').includes('peerjs.min.js'))return;
   if(e.error||e.message)fail('A game startup error occurred. Reloading may help.');
  },true);
  window.addEventListener('unhandledrejection',function(){if(!ready)fail('Game startup was interrupted. Retry or play Classic 2D.');});
