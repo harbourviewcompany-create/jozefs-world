@@ -25,7 +25,7 @@ const DESTINATIONS=Object.freeze([
  {id:'tour',title:'World Tour',tag:'GLOBAL CUP',symbol:'W',description:'Travel the world, face fresh clubs and chase the cup.',route:'tour',color:'#93e9ac'},
  {id:'club',title:'My Club',tag:'LEGACY',symbol:'HQ',description:'See Jozef and Dad’s kits, milestones, keepsakes and trophies.',route:'club',color:'#ffdf9b'},
  {id:'playbook',title:'Playbook',tag:'NEXT MISSION',symbol:'P',description:'Find what to do next across every world and sport.',route:'playbook',color:'#b3fc95'},
- {id:'training',title:'Training',tag:'LEVEL UP',symbol:'T',description:'Sharpen your skills and unlock the next challenge.',route:'training',color:'#9ce4ec'}
+ {id:'block',title:'Block World',tag:'BUILD & EXPLORE',symbol:'B',description:'Explore the voxel island with Jozef and Dad, build bridges and uncover secrets.',href:'block-world.html',color:'#9ce4ec'}
 ].map((entry,i)=>Object.freeze({...entry,normal:Object.freeze(norm(V[i]))})));
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 const rotate=(v,yaw,pitch)=>{
@@ -169,7 +169,7 @@ const $=id=>document.getElementById(id);
 const canvas=$('jw-worldcore-canvas'),overlay=$('jw-worldcore-labels'),list=$('jw-worldcore-index');
 const reduced=!!root.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
 let graphics=null,selected=0,yaw=0,pitch=0,velocity=[0,0],target=null,zoom=1,frame=0,last=0,drag=null,visible=false,disposed=false,forceFallback=false;
-let touchCount=0,pinchStart=0,pinchZoom=1;
+const pointers=new Map();let pinchStart=0,pinchZoom=1;
 const labels=[];
 function say(msg){const el=$('jw-worldcore-announcement');if(el)el.textContent=msg;}
 function isActive(){return !!document.getElementById('home')?.classList.contains('active')&&!document.hidden;}
@@ -227,7 +227,7 @@ function makeLabels(){
   const info=document.createElement('span');const title=document.createElement('strong');title.textContent=d.title;
   const tag=document.createElement('small');tag.textContent=d.tag;info.append(title,tag);
   button.append(mark,info);
-  button.addEventListener('click',()=>{focusPlate(i);if(forceFallback)enter(i);});
+  button.addEventListener('click',()=>focusPlate(i));
   list.append(button);
  }
 }
@@ -275,12 +275,27 @@ function pointerDown(e){
  if(e.button!==0&&e.pointerType==='mouse')return;
  if(!graphics)return;
  e.preventDefault();
- drag={id:e.pointerId,x:e.clientX,y:e.clientY,at:performance.now(),moved:0,lastX:e.clientX,lastY:e.clientY};
- target=null;velocity=[0,0];canvas.setPointerCapture?.(e.pointerId);
+ pointers.set(e.pointerId,[e.clientX,e.clientY]);
+ if(pointers.size===2){
+  const pair=[...pointers.values()];
+  pinchStart=Math.hypot(pair[0][0]-pair[1][0],pair[0][1]-pair[1][1]);
+  pinchZoom=zoom;drag=null;velocity=[0,0];
+ }else if(pointers.size===1){
+  drag={id:e.pointerId,x:e.clientX,y:e.clientY,at:performance.now(),moved:0,lastX:e.clientX,lastY:e.clientY};
+  target=null;velocity=[0,0];
+ }
+ canvas.setPointerCapture?.(e.pointerId);
 }
 function pointerMove(e){
+ if(!pointers.has(e.pointerId))return;
+ pointers.set(e.pointerId,[e.clientX,e.clientY]);e.preventDefault();
+ if(pointers.size===2){
+  const pair=[...pointers.values()];
+  const distance=Math.hypot(pair[0][0]-pair[1][0],pair[0][1]-pair[1][1]);
+  if(pinchStart>10)zoom=clamp(pinchZoom*distance/pinchStart,.8,1.19);
+  start();return;
+ }
  if(!drag||drag.id!==e.pointerId)return;
- e.preventDefault();
  const dx=e.clientX-drag.lastX,dy=e.clientY-drag.lastY;
  drag.moved+=Math.abs(dx)+Math.abs(dy);
  if(drag.moved>7){
@@ -293,7 +308,12 @@ function pointerMove(e){
  start();
 }
 function pointerUp(e){
- if(!drag||drag.id!==e.pointerId)return;
+ pointers.delete(e.pointerId);
+ if(!drag||drag.id!==e.pointerId){
+  if(pointers.size===0){drag=null;pinchStart=0;}
+  try{canvas.releasePointerCapture?.(e.pointerId);}catch(_){}
+  start();return;
+ }
  const was=drag;drag=null;
  try{canvas.releasePointerCapture?.(e.pointerId);}catch(_){}
  if(was.moved<13&&performance.now()-was.at<700){
@@ -321,8 +341,8 @@ function init(){
  canvas.addEventListener('pointerdown',pointerDown);
  canvas.addEventListener('pointermove',pointerMove);
  canvas.addEventListener('pointerup',pointerUp);
- canvas.addEventListener('pointercancel',()=>{drag=null;velocity=[0,0];});
- canvas.addEventListener('lostpointercapture',()=>{drag=null;});
+ canvas.addEventListener('pointercancel',e=>{pointers.delete(e.pointerId);drag=null;velocity=[0,0];});
+ canvas.addEventListener('lostpointercapture',e=>{pointers.delete(e.pointerId);drag=null;});
  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();stop();graphicsFallback('Graphics device reset. Use the accessible world index below.');});
  canvas.addEventListener('wheel',e=>{if(e.ctrlKey)return;e.preventDefault();zoom=clamp(zoom-e.deltaY*.0006,.8,1.19);start();},{passive:false});
  canvas.addEventListener('keydown',e=>{
