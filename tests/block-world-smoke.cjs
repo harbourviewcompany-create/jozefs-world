@@ -17,12 +17,12 @@ function boot(storage=new Map()){
   function node(initial=''){
     let id=initial;
     const el={
-      style:{},children:[],events:{},attrs:{},classList:{add(){},remove(){}},
+      style:{},children:[],events:{},attrs:{},classList:{add(){},remove(){},toggle(){return false;}},
       hidden:false,textContent:'',innerHTML:'',width:0,height:0,files:[],
       addEventListener(t,fn){(this.events[t]??=[]).push(fn);},
       setAttribute(k,v){this.attrs[k]=v;},
       getAttribute(k){return this.attrs[k];},
-      appendChild(v){this.children.push(v);return v;},
+      appendChild(v){this.children.push(v);return v;},insertBefore(v,ref){this.children.unshift(v);return v;},
       append(...v){this.children.push(...v);},
       replaceChildren(...v){this.children=v;},
       after(){},click(){},remove(){},
