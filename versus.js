@@ -44,6 +44,7 @@
   };
   const targets = { Dad: null, Jozef: null };
   let kickLock = 0;
+  let sprintUntil = 0;
   const PRACTICE_KEY='jozefs-world-versus-v1';
   const cpuOptions={rookie:1.55,pro:2.45,legend:3.2};
   let cpuDifficulty='pro',lastBotKick=-100,savedMatch=false;
@@ -111,8 +112,11 @@
     const node = $('versus-status');
     const line = text;
     if (node) node.textContent = line;
-    const hq = $('hq-versus');
-    if (hq) hq.textContent = line;
+    const result = $('today-versus-result');
+    if (result && /wins|draw/.test(text)) {
+      result.textContent = text;
+      try { localStorage.setItem('jozefs-world-versus-result', text); } catch { /* this phone */ }
+    }
   }
   function lights() {
     $('light-dad')?.classList.toggle('on', room.who === 'Dad' || room.other === 'Dad');
@@ -324,8 +328,9 @@
   function step() {
     if (!room.host || room.phase !== 'playing' || !localActive || !room.remoteActive) return;
     const cpuPace=practiceRival();
-    move(state.dad,targets.Dad,room.practice&&room.who!=='Dad'?cpuPace:3.1);
-    move(state.jozef,targets.Jozef,room.practice&&room.who!=='Jozef'?cpuPace:3.1);
+    const sprint = Date.now() < sprintUntil;
+    move(state.dad,targets.Dad,room.practice&&room.who!=='Dad'?cpuPace:(sprint&&room.who==='Dad'?5.4:3.1));
+    move(state.jozef,targets.Jozef,room.practice&&room.who!=='Jozef'?cpuPace:(sprint&&room.who==='Jozef'?5.4:3.1));
     touch(state.dad, state.kick === "Dad"); touch(state.jozef, state.kick === "Jozef"); state.kick = "";
     if (kickLock) kickLock -= 1;
     // Match shot and runner movement to the same 60Hz pixel scale.
@@ -464,6 +469,7 @@
     $('versus-kick').style.setProperty('--shot-charge','0%');
   }
   $('versus-aim').addEventListener('click',()=>pickAim((selectedAim+1)%3));
+  $('versus-sprint')?.addEventListener('click', () => { sprintUntil = Date.now() + 1200; say('Sprint!'); });
   const shootButton=$('versus-kick');
   shootButton.addEventListener('pointerdown',e=>{
     if(shootButton.disabled)return;
@@ -513,5 +519,7 @@
     }
     requestAnimationFrame(frame);
   }
+  const savedResult = (() => { try { return localStorage.getItem('jozefs-world-versus-result'); } catch { return ''; } })();
+  if (savedResult && $('today-versus-result')) $('today-versus-result').textContent = savedResult;
   pickAim(1);syncUI();draw();requestAnimationFrame(frame);
 })();
