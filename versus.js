@@ -23,6 +23,7 @@
   const sparks = [];
   let tick = 0;
   let lastCall = '';
+  let shake = 0;
 
   function say(text) {
     const node = $('versus-status');
@@ -83,8 +84,10 @@
   function draw() {
     if (!ctx) return;
     tick += 1;
+    ctx.save();
+    if (shake > 0) { ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake); shake -= 1; }
     pitch();
-    if (state.call && state.call !== lastCall && /scores|Full time|post/.test(state.call)) burst(state.ball.x, state.ball.y, state.call.includes('Dad') ? '#d7ff4a' : '#7ee0ff', 24);
+    if (state.call && state.call !== lastCall && /scores|Full time|post/.test(state.call)) { burst(state.ball.x, state.ball.y, state.call.includes('Dad') ? '#d7ff4a' : '#7ee0ff', 24); shake = 10; }
     lastCall = state.call;
     trail.push({ x: state.ball.x, y: state.ball.y });
     if (trail.length > 8) trail.shift();
@@ -118,6 +121,7 @@
       ctx.fillText(state.call, 0, 4);
       ctx.restore();
     }
+    ctx.restore();
   }
 
   function move(p, target) {
@@ -260,6 +264,24 @@
   canvas.addEventListener('pointerdown', aimFrom);
   canvas.addEventListener('pointermove', event => { if (event.buttons || event.pressure) aimFrom(event); });
   $('versus-again')?.addEventListener('click', again);
+  const stick = $('versus-stick');
+  const nub = $('versus-nub');
+  function steer(nx, ny) {
+    const me = room.who === 'Dad' ? state.dad : state.jozef;
+    const aim = { x: me.x + nx * 90, y: me.y + ny * 90 };
+    targets[room.who] = aim;
+    if (!room.host) send({ type: 'aim', who: room.who, x: aim.x, y: aim.y });
+    if (nub) { nub.style.left = (28 + nx * 24) + 'px'; nub.style.top = (28 + ny * 24) + 'px'; }
+  }
+  function fromStick(event) {
+    const r = stick.getBoundingClientRect();
+    const nx = Math.max(-1, Math.min(1, (event.clientX - (r.left + r.width / 2)) / 36));
+    const ny = Math.max(-1, Math.min(1, (event.clientY - (r.top + r.height / 2)) / 36));
+    steer(nx, ny);
+  }
+  stick?.addEventListener('pointerdown', event => { stick.setPointerCapture(event.pointerId); fromStick(event); });
+  stick?.addEventListener('pointermove', event => { if (event.buttons || event.pressure) fromStick(event); });
+  stick?.addEventListener('pointerup', () => { targets[room.who] = null; if (nub) { nub.style.left = '28px'; nub.style.top = '28px'; } });
   $('versus-kick')?.addEventListener('click', () => {
     if (room.host) state.kick = room.who;
     else send({ type: 'kick', who: room.who });

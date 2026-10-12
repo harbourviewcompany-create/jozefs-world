@@ -47,7 +47,11 @@ body.nav-open .nav-extra{display:inline-flex}
 .versus-head{display:flex;justify-content:space-between;align-items:end;gap:12px}
 .versus-head h2{margin:0;font-size:28px}
 .versus-head p{margin:0;font-weight:700;text-align:right}
-.versus-roles,.versus-actions,.versus-join{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.versus-roles,.versus-join{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.versus-play{display:grid;grid-template-columns:92px 1fr;gap:10px;align-items:center}
+.versus-actions{display:grid;gap:8px}
+#versus-stick{width:92px;height:92px;border-radius:50%;background:#102028;border:2px solid #cafa60;position:relative;touch-action:none}
+#versus-nub{width:36px;height:36px;border-radius:50%;background:#cafa60;position:absolute;left:28px;top:28px}
 .versus-role,.versus-actions button,#versus-open,#versus-code{min-height:48px;border-radius:14px;font-weight:800;font-size:16px}
 .versus-role{background:#132028;color:#e8fff0}
 .versus-role.is-on{background:#cafa60;color:#102018}
@@ -1320,9 +1324,12 @@ body.nav-open .nav-extra{display:inline-flex}
       <button type="button" id="versus-open">Open room</button>
     </div>
     <canvas id="versus-canvas" width="720" height="420" aria-label="Two player pitch"></canvas>
-    <div class="versus-actions">
-      <button type="button" id="versus-kick">Kick</button>
-      <button type="button" id="versus-again">Again</button>
+    <div class="versus-play">
+      <div id="versus-stick" aria-label="Move stick"><span id="versus-nub"></span></div>
+      <div class="versus-actions">
+        <button type="button" id="versus-kick">Kick</button>
+        <button type="button" id="versus-again">Again</button>
+      </div>
     </div>
   </div>
 </section>
