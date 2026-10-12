@@ -1,7 +1,7 @@
 /* Versus physics: mass, bounce, and circle collisions. Host only. */
 (() => {
   'use strict';
-  const BALL = { mass: 1, radius: 8, bounce: 0.62, drag: 0.988 };
+  const BALL = { mass: 1, radius: 8, bounce: 0.55, drag: 0.972 };
   const PLAYER = { mass: 4.4, radius: 14, bounce: 0.12, drag: 0.9 };
 
   function collide(a, b, specA, specB) {

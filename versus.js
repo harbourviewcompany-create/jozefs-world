@@ -412,9 +412,9 @@
     else {
       const dx = target.x - p.x, dy = target.y - p.y;
       const dist = Math.hypot(dx, dy) || 1;
-      const want = dist < 8 ? 0 : Math.min(pace, 1.6 + dist * 0.04);
+      const want = dist < 10 ? 0 : Math.min(pace, 1.2 + dist * 0.035);
       const braking = speed > 1 && (p.vx * dx + p.vy * dy) < 0;
-      const turn = braking ? 0.1 : 0.22;
+      const turn = braking ? 0.08 : 0.16;
       p.vx += (dx / dist * want - p.vx) * turn;
       p.vy += (dy / dist * want - p.vy) * turn;
       if (braking) { p.vx *= 0.92; p.vy *= 0.92; }
@@ -435,19 +435,21 @@
       const goalX = p === state.dad ? 18 : W-18;
       const goalY=Math.max(GOAL.y+14,Math.min(GOAL.y+GOAL.h-14,SHOT_LANES[shot.aim]));
       const sx=goalX-state.ball.x, sy=goalY-state.ball.y, length=Math.hypot(sx,sy)||1;
-      const speed=(state.super===who?16:(shot.power > 1.15 ? 13.2 : 9.4))*shot.power; if(state.super===who){state.super='';state.call='SUPER';}
-      state.ball.vx=sx/length*speed; state.ball.vy=sy/length*speed;
+      const wobble = Math.min(0.35, length / 900);
+      const speed=(state.super===who?15:(shot.power > 1.15 ? 12.4 : 8.6))*shot.power; if(state.super===who){state.super='';state.call='SUPER';}
+      state.ball.vx=sx/length*speed; state.ball.vy=sy/length*speed + (Math.random()-0.5)*wobble*8;
       shot.power=1; kickLock=16; state.shots = (state.shots||0)+1;
       burst(state.ball.x, state.ball.y, '#fff', 10);
       return;
     }
     const speed = Math.hypot(p.vx, p.vy);
     if (speed < 0.4) return;
-    const ahead = 16;
-    state.ball.x += ((p.x + (p.face || 1) * ahead) - state.ball.x) * 0.28;
-    state.ball.y += (p.y - state.ball.y) * 0.28;
-    state.ball.vx = p.vx * 0.9;
-    state.ball.vy = p.vy * 0.9;
+    const ahead = 18;
+    const leadX = p.x + (p.vx || (p.face || 1)) * 4 + (p.face || 1) * ahead;
+    state.ball.x += (leadX - state.ball.x) * 0.22;
+    state.ball.y += (p.y + p.vy * 3 - state.ball.y) * 0.22;
+    state.ball.vx = p.vx * 1.05;
+    state.ball.vy = p.vy * 1.05;
   }
 
   function inGoal(y) { return y > GOAL.y && y < GOAL.y + GOAL.h; }
