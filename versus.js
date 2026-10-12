@@ -370,6 +370,7 @@
     });
     sparks.forEach(s => { s.x += s.vx; s.y += s.vy; s.vy += 0.15; s.life -= 1; ctx.fillStyle = s.color; ctx.globalAlpha = Math.max(0, s.life / 18); ctx.fillRect(s.x, s.y, 4, 4); ctx.globalAlpha = 1; });
     for (let i = sparks.length - 1; i >= 0; i--) if (sparks[i].life <= 0) sparks.splice(i, 1);
+    if (state.score.dad || state.score.jozef) state.star.on = false;
     if (state.star?.on) {
       ctx.save(); ctx.translate(state.star.x, state.star.y); ctx.rotate(tick*0.05); ctx.fillStyle='#ffe14a';
       ctx.beginPath(); for(let i=0;i<5;i++){const a=i*1.256-1.57,b=a+0.628;ctx.lineTo(Math.cos(a)*10,Math.sin(a)*10);ctx.lineTo(Math.cos(b)*4,Math.sin(b)*4);} ctx.closePath(); ctx.fill(); ctx.restore();
@@ -447,9 +448,11 @@
       const goalX = p === state.dad ? 18 : W-18;
       const goalY=Math.max(GOAL.y+14,Math.min(GOAL.y+GOAL.h-14,SHOT_LANES[shot.aim]));
       const sx=goalX-state.ball.x, sy=goalY-state.ball.y, length=Math.hypot(sx,sy)||1;
-      const wobble = Math.min(0.35, length / 900);
+      const bouncing = Math.hypot(state.ball.vx, state.ball.vy) > 3.2;
+      const wobble = bouncing ? 1.4 : Math.min(0.35, length / 900);
       const speed=(state.super===who?15:(shot.power > 1.15 ? 12.4 : 8.6))*shot.power; if(state.super===who){state.super='';state.call='SUPER';}
       state.ball.vx=sx/length*speed; state.ball.vy=sy/length*speed + (Math.random()-0.5)*wobble*8;
+      if (bouncing) state.call = 'Off balance';
       shot.power=1; kickLock=16; state.shots = (state.shots||0)+1;
       burst(state.ball.x, state.ball.y, '#fff', 10);
       return;
@@ -457,13 +460,18 @@
     const speed = Math.hypot(p.vx, p.vy);
     if (speed < 0.4) return;
     const pace = Math.hypot(p.vx, p.vy);
+    const incoming = Math.hypot(state.ball.vx, state.ball.vy);
+    if (incoming > pace + 4 && Math.random() < 0.45) {
+      state.ball.vx *= 0.4; state.ball.vy += (Math.random() - 0.5) * 3;
+      state.call = 'Heavy touch';
+      return;
+    }
     const ahead = 14 + Math.min(8, pace * 2);
     const leadX = p.x + (p.face || 1) * ahead;
-    const first = Math.hypot(state.ball.vx, state.ball.vy) > pace * 1.8 ? 0.12 : 0.2;
-    state.ball.x += (leadX - state.ball.x) * first;
-    state.ball.y += (p.y - state.ball.y) * first;
-    state.ball.vx += (p.vx * 0.85 - state.ball.vx) * 0.18;
-    state.ball.vy += (p.vy * 0.85 - state.ball.vy) * 0.18;
+    state.ball.x += (leadX - state.ball.x) * 0.18;
+    state.ball.y += (p.y - state.ball.y) * 0.18;
+    state.ball.vx += (p.vx * 0.85 - state.ball.vx) * 0.16;
+    state.ball.vy += (p.vy * 0.85 - state.ball.vy) * 0.16;
   }
 
   function inGoal(y) { return y > GOAL.y && y < GOAL.y + GOAL.h; }
@@ -491,11 +499,13 @@
     const ballInHisHalf = who==='Dad' ? ball.x > 300 : ball.x < 420;
     const go = ballInHisHalf || distance < 240;
     const lead = go ? 18 : 0;
+    const jockey = Math.sin(tick * 0.08) * 28;
     if(bot.stun>0){bot.stun--;targets[who]=null;}
     else targets[who]={
-      x:Math.max(70,Math.min(W-70, go ? ball.x + (who==='Dad'?-lead:lead) : homeX)),
-      y:Math.max(50,Math.min(H-50, go ? ball.y : 210))
+      x:Math.max(70,Math.min(W-70, go ? ball.x + (who==='Dad'?-36:36) : homeX)),
+      y:Math.max(50,Math.min(H-50, go ? ball.y + jockey : 210))
     };
+    if (distance < 26 && Math.random() < (cpuDifficulty==='legend'?0.08:0.22)) { state.call = 'Missed tackle'; }
     if(distance<40) bot.carry=(bot.carry||0)+1; else bot.carry=0;
     if(bot.carry>18&&kickLock===0&&tick-lastBotKick>50){
       const miss=cpuDifficulty==='pro'&&Math.random()<0.3;
@@ -524,6 +534,7 @@
       physics.collide(state.jozef, state.ball, physics.PLAYER, physics.BALL);
       physics.collide(state.dad, state.jozef, physics.PLAYER, physics.PLAYER);
     }
+    if (state.score.dad || state.score.jozef) state.star.on = false;
     if (state.star?.on) {
       for (const p of [state.dad, state.jozef]) {
         if (Math.hypot(p.x-state.star.x, p.y-state.star.y) < 22) { state.star.on=false; state.super=p===state.dad?'Dad':'Jozef'; state.call='Star'; setTimeout(()=>{state.star={x:120+Math.random()*480,y:80+Math.random()*260,on:true};}, 4000); }
@@ -547,7 +558,7 @@
       if (save('right') && state.call!=='SUPER') { state.saves += 1; state.ball.x = W - 56; state.ball.vx = -5.5; state.ball.vy *= 0.4; state.call = 'Saved'; kickLock = 20; }
       else { state.score.jozef += 1; state.call = 'GOAL Jozef'; state.freeze = 70; burst(state.ball.x, state.ball.y, '#7ee0ff', 40); }
     }
-    else if ((state.ball.x < 40 || state.ball.x > W - 40) && post && inGoal(state.ball.y)) { state.ball.x = state.ball.x < W/2 ? 70 : W-70; state.ball.y = 60; state.ball.vx = 0; state.ball.vy = 0; state.call = 'Corner'; }
+    else if ((state.ball.x < 40 || state.ball.x > W - 40) && post && inGoal(state.ball.y)) { state.ball.x = state.ball.x < W/2 ? 46 : W-46; state.ball.y = 48; state.ball.vx = 0; state.ball.vy = 0; state.call = 'Corner'; }
     else if (!inGoal(state.ball.y) && state.ball.x < 34) { state.ball.x = 34; state.ball.vx = Math.abs(state.ball.vx) + 0.6; }
     else if (!inGoal(state.ball.y) && state.ball.x > W - 34) { state.ball.x = W - 34; state.ball.vx = -Math.abs(state.ball.vx) - 0.6; }
     if (state.ball.x < 70 && state.ball.y < 70 && Math.hypot(state.ball.vx, state.ball.vy) < 1) { state.ball.vx += 1.4; state.ball.vy += 1.4; }
@@ -718,7 +729,7 @@
     const step=(me.face||1)*46;
     me.x+=step; me.y+= (other.y>me.y?-18:18);
     state.ball.x=me.x+(me.face||1)*16; state.ball.y=me.y; state.ball.vx=me.vx; state.ball.vy=0;
-    if(gap<70){ other.stun=40; other.vy+=(other.y>me.y?3:-3); state.call='Ankles'; burst(other.x, other.y, '#ffe14a', 16); navigator.vibrate?.(25); }
+    if(gap<70){ const hasBall=Math.hypot(other.x-state.ball.x, other.y-state.ball.y)<30; other.stun=hasBall?(cpuDifficulty==='legend'?12:28):40; if(hasBall){state.ball.x=me.x+(me.face||1)*16;state.ball.y=me.y;state.call='Tackle';} else state.call='Ankles'; other.vy+=(other.y>me.y?3:-3); burst(other.x, other.y, '#ffe14a', 16); navigator.vibrate?.(25); }
     else state.call='Deke';
   }
   function shoot(){
