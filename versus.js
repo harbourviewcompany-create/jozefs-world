@@ -44,7 +44,23 @@
   };
   const targets = { Dad: null, Jozef: null };
   let kickLock = 0;
-  let sprintUntil = 0;
+  // Host-authoritative stamina keeps two-player matches fair.
+  const sprintUntil={Dad:0,Jozef:0},sprintReady={Dad:0,Jozef:0};
+  let nextLocalSprint=0;
+  function activateSprint(who){
+    if(!room.host||room.phase!=='playing'||!['Dad','Jozef'].includes(who))return false;
+    const now=performance.now();
+    if(now<sprintReady[who])return false;
+    sprintUntil[who]=now+1100;sprintReady[who]=now+6200;return true;
+  }
+  function sprint(){
+    if(room.phase!=='playing'||!localActive||!room.remoteActive)return;
+    const now=performance.now();if(now<nextLocalSprint)return;
+    if(room.host&&!activateSprint(room.who))return;
+    if(!room.host)send({type:'sprint'});
+    nextLocalSprint=now+6200;
+    $('versus-tip').textContent='SPRINT BURST / GET OPEN';
+  }
   const PRACTICE_KEY='jozefs-world-versus-v1';
   const cpuOptions={rookie:1.55,pro:2.45,legend:3.2};
   let cpuDifficulty='pro',lastBotKick=-100,savedMatch=false;
@@ -338,9 +354,9 @@
   function step() {
     if (!room.host || room.phase !== 'playing' || !localActive || !room.remoteActive) return;
     const cpuPace=practiceRival();
-    const sprint = Date.now() < sprintUntil;
-    move(state.dad,targets.Dad,room.practice&&room.who!=='Dad'?cpuPace:(sprint&&room.who==='Dad'?5.4:3.1));
-    move(state.jozef,targets.Jozef,room.practice&&room.who!=='Jozef'?cpuPace:(sprint&&room.who==='Jozef'?5.4:3.1));
+    const now=performance.now();
+    move(state.dad,targets.Dad,room.practice&&room.who!=='Dad'?cpuPace:(now<sprintUntil.Dad?5.4:3.1));
+    move(state.jozef,targets.Jozef,room.practice&&room.who!=='Jozef'?cpuPace:(now<sprintUntil.Jozef?5.4:3.1));
     touch(state.dad, state.kick === "Dad"); touch(state.jozef, state.kick === "Jozef"); state.kick = "";
     if (kickLock) kickLock -= 1;
     // Match shot and runner movement to the same 60Hz pixel scale.
@@ -388,6 +404,7 @@
     $('versus-lobby').hidden=connected;$('versus-room').hidden=!connected||playing||room.practice;
     $('versus-leave').hidden=!connected;$('versus-again').hidden=room.phase!=='finished';
     $('versus-kick').disabled=room.phase!=='playing'||!localActive||!room.remoteActive;
+    $('versus-sprint').disabled=room.phase!=='playing'||!localActive||!room.remoteActive;
     $('versus-ready').disabled=!room.other||room.ready;
     $('versus-ready').textContent=room.ready?'Ready — waiting for opponent':room.other?'Ready to play':'Waiting for opponent';
     $('versus-room-code').textContent=room.code;
@@ -401,7 +418,7 @@
   function stopInput(){keys.clear();stickVector=null;targets[room.who]=null;send({type:'aim',x:null,y:null});const nub=$('versus-nub'),stick=$('versus-stick');nub.style.left=(stick.clientWidth-nub.offsetWidth)/2+'px';nub.style.top=(stick.clientHeight-nub.offsetHeight)/2+'px';}
   function cleanup(){clearTimeout(connectTimer);clearTimeout(countdownTimer);const oldConn=room.conn,oldPeer=room.peer;room.conn=null;room.peer=null;oldConn?.close();oldPeer?.destroy();room.other='';room.ready=false;room.remoteReady=false;room.host=false;room.practice=false;room.remoteActive=true;room.phase='lobby';stopInput();syncUI();}
   function fail(message){cleanup();say(message);}
-  function freshMatch(){state.kick='';state.score={dad:0,jozef:0};state.matchLeft=120;state.call='Kickoff';kickLock=0;lastBotKick=-100;savedMatch=false;reset(0);}
+  function freshMatch(){state.kick='';state.score={dad:0,jozef:0};state.matchLeft=120;state.call='Kickoff';kickLock=0;lastBotKick=-100;savedMatch=false;nextLocalSprint=0;sprintUntil.Dad=sprintUntil.Jozef=0;sprintReady.Dad=sprintReady.Jozef=0;reset(0);}
   function startMatch(){
     if(!room.host||!room.ready||!room.remoteReady||room.phase==='countdown')return;
     freshMatch();room.phase='countdown';let count=3;state.call='3';syncUI();broadcast();
@@ -420,6 +437,7 @@
     else if(msg.type==='aim'&&room.host&&room.phase==='playing'){
       if(msg.x===null&&msg.y===null)targets[room.other]=null;
       else if(Number.isFinite(msg.x)&&Number.isFinite(msg.y))targets[room.other]={x:Math.max(30,Math.min(690,msg.x)),y:Math.max(30,Math.min(390,msg.y))};
+    }else if(msg.type==='sprint'&&room.host&&room.phase==='playing'){activateSprint(room.other);
     }else if(msg.type==='kick'&&room.host&&room.phase==='playing'){
       shotOptions[room.other]={aim:Number.isInteger(msg.aim)&&msg.aim>=0&&msg.aim<=2?msg.aim:1,
         power:Number.isFinite(msg.power)?Math.max(.9,Math.min(1.6,msg.power)):1};
@@ -486,7 +504,7 @@
     $('versus-kick').style.setProperty('--shot-charge','0%');
   }
   $('versus-aim').addEventListener('click',()=>pickAim((selectedAim+1)%3));
-  $('versus-sprint')?.addEventListener('click', () => { sprintUntil = Date.now() + 1200; say('Sprint!'); });
+  $('versus-sprint')?.addEventListener('click',sprint);
   const shootButton=$('versus-kick');
   shootButton.addEventListener('pointerdown',e=>{
     if(shootButton.disabled)return;
@@ -525,7 +543,11 @@
       if((room.phase==='playing'&&room.remoteActive)||room.phase==='countdown'||now-lastPaint>120){
         draw();lastPaint=now;
       }
-      if(now-uiTime>100){$('versus-score-dad').textContent=state.score.dad;$('versus-score-jozef').textContent=state.score.jozef;const seconds=Math.ceil(state.matchLeft);$('versus-clock').textContent=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');uiTime=now;}
+      if(now-uiTime>100){
+        const remain=Math.max(0,Math.ceil((nextLocalSprint-now)/1000));
+        $('versus-sprint').disabled=room.phase!=='playing'||!localActive||!room.remoteActive||remain>0;
+        $('versus-sprint').textContent=remain?'SPRINT '+remain+'s':'SPRINT';
+        $('versus-score-dad').textContent=state.score.dad;$('versus-score-jozef').textContent=state.score.jozef;const seconds=Math.ceil(state.matchLeft);$('versus-clock').textContent=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');uiTime=now;}
     }else accumulator=0;
     // Retransmit an unacknowledged room invitation: initial WebRTC packets can be lost.
     if(room.host&&room.conn?.open&&room.phase==='waiting'&&!room.other&&now-lastHello>900){send({type:'hello',hostWho:room.who});lastHello=now;}
