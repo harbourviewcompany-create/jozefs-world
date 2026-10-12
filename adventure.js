@@ -250,7 +250,7 @@
         b.textContent=moveName(lane)+(power?' ★ 2 POINTS':'');
         b.style.background=power?'#ffe19b':'';b.style.color=power?'#132b30':'';
         b.classList.toggle('is-guarded',guarded);
-        b.setAttribute('aria-label',hits[Number(b.dataset.adventureLane)]+(guarded?' — guarded':' — open'));
+        b.setAttribute('aria-label',moveName(lane)+(guarded?' — blocked':power?' — double points':' — one point'));
       });
     }
   }
@@ -272,7 +272,7 @@
     return shortestPath(state.zone,current.x,current.y,x,y,other?.x??-1,other?.y??-1);
   }
   function guideToObjective(){
-    if(battle){message('Choose an unguarded shooting lane to beat the champion.');return;}
+    if(battle){message('Choose the highlighted double-point play and avoid the blocked move.');return;}
     const zone=state.zone,done=state.completed.includes(zone);
     let candidates;
     if(done)candidates=[[14,8,'gold portal']];
@@ -411,8 +411,8 @@
       const cx=canvas.width/2,cy=canvas.height/2;
       ring(13,7,26,'#ffb3fa',1);
       ctx.fillStyle='#f7f4fd';ctx.textAlign='center';ctx.font='900 48px system-ui';ctx.fillText('CHAMPION SHOWDOWN',cx,cy-65);
-      ctx.font='700 25px system-ui';ctx.fillText('THE SHIELD IS ON '+hits[battle.shield],cx,cy-10);
-      ctx.font='700 20px system-ui';ctx.fillStyle='#aaf4dc';ctx.fillText('Choose an open lane below to shoot!',cx,cy+42);
+      ctx.font='700 25px system-ui';ctx.fillText('BLOCKED: '+moveName(battle.shield),cx,cy-10);
+      ctx.font='700 20px system-ui';ctx.fillStyle='#aaf4dc';ctx.fillText('DOUBLE POINTS: '+moveName(powerLane(state.zone,battle.round)),cx,cy+42);
     }
   }
   function animate(t){
