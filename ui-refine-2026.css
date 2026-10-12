@@ -1062,3 +1062,11 @@ body.versus-focused #versus-tip{font-weight:800;letter-spacing:.03em;color:#e4ff
 #adventure.together-focused .jw-adventure-worlds,#adventure.together-focused .jw-adventure-layout{display:none!important}
 #adventure.together-focused .jw-together-game{display:block}
 #adventure.together-focused .jw-adventure-heading{display:none!important}
+
+@media(max-width:800px){
+  #versus .versus-play{grid-template-columns:120px 1fr 128px;gap:8px}
+  #versus-stick{width:120px;height:120px}
+  #versus #versus-kick{min-height:76px;font-size:18px}
+  #versus #versus-kick.in-range{background:#e8ff8a;box-shadow:0 0 0 3px #cafa60}
+  body.versus-focused #versus{touch-action:none}
+}

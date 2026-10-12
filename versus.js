@@ -347,7 +347,7 @@
     glow.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, W, H);
-    if (state.call && state.call !== lastCall && /scores|GOAL|Saved|Full time|post|Kickoff/.test(state.call)) { burst(ball.x, ball.y, state.call.includes('Dad') ? '#d7ff4a' : '#7ee0ff', 36); shake = 14; if (/scores/.test(state.call)) net(); else if (/Saved/.test(state.call)) punch(); else if (/Kickoff/.test(state.call)) whistle(); else chime(); voice(state.call); document.querySelector('.versus-scoreboard')?.classList.add('goal'); setTimeout(() => document.querySelector('.versus-scoreboard')?.classList.remove('goal'), 900); }
+    if (state.call && state.call !== lastCall && /scores|GOAL|Saved|Full time|post|Kickoff/.test(state.call)) { burst(ball.x, ball.y, state.call.includes('Dad') ? '#d7ff4a' : '#7ee0ff', 36); shake = 14; if (/scores/.test(state.call)) { net(); navigator.vibrate?.(40); } else if (/Saved/.test(state.call)) { punch(); navigator.vibrate?.(20); } else if (/Kickoff/.test(state.call)) whistle(); else chime(); voice(state.call); document.querySelector('.versus-scoreboard')?.classList.add('goal'); setTimeout(() => document.querySelector('.versus-scoreboard')?.classList.remove('goal'), 900); }
     lastCall = state.call;
     trail.push({ x: ball.x, y: ball.y });
     if (trail.length > 8) trail.shift();
@@ -662,7 +662,10 @@
       const me=room.who==='Dad'?state.dad:state.jozef;
       const x=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),y=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);
       const vector=stickVector||(x||y?{x,y}:null);
+      const inRange=Math.hypot(me.x-state.ball.x,me.y-state.ball.y)<92;
+      $('versus-kick')?.classList.toggle('in-range', inRange && room.phase==='playing');
       if(vector&&now-lastSent>40){aim(me.x+(portrait?vector.y:vector.x)*90,me.y+(portrait?-vector.x:vector.y)*90);lastSent=now;}
+      else if(!vector && room.phase==='playing' && now-lastSent>80){aim(state.ball.x, state.ball.y);lastSent=now;}
       // Skip idle physics and lower render frequency in the lobby or after full time.
       // Live matches retain their deterministic 60 Hz simulation and animation.
       if(room.phase==='playing'&&room.remoteActive){
