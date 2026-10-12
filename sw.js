@@ -1,5 +1,5 @@
 /* Jozef FC offline shell: only same-origin public game assets. Never caches personal progress. */
-const CACHE='jozef-fc-app-shell-v103';
+const CACHE='jozef-fc-app-shell-v104';
 const CORE=[
  './','./index.html','./world.html','./block-world.html','./block-world.js','./block-world.css','./block-world-3d.html','./block-world-3d.js','./block-world-3d.css','./block-quest.html','./site-foundation.css','./site-experience.css',
  './favicon.svg','./manifest.webmanifest','./matchday.css','./training.css','./jersey-bingo.css',
