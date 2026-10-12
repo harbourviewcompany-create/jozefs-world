@@ -4,3 +4,19 @@
 @media(max-height:470px){.compass{top:57px;right:8px;max-width:31vw;padding:4px;font-size:9px}}
 
 #fallback{z-index:100;top:32%;left:6%;right:6%;width:min(480px,88vw);margin:auto;padding:22px;border:1px solid #f0d58b;color:white;box-shadow:0 12px 50px #000a;background:#102a43f4;backdrop-filter:blur(12px)}#fallback strong{font-size:18px}#fallback p{font-size:13px;line-height:1.5}#fallback .recover-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px}#fallback button,#fallback a{display:inline-flex;align-items:center;justify-content:center;padding:12px 14px;border-radius:10px;border:1px solid #a5d9ef;background:#1b4d6c;color:white;text-decoration:none;font-size:12px;font-weight:800}
+
+/* October 2026 expedition radar and performance controls */
+.radar{position:absolute;top:207px;right:max(12px,env(safe-area-inset-right));width:146px;
+padding:7px;background:linear-gradient(140deg,#092b3fe8,#0b1d30df);border:1px solid #8af8d077;
+border-radius:13px;box-shadow:0 10px 28px #0008,inset 0 1px #ffffff18;backdrop-filter:blur(8px)}
+.radar-header{display:flex;align-items:center;justify-content:space-between;gap:5px;padding:0 1px 5px;
+font-size:8px;font-weight:900;letter-spacing:.04em;color:#d3fff1}.radar-header span{color:#dfff95;font-size:8px}
+.radar canvas{width:100%;height:auto;display:block;border:1px solid #89e7b77d;border-radius:7px;image-rendering:pixelated;background:#0a2836}
+.radar-legend{display:flex;align-items:center;justify-content:space-between;gap:3px;font-size:7px;color:#e7fff1;font-weight:900;padding-top:5px}
+.radar-legend span:nth-child(1){color:#e9ff91}.radar-legend span:nth-child(2){color:#ff9cc3}.radar-legend span:nth-child(3){color:#d8a9ff}
+.top .brand{filter:drop-shadow(0 4px 12px #001b2f)}.hud .stats{box-shadow:0 7px 20px #031a2c75,inset 0 1px #e7fffd20}
+.hud .mission{box-shadow:0 10px 28px #021a2d91,inset 0 1px #ffffff23}.actions button:active{transform:scale(.96);filter:brightness(1.3)}
+@media(max-width:680px){.radar{top:181px;right:8px;width:104px;padding:5px;border-radius:10px}
+.radar-header{font-size:7px;padding-bottom:3px}.radar-header span{font-size:6px}
+.radar-legend{font-size:6px;flex-wrap:wrap;line-height:1.2}.radar-legend span:last-child{display:none}}
+@media(max-height:550px){.radar{top:101px;width:94px;max-height:112px;overflow:hidden}.radar-legend{display:none}}
