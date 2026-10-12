@@ -3526,7 +3526,7 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{
 .versus-scoreboard{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid #a0d9d229;border-radius:12px;background:#06151e;font:800 13px/1 var(--sf-ui)}
 .versus-scoreboard span{display:flex;align-items:center;gap:15px}.versus-scoreboard b{font-size:25px}.versus-blue{color:#75d5ff}.versus-lime{color:#d0ff69}#versus-clock{font-variant-numeric:tabular-nums}
 .versus-stage{min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:14px;background:#06121d;border:1px solid #4d879066}
-#versus-canvas{display:block;width:100%;height:auto;max-height:100%;object-fit:contain;touch-action:none}
+#versus-canvas{display:block;width:100%;height:auto;max-height:72dvh;object-fit:contain;touch-action:none;aspect-ratio:420/720}
 #versus .versus-play{display:grid;grid-template-columns:92px 1fr 110px;align-items:center;gap:10px}
 #versus-stick{width:92px;height:92px;border-radius:50%;background:radial-gradient(circle,#234650,#0b1d29);border:1px solid #8bd2d177;position:relative;touch-action:none;box-shadow:inset 0 0 18px #0007}
 #versus-nub{position:absolute;width:36px;height:36px;left:28px;top:28px;border-radius:50%;background:linear-gradient(135deg,#e1ffc1,#76bcb0);box-shadow:0 4px 12px #0008}

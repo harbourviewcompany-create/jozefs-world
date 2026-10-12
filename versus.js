@@ -11,7 +11,20 @@
   canvas.width = W * dpr; canvas.height = H * dpr;
   ctx.scale(dpr, dpr);
   let portrait=false;
-  function fitCamera(){const next=window.innerHeight>window.innerWidth;if(next!==portrait||!canvas.width){portrait=next;canvas.width=(portrait?H:W)*dpr;canvas.height=(portrait?W:H)*dpr;}ctx.setTransform(dpr,0,0,dpr,0,0);if(portrait){ctx.translate(H,0);ctx.rotate(Math.PI/2);}}
+  function fitCamera(){
+    const next = window.innerWidth < 900;
+    if (next !== portrait || !canvas.width) {
+      portrait = next;
+      canvas.width = (portrait ? H : W) * dpr;
+      canvas.height = (portrait ? W : H) * dpr;
+    }
+    canvas.style.width = '100%';
+    canvas.style.height = 'auto';
+    canvas.style.aspectRatio = portrait ? '420 / 720' : '720 / 420';
+    canvas.style.maxHeight = portrait ? '72dvh' : '100%';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (portrait) { ctx.translate(H, 0); ctx.rotate(Math.PI / 2); }
+  }
   const GOAL = { x: 36, y: 150, w: 18, h: 120 };
   const room = { code: '', who: 'Dad', peer: null, conn: null, host: false, other: '', ready: false, remoteReady: false, practice: false, phase: 'lobby', remoteActive: true };
   let connectTimer, countdownTimer, lastPacket = 0, lastSent = 0, lastHello = 0, localActive = true;
