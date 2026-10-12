@@ -19,9 +19,10 @@
       canvas.height = (portrait ? W : H) * dpr;
     }
     canvas.style.width = '100%';
-    canvas.style.height = 'auto';
-    canvas.style.aspectRatio = portrait ? '420 / 720' : '720 / 420';
-    canvas.style.maxHeight = portrait ? '78dvh' : '100%';
+    canvas.style.height = '100%';
+    canvas.style.aspectRatio = 'auto';
+    canvas.style.maxHeight = 'none';
+    canvas.style.objectFit = 'cover';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     if (portrait) { ctx.translate(H, 0); ctx.rotate(Math.PI / 2); }
   }
