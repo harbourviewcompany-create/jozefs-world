@@ -273,20 +273,25 @@
 
   function keeper(side, color) {
     const y = state.keepers?.[side] || 210;
-    const x = side === 'left' ? 52 : 668;
+    const x = side === 'left' ? 48 : 672;
     const dive = keeperState[side].commit > 0 ? Math.sign(keeperState[side].target - 210) : 0;
     ctx.save();
     ctx.translate(x, y);
-    ctx.rotate(dive * 0.5);
-    ctx.fillStyle = 'rgba(0,0,0,.3)';
-    ctx.beginPath(); ctx.ellipse(0, 16, 10, 3, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = color;
-    ctx.fillRect(-8, -6, 16, 18);
-    ctx.fillStyle = '#e7b898';
-    ctx.beginPath(); ctx.arc(0, -12, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.rotate(dive * 0.7);
+    ctx.scale(1.6, 1.6);
+    ctx.fillStyle = 'rgba(0,0,0,.35)';
+    ctx.beginPath(); ctx.ellipse(0, 16, 12, 4, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#111';
-    ctx.fillRect(-14, -4, 6, 5);
-    ctx.fillRect(8, -4, 6, 5);
+    ctx.fillRect(-16, -2, 7, 6);
+    ctx.fillRect(9, -2, 7, 6);
+    ctx.fillStyle = color;
+    ctx.fillRect(-9, -8, 18, 20);
+    ctx.fillStyle = '#e7b898';
+    ctx.beginPath(); ctx.arc(0, -14, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#071724';
+    ctx.font = '700 8px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText('GK', 0, 4);
     ctx.restore();
   }
   function mindKeepers() {
