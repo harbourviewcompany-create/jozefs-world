@@ -3654,3 +3654,8 @@ body.versus-focused #versus-tip{font-weight:800;letter-spacing:.03em;color:#e4ff
 #versus-season-list{display:flex;gap:8px;list-style:none;padding:0;margin:0;font-weight:800}
 #versus-season{font-weight:800}
 @media(orientation:portrait){#versus .versus-stage{min-height:72dvh}}
+
+/* Showdown move focus for keyboard and controller players. */
+#jw-adventure-battle [data-adventure-lane].is-selected{outline:3px solid #e4ff8e;outline-offset:2px;box-shadow:0 0 0 5px #a3f4a123,inset 0 1px #fff5}
+#jw-adventure-battle [data-adventure-lane].is-selected.is-guarded{outline-color:#ffcaa0}
+@media(prefers-reduced-motion:reduce){#jw-adventure-battle [data-adventure-lane].is-selected{transition:none!important}}

@@ -78,7 +78,19 @@
     }
     return null;
   }
-  const api=Object.freeze({KEY,WORLDS,OUTFITS,STAR_POS,SECRET_POS,SWITCH_POS,newState,sanitize,tileAt,canMove,canChallenge,bossGuard,pointId,earnedCount,shortestPath,powerLane});
+  // Standard Gamepad mapping shared with Arena: stick/D-pad, A, X, Y.
+  function readGamepad(pad){
+    if(!pad?.connected)return {dx:0,dy:0,action:false,switchPlayer:false,guide:false};
+    const pressed=i=>pad.buttons?.[i]?.pressed===true;
+    const axis=n=>Number.isFinite(pad.axes?.[n])?pad.axes[n]:0;
+    const dx=pressed(14)?-1:pressed(15)?1:axis(0)<-.45?-1:axis(0)>.45?1:0;
+    const dy=pressed(12)?-1:pressed(13)?1:axis(1)<-.45?-1:axis(1)>.45?1:0;
+    // Grid movement is cardinal; prevent diagonal moves from being dropped.
+    const moveX=Math.abs(axis(0))>=Math.abs(axis(1))?dx:dy?0:dx;
+    const moveY=moveX?0:dy;
+    return {dx:moveX,dy:moveY,action:pressed(0),switchPlayer:pressed(2),guide:pressed(3)};
+  }
+  const api=Object.freeze({KEY,WORLDS,OUTFITS,STAR_POS,SECRET_POS,SWITCH_POS,newState,sanitize,tileAt,canMove,canChallenge,bossGuard,pointId,earnedCount,shortestPath,powerLane,readGamepad});
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
   if(typeof document==='undefined')return;
   root.JozefAdventureRules=api;
@@ -91,6 +103,7 @@
   let state;
   try{state=sanitize(JSON.parse(localStorage.getItem(KEY)||'null'))}catch(_){state=newState()}
   let players=[{x:1,y:1},{x:1,y:2}],active=0,battle=null,frameId=0,walkingTimer=null,walkingToken=0;
+  let controllerLane=1,lastControllerSample=0,controllerButtons={action:false,switchPlayer:false,guide:false};
   let displayed=[{x:1,y:1},{x:1,y:2}];
   let toast='Explore the arena. Collect two energy stars and activate both beacons.',soundOff=true;
   const hits=['LEFT','CENTRE','RIGHT'];
@@ -159,6 +172,7 @@
     if(near(p,13,7)){
       if(state.completed.includes(state.zone)){message('Champion already beaten. Find the golden portal!');return true;}
       if(!canChallenge(state,state.zone)){message('Collect at least two stars and activate both beacons to challenge the champion.');return true;}
+      controllerLane=1;
       battle={goals:0,misses:0,round:0,attempt:0,shield:bossGuard(state.zone,0,0)};
       message('CHAMPION SHOWDOWN! Avoid the shield; highlighted plays earn double points.');
       render();return true;
@@ -250,6 +264,8 @@
         b.textContent=moveName(lane)+(power?' ★ 2 POINTS':'');
         b.style.background=power?'#ffe19b':'';b.style.color=power?'#132b30':'';
         b.classList.toggle('is-guarded',guarded);
+        b.classList.toggle('is-selected',Boolean(battle&&lane===controllerLane));
+        b.setAttribute('aria-pressed',String(Boolean(battle&&lane===controllerLane)));
         b.setAttribute('aria-label',moveName(lane)+(guarded?' — blocked':power?' — double points':' — one point'));
       });
     }
@@ -296,12 +312,46 @@
     message('Following the shortest clear route to the '+next.name+'.');
     followRoute(next.path);
   }
+  function selectChampionLane(value){
+    controllerLane=(Math.max(0,Math.min(2,value)));
+    document.querySelectorAll('[data-adventure-lane]').forEach(button=>{
+      const selected=Boolean(battle&&Number(button.dataset.adventureLane)===controllerLane);
+      button.classList.toggle('is-selected',selected);
+      button.setAttribute('aria-pressed',String(selected));
+    });
+  }
+  function pollController(t){
+    if(t-lastControllerSample<165)return;
+    lastControllerSample=t;
+    let pad=null;
+    try{pad=Array.from(navigator.getGamepads?.()||[]).find(item=>item?.connected)||null;}catch(_){}
+    const input=readGamepad(pad);
+    const edge=name=>input[name]&&!controllerButtons[name];
+    if(edge('switchPlayer')&&state.coop&&!battle){stopWalking();active=1-active;renderHud();}
+    if(edge('guide')&&!battle)guideToObjective();
+    if(battle){
+      if(input.dx)selectChampionLane((controllerLane+input.dx+3)%3);
+      if(edge('action'))shoot(controllerLane);
+    }else{
+      if(input.dx||input.dy){stopWalking();move(active,input.dx,input.dy);}
+      if(edge('action')){stopWalking();interact();}
+    }
+    controllerButtons={action:input.action,switchPlayer:input.switchPlayer,guide:input.guide};
+  }
   function initInput(){
-    const keys=new Set(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d','W','A','S','D',' ','Enter']);
+    const keys=new Set(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d','W','A','S','D',' ','Enter','1','2','3']);
     document.addEventListener('keydown',e=>{
       if(!$('adventure')?.classList.contains('active')||e.altKey||e.ctrlKey||e.metaKey||e.repeat||!keys.has(e.key))return;
       if(e.target.closest('button,input,select,textarea,dialog'))return;
-      if([' ','Enter'].includes(e.key)){e.preventDefault();interact();return;}
+      if(battle){
+        if(['1','2','3'].includes(e.key)){e.preventDefault();shoot(Number(e.key)-1);return;}
+        if(e.key==='ArrowLeft'||e.key==='ArrowRight'){
+          e.preventDefault();selectChampionLane((controllerLane+(e.key==='ArrowLeft'?2:1))%3);return;
+        }
+        if([' ','Enter'].includes(e.key)){e.preventDefault();shoot(controllerLane);return;}
+        return;
+      }
+      if([' ','Enter'].includes(e.key)){e.preventDefault();stopWalking();interact();return;}
       const k=e.key.toLowerCase();
       const id=state.coop&&e.key.startsWith('Arrow')?1:0;
       const directions={arrowup:[0,-1],arrowdown:[0,1],arrowleft:[-1,0],arrowright:[1,0],w:[0,-1],s:[0,1],a:[-1,0],d:[1,0]};
@@ -310,7 +360,7 @@
     document.querySelectorAll('[data-adventure-step]').forEach(b=>b.addEventListener('click',()=>{
       const parts=b.dataset.adventureStep.split(',').map(Number);stopWalking();move(active,parts[0],parts[1]);canvas.focus();
     }));
-    document.querySelectorAll('[data-adventure-lane]').forEach(b=>b.addEventListener('click',()=>shoot(Number(b.dataset.adventureLane))));
+    document.querySelectorAll('[data-adventure-lane]').forEach(b=>b.addEventListener('click',()=>{selectChampionLane(Number(b.dataset.adventureLane));shoot(controllerLane);}));
     $('jw-adventure-interact')?.addEventListener('click',()=>{stopWalking();interact();canvas.focus();});
     $('jw-adventure-guide')?.addEventListener('click',()=>{guideToObjective();canvas.focus();});
     $('jw-adventure-coop')?.addEventListener('click',toggleCoop);
@@ -416,8 +466,11 @@
     }
   }
   function animate(t){
+    const activeScene=$('adventure')?.classList.contains('active')&&!document.hidden;
+    if(activeScene)pollController(t);
+    else controllerButtons={action:false,switchPlayer:false,guide:false};
     // Throttle expensive dynamic lighting on lower-end mobile devices.
-    if($('adventure')?.classList.contains('active')&&!document.hidden&&
+    if(activeScene&&
       (t-lastPaint>=(reducedMotion?60:32))){
       draw(t);lastPaint=t;
     }

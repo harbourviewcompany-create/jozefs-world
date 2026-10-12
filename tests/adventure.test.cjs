@@ -58,3 +58,16 @@ test('each champion has an unblocked bonus choice',()=>{
   assert.ok(b>=0&&b<=2);assert.notEqual(b,rules.bossGuard(zone,round,0));
  }
 });
+
+test('controller navigation uses cardinal movement and action edges',()=>{
+ const p=(axes,buttons=[])=>({connected:true,axes,buttons:Array.from({length:16},(_,i)=>({pressed:buttons.includes(i)}))});
+ assert.deepEqual([rules.readGamepad(p([.9,.7])).dx,rules.readGamepad(p([.9,.7])).dy],[1,0]);
+ assert.deepEqual([rules.readGamepad(p([-.2,-.9])).dx,rules.readGamepad(p([-.2,-.9])).dy],[0,-1]);
+ const input=rules.readGamepad(p([0,0],[0,2,3,12]));
+ assert.equal(input.action,true);assert.equal(input.switchPlayer,true);assert.equal(input.guide,true);
+ assert.equal(input.dy,-1);
+ assert.equal(rules.readGamepad(null).action,false);
+ const source=read('adventure.js');
+ assert.match(source,/shoot\(Number\(e\.key\)-1\)/);
+ assert.match(source,/function pollController\(/);
+});
