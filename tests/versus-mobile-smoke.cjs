@@ -32,6 +32,7 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  await guest.locator('#versus-stick').dispatchEvent('pointerup');
  await host.evaluate(()=>window.__versusTest.onData({type:'aim',x:null,y:null}));
  assert.equal(await host.evaluate(()=>window.__versusTest.targets.Jozef),null);
+ await host.evaluate(()=>{const t=window.__versusTest;t.targets.Dad=null;t.targets.Jozef=null;Object.assign(t.state.dad,{x:400,y:210,vx:0,vy:0});Object.assign(t.state.ball,{x:380,y:210,vx:0,vy:0});t.state.kick='Dad';t.step();t.step();if(t.state.ball.vx>=-5)throw Error('shot was swallowed by dribbling');});
  await host.evaluate(()=>{window.__versusTest.state.matchLeft=.02;});
  await host.waitForFunction(()=>!document.querySelector('#versus-again').hidden);await guest.waitForFunction(()=>!document.querySelector('#versus-again').hidden);
  await host.waitForTimeout(150);assert.equal(await host.locator('#versus-clock').textContent(),'0:00');

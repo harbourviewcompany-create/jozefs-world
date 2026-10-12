@@ -159,6 +159,8 @@
   }
 
   function touch(p, forced) {
+    // Give a struck ball time to leave the player's dribble radius.
+    if (!forced && kickLock > 0) return;
     const dx = state.ball.x - p.x, dy = state.ball.y - p.y;
     const dist = Math.hypot(dx, dy) || 1;
     if (dist > (forced ? 64 : 30)) return;
