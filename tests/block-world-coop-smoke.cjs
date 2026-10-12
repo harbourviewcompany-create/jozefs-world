@@ -108,11 +108,15 @@ guest.game().requestAction('mine',{x:tileX,y:tileY},2);
 for(let i=0;i<12;i++){guest.advance(1);host.advance(1);}
 assert.equal(host.game().getWorld().world[tileY][tileX],0,'Jozef can mine a real host tile');
 assert.equal(guest.game().getWorld().world[tileY][tileX],0,'mined block updated on second device');
+guest.game().requestAction('place',{x:tileX,y:tileY},2);
+for(let i=0;i<12;i++){guest.advance(1);host.advance(1);}
+assert.equal(host.game().getWorld().world[tileY][tileX],2,'Jozef can place a block on the host world');
+assert.equal(guest.game().getWorld().world[tileY][tileX],2,'new block appears on the second device');
 guest.click('save');
 assert.equal(guest.store.get('jozefs-world-block-v3'),ownSave,'Jozef joining must not overwrite their solo save');
 host.click('save');
-assert.equal(JSON.parse(host.store.get('jozefs-world-block-v3')).world[tileY][tileX],0,'shared world saved on the host');
+assert.equal(JSON.parse(host.store.get('jozefs-world-block-v3')).world[tileY][tileX],2,'shared construction saved on the host');
 assert.ok(host.game().getWorld().players[0].x>0,'Daddy remains independently present');
 guest.session().disconnect();
 assert.ok(guest.trace.includes('reload'),'guest reload restores own solo world on disconnect');
-console.log('Block World 2D co-op: private invite, two-player physics, live positions, shared mining, host saves, guest save isolation PASS');
+console.log('Block World 2D co-op: private invite, two-player physics, live positions, shared mining/building, host saves, guest save isolation PASS');
