@@ -564,7 +564,7 @@
     $('versus-ready').textContent=room.ready?'Ready — waiting for opponent':room.other?'Ready to play':'Waiting for opponent';
     $('versus-room-code').textContent=room.code;
     $('versus').classList.toggle('is-playing',playing);
-    const stage=$('.versus-stage'), play=$('.versus-play'), board=$('.versus-scoreboard'), card=$('.versus-card');
+    const stage=document.querySelector('.versus-stage'), play=document.querySelector('.versus-play'), board=document.querySelector('.versus-scoreboard'), card=document.querySelector('.versus-card');
     if(playing){
       if(card){card.style.cssText='position:relative;height:100dvh;padding:0;overflow:hidden;background:#061018';}
       if(stage){stage.style.cssText='position:absolute;inset:0;z-index:0';}
