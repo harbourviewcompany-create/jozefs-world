@@ -200,7 +200,7 @@ if(!host)return;
 const $=id=>document.getElementById(id);
 const canvas=$('jw-worldcore-canvas'),overlay=$('jw-worldcore-labels'),list=$('jw-worldcore-index');
 const reduced=!!root.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
-let graphics=null,selected=0,yaw=0,pitch=0,velocity=[0,0],target=null,zoom=1,frame=0,last=0,drag=null,visible=false,disposed=false,forceFallback=false,armed=-1;
+let graphics=null,selected=0,yaw=0,pitch=0,velocity=[0,0],target=null,zoom=1,frame=0,last=0,drag=null,visible=false,disposed=false,forceFallback=false,armed=-1,rendererError='';
 const pointers=new Map();let pinchStart=0,pinchZoom=1;
 const labels=[];
 function say(msg){const el=$('jw-worldcore-announcement');if(el)el.textContent=msg;}
@@ -403,10 +403,14 @@ function init(){
  },{threshold:.01}).observe(host);
  try{
   graphics=glRenderer(canvas);
-  if(!graphics)graphicsFallback('WebGL is not supported. Every world is still available below.');
+  if(!graphics){rendererError='No WebGL context';graphicsFallback('WebGL is not supported. Every world is still available below.');}
   else {resize();focusPlate(0,false);start();}
- }catch(_){graphicsFallback('3D graphics unavailable. All worlds remain reachable below.');}
+ }catch(error){
+  rendererError=String(error?.message||error);
+  console.warn('World Core WebGL initialization:',rendererError);
+  graphicsFallback('3D graphics unavailable. All worlds remain reachable below.');
+ }
 }
-root.JozefWorldCore=Object.freeze({DESTINATIONS,focusPlate,enter,hitTest,progress:()=>({selected:DESTINATIONS[selected].id,webgl:!!graphics,fallback:forceFallback})});
+root.JozefWorldCore=Object.freeze({DESTINATIONS,focusPlate,enter,hitTest,progress:()=>({selected:DESTINATIONS[selected].id,webgl:!!graphics,fallback:forceFallback,rendererError})});
 init();
 })(typeof window!=='undefined'?window:globalThis);
