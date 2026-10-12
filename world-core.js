@@ -99,7 +99,7 @@ function glRenderer(canvas){
  ||canvas.getContext('experimental-webgl',{alpha:true,antialias:true,depth:true});
  if(!gl)return null;
  const vertex=`attribute vec3 p;attribute vec3 n;attribute float bevel;
- uniform vec2 rotation;uniform float scale;uniform float selected;
+ uniform vec2 rotation;uniform float scale;uniform mediump float selected;
  varying vec3 normal;varying vec3 point;varying float finish;
  void main(){
  float cy=cos(rotation.x),sy=sin(rotation.x),cx=cos(rotation.y),sx=sin(rotation.y);
