@@ -681,6 +681,70 @@ createAdventureUi();
  update=function(dt){baseUpdateJump(dt);if(players[1].ground)secondJumpUsed=false;};
 })();
 
+
+/* IndexedDB autosave mirror and recovery, with legacy localStorage continuity. */
+(function(){
+ const DB_NAME='jozef-dad-block-world',STORE='worlds',ID='autosave';
+ let opening=null;
+ function openDB(){
+  if(opening)return opening;
+  if(typeof window.indexedDB==='undefined')return Promise.resolve(null);
+  opening=new Promise(resolve=>{
+   try{
+    const request=window.indexedDB.open(DB_NAME,1);
+    request.onupgradeneeded=()=>{const db=request.result;if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE);};
+    request.onsuccess=()=>resolve(request.result);
+    request.onerror=()=>resolve(null);
+    request.onblocked=()=>resolve(null);
+   }catch(_){resolve(null);}
+  });
+  return opening;
+ }
+ function snapshot(){return {
+  version:4,seed:adventureSeed,world:world.map(row=>row.slice()),creative,active,selected,
+  players:players.map(p=>({x:p.x,y:p.y,facing:p.facing,inventory:Object.assign({},p.inventory)})),
+  extra:{questStage,goals:Object.assign({},goals),explored:Object.assign({},explored),achievements:achievements.slice(),portalUnlocked,teamFollow,cameraZoom}
+ };}
+ function mirror(){
+  openDB().then(db=>{
+   if(!db)return;
+   try{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(snapshot(),ID);tx.onerror=()=>console.warn('Block World IndexedDB write failed');}
+   catch(err){console.warn('Block World IndexedDB storage unavailable',err);}
+  });
+ }
+ const priorSave=save;
+ save=function(){const write=dirty;priorSave();if(write)mirror();};
+ const previousRead=readSave;
+ readSave=function(){
+  const loaded=previousRead();
+  if(!loaded){
+   openDB().then(db=>{
+    if(!db)return;
+    try{
+     const transaction=db.transaction(STORE,'readonly'),get=transaction.objectStore(STORE).get(ID);
+     get.onsuccess=()=>{
+      const data=get.result;
+      if(!data||data.version!==4||ticks>80||dirty||!Array.isArray(data.world)||data.world.length!==H||
+         data.world.some(row=>!Array.isArray(row)||row.length!==W))return;
+      world=data.world;adventureSeed=data.seed||adventureSeed;creative=!!data.creative;
+      active=data.active===1?1:0;selected=blockable.includes(data.selected)?data.selected:2;
+      players.forEach((p,i)=>{const q=data.players?.[i];if(!q)return;
+       if(Number.isFinite(q.x))p.x=Math.max(0,Math.min(W*TILE-p.w,q.x));
+       if(Number.isFinite(q.y))p.y=Math.max(0,Math.min(H*TILE-p.h,q.y));
+       p.vx=p.vy=0;p.facing=q.facing===-1?-1:1;p.inventory=q.inventory&&typeof q.inventory==='object'?q.inventory:{};
+      });
+      const e=data.extra||{};questStage=Math.max(0,Math.min(Q.length,Number(e.questStage)||0));goals=Object.assign(goals,e.goals||{});
+      explored=e.explored||{};achievements=Array.isArray(e.achievements)?e.achievements:[];portalUnlocked=!!e.portalUnlocked;
+      teamFollow=e.teamFollow!==false;cameraZoom=Math.max(1,Math.min(2,Number(e.cameraZoom)||1));
+      dirty=true;save();renderHotbar();questHud();say('Recovered your world from offline storage',3600);
+     };
+    }catch(err){console.warn('Offline recovery unavailable',err);}
+   });
+  }
+  return loaded;
+ };
+})();
+
 bindButton('left','left');bindButton('right','right');bindButton('jump','jump');
 bindButton('mine',null,mine);bindButton('place',null,place);bindButton('switch',null,playerSwitch);
 const canvasTouches=new Map();let tapTimer=0,pinchGap=0;
