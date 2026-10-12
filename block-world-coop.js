@@ -101,6 +101,7 @@ function onMessage(m){
 function attach(connection){
  if(conn?.open){connection.close();return;}conn=connection;
  connection.on('open',()=>{
+  $('coop-disconnect').disabled=false;
   if(role==='host'){
    ready=false;g.role(0);setStatus('Jozef joined. Synchronizing your shared world…');
    fullWorld();
