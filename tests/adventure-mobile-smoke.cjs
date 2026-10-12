@@ -37,6 +37,24 @@ const close=()=>new Promise(resolve=>server.close(resolve));
       assert.equal(await page.locator('#jw-adventure-outfits button').count(),5,'five earned outfits');
       assert.equal(await page.locator('#jw-adventure-worlds button').nth(1).isDisabled(),true,'future stages begin locked');
       assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'adventure has no horizontal overflow');
+      const layout=await page.evaluate(()=>{
+       const selectors=['#adventure','.jw-adventure-board','.jw-adventure-sidebar','.jw-adventure-controls',
+         '#jw-adventure-interact','#jw-adventure-guide','#jw-adventure-coop','#jw-adventure-retry','.jw-adventure-exit'];
+       return selectors.map(sel=>{
+        const el=document.querySelector(sel),r=el.getBoundingClientRect();
+        return {sel,left:r.left,right:r.right,width:r.width};
+       });
+      });
+      for(const item of layout)assert.ok(item.width>0&&item.left>=-1&&item.right<=viewport.width+1,
+        item.sel+' clipped: '+JSON.stringify(item));
+      assert.ok(await page.locator('.jw-adventure-exit').isVisible(),'mobile game retains an accessible exit');
+      assert.equal(await page.locator('.jw-adventure-collection').evaluate(el=>el.open),false,
+        'optional kits start collapsed so the game stays playable');
+      assert.equal(await page.locator('.phone-dock').isVisible(),false,
+        'global navigation is replaced by compact game controls');
+      await page.locator('.jw-adventure-collection summary').click();
+      assert.equal(await page.locator('.jw-adventure-collection').evaluate(el=>el.open),true,
+        'kits remain accessible using the disclosure');
       await page.locator('#jw-adventure-guide').click();
       await page.waitForFunction(()=>window.JozefAdventure.getProgress().stars>=1,null,{timeout:5000});
       assert.ok(await page.evaluate(()=>window.JozefAdventure.getProgress().stars)>=1,'guided route collects an actual star');

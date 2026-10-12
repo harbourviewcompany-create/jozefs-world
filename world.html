@@ -1323,6 +1323,7 @@ body.nav-open .nav-extra{display:inline-flex}
       <p>Explore original sports worlds, collect stars, activate beacons and beat each champion. Play solo or together on one device. Progress stays on your device.</p>
     </div>
     <strong id="jw-adventure-stats" aria-live="polite">0/20 STARS · 0/8 SECRETS · 0/4 CUPS</strong>
+    <button type="button" class="jw-adventure-exit" aria-label="Exit Adventure and return to Club HQ" onclick="showSection('home')">← EXIT</button>
   </header>
 
   <section id="jw-together-game" class="jw-together-game" aria-label="Dad and Jozef together story" hidden>
@@ -1393,11 +1394,11 @@ body.nav-open .nav-extra{display:inline-flex}
           <button type="button" data-adventure-step="1,0" class="right" aria-label="Move right">→</button>
         </div>
         <div class="jw-adventure-main-actions">
-          <button type="button" id="jw-adventure-interact">INTERACT / CHALLENGE</button>
-          <button type="button" id="jw-adventure-guide">FIND NEXT OBJECTIVE</button>
+          <button type="button" id="jw-adventure-interact" aria-label="Interact with objects or challenge the champion">INTERACT</button>
+          <button type="button" id="jw-adventure-guide" aria-label="Find and walk to the next objective">FIND NEXT</button>
           <button type="button" id="jw-adventure-coop" aria-pressed="false">2 PLAYER: OFF</button>
           <button type="button" id="jw-adventure-switch" hidden>SWITCH PLAYER</button>
-          <button type="button" id="jw-adventure-retry">RESTART POSITION</button>
+          <button type="button" id="jw-adventure-retry" aria-label="Restart player position without losing collected items">RESET</button>
         </div>
       </div>
       <div id="jw-adventure-battle" class="jw-adventure-battle" hidden>
@@ -1409,11 +1410,11 @@ body.nav-open .nav-extra{display:inline-flex}
           <button type="button" data-adventure-lane="2">BOTTOM</button>
         </div>
       </div>
-      <div class="jw-adventure-collection">
-        <span class="studio-kicker">EARNED KITS / SHARED CLUB</span>
+      <details class="jw-adventure-collection" open>
+        <summary class="studio-kicker">EARNED KITS <span aria-hidden="true">⌄</span></summary>
         <div id="jw-adventure-outfits" class="jw-adventure-outfits"></div>
-      </div>
-      <p class="jw-adventure-help">Tap an open tile to follow a safe path, or use the arrows. On desktop, WASD controls Jozef and arrow keys control Dad in two-player mode. Space or Enter interacts. In champion showdowns, press 1–3 to choose a move, or use ←/→ and Enter. Gamepad: stick/D-pad moves; A interacts, X swaps player, Y finds the next objective.</p>
+      </details>
+      <details class="jw-adventure-help"><summary>How to play</summary><p>Tap any open tile to follow a safe path. Use the arrows to move one step. On desktop, WASD controls Jozef and arrow keys control Dad in two-player mode. Space or Enter interacts. In champion showdowns, press 1–3 to choose a move, or use ←/→ and Enter. Gamepad: stick/D-pad moves; A interacts, X swaps player, Y finds the next objective.</p></details>
     </aside>
   </div>
 </section>

@@ -3746,3 +3746,95 @@ body.versus-focused #versus-tip{font-weight:800;letter-spacing:.03em;color:#e4ff
 #versus-trophy,#hq-trophy{color:#d7ff4a;font-weight:800}
 
 .versus-spots{display:flex;gap:8px}.versus-spot{min-height:44px;border-radius:12px;border:1px solid #8bd2d155;background:#102430;color:#fff;font-weight:800}.versus-spot.is-on{background:#d0ff69;color:#122320}#versus-together{background:#163040;color:#fff;border:0;border-radius:12px;min-height:48px;font-weight:800}
+
+/* October 2026 / Adventure play-first phone layout.
+   Explicit minmax(0,1fr) and min-width:0 avoid Safari intrinsic grid overflow. */
+.jw-adventure-exit{display:none}
+#adventure .jw-adventure-layout,
+#adventure .jw-adventure-board,
+#adventure .jw-adventure-sidebar,
+#adventure .jw-adventure-controls,
+#adventure .jw-adventure-main-actions,
+#adventure .jw-adventure-mission,
+#adventure .jw-adventure-collection,
+#adventure .jw-adventure-help{min-width:0;max-width:100%}
+#adventure .jw-adventure-main-actions button{min-width:0;max-width:100%;width:100%;white-space:normal;overflow-wrap:anywhere}
+#adventure #jw-adventure-objective{white-space:normal;overflow-wrap:anywhere;max-width:100%;line-height:1.35}
+#adventure .jw-adventure-help summary,
+#adventure .jw-adventure-collection summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:30px}
+#adventure .jw-adventure-help summary::-webkit-details-marker,
+#adventure .jw-adventure-collection summary::-webkit-details-marker{display:none}
+#adventure .jw-adventure-help summary::after{content:'⌄';font-size:15px;color:#bcf6ef}
+#adventure .jw-adventure-help[open] summary::after{content:'⌃'}
+#adventure .jw-adventure-collection[open] summary span{transform:rotate(180deg)}
+#adventure .jw-adventure-help p{margin:5px 0 0;overflow-wrap:anywhere}
+#adventure .jw-adventure-outfits{min-width:0}
+@media(max-width:640px){
+  body:has(#adventure.section.active) .navbar,
+  body:has(#adventure.section.active) .phone-dock,
+  body:has(#adventure.section.active)>footer{display:none!important}
+  body:has(#adventure.section.active){overflow-x:clip}
+  #adventure.section.active{box-sizing:border-box;display:block;width:100%;max-width:100%;min-width:0;
+    min-height:100dvh;overflow-x:clip;margin:0;padding:calc(7px + env(safe-area-inset-top,0px)) 8px calc(13px + env(safe-area-inset-bottom,0px));
+    background:radial-gradient(ellipse at 48% -15%,#194153 0%,#071824 68%);color:#e9faf5}
+  #adventure .jw-adventure-heading{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 6px;align-items:center;margin:0 0 5px;padding:0}
+  #adventure .jw-adventure-heading>div{min-width:0}
+  #adventure .jw-adventure-heading .studio-kicker{display:block;font-size:9px;line-height:1.1;letter-spacing:.08em;color:#b4f4b1}
+  #adventure .jw-adventure-heading h2{font-size:clamp(18px,5.8vw,24px);line-height:1.03;margin:3px 0;letter-spacing:-.018em;white-space:normal}
+  #adventure .jw-adventure-heading p{display:none}
+  #adventure .jw-adventure-exit{grid-column:2;grid-row:1 / span 2;display:inline-flex;align-items:center;justify-content:center;
+    min-width:66px;min-height:40px;padding:6px 10px;border:1px solid #b4e8ba70;border-radius:10px;
+    background:#102d3e;color:#e7fff0;font:900 11px/1.1 var(--sf-ui);letter-spacing:.04em}
+  #adventure #jw-adventure-stats{grid-column:1;grid-row:2;font-size:10px;letter-spacing:0;min-width:0;white-space:normal}
+  #adventure .jw-adventure-worlds{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:5px;width:100%;max-width:100%;margin:5px 0 7px;padding:0;overflow:visible;scroll-snap-type:none}
+  #adventure .jw-adventure-world{min-width:0;min-height:47px;width:100%;padding:6px 5px;gap:3px;
+    border-radius:10px;font:850 clamp(9px,2.65vw,11px)/1.12 var(--sf-ui);letter-spacing:-.02em;
+    overflow-wrap:anywhere;justify-content:center}
+  #adventure .jw-adventure-world small{font-size:8px;line-height:1.1;letter-spacing:0}
+  #adventure .jw-adventure-layout{display:flex;flex-direction:column;gap:5px;min-width:0;width:100%}
+  #adventure .jw-adventure-board{width:100%;flex:0 0 auto;overflow:hidden;border-radius:12px}
+  #adventure .jw-adventure-boardhead{min-height:28px;padding:5px 9px;gap:5px}
+  #adventure #jw-adventure-zone-title{font-size:17px;line-height:1.05}
+  #adventure #jw-adventure-active{font-size:10px;text-align:right}
+  #adventure #jw-adventure-canvas{width:100%;max-width:100%;height:auto;aspect-ratio:8/5}
+  #adventure .jw-adventure-status{margin:0;padding:6px 9px;min-height:28px;font-size:10px;line-height:1.35;
+    border-radius:0;overflow-wrap:anywhere}
+  #adventure .jw-adventure-sidebar{display:grid;grid-template-columns:minmax(0,1fr);width:100%;gap:5px;
+    padding:7px;border-radius:12px}
+  #adventure .jw-adventure-mission{grid-column:1;grid-row:auto;margin:0;padding:5px 8px;border-radius:9px}
+  #adventure .jw-adventure-mission .studio-kicker{font-size:9px;letter-spacing:.08em}
+  #adventure #jw-adventure-objective{margin:3px 0 0;font-size:10px;line-height:1.25}
+  #adventure .jw-adventure-controls{grid-column:1;grid-row:auto;display:grid;
+    grid-template-columns:minmax(96px,34%) minmax(0,1fr);gap:7px;align-items:center;min-width:0;min-height:98px}
+  #adventure .jw-adventure-dpad{display:grid;grid-template:repeat(3,minmax(33px,1fr))/repeat(3,minmax(0,1fr));
+    gap:3px;place-content:center;width:100%;max-width:126px;height:108px;padding:0;margin:0}
+  #adventure .jw-adventure-dpad button{min-width:0;width:100%;min-height:33px;height:33px;padding:0;font:900 17px/1 var(--sf-ui);border-radius:9px}
+  #adventure .jw-adventure-main-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;align-items:stretch;width:100%}
+  #adventure .jw-adventure-main-actions button{width:100%;height:auto;min-height:45px;padding:5px 3px;
+    border-radius:9px;font:850 clamp(9px,2.7vw,11px)/1.1 var(--sf-ui);text-align:center;letter-spacing:0}
+  #adventure #jw-adventure-guide{min-height:45px;font-size:clamp(9px,2.7vw,11px);box-shadow:none}
+  #adventure #jw-adventure-switch:not([hidden]){grid-column:1/-1;min-height:34px;margin:0}
+  #adventure .jw-adventure-collection{grid-column:1;grid-row:auto;margin:0;padding:4px 7px;
+    border:1px solid #345f6b;border-radius:9px;background:#0c2735}
+  #adventure .jw-adventure-collection summary{font-size:10px;line-height:1.1;min-height:25px;letter-spacing:.04em}
+  #adventure .jw-adventure-outfits{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin:6px 0 2px;
+    max-height:164px;overflow-y:auto;overflow-x:hidden}
+  #adventure .jw-outfit{min-height:38px;min-width:0;padding:5px;font-size:10px;white-space:normal;overflow-wrap:anywhere}
+  #adventure .jw-adventure-help{grid-column:1;grid-row:auto;padding:3px 7px;margin:0;
+    border:1px solid #345f6b;border-radius:9px;font-size:10px;line-height:1.35}
+  #adventure .jw-adventure-help summary{min-height:23px;font-size:10px;font-weight:750}
+  #adventure .jw-adventure-battle{grid-column:1;grid-row:auto;min-width:0;padding:8px;gap:6px}
+  #adventure .jw-adventure-battle>div{grid-template-columns:repeat(3,minmax(0,1fr))}
+  #adventure .jw-adventure-battle button{min-width:0;white-space:normal;overflow-wrap:anywhere}
+  #adventure .jw-adventure-collection[open] ~ .jw-adventure-help{margin-top:0}
+  #adventure.together-focused .jw-together-game{max-width:100%;min-width:0}
+}
+@media(max-width:360px){
+  #adventure.section.active{padding-left:5px;padding-right:5px}
+  #adventure .jw-adventure-world{font-size:9px;padding:5px 3px}
+  #adventure .jw-adventure-dpad{height:102px;grid-template-rows:repeat(3,32px)}
+  #adventure .jw-adventure-dpad button{min-height:32px;height:32px}
+  #adventure .jw-adventure-controls{grid-template-columns:minmax(95px,33%) minmax(0,1fr)}
+  #adventure .jw-adventure-main-actions button{min-height:42px;font-size:9px;padding:3px 2px}
+}

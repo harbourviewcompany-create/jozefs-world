@@ -478,6 +478,10 @@
     frameId=root.requestAnimationFrame(animate);
   }
   function boot(){
+    // Optional collection stays available without pushing the playfield below
+    // the iPhone viewport. Desktop players retain the expanded collection.
+    const collection=document.querySelector('.jw-adventure-collection');
+    if(collection&&root.matchMedia?.('(max-width: 640px)')?.matches)collection.open=false;
     initInput();render();message(toast);
     if(ctx&&root.requestAnimationFrame)frameId=root.requestAnimationFrame(animate);
     else message('Graphics are unavailable in this browser. The adventure controls and collection still work.');
