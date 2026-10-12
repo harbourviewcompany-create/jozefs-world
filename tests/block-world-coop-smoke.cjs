@@ -83,6 +83,18 @@ function boot(store=new Map()){
 }
 // Without a network, two people on one keyboard can independently control both heroes.
 const keyboard=boot();keyboard.advance(3);
+// Test simultaneous input on an intentionally flat collision-free path.
+// Randomly generated cliffs at the spawn otherwise make this a terrain test.
+const level=keyboard.game().getWorld(),TILE=40;
+for(let x=67;x<92;x++){
+ level.surface[x]=50;
+ for(let y=0;y<level.h;y++)level.world[y][x]=y<50?0:y===level.h-1?14:2;
+}
+for(let i=0;i<2;i++){
+ const p=level.players[i];p.x=(i===0?70:76)*TILE;p.y=50*TILE-(i===0?39:35)-.1;
+ p.vx=0;p.vy=0;p.ground=true;
+}
+assert.equal(keyboard.game().useWorld(level),true,'flat input test world loaded');
 const keyboardBefore=keyboard.game().getState().players.map(p=>p.x);
 keyboard.key('KeyD',true);keyboard.key('ArrowRight',true);
 keyboard.advance(25);
