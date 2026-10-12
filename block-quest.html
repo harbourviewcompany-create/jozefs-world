@@ -58,7 +58,7 @@ footer{text-align:center;color:#9ac6be;line-height:1.25;font-size:8px;letter-spa
 <p id="toast" role="status" aria-live="polite">Collect two timber blocks, then build a bridge across the river.</p>
 <div class="controls"><div class="dpad" role="group" aria-label="Move the selected hero"><button class="up" data-dir="0,-1" aria-label="Move up">↑</button><button class="left" data-dir="-1,0" aria-label="Move left">←</button><button class="right" data-dir="1,0" aria-label="Move right">→</button><button class="down" data-dir="0,1" aria-label="Move down">↓</button></div>
 <div class="buttons"><button class="action" id="act">BUILD / CLAIM</button><button id="guide">FIND NEXT</button><button class="hero" id="swap">PLAY AS DAD</button><button id="reset">RESTART MAP</button></div></div>
-<div class="hints"><span>Tap tiles to walk · Swipe sideways to rotate · Arrow keys to move · Tab switches hero</span><a href="./#adventure">ADVENTURE CIRCUIT ↗</a></div>
+<div class="hints"><span>Tap to walk · Swipe to rotate · Pinch to zoom · Arrows move · Tab switches hero</span><a href="./#adventure">ADVENTURE CIRCUIT ↗</a></div>
 <footer>ORIGINAL VOXEL-INSPIRED GAME · NO ACCOUNTS OR TRACKING · LOCAL SAVE</footer>
 </div>
 <script>
@@ -81,7 +81,8 @@ function clean(d){
 }
 let state;try{state=clean(JSON.parse(localStorage.getItem(KEY)||'null'))}catch{state=fresh()}
 let rotation=0,camera=[0,0],visual=state.pos.map(p=>p.slice()),route=[],walkTimer=null,token=0;
-let cw=0,ch=0,tw=58,th=29,dpr=1,frame=0,gesture=null,particles=[],lastNotice='';
+let cw=0,ch=0,tw=58,th=29,dpr=1,frame=0,gesture=null,particles=[],lastNotice='',zoom=1,pinch=null;
+const pointers=new Map();
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch{}}
 function notice(s){if(s!==lastNotice){$('toast').textContent=s;lastNotice=s;}}
 function pickup(){
@@ -245,9 +246,10 @@ function render(t){
  const w=canvas.clientWidth,h=canvas.clientHeight;
  if(w>0&&h>0&&(w!==cw||h!==ch)){
   cw=w;ch=h;dpr=Math.min(2,devicePixelRatio||1);canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
-  tw=Math.max(52,Math.min(82,cw*.162));th=tw*.52;
+  
  }
  if(!cw||!ch){frame=requestAnimationFrame(render);return}
+ tw=Math.max(52,Math.min(82,cw*.162))*zoom;th=tw*.52;
  ctx.setTransform(dpr,0,0,dpr,0,0);
  const bg=ctx.createLinearGradient(0,0,0,ch);bg.addColorStop(0,'#153b55');bg.addColorStop(.7,'#30676f');bg.addColorStop(1,'#0e3447');ctx.fillStyle=bg;ctx.fillRect(0,0,cw,ch);
  const glow=ctx.createRadialGradient(cw*.78,ch*.1,10,cw*.78,ch*.1,cw*.68);glow.addColorStop(0,'#9bdcbb45');glow.addColorStop(1,'#09212b00');ctx.fillStyle=glow;ctx.fillRect(0,0,cw,ch);
@@ -281,27 +283,48 @@ $('rotate').addEventListener('click',()=>{rotation=(rotation+1)%4;notice('VIEW R
 $('victory-view').addEventListener('click',()=>{$('victory').hidden=true;window.__blockVictoryDismissed=true;});
 $('victory-restart').addEventListener('click',()=>{$('victory').hidden=true;window.__blockVictoryDismissed=true;$('reset').click();});
 $('reset').addEventListener('click',()=>{if(!confirm('Restart Block World? This will clear only this game’s progress.'))return;stop();state=fresh();window.__blockVictoryDismissed=false;$('victory').hidden=true;visual=state.pos.map(p=>p.slice());save();hud();notice('NEW ISLAND! HELP DAD AND JOZEF COLLECT TIMBER.')});
-canvas.addEventListener('pointerdown',e=>{gesture={x:e.clientX,y:e.clientY,id:e.pointerId};canvas.setPointerCapture?.(e.pointerId)});
+function pointerDistance(){
+ const pts=[...pointers.values()];return pts.length===2?Math.hypot(pts[1][0]-pts[0][0],pts[1][1]-pts[0][1]):0;
+}
+canvas.addEventListener('pointerdown',e=>{
+ pointers.set(e.pointerId,[e.clientX,e.clientY]);
+ if(pointers.size===1){gesture={x:e.clientX,y:e.clientY,id:e.pointerId};pinch=null}
+ else if(pointers.size===2){pinch={distance:Math.max(1,pointerDistance()),start:zoom};gesture=null}
+ else{gesture=null}
+ try{canvas.setPointerCapture?.(e.pointerId)}catch{}
+});
+canvas.addEventListener('pointermove',e=>{
+ if(!pointers.has(e.pointerId))return;
+ pointers.set(e.pointerId,[e.clientX,e.clientY]);
+ if(pinch&&pointers.size===2)zoom=Math.max(.72,Math.min(1.65,pinch.start*pointerDistance()/pinch.distance));
+});
 canvas.addEventListener('pointerup',e=>{
- if(!gesture||gesture.id!==e.pointerId)return;
- const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;gesture=null;
+ const original=gesture,wasPinch=!!pinch;
+ pointers.delete(e.pointerId);
+ if(wasPinch){pinch=null;gesture=null;return}
+ gesture=null;
+ if(!original||original.id!==e.pointerId)return;
+ const dx=e.clientX-original.x,dy=e.clientY-original.y;
  if(Math.abs(dx)>48&&Math.abs(dx)>Math.abs(dy)*1.4){rotation=(rotation+(dx>0?3:1))%4;notice('CAMERA ROTATED.');return}
  if(Math.hypot(dx,dy)>14)return;
  const r=canvas.getBoundingClientRect();tap(tileAt(e.clientX-r.left,e.clientY-r.top));
 });
-canvas.addEventListener('pointercancel',()=>{gesture=null});
+canvas.addEventListener('pointercancel',e=>{pointers.delete(e.pointerId);gesture=null;pinch=null});
+window.addEventListener('blur',()=>{pointers.clear();gesture=null;pinch=null});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 window.addEventListener('keydown',e=>{
  if(['INPUT','TEXTAREA','SELECT'].includes(e.target?.tagName))return;
  const dir={ArrowUp:[0,-1],w:[0,-1],ArrowDown:[0,1],s:[0,1],ArrowLeft:[-1,0],a:[-1,0],ArrowRight:[1,0],d:[1,0]};
  if(dir[e.key]){e.preventDefault();stop();step(...dir[e.key]);}
  else if(e.key==='Tab'&&!e.shiftKey){e.preventDefault();swap()}else if(e.key===' '){e.preventDefault();action()}
+ else if(e.key==='+'||e.key==='='){e.preventDefault();zoom=Math.min(1.65,zoom+.12)}
+ else if(e.key==='-'){e.preventDefault();zoom=Math.max(.72,zoom-.12)}
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stop();cancelAnimationFrame(frame)}else frame=requestAnimationFrame(render)});
 hud();frame=requestAnimationFrame(render);
 if(typeof navigator!=='undefined'&&'serviceWorker' in navigator){
  window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>{});},{once:true});
 }
-window.JozefBlock=Object.freeze({progress:()=>JSON.parse(JSON.stringify(state)),move:(dx,dy)=>{stop();return step(dx,dy)},build:action,guide,swap,path:p=>paths(state.active,p),at:p=>tap(p),reset:()=>{state=fresh();save();hud()},version:'2026.10'});
+window.JozefBlock=Object.freeze({progress:()=>JSON.parse(JSON.stringify(state)),move:(dx,dy)=>{stop();return step(dx,dy)},build:action,guide,swap,path:p=>paths(state.active,p),at:p=>tap(p),reset:()=>{state=fresh();save();hud()},view:()=>({zoom,rotation}),version:'2026.11'});
 })();
 </script></html>
