@@ -53,10 +53,44 @@
   <p id="pairStatus" aria-live="polite">Offline · local play</p>
  </section>
  <div class="toast" id="toast" role="status" aria-live="polite"></div>
- <div id="fallback" hidden><strong>3D is unavailable on this device.</strong><p>Your classic 2D world is still playable.</p><a href="./block-world.html">OPEN CLASSIC BLOCK WORLD</a></div>
+ <div id="fallback" role="alert" hidden><strong>Block World 3D could not start.</strong><p id="fallback-reason">The game did not finish loading.</p><div class="recover-actions"><button id="retry-3d" type="button">RETRY 3D</button><a href="./block-world.html">PLAY CLASSIC 2D</a></div></div>
 </div>
 <input type="file" id="fileInput" accept=".json,application/json" hidden>
+<script>
+/* Boot guard runs independently of the game bundle, including when a script is missing. */
+(function(){
+ let ready=false;
+ function fail(message){
+  if(ready)return;
+  const panel=document.getElementById('fallback');
+  const reason=document.getElementById('fallback-reason');
+  if(reason)reason.textContent=message||'The 3D engine did not start.';
+  if(panel)panel.hidden=false;
+  const mission=document.getElementById('mission');
+  if(mission)mission.textContent='Unable to start 3D. Choose Retry or Classic 2D.';
+ }
+ window.__bw3dReady=function(){ready=true;};
+ window.__bw3dFail=fail;
+ window.addEventListener('error',function(e){
+  if(ready)return;
+  if(e.target&&e.target.tagName==='SCRIPT'){fail('A required game file did not load. Connect to the internet and retry.');return;}
+  if(e.error||e.message)fail('A game startup error occurred. Reloading may help.');
+ },true);
+ window.addEventListener('unhandledrejection',function(){if(!ready)fail('Game startup was interrupted. Retry or play Classic 2D.');});
+ document.addEventListener('DOMContentLoaded',function(){
+  const retry=document.getElementById('retry-3d');
+  if(retry)retry.addEventListener('click',function(){
+   const url=new URL(location.href);
+   url.searchParams.set('reload',String(Date.now()));
+   location.assign(url.href);
+  });
+  setTimeout(function(){
+   if(!ready)fail('3D took too long to initialize on this device. You can retry or play Classic 2D.');
+  },12000);
+ });
+})();
+</script>
 <script src="./peerjs.min.js" defer></script>
-<script src="./block-world-3d.js" defer></script>
+<script src="./block-world-3d.js?v=20261012-restore1" defer></script>
 </body>
 </html>
