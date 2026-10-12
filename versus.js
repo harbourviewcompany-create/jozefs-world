@@ -133,7 +133,11 @@
   function send(msg) { if (room.conn && room.conn.open) room.conn.send(msg); }
   function onData(msg) {
     if (!msg) return;
-    if (msg.type === 'hello') { room.other = msg.who; say(room.who + ' is here · ' + msg.who + ' is here'); }
+    if (msg.type === 'hello') {
+      room.other = msg.who;
+      if (msg.who === room.who) say('Both phones are ' + room.who + '. One of you pick the other name.');
+      else say(room.who + ' is here · ' + msg.who + ' is here. Tap the pitch.');
+    }
     if (msg.type === 'aim' && room.host) targets[msg.who] = { x: msg.x, y: msg.y };
     if (msg.type === 'state' && !room.host) Object.assign(state, msg.state);
   }
@@ -150,7 +154,7 @@
     say('Looking for the room...');
     const peer = new Peer('jw-' + room.code);
     room.peer = peer;
-    peer.on('open', () => { room.host = true; say(room.who + ' is in ' + room.code + '. Waiting for the other one.'); peer.on('connection', wire); });
+    peer.on('open', () => { room.host = true; say(room.who + ' is in ' + room.code + '. Waiting for ' + (room.who === 'Dad' ? 'Jozef' : 'Dad') + '.'); peer.on('connection', wire); });
     peer.on('error', err => { if (err.type === 'unavailable-id') join('jw-' + room.code); else say('Room problem: ' + err.type); });
   }
   function join(id) {
