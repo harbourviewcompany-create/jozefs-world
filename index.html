@@ -97,7 +97,7 @@ body.nav-open .nav-extra{display:inline-flex}
         <p class="hero-subtitle">A universe built around one player. Train under the floodlights. Own the streets. Lead your club to the top.</p>
         <div class="hero-buttons">
           <button type="button" class="studio-button-primary" onclick="showSection('arena')"><span class="studio-button-icon">▶</span> PLAY FOOTBALL <span aria-hidden="true">↗</span></button>
-          <button type="button" class="studio-button-primary" onclick="document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById('versus').classList.add('active');window.scrollTo(0,0)">VERSUS <span aria-hidden="true">↗</span></button>
+          <button type="button" class="studio-button-primary" onclick="document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));var v=document.getElementById('versus');v.classList.add('active');v.scrollIntoView()">VERSUS <span aria-hidden="true">↗</span></button>
           <button type="button" class="studio-button-outline" onclick="showSection('sports-arcade')">PLAY ALL SPORTS <span aria-hidden="true">↗</span></button>
         </div>
         <div class="studio-hero-foot"><span>01 / YOUR STORY STARTS HERE</span><span>OFFLINE-FIRST • NO ACCOUNTS • ALL YOU</span></div>
@@ -144,7 +144,7 @@ body.nav-open .nav-extra{display:inline-flex}
         </div>
         <div class="today-task" id="today-task-versus">
           <div class="today-task-info"><span class="today-task-number">03 / VERSUS</span><strong>PLAY EACH OTHER</strong><small>Same code. Both online.</small></div>
-          <button type="button" class="studio-button-primary" id="today-play-versus" onclick="document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById('versus').classList.add('active');window.scrollTo(0,0)">VERSUS ↗</button>
+          <button type="button" class="studio-button-primary" id="today-play-versus" onclick="document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));var v=document.getElementById('versus');v.classList.add('active');v.scrollIntoView()">VERSUS ↗</button>
         </div>
         <div class="today-task" id="today-task-street">
           <div class="today-task-info"><span class="today-task-number">02 / NIGHT RUN</span><strong>TAKE THE STREETS</strong><small id="today-street-status">Not played today</small></div>
@@ -1433,7 +1433,7 @@ body.nav-open .nav-extra{display:inline-flex}
     <button type="button" data-dock-section="arena" onclick="showSection('arena')"><span class="jw-dock-symbol" aria-hidden="true">⚽</span><span>Football</span></button>
     <button type="button" data-dock-section="sports-arcade" onclick="showSection('sports-arcade')"><span class="jw-dock-symbol" aria-hidden="true">✦</span><span>Sports</span></button>
     <button type="button" data-dock-section="playbook" onclick="showSection('playbook')"><span class="jw-dock-symbol" aria-hidden="true">◆</span><span>Playbook</span></button>
-    <button type="button" data-dock-section="versus" onclick="document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById('versus').classList.add('active');window.scrollTo(0,0)"><span class="jw-dock-symbol" aria-hidden="true">⚡</span><span>Versus</span></button>
+    <button type="button" data-dock-section="versus" onclick="document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));var v=document.getElementById('versus');v.classList.add('active');v.scrollIntoView()"><span class="jw-dock-symbol" aria-hidden="true">⚡</span><span>Versus</span></button>
     <button type="button" data-dock-section="club" onclick="showSection('club')"><span class="jw-dock-symbol" aria-hidden="true">★</span><span>Club</span></button>
   </nav>
 
