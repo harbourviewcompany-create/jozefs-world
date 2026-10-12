@@ -1,0 +1,39 @@
+name: World Core 3D HQ Quality
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/worldcore-qa.yml'
+      - 'world-core.js'
+      - 'world-core.css'
+      - 'index.html'
+      - 'world.html'
+      - 'site-experience.css'
+      - 'sw.js'
+      - 'scripts/build-site-css.cjs'
+      - 'tests/world-core.test.cjs'
+      - 'tests/hq-mobile-smoke.cjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  globe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify canonical home and CSS
+        run: |
+          cmp -s index.html world.html
+          node scripts/build-site-css.cjs --check
+      - name: Validate sphere geometry, selection and routes
+        run: node --test tests/world-core.test.cjs
+      - name: Install browser runner
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium webkit
+      - name: Verify 3D globe on phones and desktop
+        run: node tests/hq-mobile-smoke.cjs
