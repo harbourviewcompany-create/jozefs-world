@@ -3728,3 +3728,7 @@ body.versus-focused #versus-tip{font-weight:800;letter-spacing:.03em;color:#e4ff
 .jw-shared-legends-copy small{font:700 11px/1.4 var(--sf-ui);color:#a6cecb}
 .jw-shared-legends>button{border:1px solid #e4ff9a;border-radius:10px;background:#cefa84;color:#162822;font:900 11px/1.2 var(--sf-ui);min-height:46px;padding:12px 14px;flex:0 0 auto}
 @media(max-width:600px){.jw-shared-legends{flex-wrap:wrap;padding:12px;gap:11px}.jw-shared-legends-mark{width:54px;height:54px;min-width:54px;font-size:18px;border-radius:12px}.jw-shared-legends>button{flex:1 1 100%}}
+
+/* Keep one game's controls active at a time. */
+#adventure.together-focused .jw-adventure-worlds,#adventure.together-focused .jw-adventure-layout{display:none!important}
+#adventure.together-focused .jw-together-game{display:block}

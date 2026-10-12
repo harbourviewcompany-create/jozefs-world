@@ -321,6 +321,7 @@
     });
   }
   function pollController(t){
+    if($('adventure')?.classList.contains('together-focused'))return;
     if(t-lastControllerSample<165)return;
     lastControllerSample=t;
     let pad=null;
@@ -341,7 +342,7 @@
   function initInput(){
     const keys=new Set(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d','W','A','S','D',' ','Enter','1','2','3']);
     document.addEventListener('keydown',e=>{
-      if(!$('adventure')?.classList.contains('active')||e.altKey||e.ctrlKey||e.metaKey||e.repeat||!keys.has(e.key))return;
+      if(!$('adventure')?.classList.contains('active')||$('adventure')?.classList.contains('together-focused')||e.altKey||e.ctrlKey||e.metaKey||e.repeat||!keys.has(e.key))return;
       if(e.target.closest('button,input,select,textarea,dialog'))return;
       if(battle){
         if(['1','2','3'].includes(e.key)){e.preventDefault();shoot(Number(e.key)-1);return;}

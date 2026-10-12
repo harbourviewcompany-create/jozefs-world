@@ -83,7 +83,7 @@ function persist(){
 function stop(){walkToken++;if(walking!==null)clearTimeout(walking);walking=null;}
 function progress(){return {stage:state.stage,clues:state.clues.slice(),won:state.won,positions:state.positions.map(p=>({...p})),selected,opened,shots:battle?battle.hits.slice():null};}
 function start(){
- opened=true;lastPadTick=0;lastPadButtons=[{act:false,switchHero:false},{act:false,switchHero:false}];rootGame.hidden=false;root.showSection?.('adventure');
+ opened=true;lastPadTick=0;lastPadButtons=[{act:false,switchHero:false},{act:false,switchHero:false}];rootGame.hidden=false;$('adventure')?.classList.add('together-focused');root.showSection?.('adventure');
  selected=0;
  checkpoint();hud();
  notify(state.stage===4?'Your shared Stadium Cup is ready. Replay to start a new mission.':'Story ready. Both players have equal challenges and a turn in the finale.');
@@ -91,7 +91,7 @@ function start(){
  return true;
 }
 function close(){
- opened=false;lastPadButtons=[{act:false,switchHero:false},{act:false,switchHero:false}];rootGame.hidden=true;stop();battle=null;
+ opened=false;lastPadButtons=[{act:false,switchHero:false},{act:false,switchHero:false}];rootGame.hidden=true;$('adventure')?.classList.remove('together-focused');stop();battle=null;
  notify('Together Mode paused. Your progress is saved on this device.');
  return true;
 }
@@ -268,7 +268,7 @@ function pollGamepads(t){
   lastPadButtons[i]={act:input.act,switchHero:input.switchHero};
  }
 }
-function tick(t){if(opened&&!document.hidden){pollGamepads(t);if(t-lastFrame>=34){draw(t);lastFrame=t;}}root.requestAnimationFrame?.(tick);}
+function tick(t){if(opened&&!document.hidden&&$('adventure')?.classList.contains('active')){pollGamepads(t);if(t-lastFrame>=34){draw(t);lastFrame=t;}}root.requestAnimationFrame?.(tick);}
 function init(){
  document.querySelectorAll('[data-start-together]').forEach(el=>el.addEventListener('click',start));
  $('jw-together-start')?.addEventListener('click',start);
