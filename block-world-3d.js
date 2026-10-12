@@ -231,7 +231,7 @@ function render(){
   cube(v,40,height(40,40)+.1,40,8,.9);
   cube(v,40,height(40,40)+1.1+Math.sin(clock*2)*.12,40,11,.9);
  }
- gl.bindBuffer(gl.ARRAY_BUFFER,dynamic);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(v),gl.DYNAMIC_DRAW);for(const particle of effects)if(Math.hypot(particle.x-hero.x,particle.z-hero.z)<40)
+ for(const particle of effects)if(Math.hypot(particle.x-hero.x,particle.z-hero.z)<40)
    cube(v,particle.x,particle.y,particle.z,particle.id,.10);
  gl.bindBuffer(gl.ARRAY_BUFFER,dynamic);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(v),gl.DYNAMIC_DRAW);
  renderBuffer(dynamic,v.length/6);drawAimOutline();renderOk=true;
