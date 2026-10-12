@@ -173,6 +173,8 @@ function hud(){
  const score=$('jw-together-score');
  if(score)score.textContent=state.stage===3&&battle?'JOZEF '+battle.hits[0]+'/2 · DAD '+battle.hits[1]+'/2 · BLOCKS '+battle.blocks+'/3':state.stage===4?'JOZEF + DAD / CHAMPIONS':'CHAPTER 01 / '+(state.stage+1)+' OF 5';
  const trophy=$('jw-together-trophy');if(trophy)trophy.hidden=!state.won;
+ const clubCup=$('jw-together-club-cup');if(clubCup)clubCup.hidden=!state.won;
+ const clubPending=$('jw-together-club-pending');if(clubPending)clubPending.hidden=state.won;
  const shots=$('jw-together-shots');if(shots)shots.hidden=state.stage!==3;
  const defender=$('jw-together-defender');if(defender)defender.textContent=state.stage===3&&battle?
    HEROES[battle.turn].name+' SHOOTS · RIVAL BLOCKS '+['LEFT','CENTRE','RIGHT'][shieldFor(battle.round)]:

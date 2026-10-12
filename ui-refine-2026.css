@@ -1046,3 +1046,14 @@ body.versus-focused #versus-tip{font-weight:800;letter-spacing:.03em;color:#e4ff
 #jw-together-shots [data-together-shot].is-selected{outline:3px solid #cbff79;outline-offset:2px;box-shadow:0 0 0 5px #96eaf421}
 #jw-together-shots [data-together-shot].is-selected.is-blocked{outline-color:#ffc38a}
 @media(prefers-reduced-motion:reduce){#jw-together-shots [data-together-shot].is-selected{transition:none!important}}
+/* Shared trophy lives in My Club, not only in the adventure menu. */
+.jw-shared-legends{display:flex;align-items:center;gap:16px;min-width:0;margin:17px 0;padding:17px 19px;border:1px solid #aee7c286;border-radius:18px;background:radial-gradient(circle at 10% 20%,#92caff22,transparent 36%),linear-gradient(120deg,#132f40,#101d2b);color:#eaffed}
+.jw-shared-legends-mark{display:grid;place-content:center;width:76px;height:76px;min-width:76px;border:2px solid #c7ee96;border-radius:18px;background:#1e3b45;color:#e4ffb2;font:900 23px/1 var(--sf-display);box-shadow:0 0 25px #7ee5b01b}
+.jw-shared-legends-mark span{color:#7dc9f0;font-size:14px}
+.jw-shared-legends-copy{flex:1;min-width:0}
+.jw-shared-legends-copy h3{margin:4px 0;font:900 clamp(20px,3.5vw,28px)/1 var(--sf-display);color:#f5fff1}
+.jw-shared-legends-copy p{margin:5px 0;color:#bbd6d8;font:600 12px/1.4 var(--sf-ui)}
+.jw-shared-legends-copy strong{display:block;color:#ffe2a5;font:900 12px/1.4 var(--sf-ui);margin-top:8px}
+.jw-shared-legends-copy small{font:700 11px/1.4 var(--sf-ui);color:#a6cecb}
+.jw-shared-legends>button{border:1px solid #e4ff9a;border-radius:10px;background:#cefa84;color:#162822;font:900 11px/1.2 var(--sf-ui);min-height:46px;padding:12px 14px;flex:0 0 auto}
+@media(max-width:600px){.jw-shared-legends{flex-wrap:wrap;padding:12px;gap:11px}.jw-shared-legends-mark{width:54px;height:54px;min-width:54px;font-size:18px;border-radius:12px}.jw-shared-legends>button{flex:1 1 100%}}
