@@ -158,7 +158,7 @@ function checkpoint(){
    state.stage++;
    stop();persist();hud();cue(true);
    if(state.stage===2)notify('THE LIGHTS ARE ON! Both heroes must enter the champion vault.');
-   else {battle={turn:0,hits:[0,0],blocks:0,round:0,combo:0};controllerLane=1;notify('FINALE UNLOCKED! Jozef shoots first. Each of you needs two scores.');}
+   else {battle={turn:0,hits:[0,0],blocks:0,round:0,combo:0,overdrive:false};controllerLane=1;notify('FINALE UNLOCKED! Jozef shoots first. Each of you needs two scores.');}
    return true;
   }
  }
@@ -194,9 +194,14 @@ function guide(){
 }
 function shoot(lane){
  if(!opened||state.stage!==3||!battle||!Number.isInteger(lane)||lane<0||lane>2)return false;
- const actor=battle.turn,blocked=lane===shieldFor(battle.round);
+ const actor=battle.turn,wasPowered=battle.overdrive===true;
+ const blocked=!wasPowered&&lane===shieldFor(battle.round);
+ battle.overdrive=false;
  if(blocked){battle.blocks++;battle.combo=0;}
- else{battle.hits[actor]++;battle.combo++;state.bestCombo=Math.max(state.bestCombo,battle.combo);cue();}
+ else{battle.hits[actor]++;battle.combo++;state.bestCombo=Math.max(state.bestCombo,battle.combo);cue();
+  // Two successful alternating shots charge one shield-breaking team play.
+  if(battle.combo>0&&battle.combo%2===0)battle.overdrive=true;
+ }
  battle.round++;battle.turn=1-actor;
  if(battle.hits.every(n=>n>=2)){
   state.stage=4;state.won=true;state.perfect=state.perfect||state.fragments.length===6;
@@ -205,9 +210,9 @@ function shoot(lane){
   root.dispatchEvent?.(new CustomEvent('jozef:together-completed',{detail:{chapter:'The Midnight Stadium Mystery'}}));
  }else if(battle.blocks>=(state.difficulty==='challenge'?2:3)){
   battle=null;state.stage=2;state.positions=HEROES.map(h=>({x:h.start[0],y:h.start[1]}));selected=0;
-  persist();hud();notify('Three blocks. The vault checkpoint is safe — return together and try again.');
+  persist();hud();notify('The rival blocked the limit of shots. The vault checkpoint is safe — try again as a team.');
  }else{
-  persist();hud();notify((blocked?'BLOCKED! ':'SCORED! ')+HEROES[battle.turn].name+' has the next shot. '+(battle.combo>1?'TEAM COMBO ×'+battle.combo+'!':''));
+  persist();hud();notify((blocked?'BLOCKED! ':wasPowered?'DUO OVERDRIVE SCORES! ':'SCORED! ')+HEROES[battle.turn].name+' has the next shot. '+(battle.overdrive?'TEAM POWER READY — the next lane breaks the guard!':battle.combo>1?'TEAM COMBO ×'+battle.combo+'!':''));
  }
  draw(performance.now?.()||0);return true;
 }
@@ -228,14 +233,14 @@ function hud(){
  const clubPending=$('jw-together-club-pending');if(clubPending)clubPending.hidden=state.won;
  const shots=$('jw-together-shots');if(shots)shots.hidden=state.stage!==3;
  const defender=$('jw-together-defender');if(defender)defender.textContent=state.stage===3&&battle?
-   HEROES[battle.turn].name+' SHOOTS · RIVAL BLOCKS '+['LEFT','CENTRE','RIGHT'][shieldFor(battle.round)]:
+   HEROES[battle.turn].name+' SHOOTS · '+(battle.overdrive?'DUO OVERDRIVE: EVERY LANE IS OPEN':'RIVAL BLOCKS '+['LEFT','CENTRE','RIGHT'][shieldFor(battle.round)]):
    '';
  for(let i=0;i<2;i++){
   const btn=$('jw-together-hero-'+i);
   if(btn){btn.setAttribute('aria-pressed',String(selected===i));btn.textContent=(i===0?'JOZEF':'DAD')+(selected===i?' · CONTROLLING':' · SWITCH');}
  }
  for(const button of document.querySelectorAll('[data-together-shot]')){
-  const n=Number(button.dataset.togetherShot),blocked=state.stage===3&&battle&&shieldFor(battle.round)===n;
+  const n=Number(button.dataset.togetherShot),blocked=state.stage===3&&battle&&!battle.overdrive&&shieldFor(battle.round)===n;
   button.classList.toggle('is-blocked',!!blocked);
   button.classList.toggle('is-selected',state.stage===3&&n===controllerLane);
   button.setAttribute('aria-pressed',String(state.stage===3&&n===controllerLane));

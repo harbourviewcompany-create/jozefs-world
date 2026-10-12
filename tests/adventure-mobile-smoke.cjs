@@ -78,6 +78,11 @@ const close=()=>new Promise(resolve=>server.close(resolve));
       assert.ok((await page.locator('#jw-together-canvas').boundingBox()).width>=200,'Together canvas visible');
       assert.equal(await page.locator('#jw-together-hero-0').count(),1);
       assert.equal(await page.locator('#jw-together-hero-1').count(),1);
+      assert.equal(await page.locator('#jw-together-difficulty').count(),1);
+      await page.evaluate(()=>window.JozefTogether.toggleDifficulty());
+      assert.equal(await page.evaluate(()=>window.JozefTogether.progress().difficulty),'challenge');
+      await page.evaluate(()=>window.JozefTogether.toggleDifficulty());
+      assert.equal(await page.evaluate(()=>window.JozefTogether.progress().difficulty),'story');
       for(let stage=0;stage<3;stage++){
        for(let who=0;who<2;who++){
         await page.evaluate(id=>{window.JozefTogether.choose(id);window.JozefTogether.guide();},who);

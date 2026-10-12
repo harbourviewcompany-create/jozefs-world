@@ -21,11 +21,21 @@ test('two heroes can reach all story stages without crossing walls',()=>{
   }
  }
 });
+test('all six optional sparks are reachable without stepping into walls',()=>{
+ const pieces=rules.FRAGMENTS.flat();assert.equal(pieces.length,6);
+ for(const piece of pieces){
+  assert.equal(rules.own(piece.x,piece.y),true,piece.id+' should be on a walkable tile');
+  assert.ok(rules.pathTo({x:1,y:1},[piece.x,piece.y],{x:1,y:6}),piece.id+' has a route');
+ }
+});
 test('saved co-op chapter resumes only from validated checkpoints',()=>{
  const fresh=rules.fresh();assert.equal(fresh.stage,0);
  assert.equal(rules.sanitize({stage:3,clues:[true,true]}).stage,2);
  assert.equal(rules.sanitize({stage:4,won:false,clues:[true,true]}).stage,2);
  assert.equal(rules.sanitize({stage:4,won:true,clues:[true,true]}).stage,4);
+ assert.equal(rules.sanitize({difficulty:'challenge'}).difficulty,'challenge');
+ assert.equal(rules.sanitize({difficulty:'malformed'}).difficulty,'story');
+ assert.equal(rules.sanitize({fragments:['0-0','1-0','0-0','bad']}).fragments.length,2);
  assert.equal(rules.sanitize({stage:2,clues:[false,false]}).stage,0);
  const bad=rules.sanitize({positions:[{x:4,y:2},{x:4,y:2}],stage:0});
  assert.deepEqual(bad.positions,fresh.positions);

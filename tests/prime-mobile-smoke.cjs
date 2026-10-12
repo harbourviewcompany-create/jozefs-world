@@ -13,7 +13,7 @@ const server=http.createServer((req,res)=>{
  if(!file.startsWith(root+path.sep)){res.writeHead(403);return res.end();}
  fs.readFile(file,(err,body)=>{res.writeHead(err?404:200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});res.end(err?'missing':body);});
 });
-const poll=async(page,fn)=>page.waitForFunction(fn,null,{timeout:10000});
+const poll=async(page,fn)=>page.waitForFunction(fn,null,{timeout:20000});
 (async()=>{
  await new Promise(r=>server.listen(0,'127.0.0.1',r));
  const base='http://127.0.0.1:'+server.address().port+'/jozefs-world/prime/';

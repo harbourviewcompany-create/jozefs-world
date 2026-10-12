@@ -147,7 +147,7 @@ const close=()=>new Promise(resolve=>server.close(resolve));
       });
       // Wait for a painted update; shared CI runners can delay a WebKit frame.
       // A broken stationary hold still times out because no pointermove is sent.
-      await page.waitForFunction(()=>parseFloat(document.querySelector('#arena-shoot').style.getPropertyValue('--arena-charge')||'0')>=20,null,{timeout:2000});
+      await page.waitForFunction(()=>parseFloat(document.querySelector('#arena-shoot').style.getPropertyValue('--arena-charge')||'0')>=20,null,{timeout:6000});
       const percent=await button.evaluate(el=>parseFloat(el.style.getPropertyValue('--arena-charge')||'0'));
       assert.ok(percent>=20&&percent<=100,'Stationary hold should visibly charge power: '+percent);
       await button.dispatchEvent('pointercancel',{pointerId:71,pointerType:'touch'});
