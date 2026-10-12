@@ -3989,3 +3989,19 @@ body.versus-focused #versus.is-playing .versus-scoreboard{position:relative!impo
 body.versus-focused #versus.is-playing .versus-stage{position:relative!important;inset:auto!important;top:auto!important;bottom:auto!important;left:auto!important;right:auto!important;flex:1 1 auto;min-height:0!important;height:auto!important;overflow:hidden}
 body.versus-focused #versus.is-playing #versus-canvas{width:100%!important;height:100%!important;max-height:100%!important;object-fit:contain!important}
 body.versus-focused #versus.is-playing .versus-play{position:relative!important;top:auto!important;bottom:auto!important;left:auto!important;right:auto!important;flex:0 0 auto;height:auto;min-height:132px;z-index:1;background:#07141c;padding:8px 8px max(10px,env(safe-area-inset-bottom));margin:0!important}
+
+/* Full-screen pitch. Thin score. See-through buttons. */
+body.versus-focused #versus.is-playing .versus-stage{position:absolute!important;inset:0!important;top:0!important;right:0!important;bottom:0!important;left:0!important;height:100%!important;flex:none!important;z-index:0}
+body.versus-focused #versus.is-playing #versus-canvas{width:100%!important;height:100%!important;max-height:none!important;object-fit:cover!important}
+body.versus-focused #versus.is-playing .versus-scoreboard{position:absolute!important;top:max(4px,env(safe-area-inset-top))!important;left:8px!important;right:8px!important;z-index:4;margin:0!important;padding:4px 10px!important;min-height:0;background:rgba(6,16,24,.45)!important;backdrop-filter:blur(6px);border-radius:12px}
+body.versus-focused #versus.is-playing .versus-scoreboard small,
+body.versus-focused #versus.is-playing #versus-stats,
+body.versus-focused #versus.is-playing #versus-cpu-label{display:none!important}
+body.versus-focused #versus.is-playing .versus-play{position:absolute!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;height:auto!important;min-height:0!important;z-index:4;background:transparent!important;padding:8px 10px max(10px,env(safe-area-inset-bottom))!important;pointer-events:none}
+body.versus-focused #versus.is-playing .versus-play > *{pointer-events:auto}
+body.versus-focused #versus.is-playing #versus-stick{background:rgba(8,22,32,.45)!important;border-color:rgba(255,255,255,.25)}
+body.versus-focused #versus.is-playing #versus-aim,
+body.versus-focused #versus.is-playing #versus-deke,
+body.versus-focused #versus.is-playing #versus-pass,
+body.versus-focused #versus.is-playing #versus-kick{background:rgba(8,22,32,.42)!important;color:#fff!important;border:1px solid rgba(255,255,255,.28)!important;backdrop-filter:blur(8px)}
+body.versus-focused #versus.is-playing #versus-kick{background:rgba(208,255,105,.55)!important;color:#122320!important}
