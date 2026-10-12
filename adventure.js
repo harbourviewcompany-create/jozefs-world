@@ -84,9 +84,12 @@
   const canvas=$('jw-adventure-canvas');
   if(!canvas)return;
   const ctx=canvas.getContext&&canvas.getContext('2d');
+  const reducedMotion=!!root.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+  let terrainCache=null,lastPaint=0;
   let state;
   try{state=sanitize(JSON.parse(localStorage.getItem(KEY)||'null'))}catch(_){state=newState()}
   let players=[{x:1,y:1},{x:1,y:2}],active=0,battle=null,frameId=0,walkingTimer=null,walkingToken=0;
+  let displayed=[{x:1,y:1},{x:1,y:2}];
   let toast='Explore the arena. Collect two energy stars and activate both beacons.',soundOff=true;
   const hits=['LEFT','CENTRE','RIGHT'];
   function save(){
@@ -99,7 +102,10 @@
     if(node)node.textContent=value;
   }
   function stopWalking(){walkingToken++;if(walkingTimer!==null)clearTimeout(walkingTimer);walkingTimer=null;}
-  function resetPlayers(){stopWalking();players=[{x:1,y:1},{x:1,y:2}];active=0;battle=null;}
+  function resetPlayers(){
+    stopWalking();players=[{x:1,y:1},{x:1,y:2}];displayed=[{x:1,y:1},{x:1,y:2}];
+    active=0;battle=null;
+  }
   function progress(){return {zones:state.completed.length,stars:state.stars.length,secrets:state.secrets.length,coop:state.coop,outfit:state.outfit};}
   function enterZone(index){
     if(!Number.isInteger(index)||index<0||index>=4||index>state.completed.length)return false;
@@ -283,23 +289,40 @@
     if(ctx.roundRect){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();}
     else {ctx.fillStyle=fill;ctx.fillRect(x,y,w,h);}
   }
+  function paintTerrain(){
+    try{
+      if(terrainCache?.zone===state.zone&&terrainCache.width===canvas.width)return true;
+      const buffer=document.createElement('canvas');buffer.width=canvas.width;buffer.height=canvas.height;
+      const g=buffer.getContext('2d');if(!g)return false;
+      const zone=WORLDS[state.zone],w=buffer.width/WIDTH,h=buffer.height/HEIGHT;
+      const bg=g.createLinearGradient(0,0,buffer.width,buffer.height);
+      bg.addColorStop(0,zone.shadow);bg.addColorStop(1,'#06131f');
+      g.fillStyle=bg;g.fillRect(0,0,buffer.width,buffer.height);
+      for(let y=0;y<HEIGHT;y++)for(let x=0;x<WIDTH;x++){
+        const px=x*w,py=y*h,wall=tileAt(state.zone,x,y)==='#';
+        if(wall){
+          g.fillStyle='#08131f';g.fillRect(px+2,py+1,w-4,h-4);
+          g.fillStyle='#183349';g.fillRect(px+5,py+4,w-10,h-10);
+          g.fillStyle=zone.color;g.globalAlpha=.12;g.fillRect(px+5,py+4,w-10,2);g.globalAlpha=1;
+        }else{
+          g.fillStyle=(x+y)%2?'#0a2434':'#102a3a';g.fillRect(px+1,py+1,w-2,h-2);
+          g.fillStyle=zone.color;g.globalAlpha=.09;g.fillRect(px+1,py+1,w-2,1);g.globalAlpha=1;
+        }
+      }
+      // Atmospheric court lights are baked once per world, not re-painted 60 times a second.
+      for(let i=1;i<16;i+=2){
+        g.fillStyle=zone.color;g.globalAlpha=.1;g.fillRect(i*w,0,2,buffer.height);
+      }
+      g.globalAlpha=1;
+      terrainCache={zone:state.zone,width:canvas.width,canvas:buffer};return true;
+    }catch(_){terrainCache=null;return false;}
+  }
   function draw(t){
     if(!ctx)return;
     const zone=WORLDS[state.zone],w=canvas.width/WIDTH,h=canvas.height/HEIGHT;
-    const bg=ctx.createLinearGradient(0,0,canvas.width,canvas.height);
-    bg.addColorStop(0,zone.shadow);bg.addColorStop(1,'#06131f');
-    ctx.fillStyle=bg;ctx.fillRect(0,0,canvas.width,canvas.height);
-    for(let y=0;y<HEIGHT;y++)for(let x=0;x<WIDTH;x++){
-      const px=x*w,py=y*h,wall=tileAt(state.zone,x,y)==='#';
-      if(wall){
-        rounded(px+2,py+1,w-4,h-4,8,'#08131f');
-        rounded(px+5,py+4,w-10,h-10,7,'#183349');
-        ctx.fillStyle=zone.color;ctx.globalAlpha=.1;ctx.fillRect(px+5,py+4,w-10,2);ctx.globalAlpha=1;
-      }else{
-        ctx.fillStyle=(x+y)%2?'#0a2434':'#102a3a';ctx.fillRect(px+1,py+1,w-2,h-2);
-        ctx.fillStyle=zone.color;ctx.globalAlpha=.095;ctx.fillRect(px+1,py+1,w-2,1);ctx.globalAlpha=1;
-      }
-    }
+    if(paintTerrain())ctx.drawImage(terrainCache.canvas,0,0);
+    else {ctx.fillStyle=zone.shadow;ctx.fillRect(0,0,canvas.width,canvas.height);}
+
     const ring=(x,y,r,color,alpha)=>{
       ctx.save();ctx.globalAlpha=alpha;ctx.strokeStyle=color;ctx.lineWidth=3;ctx.beginPath();ctx.arc((x+.5)*w,(y+.5)*h,r,0,Math.PI*2);ctx.stroke();ctx.restore();
     };
@@ -326,7 +349,11 @@
     const outfit=OUTFITS.find(o=>o.id===state.outfit)||OUTFITS[0];
     players.forEach((p,i)=>{
       if(i===1&&!state.coop)return;
-      const px=(p.x+.5)*w,py=(p.y+.5)*h,primary=i===0?outfit.color:outfit.second;
+      const pose=displayed[i],speed=reducedMotion?1:.38;
+      pose.x+=(p.x-pose.x)*speed;pose.y+=(p.y-pose.y)*speed;
+      const moving=Math.hypot(p.x-pose.x,p.y-pose.y)>.025;
+      const bob=moving&&!reducedMotion?Math.abs(Math.sin(t/65+i))*3:0;
+      const px=(pose.x+.5)*w,py=(pose.y+.5)*h-bob,primary=i===0?outfit.color:outfit.second;
       ctx.fillStyle='rgba(0,0,0,.4)';ctx.beginPath();ctx.ellipse(px,py+19,18,6,0,0,7);ctx.fill();
       if(state.coop&&i===active)ring(p.x,p.y,24,'#fff',.8);
       rounded(px-17,py-14,34,32,9,primary);
@@ -346,7 +373,11 @@
     }
   }
   function animate(t){
-    if($('adventure')?.classList.contains('active')&&!document.hidden)draw(t);
+    // Throttle expensive dynamic lighting on lower-end mobile devices.
+    if($('adventure')?.classList.contains('active')&&!document.hidden&&
+      (t-lastPaint>=(reducedMotion?60:32))){
+      draw(t);lastPaint=t;
+    }
     frameId=root.requestAnimationFrame(animate);
   }
   function boot(){
