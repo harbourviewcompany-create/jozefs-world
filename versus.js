@@ -109,8 +109,9 @@
     const g=paint.createLinearGradient(0,0,0,H);g.addColorStop(0,'#11283d');g.addColorStop(1,'#040c17');paint.fillStyle=g;paint.fillRect(0,0,W,H);
     for(let y=4;y<H;y+=8)for(let x=4;x<W;x+=10){paint.fillStyle=['#234355','#3a5c69','#719190'][(x+y)%3];paint.fillRect(x,y,3,3);}
     paint.fillStyle='#071821';paint.fillRect(20,16,680,388);
-    const grass=paint.createLinearGradient(0,24,0,396);grass.addColorStop(0,'#24745e');grass.addColorStop(1,'#103c38');paint.fillStyle=grass;paint.fillRect(28,22,664,376);
-    for(let x=28;x<692;x+=55){paint.fillStyle='rgba(166,235,197,.055)';paint.fillRect(x,22,27,376);}
+    paint.fillStyle='#1e6b3a';paint.fillRect(28,22,664,376);
+    for(let x=28;x<692;x+=42){paint.fillStyle=x%84?'#176033':'#228243';paint.fillRect(x,22,42,376);}
+    paint.fillStyle='rgba(255,255,255,.04)';paint.fillRect(28,300,664,40);
     // Deterministic grass flecks avoid expensive per-frame noise generation.
     for(let i=0;i<2600;i++){paint.fillStyle=i%2?'#c7ffe00a':'#00181019';paint.fillRect(29+(i*137%662),23+(i*67%374),1,2);}
     paint.strokeStyle='#d5f3df99';paint.lineWidth=1.5;paint.strokeRect(28,22,664,376);
@@ -127,16 +128,17 @@
   function player(p,color,name){
     const moving=Math.hypot(p.vx,p.vy)>.25;
     const stride=moving?Math.sin(tick*.23)*5:0;
-    ctx.save();ctx.translate(p.x,p.y);if(portrait)ctx.rotate(-Math.PI/2);ctx.scale(1.3,1.3);
-    ctx.fillStyle='#020b1290';ctx.beginPath();ctx.ellipse(4,17,15,6,0,0,Math.PI*2);ctx.fill();
+    ctx.save();ctx.translate(p.x,p.y);if(portrait)ctx.rotate(-Math.PI/2);ctx.scale(p.face||1,1);ctx.scale(1.3,1.3);
+    ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.ellipse(2,18,12,4,0,0,Math.PI*2);ctx.fill();
     if(name===room.who){ctx.strokeStyle=color;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(0,16,18,8,0,0,Math.PI*2);ctx.stroke();ctx.strokeStyle=color+'88';ctx.beginPath();ctx.arc(0,0,24,-Math.PI*.83,-Math.PI*.17);ctx.stroke();}
     else if(room.practice){ctx.strokeStyle='#ffb37a99';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(0,16,18,8,0,0,Math.PI*2);ctx.stroke();}
     ctx.lineCap='round';ctx.lineWidth=6;ctx.strokeStyle='#142439';
     ctx.beginPath();ctx.moveTo(-5,7);ctx.lineTo(-6+stride,19);ctx.moveTo(5,7);ctx.lineTo(6-stride,19);ctx.stroke();
     ctx.strokeStyle='#e4fff4';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-6+stride,19);ctx.lineTo(-2+stride,20);ctx.moveTo(6-stride,19);ctx.lineTo(10-stride,20);ctx.stroke();
     ctx.strokeStyle='#bd8d69';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-8,-5);ctx.lineTo(-13,-1-stride);ctx.moveTo(8,-5);ctx.lineTo(13,-1+stride);ctx.stroke();
-    const kit=ctx.createLinearGradient(-9,0,10,0);kit.addColorStop(0,color);kit.addColorStop(1,'#234254');ctx.fillStyle=kit;ctx.beginPath();ctx.roundRect(-10,-10,20,23,5);ctx.fill();
-    ctx.fillStyle='#e6fff1';ctx.font='bold 9px system-ui';ctx.textAlign='center';ctx.fillText('11',0,5);
+    ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(-10,-8,20,16,4);ctx.fill();
+    ctx.fillStyle='#f4f7f2';ctx.fillRect(-10,6,20,6);
+    ctx.fillStyle='#e6fff1';ctx.font='bold 9px system-ui';ctx.textAlign='center';ctx.fillText('11',0,2);
     ctx.fillStyle='#d6a980';ctx.beginPath();ctx.arc(0,-16,7,0,Math.PI*2);ctx.fill();ctx.fillStyle='#29211f';ctx.beginPath();ctx.arc(0,-18,7,Math.PI,Math.PI*2);ctx.fill();
     ctx.fillStyle='#071724d9';ctx.beginPath();ctx.roundRect(-25,-42,50,15,5);ctx.fill();ctx.fillStyle='#ecfffa';ctx.font='bold 10px system-ui';ctx.fillText(name,0,-31);
     ctx.restore();
