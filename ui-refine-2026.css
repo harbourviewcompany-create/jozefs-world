@@ -1209,3 +1209,11 @@ body.versus-focused #versus-tip{font-weight:800;letter-spacing:.03em;color:#e4ff
  #jw-together-guide{min-height:43px;font-size:10px;padding:7px}
  .jw-together-shots,.jw-together-hint,.jw-together-trophy,.jw-together-perfect,#jw-together-replay{grid-column:1/-1}
 }
+
+body.versus-focused #versus.is-playing .versus-head,
+body.versus-focused #versus.is-playing #versus-status,
+body.versus-focused #versus.is-playing #versus-season-line,
+body.versus-focused #versus.is-playing #versus-trophy{display:none}
+body.versus-focused #versus.is-playing .versus-card{grid-template-rows:auto minmax(0,1fr) auto;gap:4px;padding:6px}
+body.versus-focused #versus.is-playing .versus-stage{min-height:0;height:100%}
+body.versus-focused #versus.is-playing #versus-canvas{width:100%;height:100%;max-height:none;aspect-ratio:auto;object-fit:cover}
