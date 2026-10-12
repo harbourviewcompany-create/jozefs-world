@@ -35,7 +35,7 @@ const server=http.createServer((req,res)=>{
      const gpuAvailable=await page.evaluate(()=>{
        try{return Boolean(document.createElement('canvas').getContext('webgl'));}catch(_){return false;}
      });
-     if(gpuAvailable)assert.equal(state.webgl,true,'WebGL-supported browsers must compile and display the actual 3D world, not silently fall back');
+     if(gpuAvailable)assert.equal(state.webgl,true,'WebGL renderer failed: '+(state.rendererError||'unknown'));
 
      await page.locator('#jw-worldcore-next').click();
      assert.equal(await page.locator('#jw-worldcore-selected-title').textContent(),'Together','next plate previews without navigating');
