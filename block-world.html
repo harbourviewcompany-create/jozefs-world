@@ -299,7 +299,7 @@ window.addEventListener('keydown',e=>{
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stop();cancelAnimationFrame(frame)}else frame=requestAnimationFrame(render)});
 hud();frame=requestAnimationFrame(render);
-if('serviceWorker' in navigator){
+if(typeof navigator!=='undefined'&&'serviceWorker' in navigator){
  window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>{});},{once:true});
 }
 window.JozefBlock=Object.freeze({progress:()=>JSON.parse(JSON.stringify(state)),move:(dx,dy)=>{stop();return step(dx,dy)},build:action,guide,swap,path:p=>paths(state.active,p),at:p=>tap(p),reset:()=>{state=fresh();save();hud()},version:'2026.10'});
