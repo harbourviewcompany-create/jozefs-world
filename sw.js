@@ -1,12 +1,13 @@
 /* Jozef FC offline shell: only same-origin public game assets. Never caches personal progress. */
-const CACHE='jozef-fc-app-shell-v91';
+const CACHE='jozef-fc-app-shell-v92';
 const CORE=[
  './','./index.html','./world.html','./site-foundation.css','./site-experience.css',
  './favicon.svg','./manifest.webmanifest','./matchday.css','./training.css','./jersey-bingo.css',
  './tournament.js','./career.js','./clubhouse.js','./scramble-positions.js','./celebrate.js',
  './training.js','./jersey-bingo.js','./matchday.js','./street.js','./adventure.js','./together-renderer.js','./together.js','./versus-physics.js','./versus.js','./presence.js','./peerjs.min.js','./street-phaser.js','./phaser.min.js','./arcade.js',
  './roblox.js','./squad.js','./site-core.js','./site-features.js','./arena-bundle.js',
- './visual-2026.js','./campaign-2026.js','./club-hq.js','./chronicle.js','./playbook.js'
+ './visual-2026.js','./campaign-2026.js','./club-hq.js','./chronicle.js','./playbook.js',
+ './prime/','./prime/neon.html'
 ];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(async cache=>{
@@ -14,6 +15,21 @@ self.addEventListener('install',event=>{
   await Promise.all(CORE.map(async path=>{
    try{await cache.add(new URL(path,self.registration.scope).href);}
    catch(err){console.warn('Offline asset unavailable:',path,err);}
+  }));
+  // Cache versioned compiled assets for Prime's two offline game entries.
+  // Prime's entry HTML names the actual hashed bundles: no stale hashes or API data.
+  const assetUrls=new Set();
+  for(const page of ['./prime/','./prime/neon.html']){
+   const pageUrl=new URL(page,self.registration.scope);
+   const response=await cache.match(pageUrl);
+   if(!response)continue;
+   const html=await response.text();
+   for(const match of html.matchAll(/(?:src|href)="(\.\/assets\/[A-Za-z0-9._-]+\.(?:js|css))"/g)){
+    assetUrls.add(new URL(match[1],pageUrl).href);
+   }
+  }
+  await Promise.all([...assetUrls].map(async url=>{
+   try{await cache.add(url);}catch(err){console.warn('Prime offline asset unavailable:',url,err);}
   }));
   await self.skipWaiting();
  }));
@@ -38,7 +54,7 @@ self.addEventListener('fetch',event=>{
    }
    return response;
   }).catch(async()=>{
-   const cached=await caches.match(request);
+   const cached=await caches.match(request,{ignoreSearch:request.mode==='navigate'});
    if(cached)return cached;
    if(request.mode==='navigate'){
     if(url.pathname.startsWith(new URL('./prime/',root.href).pathname)){

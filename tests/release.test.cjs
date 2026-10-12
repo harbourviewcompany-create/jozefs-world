@@ -62,3 +62,11 @@ test('external Roblox leaves the site only after guardian confirmation',()=>{
  assert.match(script,/window\.open\(web, '_blank', 'noopener'\)/);
  assert.doesNotMatch(script,/fetch\('https:\/\/thumbnails\.roblox\.com/,'no passive child-data requests');
 });
+
+test('offline shell pre-caches Prime sport, Neon City, and their hashed public bundles',()=>{
+ const sw=read('sw.js');
+ assert.match(sw,/'.\/prime\/'/);
+ assert.match(sw,/'.\/prime\/neon\.html'/);
+ assert.match(sw,/assetUrls\.add/);
+ assert.match(sw,/ignoreSearch:request\.mode==='navigate'/);
+});
