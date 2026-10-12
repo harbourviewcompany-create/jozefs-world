@@ -906,3 +906,11 @@ body.versus-focused #versus:not(.is-playing) .versus-card{grid-template-rows:aut
 @media(max-width:600px){#versus #versus-aim{font-size:9px;min-height:33px}#versus .versus-help{font-size:10px}}
 @media(max-height:480px) and (orientation:landscape){#versus #versus-aim{min-height:30px}#versus #versus-kick{min-height:44px}}
 @media(prefers-reduced-motion:reduce){#versus #versus-kick{transition:none!important}}
+
+/* Oct 2026: separate stamina control, shot targeting and primary action. */
+#versus .versus-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;align-content:center;min-width:0}
+#versus #versus-aim,#versus #versus-sprint{min-height:36px;min-width:0;padding:6px 3px;font-size:9px;white-space:nowrap}
+#versus #versus-sprint{background:linear-gradient(135deg,#172d42,#0b1a27);border:1px solid #79caff77;color:#cae7fa}
+#versus #versus-sprint:not(:disabled){box-shadow:0 0 15px #4ebaff25}
+#versus #versus-kick,#versus #versus-again{grid-column:1/-1;min-height:52px}
+@media(max-height:480px) and (orientation:landscape){#versus #versus-aim,#versus #versus-sprint{min-height:32px}#versus #versus-kick{min-height:44px}}
