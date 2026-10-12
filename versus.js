@@ -26,7 +26,7 @@
     if (portrait) { ctx.translate(H, 0); ctx.rotate(Math.PI / 2); }
   }
   const GOAL = { x: 36, y: 150, w: 18, h: 120 };
-  const room = { code: '', who: 'Dad', peer: null, conn: null, host: false, other: '', ready: false, remoteReady: false, practice: false, phase: 'lobby', remoteActive: true };
+  const room = { code: '', who: 'Dad', spot: 'forward', together: false, peer: null, conn: null, host: false, other: '', ready: false, remoteReady: false, practice: false, phase: 'lobby', remoteActive: true };
   let connectTimer, countdownTimer, lastPacket = 0, lastSent = 0, lastHello = 0, localActive = true;
   let stickVector=null;
   const SHOT_LANES=[160,210,260],shotOptions={Dad:{aim:1,power:1},Jozef:{aim:1,power:1}};
@@ -271,28 +271,9 @@
     ctx.restore();
   }
 
-  function keeper(side, color) {
-    const y = state.keepers?.[side] || 210;
-    const x = side === 'left' ? 48 : 672;
-    const dive = keeperState[side].commit > 0 ? Math.sign(keeperState[side].target - 210) : 0;
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(dive * 0.7);
-    ctx.scale(1.6, 1.6);
-    ctx.fillStyle = 'rgba(0,0,0,.35)';
-    ctx.beginPath(); ctx.ellipse(0, 16, 12, 4, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#111';
-    ctx.fillRect(-16, -2, 7, 6);
-    ctx.fillRect(9, -2, 7, 6);
-    ctx.fillStyle = color;
-    ctx.fillRect(-9, -8, 18, 20);
-    ctx.fillStyle = '#e7b898';
-    ctx.beginPath(); ctx.arc(0, -14, 7, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#071724';
-    ctx.font = '700 8px system-ui';
-    ctx.textAlign = 'center';
-    ctx.fillText('GK', 0, 4);
-    ctx.restore();
+  function keeper(side, color, name) {
+    const body = { x: side === 'left' ? 52 : 668, y: state.keepers?.[side] || 210, vx: 0, vy: 0, face: side === 'left' ? 1 : -1 };
+    player(body, color, name);
   }
   function mindKeepers() {
     const ball = state.ball;
@@ -371,8 +352,8 @@
     for (let i = sparks.length - 1; i >= 0; i--) if (sparks[i].life <= 0) sparks.splice(i, 1);
     player(visualPose(state.jozef,'jozef'), jozefKit(), room.practice && room.who!=='Jozef' ? 'Rovers' : 'Jozef');
     player(visualPose(state.dad,'dad'), '#d7ff4a', room.practice && room.who!=='Dad' ? 'Rovers' : 'Dad');
-    keeper('left', '#f4f7f2');
-    keeper('right', '#f4f7f2');
+    keeper('left', '#f4f7f2', 'Keeper');
+    keeper('right', '#f4f7f2', 'Keeper');
     ctx.fillStyle = 'rgba(0,0,0,.25)';
     ctx.beginPath(); ctx.ellipse(ball.x + 2, ball.y + 5, 6, 3, 0, 0, Math.PI * 2); ctx.fill();
     ctx.shadowColor='#e2faff';ctx.shadowBlur=Math.hypot(state.ball.vx,state.ball.vy)>4?15:4;
@@ -463,6 +444,11 @@
 
   function practiceRival(){
     if(!room.practice)return 4.4;
+    if(room.together){
+      const mate=room.who==='Dad'?'Jozef':'Dad', bot=mate==='Dad'?state.dad:state.jozef, ball=state.ball;
+      targets[mate]={x:Math.max(80,Math.min(640,ball.x-40)), y:ball.y};
+      return 4.0;
+    }
     const who=room.who==='Dad'?'Jozef':'Dad',bot=who==='Dad'?state.dad:state.jozef,ball=state.ball;
     const distance=Math.hypot(bot.x-ball.x,bot.y-ball.y);
     const homeX = who==='Dad' ? W-150 : 150;
@@ -531,8 +517,8 @@
   function reset(dir) {
     state.ball = { x: 360, y: 210, vx: dir * 1.4, vy: 0 };
     kickoffHold=dir?36:0;
-    state.dad.x = 560; state.dad.y = 210;
-    state.jozef.x = 160; state.jozef.y = 210;
+    state.dad.x = room.together?220:560; state.dad.y = 210;
+    state.jozef.x = room.together?160:160; state.jozef.y = room.together?250:210;
     targets.Dad = null; targets.Jozef = null;
     for(const p of [state.dad,state.jozef]){p.vx=0;p.vy=0;}
     state.dad.face=-1;state.jozef.face=1;
@@ -624,6 +610,14 @@
   $('versus-code').addEventListener('keydown',e=>{if(e.key==='Enter')connect(false);});
   $('versus-ready').addEventListener('click',ready);
   $('versus-leave').addEventListener('click',()=>{cleanup();say('Create a room, join with a code, or warm up solo.');});
+  document.querySelectorAll('.versus-spot').forEach(b=>b.addEventListener('click',()=>{if(room.phase!=='lobby')return;room.spot=b.dataset.spot;document.querySelectorAll('.versus-spot').forEach(n=>{n.classList.toggle('is-on',n===b);n.setAttribute('aria-pressed',String(n===b));});}));
+  $('versus-together')?.addEventListener('click',()=>{
+    const chosen=$('versus-cpu-difficulty').value;
+    cpuDifficulty=Object.hasOwn(cpuOptions,chosen)?chosen:'pro';
+    practiceSeconds=$('versus-practice-length').value==='60'?60:120;
+    cleanup();room.host=true;room.practice=true;room.together=true;room.ready=room.remoteReady=true;room.phase='waiting';startMatch();
+    say('Same team. You and '+ (room.who==='Dad'?'Jozef':'Dad') +' against Rovers.');
+  });
   $('versus-practice').addEventListener('click',()=>{
     const chosen=$('versus-cpu-difficulty').value;
     cpuDifficulty=Object.hasOwn(cpuOptions,chosen)?chosen:'pro';
@@ -632,7 +626,16 @@
   });
   $('versus-share').addEventListener('click',async()=>{const url=new URL(location.href);url.hash='versus';url.searchParams.set('room',room.code);try{await navigator.clipboard.writeText(url.href);say('Invite copied. Send it to your opponent.');}catch{say('Your room code is '+room.code+'. Share it with your opponent.');}});
   $('versus-again').addEventListener('click',()=>{if(room.phase!=='finished')return;if(room.host)prepareRematch();else{send({type:'rematch'});say('Rematch requested.');}});
-  function aim(x,y){if(room.phase!=='playing')return;targets[room.who]={x,y};if(!room.host)send({type:'aim',x,y});}
+  function aim(x,y){
+    if(room.phase!=='playing')return;
+    if(room.spot==='keeper'){
+      const side=room.together||room.who==='Jozef'?'left':'right';
+      state.keepers[side]=Math.max(GOAL.y+16,Math.min(GOAL.y+GOAL.h-16,y));
+      if(!room.host)send({type:'keeper',y:state.keepers[side]});
+      return;
+    }
+    targets[room.who]={x,y};if(!room.host)send({type:'aim',x,y});
+  }
   function aimFrom(e){const r=canvas.getBoundingClientRect(),vw=portrait?H:W,vh=portrait?W:H,scale=Math.min(r.width/vw,r.height/vh),x=(e.clientX-r.left-(r.width-vw*scale)/2)/scale,y=(e.clientY-r.top-(r.height-vh*scale)/2)/scale;aim(portrait?y:x,portrait?H-x:y);}
   canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);aimFrom(e);});canvas.addEventListener('pointermove',e=>{if(e.buttons)aimFrom(e);});canvas.addEventListener('pointercancel',stopInput);
   const stick=$('versus-stick'),nub=$('versus-nub');

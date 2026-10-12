@@ -1073,3 +1073,5 @@ body.versus-focused #versus-tip{font-weight:800;letter-spacing:.03em;color:#e4ff
 
 #versus-pass{min-height:48px;border-radius:14px;font-weight:800;background:#163040;color:#fff;border:0}
 #versus-trophy,#hq-trophy{color:#d7ff4a;font-weight:800}
+
+.versus-spots{display:flex;gap:8px}.versus-spot{min-height:44px;border-radius:12px;border:1px solid #8bd2d155;background:#102430;color:#fff;font-weight:800}.versus-spot.is-on{background:#d0ff69;color:#122320}#versus-together{background:#163040;color:#fff;border:0;border-radius:12px;min-height:48px;font-weight:800}

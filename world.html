@@ -1429,7 +1429,11 @@ body.nav-open .nav-extra{display:inline-flex}
         <button type="button" class="versus-role is-on" data-who="Dad" id="light-dad" aria-pressed="true">Dad</button>
         <button type="button" class="versus-role" data-who="Jozef" id="light-jozef" aria-pressed="false">Jozef</button>
       </div><input id="versus-who" value="Dad" hidden>
-      <div class="versus-join"><button type="button" id="versus-open">Create room</button><button type="button" id="versus-practice">Play the rival</button></div>
+      <div class="versus-spots" role="group" aria-label="Your position">
+        <button type="button" class="versus-spot is-on" data-spot="forward">Forward</button>
+        <button type="button" class="versus-spot" data-spot="keeper">Keeper</button>
+      </div>
+      <div class="versus-join"><button type="button" id="versus-open">Create room</button><button type="button" id="versus-practice">Play the rival</button><button type="button" id="versus-together">Same team</button></div>
       <div class="versus-practice-settings">
         <label for="versus-cpu-difficulty">SOLO RIVAL DIFFICULTY
           <select id="versus-cpu-difficulty"><option value="rookie">Rookie</option><option value="pro" selected>Pro</option><option value="legend">Legend</option></select>
