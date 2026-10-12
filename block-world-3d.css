@@ -20,3 +20,7 @@ font-size:8px;font-weight:900;letter-spacing:.04em;color:#d3fff1}.radar-header s
 .radar-header{font-size:7px;padding-bottom:3px}.radar-header span{font-size:6px}
 .radar-legend{font-size:6px;flex-wrap:wrap;line-height:1.2}.radar-legend span:last-child{display:none}}
 @media(max-height:550px){.radar{top:101px;width:94px;max-height:112px;overflow:hidden}.radar-legend{display:none}}
+
+/* Clear interaction feedback when the raycast finds a mineable block. */
+.target.aimed{color:#deff8d;text-shadow:0 0 6px #d1ff66,0 0 17px #d1ff667a,0 2px 4px #001;}
+@media(prefers-reduced-motion:reduce){.target.aimed{animation:none}}
