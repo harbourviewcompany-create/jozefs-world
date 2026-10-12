@@ -53,6 +53,7 @@ const close=()=>new Promise(resolve=>server.close(resolve));
       // A second playable chapter: verify both heroes actually contribute.
       await page.evaluate(()=>window.JozefTogether.start());
       await page.waitForFunction(()=>!document.querySelector('#jw-together-game').hidden);
+      await page.waitForFunction(()=>document.querySelector('#adventure')?.classList.contains('active'),null,{timeout:5000});
       assert.ok((await page.locator('#jw-together-canvas').boundingBox()).width>=200,'Together canvas visible');
       assert.equal(await page.locator('#jw-together-hero-0').count(),1);
       assert.equal(await page.locator('#jw-together-hero-1').count(),1);
