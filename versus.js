@@ -161,7 +161,13 @@
     ctx.save();
     if (shake > 0 && !reduced.matches) { ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake); shake -= 1; }
     pitch();
-    if (state.call && state.call !== lastCall && /scores|Full time|post/.test(state.call)) { burst(ball.x, ball.y, state.call.includes('Dad') ? '#d7ff4a' : '#7ee0ff', 24); shake = 10; chime(); voice(state.call); }
+    const sweep = (Math.sin(tick * 0.02) + 1) / 2;
+    const glow = ctx.createRadialGradient(80 + sweep * 560, 8, 10, 360, 180, 420);
+    glow.addColorStop(0, 'rgba(180,255,255,0.10)');
+    glow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, W, H);
+    if (state.call && state.call !== lastCall && /scores|Full time|post/.test(state.call)) { burst(ball.x, ball.y, state.call.includes('Dad') ? '#d7ff4a' : '#7ee0ff', 36); shake = 14; chime(); voice(state.call); document.querySelector('.versus-scoreboard')?.classList.add('goal'); setTimeout(() => document.querySelector('.versus-scoreboard')?.classList.remove('goal'), 900); }
     lastCall = state.call;
     trail.push({ x: ball.x, y: ball.y });
     if (trail.length > 8) trail.shift();
@@ -175,10 +181,12 @@
     player(visualPose(state.dad,'dad'), '#d7ff4a', 'Dad');
     ctx.fillStyle = 'rgba(0,0,0,.25)';
     ctx.beginPath(); ctx.ellipse(ball.x + 2, ball.y + 5, 6, 3, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#f7f7f2';
-    ctx.beginPath(); ctx.arc(ball.x, ball.y, 7, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = '#233549'; ctx.lineWidth=1; ctx.stroke();
-    ctx.fillStyle='#263848';ctx.beginPath();ctx.arc(ball.x+Math.sin(tick*.12)*2,ball.y-1,2.5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle = '#f4f7f2';
+    ctx.beginPath(); ctx.arc(ball.x, ball.y, 8, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#1c2833'; ctx.lineWidth = 1.4; ctx.stroke();
+    ctx.strokeStyle = '#c5ced6';
+    ctx.beginPath(); ctx.arc(ball.x - 2, ball.y - 1, 3.2, 0.4, 2.4); ctx.stroke();
+    ctx.beginPath(); ctx.arc(ball.x + 2, ball.y + 1, 3.2, 2.2, 4.4); ctx.stroke();
     /* scoreboard is accessible HTML outside the canvas */
     /* ctx.fillStyle = '#08140f';
     ctx.fillRect(W / 2 - 78, 4, 156, 26);
@@ -193,10 +201,11 @@
       ctx.translate(W / 2, H / 2);
       if(portrait)ctx.rotate(-Math.PI/2);
       ctx.scale(pop, pop);
-      ctx.fillStyle = 'rgba(8,20,15,.78)';
-      ctx.fillRect(-96, -18, 192, 34);
-      ctx.fillStyle = '#fff';
-      ctx.fillText(state.call, 0, 4);
+      ctx.fillStyle = /scores/.test(state.call) ? 'rgba(202,250,96,.92)' : 'rgba(8,20,15,.82)';
+      ctx.fillRect(-120, -22, 240, 44);
+      ctx.fillStyle = /scores/.test(state.call) ? '#102018' : '#fff';
+      ctx.font = '900 22px system-ui';
+      ctx.fillText(state.call, 0, 6);
       ctx.restore();
     }
     ctx.restore();
