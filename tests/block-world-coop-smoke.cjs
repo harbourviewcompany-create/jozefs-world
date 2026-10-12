@@ -101,7 +101,7 @@ const now=host.game().getState().players[1].x;
 assert.ok(now>start+10,'Jozef really moved inside the host physics engine: '+start+' -> '+now);
 assert.ok(Math.abs(guest.game().getState().players[1].x-now)<5,'host sent Jozef position to guest');
 const p=host.game().getState().players[1];
-const tileX=Math.floor(p.x/40)+1,tileY=Math.floor((p.y+37)/40);
+const tileX=Math.floor(p.x/40)+2,tileY=Math.floor((p.y+37)/40);
 const hostBefore=host.game().getWorld().world[tileY][tileX];
 assert.notEqual(hostBefore,14);
 guest.game().requestAction('mine',{x:tileX,y:tileY},2);
