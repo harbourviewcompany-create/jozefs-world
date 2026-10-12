@@ -40,7 +40,24 @@ body.nav-open .nav-extra{display:inline-flex}
 .versus-role{min-height:48px;border-radius:12px;font-weight:800}
 .versus-role.is-on{background:#cafa60;color:#102018}
 #versus-canvas{width:100%;height:auto;border-radius:14px;touch-action:none;background:#187a42}
-</style></head>
+</style>
+<style>
+#versus{padding:72px 12px 110px}
+.versus-card{display:grid;gap:10px}
+.versus-head{display:flex;justify-content:space-between;align-items:end;gap:12px}
+.versus-head h2{margin:0;font-size:28px}
+.versus-head p{margin:0;font-weight:700;text-align:right}
+.versus-roles,.versus-actions,.versus-join{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.versus-role,.versus-actions button,#versus-open,#versus-code{min-height:48px;border-radius:14px;font-weight:800;font-size:16px}
+.versus-role{background:#132028;color:#e8fff0}
+.versus-role.is-on{background:#cafa60;color:#102018}
+.versus-role.on{box-shadow:inset 0 0 0 3px #fff}
+#versus-code{padding:0 14px;background:#0c1820;color:#fff;border:1px solid #245}
+#versus-open,#versus-kick{background:#cafa60;color:#102018;border:0}
+#versus-again{background:#163040;color:#fff;border:0}
+#versus-canvas{width:100%;height:auto;border-radius:16px;touch-action:none;background:#187a42}
+</style>
+</head>
 <body>
 
   <div id="walkout" class="walkout" hidden role="dialog" aria-modal="true" aria-labelledby="walkout-title">
@@ -1288,23 +1305,25 @@ body.nav-open .nav-extra{display:inline-flex}
   
 
 <section id="versus" class="section" tabindex="-1" aria-labelledby="versus-title">
-  <div class="notes-card versus-card">
-    <h2 id="versus-title">Versus</h2>
-    <div class="versus-lights" aria-label="Who is in the room">
-      <span id="light-dad">Dad</span>
-      <span id="light-jozef">Jozef</span>
-    </div>
+  <div class="versus-card">
+    <header class="versus-head">
+      <h2 id="versus-title">Versus</h2>
+      <p id="versus-status">Pick who you are.</p>
+    </header>
     <div class="versus-roles" role="group" aria-label="Who are you">
-      <button type="button" class="versus-role is-on" data-who="Dad">I am Dad</button>
-      <button type="button" class="versus-role" data-who="Jozef">I am Jozef</button>
+      <button type="button" class="versus-role is-on" data-who="Dad" id="light-dad">Dad</button>
+      <button type="button" class="versus-role" data-who="Jozef" id="light-jozef">Jozef</button>
     </div>
     <input id="versus-who" value="Dad" hidden>
-    <label>Room code <input id="versus-code" value="JOZEF" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text"></label>
-    <button type="button" class="action-btn" id="versus-open">Open room</button>
-    <p id="versus-status">Pick who you are. Use the same code.</p>
-    <button type="button" class="action-btn" id="versus-kick">Kick</button>
-    <button type="button" class="action-btn" id="versus-again">Play again</button>
+    <div class="versus-join">
+      <input id="versus-code" value="JOZEF" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Room code">
+      <button type="button" id="versus-open">Open room</button>
+    </div>
     <canvas id="versus-canvas" width="720" height="420" aria-label="Two player pitch"></canvas>
+    <div class="versus-actions">
+      <button type="button" id="versus-kick">Kick</button>
+      <button type="button" id="versus-again">Again</button>
+    </div>
   </div>
 </section>
 
