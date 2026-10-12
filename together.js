@@ -73,7 +73,7 @@ function progress(){return {stage:state.stage,clues:state.clues.slice(),won:stat
 function start(){
  opened=true;rootGame.hidden=false;root.showSection?.('adventure');
  selected=0;
- hud();
+ checkpoint();hud();
  notify(state.stage===4?'Your shared Stadium Cup is ready. Replay to start a new mission.':'Story ready. Both players have equal challenges and a turn in the finale.');
  draw(performance.now?.()||0);
  return true;
@@ -84,7 +84,7 @@ function close(){
  return true;
 }
 function replay(){
- stop();state=fresh();battle=null;selected=0;persist();
+ stop();const trophyPreviouslyWon=state.won;state=fresh();state.won=trophyPreviouslyWon;battle=null;selected=0;persist();
  start();notify('New mystery started! Both players can explore and discover clues.');
  return true;
 }
@@ -204,7 +204,7 @@ function draw(t){
    const cx=(x+.5)*tw,cy=(y+.5)*th,lit=at(p,[x,y]);
    const scale=motionReduced?0:Math.sin(t/430+i)*3;
    ctx.fillStyle=i===0?'#caff6a':'#80daff';
-   ctx.globalAlpha=done?.22:.17;ctx.beginPath();ctx.arc(cx,cy,26+scale,0,Math.PI*2);ctx.fill();
+   ctx.globalAlpha=done?0.22:0.17;ctx.beginPath();ctx.arc(cx,cy,26+scale,0,Math.PI*2);ctx.fill();
    ctx.globalAlpha=1;ctx.strokeStyle=i===0?'#caff6a':'#80daff';ctx.lineWidth=lit?5:3;ctx.beginPath();ctx.arc(cx,cy,21+scale,0,Math.PI*2);ctx.stroke();
    ctx.fillStyle=done?'#ffffff':i===0?'#e2ffad':'#c7edff';ctx.font='900 12px system-ui';ctx.fillText(done?'✓':HEROES[i].name,cx,cy-31);
    ctx.font='900 24px system-ui';ctx.fillText(done?'✓':'✦',cx,cy+1);

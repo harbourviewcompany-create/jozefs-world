@@ -50,6 +50,39 @@ const close=()=>new Promise(resolve=>server.close(resolve));
       const progress=await page.evaluate(()=>window.JozefAdventure.getProgress());
       assert.ok(progress.stars>=1,'earned progress persists after reload');
       assert.equal(progress.coop,true,'player mode remains private and saved');
+      // A second playable chapter: verify both heroes actually contribute.
+      await page.evaluate(()=>window.JozefTogether.start());
+      await page.waitForFunction(()=>!document.querySelector('#jw-together-game').hidden);
+      assert.ok((await page.locator('#jw-together-canvas').boundingBox()).width>=200,'Together canvas visible');
+      assert.equal(await page.locator('#jw-together-hero-0').count(),1);
+      assert.equal(await page.locator('#jw-together-hero-1').count(),1);
+      for(let stage=0;stage<3;stage++){
+       for(let who=0;who<2;who++){
+        await page.evaluate(id=>{window.JozefTogether.choose(id);window.JozefTogether.guide();},who);
+        if(stage===0&&who===0)
+         await page.waitForFunction(()=>window.JozefTogether.progress().clues[0],null,{timeout:6500});
+        else if(who===1)
+         await page.waitForFunction(s=>window.JozefTogether.progress().stage>s,stage,{timeout:6500});
+        else
+         await page.waitForFunction(s=>{
+          const p=window.JozefTogether.progress().positions[0],t=[[3,2],[3,5],[5,2]][s];
+          return p.x===t[0]&&p.y===t[1];
+         },stage,{timeout:6500});
+       }
+      }
+      assert.equal(await page.evaluate(()=>window.JozefTogether.progress().stage),3,'two people opened the finale');
+      for(let round=0;round<4;round++){
+       const guarded=(round*2+1)%3;
+       assert.equal(await page.evaluate(lane=>window.JozefTogether.shoot(lane),(guarded+1)%3),true);
+      }
+      assert.equal(await page.evaluate(()=>window.JozefTogether.progress().stage),4,'both champions scored twice');
+      assert.equal(await page.evaluate(()=>window.JozefTogether.progress().won),true,'shared trophy recorded');
+      await page.reload({waitUntil:'domcontentloaded'});
+      await page.waitForFunction(()=>Boolean(window.JozefTogether));
+      assert.equal(await page.evaluate(()=>window.JozefTogether.progress().won),true,'shared trophy survives reload');
+      await page.evaluate(()=>window.JozefTogether.replay());
+      assert.equal(await page.evaluate(()=>window.JozefTogether.progress().stage),0,'replay starts a fresh mystery');
+      assert.equal(await page.evaluate(()=>window.JozefTogether.progress().won),true,'replay never removes shared cup');
       assert.deepEqual(errors,[],'no uncaught browser script errors');
       console.log(browserName+' '+viewport.width+'x'+viewport.height+' adventure PASS');
      }finally{await page.close();}
