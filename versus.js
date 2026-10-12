@@ -252,19 +252,22 @@
   function player(p,color,name){
     const speed=Math.hypot(p.vx,p.vy);
     const moving=speed>.25;
-    const phase=tick*(0.16+speed*0.1);
-    const stride=moving?Math.sin(phase)*(5+speed*1.4):0;
-    const bob=moving?Math.abs(Math.sin(phase))*-1.6:0;
-    ctx.save();ctx.translate(p.x,p.y+bob);if(portrait)ctx.rotate(-Math.PI/2);ctx.scale(p.face||1,1);ctx.rotate(Math.max(-0.18,Math.min(0.18,p.vy*0.06)));ctx.scale(1.35,1.35);
+    const phase=tick*(0.22+speed*0.12);
+    const stride=moving?Math.sin(phase)*(7+speed*1.8):0;
+    const bob=moving?Math.abs(Math.sin(phase*2))*-2.2:0;
+    const lean=Math.max(-0.28,Math.min(0.28,(p.vx||0)*0.05));
+    const kicking=kickLock>8 && state.call;
+    ctx.save();ctx.translate(p.x,p.y+bob);if(portrait)ctx.rotate(-Math.PI/2);ctx.scale(p.face||1,1);ctx.rotate(lean);ctx.scale(1.35,1.35);
     ctx.fillStyle='rgba(0,0,0,.32)';ctx.beginPath();ctx.ellipse(1,20,11,3.5,0,0,Math.PI*2);ctx.fill();
     if(name===room.who){ctx.strokeStyle=color;ctx.globalAlpha=.55;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(0,18,16,6,0,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;}
     ctx.lineCap='round';ctx.lineJoin='round';
     ctx.strokeStyle='#1d2430';ctx.lineWidth=5;
-    ctx.beginPath();ctx.moveTo(-4,8);ctx.lineTo(-5+stride*.3,16);ctx.lineTo(-6+stride,21);ctx.moveTo(4,8);ctx.lineTo(5-stride*.3,16);ctx.lineTo(6-stride,21);ctx.stroke();
+    const kick=kicking?14:0;
+    ctx.beginPath();ctx.moveTo(-4,8);ctx.lineTo(-5+stride*.4,16);ctx.lineTo(-7+stride,22);ctx.moveTo(4,8);ctx.lineTo(5-stride*.4+kick,16);ctx.lineTo(8-stride+kick,22);ctx.stroke();
     ctx.strokeStyle='#f2f5f3';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-5+stride*.2,12);ctx.lineTo(-5+stride*.2,17);ctx.moveTo(5-stride*.2,12);ctx.lineTo(5-stride*.2,17);ctx.stroke();
     ctx.fillStyle='#1b1f27';ctx.beginPath();ctx.ellipse(-6+stride,21,4,2,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(6-stride,21,4,2,0,0,Math.PI*2);ctx.fill();
     ctx.strokeStyle='#e0b08a';ctx.lineWidth=3.5;
-    ctx.beginPath();ctx.moveTo(-7,-2);ctx.lineTo(-12,-stride*.4);ctx.moveTo(7,-2);ctx.lineTo(12,stride*.4);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(-7,-2);ctx.lineTo(-13,-stride*.7);ctx.moveTo(7,-2);ctx.lineTo(13,stride*.7);ctx.stroke();
     ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(-9,-9);ctx.quadraticCurveTo(0,-13,9,-9);ctx.lineTo(8,7);ctx.quadraticCurveTo(0,10,-8,7);ctx.closePath();ctx.fill();
     ctx.fillStyle='#ffffffcc';ctx.fillRect(-8,4,16,3);
     ctx.fillStyle='#fff';ctx.font='700 8px system-ui';ctx.textAlign='center';ctx.fillText('11',0,1);
@@ -409,9 +412,11 @@
       const dx = target.x - p.x, dy = target.y - p.y;
       const dist = Math.hypot(dx, dy) || 1;
       const want = dist < 8 ? 0 : Math.min(pace, 1.6 + dist * 0.04);
-      const turn = speed > 1 && (p.vx * dx + p.vy * dy) < 0 ? 0.12 : 0.28;
+      const braking = speed > 1 && (p.vx * dx + p.vy * dy) < 0;
+      const turn = braking ? 0.1 : 0.22;
       p.vx += (dx / dist * want - p.vx) * turn;
       p.vy += (dy / dist * want - p.vy) * turn;
+      if (braking) { p.vx *= 0.92; p.vy *= 0.92; }
       if (Math.abs(p.vx) > 0.35) p.face = p.vx > 0 ? 1 : -1;
     }
     p.x = Math.max(46, Math.min(W - 46, p.x + p.vx));
