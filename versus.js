@@ -269,7 +269,7 @@
     ctx.fillStyle='#1b1f27';ctx.beginPath();ctx.ellipse(-6+stride,21,4,2,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(6-stride,21,4,2,0,0,Math.PI*2);ctx.fill();
     ctx.strokeStyle='#e0b08a';ctx.lineWidth=3.5;
     ctx.beginPath();ctx.moveTo(-7,-2);ctx.lineTo(-13,-stride*.7);ctx.moveTo(7,-2);ctx.lineTo(13,stride*.7);ctx.stroke();
-    ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(-9,-9);ctx.quadraticCurveTo(0,-13,9,-9);ctx.lineTo(8,7);ctx.quadraticCurveTo(0,10,-8,7);ctx.closePath();ctx.fill();
+    const kit=ctx.createLinearGradient(-9,-12,9,10);kit.addColorStop(0,color);kit.addColorStop(1,'#00000033');ctx.fillStyle=kit;ctx.beginPath();ctx.moveTo(-9,-9);ctx.quadraticCurveTo(0,-13,9,-9);ctx.lineTo(8,7);ctx.quadraticCurveTo(0,10,-8,7);ctx.closePath();ctx.fill();
     ctx.fillStyle='#ffffffcc';ctx.fillRect(-8,4,16,3);
     ctx.fillStyle='#fff';ctx.font='700 8px system-ui';ctx.textAlign='center';ctx.fillText('11',0,1);
     const dad=name==='Dad';
@@ -376,11 +376,15 @@
     ctx.fillStyle = 'rgba(0,0,0,.25)';
     ctx.beginPath(); ctx.ellipse(ball.x + 2, ball.y + 5, 6, 3, 0, 0, Math.PI * 2); ctx.fill();
     ctx.shadowColor='#e2faff';ctx.shadowBlur=Math.hypot(state.ball.vx,state.ball.vy)>4?15:4;
-    const ballGrad=ctx.createRadialGradient(ball.x-2,ball.y-2,1,ball.x,ball.y,8);
-    ballGrad.addColorStop(0,'#ffffff');ballGrad.addColorStop(1,'#d5ddd8');
+    const pace=Math.hypot(state.ball.vx,state.ball.vy);
+    ctx.fillStyle='rgba(0,0,0,.28)';ctx.beginPath();ctx.ellipse(ball.x+2,ball.y+7,7+pace*.2,3,0,0,Math.PI*2);ctx.fill();
+    const ballGrad=ctx.createRadialGradient(ball.x-2.4,ball.y-2.6,1,ball.x,ball.y,8);
+    ballGrad.addColorStop(0,'#ffffff');ballGrad.addColorStop(.7,'#e7eeea');ballGrad.addColorStop(1,'#b7c2bc');
     ctx.fillStyle=ballGrad;ctx.beginPath();ctx.arc(ball.x,ball.y,8,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
-    ctx.strokeStyle='#1c2833';ctx.lineWidth=1.2;ctx.stroke();
-    ctx.strokeStyle='#9aa7b2';ctx.beginPath();ctx.arc(ball.x-2,ball.y-1,3.4,.3,2.6);ctx.stroke();ctx.beginPath();ctx.arc(ball.x+2.2,ball.y+1.2,3.4,2.1,4.6);ctx.stroke();
+    ctx.strokeStyle='#24303a';ctx.lineWidth=1.1;ctx.stroke();
+    ctx.strokeStyle='#8e9aa3';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(ball.x-6,ball.y-2);ctx.lineTo(ball.x-1,ball.y-6);ctx.lineTo(ball.x+4,ball.y-3);ctx.lineTo(ball.x+1,ball.y+2);ctx.closePath();ctx.stroke();
+    ctx.beginPath();ctx.moveTo(ball.x-2,ball.y+2);ctx.lineTo(ball.x-5,ball.y+6);ctx.moveTo(ball.x+2,ball.y+1);ctx.lineTo(ball.x+6,ball.y+4);ctx.stroke();
     /* scoreboard is accessible HTML outside the canvas */
     /* ctx.fillStyle = '#08140f';
     ctx.fillRect(W / 2 - 78, 4, 156, 26);
