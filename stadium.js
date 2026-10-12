@@ -1,7 +1,7 @@
 /* JOZEF FC // AFTER DARK: immersive navigation and player HUD, no account or tracking. */
 (() => {
 'use strict';
-const ids=['home','street','arena','games','career','tour','club','playbook','matchday','training','learn','news','notes','album','sports','watch','sports-arcade','chronicle','fun'];
+const ids=['home','street','versus','arena','games','career','tour','club','playbook','matchday','training','learn','news','notes','album','sports','watch','sports-arcade','chronicle','fun'];
 const el=id=>document.getElementById(id);
 const txt=(id,x)=>{const n=el(id);if(n)n.textContent=String(x)};
 const get=key=>{try{return localStorage.getItem(key)}catch(_){return null}};
@@ -85,6 +85,7 @@ function commandDeck(){
  const options=[
   ['home','00','CLUB HQ','BACK TO YOUR WORLD'],
   ['arena','01','FOOTBALL ARENA','LIVE FOOTBALL MATCH'],
+  ['versus','02A','VERSUS','PLAY DAD OR JOZEF'],
   ['street','02','STREET//11','THE NIGHT RUN'],
   ['sports-arcade','03','SPORTS ARCADE','HOCKEY · BASEBALL · BASKETBALL · WRESTLING'],
   ['playbook','04','COACH PLAYBOOK','MISSIONS ACROSS EVERY SPORT'],
