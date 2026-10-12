@@ -14,7 +14,7 @@
   function fitCamera(){const r=canvas.parentElement.getBoundingClientRect();const next=r.height>r.width*1.15;if(next===portrait)return;portrait=next;canvas.width=(portrait?H:W)*dpr;canvas.height=(portrait?W:H)*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);if(portrait){ctx.translate(H,0);ctx.rotate(Math.PI/2);}}
   const GOAL = { x: 36, y: 150, w: 18, h: 120 };
   const room = { code: '', who: 'Dad', peer: null, conn: null, host: false, other: '', ready: false, remoteReady: false, practice: false, phase: 'lobby', remoteActive: true };
-  let connectTimer, countdownTimer, lastPacket = 0, lastSent = 0, localActive = true;
+  let connectTimer, countdownTimer, lastPacket = 0, lastSent = 0, lastHello = 0, localActive = true;
   let stickVector = null;
   const keys = new Set();
   const state = {
@@ -262,7 +262,8 @@
     if(!msg||typeof msg!=='object')return;lastPacket=performance.now();
     if(msg.type==='hello'&&!room.host&&['Dad','Jozef'].includes(msg.hostWho)){
       room.other=msg.hostWho;room.who=msg.hostWho==='Dad'?'Jozef':'Dad';room.phase='waiting';syncUI();send({type:'joined'});say('You are '+room.who+'. Both players tap Ready.');
-    }else if(msg.type==='joined'&&room.host){room.other=room.who==='Dad'?'Jozef':'Dad';syncUI();say(room.other+' joined. Both players tap Ready.');}
+    }else if(msg.type==='joined'&&room.host&&room.phase==='waiting'){room.other=room.who==='Dad'?'Jozef':'Dad';send({type:'ack'});syncUI();say(room.other+' joined. Both players tap Ready.');}
+    else if(msg.type==='ack'&&!room.host&&room.phase==='waiting'){say('Connected. Both players tap Ready.');}
     else if(msg.type==='ready'&&room.host&&room.phase==='waiting'){room.remoteReady=true;startMatch();}
     else if(msg.type==='aim'&&room.host&&room.phase==='playing'){
       if(msg.x===null&&msg.y===null)targets[room.other]=null;
@@ -279,7 +280,11 @@
   function prepareRematch(){if(room.practice){room.ready=room.remoteReady=true;startMatch();return;}room.phase='waiting';room.ready=false;room.remoteReady=false;syncUI();send({type:'lobby'});say('Rematch — both players tap Ready.');}
   function wire(conn){
     if(room.conn){conn.close();return;}room.conn=conn;conn.on('data',onData);
-    conn.on('open',()=>{clearTimeout(connectTimer);lastPacket=performance.now();room.phase='waiting';if(room.host)send({type:'hello',hostWho:room.who});else if(room.other)send({type:'joined'});syncUI();});
+    let opened=false;
+    const onOpen=()=>{if(opened||room.conn!==conn)return;opened=true;clearTimeout(connectTimer);lastPacket=performance.now();room.phase='waiting';if(room.host)send({type:'hello',hostWho:room.who});else if(room.other)send({type:'joined'});syncUI();};
+    conn.on('open',onOpen);
+    // WebKit can open a data channel before an event handler attaches.
+    if(conn.open)queueMicrotask(onOpen);
     conn.on('close',()=>{if(room.conn!==conn)return;room.conn=null;fail('Opponent disconnected. Create or join a room to play again.');});
     conn.on('error',()=>fail('Connection lost. Create or join a room to retry.'));
   }
@@ -328,7 +333,13 @@
       accumulator+=dt;while(accumulator>=1/60){step();accumulator-=1/60;}draw();
       if(now-uiTime>100){$('versus-score-dad').textContent=state.score.dad;$('versus-score-jozef').textContent=state.score.jozef;const seconds=Math.ceil(state.matchLeft);$('versus-clock').textContent=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');uiTime=now;}
     }else accumulator=0;
-    if(room.conn?.open&&now-heartbeat>2000){send({type:'ping'});heartbeat=now;if(now-lastPacket>12000)fail('Connection interrupted. Rejoin to start a fresh match.');}
+    // Retransmit an unacknowledged room invitation: initial WebRTC packets can be lost.
+    if(room.host&&room.conn?.open&&room.phase==='waiting'&&!room.other&&now-lastHello>900){send({type:'hello',hostWho:room.who});lastHello=now;}
+    if(room.conn?.open&&now-heartbeat>2000){
+      heartbeat=now;
+      if(localActive&&room.remoteActive){send({type:'ping'});if(now-lastPacket>16000)fail('Connection interrupted. Rejoin to start a fresh match.');}
+      else lastPacket=now; // Background tabs must not be treated as a dead connection.
+    }
     requestAnimationFrame(frame);
   }
   syncUI();draw();requestAnimationFrame(frame);
