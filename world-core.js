@@ -186,8 +186,11 @@ function setDetail(){
 function focusPlate(i,announce=true){
  if(!Number.isInteger(i)||i<0||i>=DESTINATIONS.length)return;
  selected=i;velocity=[0,0];
- const p=rotate(DESTINATIONS[i].normal,yaw,pitch);
- target={yaw:yaw-Math.atan2(p[0],p[2]),pitch:pitch+Math.atan2(p[1],Math.hypot(p[0],p[2]))};
+ // Solve for the plate normal facing camera, then use the nearest revolutions.
+ const raw=DESTINATIONS[i].normal;
+ const wrap=(angle,current)=>angle+Math.PI*2*Math.round((current-angle)/(Math.PI*2));
+ target={yaw:wrap(-Math.atan2(raw[0],raw[2]),yaw),
+         pitch:wrap(Math.atan2(raw[1],Math.hypot(raw[0],raw[2])),pitch)};
  if(reduced){yaw=target.yaw;pitch=target.pitch;target=null;}
  setDetail();if(announce)say(DESTINATIONS[i].title+' selected. Choose Enter to open this world.');
  start();
@@ -257,7 +260,7 @@ function paint(t){
  try{graphics.render(yaw,pitch,.83*zoom,selected,t*.001);}
  catch(_){graphicsFallback('3D graphics paused. The complete world index remains available.');return;}
  updateLabels();
- if(!reduced)start();
+ if(!reduced||target)start();
 }
 function start(){if(frame||!graphics||!isActive()||disposed)return;frame=root.requestAnimationFrame(paint);}
 function stop(){if(frame)root.cancelAnimationFrame(frame);frame=0;last=0;}
@@ -310,6 +313,7 @@ function init(){
  });
  $('jw-worldcore-dashboard').addEventListener('click',()=>{
   const expanded=host.classList.toggle('show-dashboard');
+  host.parentElement.classList.toggle('jw-hq-more-open',expanded);
   host.setAttribute('data-dashboard',String(expanded));
   $('jw-worldcore-dashboard').setAttribute('aria-expanded',String(expanded));
   $('jw-worldcore-dashboard').textContent=expanded?'HIDE DASHBOARD':'CLUB DASHBOARD ↗';
