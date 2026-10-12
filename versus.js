@@ -292,8 +292,8 @@
     });
     sparks.forEach(s => { s.x += s.vx; s.y += s.vy; s.vy += 0.15; s.life -= 1; ctx.fillStyle = s.color; ctx.globalAlpha = Math.max(0, s.life / 18); ctx.fillRect(s.x, s.y, 4, 4); ctx.globalAlpha = 1; });
     for (let i = sparks.length - 1; i >= 0; i--) if (sparks[i].life <= 0) sparks.splice(i, 1);
-    player(visualPose(state.jozef,'jozef'), '#60c5ff', 'Jozef');
-    player(visualPose(state.dad,'dad'), '#d7ff4a', 'Dad');
+    player(visualPose(state.jozef,'jozef'), '#60c5ff', room.practice && room.who!=='Jozef' ? 'Rival' : 'Jozef');
+    player(visualPose(state.dad,'dad'), '#d7ff4a', room.practice && room.who!=='Dad' ? 'Rival' : 'Dad');
     keeper('left', '#f4f7f2');
     keeper('right', '#f4f7f2');
     ctx.fillStyle = 'rgba(0,0,0,.25)';
