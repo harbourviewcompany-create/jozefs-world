@@ -483,10 +483,10 @@ function spark(x,y,count=8){
 }
 const baseGenerate=generate;
 generate=function(){
- world=Array.from({length:H},()=>Array(W).fill(0));
+ world=Array.from({length:H},()=>Array(W).fill(0));surface=new Array(W);
  for(let x=0;x<W;x++){
   const z=biome(x),v=Math.sin((x+adventureSeed%77)*.09)*3+Math.sin((x+adventureSeed%61)*.21)*2+Math.sin(x*.026)*4;
-  const h=Math.max(26,Math.min(47,Math.floor([33,33,37,31,29][z]+v)));
+  const h=Math.max(26,Math.min(47,Math.floor([33,33,37,31,29][z]+v)));surface[x]=h;
   for(let y=h;y<H;y++){
    let id=y===h?tilesForBiome[z]:y<h+4?(z===2?6:z===3?16:2):3;
    if(y>h+6){const n=noise(x,y);if(n>.993&&y>h+18)id=18;else if(n>.976)id=11;else if(n>.955)id=10;else if(n>.942)id=8;
