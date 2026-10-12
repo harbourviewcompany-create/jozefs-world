@@ -6,7 +6,9 @@ const vm=require('node:vm');
 const assert=require('node:assert/strict');
 const html=fs.readFileSync(path.join(__dirname,'../block-world-3d.html'),'utf8');
 const script=fs.readFileSync(path.join(__dirname,'../block-world-3d.js'),'utf8');
-assert.match(html,/src="\.\/block-world-3d\.js"/);
+assert.match(html,/src="\.\/block-world-3d\.js\?v=[A-Za-z0-9._-]+"/);
+assert.match(html,/__bw3dFail/,"HTML must display a fallback when the engine fails to start");
+assert.match(html,/12000/,"HTML must have a startup timeout");
 assert.match(html,/src="\.\/peerjs\.min\.js"/);
 new vm.Script(script,{filename:'block-world-3d.js'});
 function boot(shared=new Map()){
@@ -30,7 +32,8 @@ function boot(shared=new Map()){
  const document={hidden:false,createElement(){return element();},getElementById(id){if(!elements.has(id))elements.set(id,element(id));return elements.get(id);},
   addEventListener(t,fn){(events.get(t)||events.set(t,[]).get(t)).push(fn);}
  };
- const window={Peer:null,addEventListener(t,fn){(events.get(t)||events.set(t,[]).get(t)).push(fn);}};
+ let readyCalls=0;
+ const window={Peer:null,__bw3dReady(){readyCalls++;},addEventListener(t,fn){(events.get(t)||events.set(t,[]).get(t)).push(fn);}};
  const sandbox={
   document,window,
   localStorage:{getItem:k=>shared.get(k)||null,setItem:(k,v)=>shared.set(k,String(v)),removeItem:k=>shared.delete(k)},
@@ -49,12 +52,13 @@ function boot(shared=new Map()){
  const status=()=>window.BlockWorld3D?.status();
  const tick=(n=1)=>{for(let i=0;i<n;i++){clock.now+=17;assert.ok(clock.raf);clock.raf(clock.now);}};
  const click=id=>{const el=document.getElementById(id);if(el.onclick)el.onclick({});else for(const f of(el.events.click||[]))f({preventDefault(){}});};
- return {status,tick,click,document,events,errors,shared,testHooks:window.__block3dTests,window};
+ return {status,tick,click,document,events,errors,shared,testHooks:window.__block3dTests,window,readyCalls:()=>readyCalls};
 }
 const test=boot();
 assert.ok(test.status(),'3D API initialized');
 test.tick(3);
 assert.ok(test.status().renderOk,'frame rendered');
+assert.ok(test.readyCalls()>0,'successful first frame signals the HTML startup watchdog');
 assert.ok(test.status().loadedChunks>0,'terrain chunks streamed');
 const start=test.status().hero.z;
 for(const fn of test.events.get('keydown')||[])fn({code:'KeyW',repeat:false,preventDefault(){}});
