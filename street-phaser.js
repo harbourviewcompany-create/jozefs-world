@@ -124,40 +124,121 @@
     updateHUD();
   }
 
+  // High-contrast, original, offline arcade art: cached stage + dynamic GPU primitives.
   class Night extends Phaser.Scene {
     create() {
       this.cameras.main.setBackgroundColor('#071018');
-      this.graphics = this.add.graphics();
-      this.player = this.add.circle(playerX, 424, 18, 0xcafa60);
-      this.player.setStrokeStyle(3, 0xffffff);
-      this.label = this.add.text(W / 2, 220, '', { fontFamily: 'system-ui', fontSize: '28px', color: '#ffffff', fontStyle: '900' }).setOrigin(0.5);
+      const bg=this.add.graphics();
+      bg.fillStyle(0x05121d).fillRect(0,0,W,H);
+      // Stadium seating and branded sideline glow, painted only once.
+      for(let row=0;row<16;row++){
+        for(let col=0;col<12;col++){
+          const x=(col<6?0:340)+(col%6)*4.4,y=12+row*32;
+          bg.fillStyle((row+col)%7===0?0xcaff66:0x6cb0ca,(row+col)%4===0?.46:.2);
+          bg.fillRoundedRect(x,y,3,9,1);
+        }
+      }
+      bg.fillStyle(0x0c342f).fillRoundedRect(25,0,310,H,12);
+      for(let y=0;y<H;y+=70){
+        bg.fillStyle((y/70)%2===0?0x155542:0x0e4237,.65);
+        bg.fillRect(27,y,306,70);
+      }
+      for(const x of [21,339]){
+        bg.fillStyle(0x91fff3,.5).fillRect(x,0,3,H);
+        bg.fillStyle(0x8effbd,.16).fillRect(x-5,0,13,H);
+      }
+      for(let y=14;y<H;y+=76){
+        bg.fillStyle(0xe5fff4,.075).fillRect(27,y,306,2);
+      }
+      bg.lineStyle(2,0xa0f4d3,.4).strokeRoundedRect(25,3,310,510,9);
+      bg.lineStyle(1,0xa5ffc1,.25);
+      for(const x of [126,234])bg.lineBetween(x,5,x,515);
+      for(let i=0;i<11;i++){
+        const x=36+i*29;
+        bg.fillStyle(0xf6fff0,.5).fillCircle(x,9,2.6);
+        bg.fillStyle(0xb4fff0,.055).fillCircle(x,9,13);
+      }
+      this.graphics=this.add.graphics();
+      this.player=this.add.container(playerX,424);
+      const runner=this.add.graphics();
+      runner.fillStyle(0x031119,.45).fillEllipse(3,32,54,14);
+      // Detailed Jozef FC player silhouette: dynamic movement occurs on the container.
+      runner.fillStyle(0x102b3b).fillRoundedRect(-17,19,15,20,5).fillRoundedRect(3,19,15,20,5);
+      runner.fillStyle(0xe9f8ed).fillRoundedRect(-18,31,16,8,3).fillRoundedRect(3,31,16,8,3);
+      runner.fillStyle(0x081b29).fillRoundedRect(-23,37,22,9,4).fillRoundedRect(2,37,22,9,4);
+      runner.fillStyle(0xc9fb65).fillRoundedRect(-25,-20,50,44,10);
+      runner.fillStyle(0x163d3f).fillRoundedRect(-25,11,50,13,4);
+      runner.fillStyle(0xf3f7e7,.75).fillRect(-23,-17,6,28).fillRect(17,-17,6,28);
+      runner.fillStyle(0xf0b98a).fillRoundedRect(-33,-13,10,29,5).fillRoundedRect(23,-13,10,29,5);
+      runner.fillStyle(0xf0b98a).fillRoundedRect(-7,-32,14,14,3).fillCircle(0,-42,17);
+      runner.fillStyle(0x191f2c).fillRoundedRect(-17,-55,34,11,5);
+      runner.fillStyle(0x101b28).fillCircle(-5,-42,2).fillCircle(6,-42,2);
+      this.player.add(runner);
+      this.player.add(this.add.text(0,-1,'11',{fontFamily:'system-ui',fontSize:'19px',fontStyle:'900',color:'#0d302d'}).setOrigin(.5));
+      this.label=this.add.text(W/2,220,'',{fontFamily:'system-ui',fontSize:'27px',color:'#edffdf',fontStyle:'900',stroke:'#051923',strokeThickness:7}).setOrigin(.5);
+      this.input.on('pointerdown',pointer=>{
+        if(state==='ready'||state==='over')newRun();
+        if(state==='playing')moveTo(clamp(Math.floor(pointer.worldX/(W/3)),0,2));
+      });
+      this.input.on('pointermove',pointer=>{
+        if(state==='playing'&&pointer.isDown)moveTo(clamp(Math.floor(pointer.worldX/(W/3)),0,2));
+      });
+      this.events.on('shutdown',()=>this.input.removeAllListeners('pointerdown'));
     }
-    update(_, delta) {
-      const dt = Math.min(0.036, delta / 1000);
-      if (state === 'playing' && dt > 0) update(dt);
+    update(_time,delta) {
+      const dt=Math.min(.036,delta/1000);
+      if(state==='playing'&&dt>0)update(dt);
       this.draw();
     }
     draw() {
-      const g = this.graphics;
-      g.clear();
-      g.fillStyle(0x0b1c24, 1);
-      g.fillRect(0, 0, W, H);
-      g.lineStyle(2, 0x1f4d46, 0.8);
-      LANES.forEach(x => g.lineBetween(x, 0, x, H));
-      g.lineStyle(3, 0xcafa60, 0.35);
-      g.strokeRect(18, 12, W - 36, H - 24);
-      items.forEach(item => {
-        if (item.hit) return;
-        const x = LANES[item.lane];
-        if (item.kind === 'star') g.fillStyle(0xcafa60, 1);
-        else if (item.kind === 'gold') g.fillStyle(0xffd166, 1);
-        else if (item.kind === 'shield') g.fillStyle(0x7ee0ff, 1);
-        else g.fillStyle(0xff5b60, 1);
-        g.fillCircle(x, item.y, item.kind === 'defender' ? 20 : 14);
+      const g=this.graphics;g.clear();
+      // Lane speed marks scroll toward the player to communicate acceleration.
+      g.lineStyle(2,0xc8ffa5,.2);
+      const offset=(elapsed*(185+pace*48))%84;
+      for(const x of [126,234]){
+        for(let y=-84+offset;y<H;y+=84)g.lineBetween(x,y,x,y+37);
+      }
+      items.forEach(item=>{
+        if(item.hit)return;
+        const x=LANES[item.lane],y=item.y;
+        g.fillStyle(0x041623,.38).fillEllipse(x+3,y+24,39,12);
+        if(item.kind==='defender'){
+          // Distinct opponent: red kit, boots, shoulder pads, head.
+          g.fillStyle(0xff547b,.15).fillCircle(x,y,34);
+          g.fillStyle(0x162237).fillRoundedRect(x-18,y+13,14,17,3).fillRoundedRect(x+5,y+13,14,17,3);
+          g.fillStyle(0xff547b).fillRoundedRect(x-21,y-15,42,34,8);
+          g.fillStyle(0xffadb9,.8).fillRect(x-18,y-12,5,21).fillRect(x+13,y-12,5,21);
+          g.fillStyle(0xe4b99f).fillCircle(x,y-27,12);
+          g.fillStyle(0x263043).fillRoundedRect(x-13,y-37,26,7,3);
+          g.fillStyle(0xffffff,.7).fillCircle(x,y,4);
+        }else if(item.kind==='shield'){
+          g.fillStyle(0x71eeff,.17).fillCircle(x,y,31);
+          g.fillStyle(0x80faff).fillTriangle(x,y+25,x-22,y-13,x+22,y-13);
+          g.fillStyle(0x0b4d64).fillRoundedRect(x-10,y-10,20,20,5);
+          g.lineStyle(3,0xffffff,.7).strokeCircle(x,y,8);
+        }else{
+          const color=item.kind==='gold'?0xffc96c:0xd7ff77;
+          g.fillStyle(color,.13).fillCircle(x,y,32);
+          g.fillStyle(color).fillCircle(x,y,13);
+          g.fillTriangle(x,y-25,x-11,y+5,x+11,y+5);
+          g.fillTriangle(x,y+25,x-11,y-5,x+11,y-5);
+          g.fillTriangle(x-25,y,x+4,y-11,x+4,y+11);
+          g.fillTriangle(x+25,y,x-4,y-11,x-4,y+11);
+          g.fillStyle(0x123530).fillCircle(x,y,7);
+        }
       });
-      this.player.setPosition(playerX, 424);
-      this.player.setFillStyle(shield ? 0x7ee0ff : 0xcafa60);
-      this.label.setText(state === 'ready' ? 'READY, CAPTAIN?' : state === 'paused' ? 'PAUSED' : state === 'over' ? 'FULL-TIME' : '');
+      const bob=state==='playing'?Math.abs(Math.sin(elapsed*15))*2:0;
+      this.player.setPosition(playerX,424-bob);
+      if(state==='playing')this.player.rotation*=.76;
+      this.player.setAlpha(state==='over'?.7:1);
+      if(shield){
+        g.lineStyle(3,0x71e7ff,.9).strokeEllipse(playerX,421,76,104);
+        g.lineStyle(1,0xb7ffff,.35).strokeEllipse(playerX,421,86,114);
+      }
+      if(streak>0){
+        g.fillStyle(0xd7ff77,.13).fillCircle(playerX,421,52);
+      }
+      this.label.setText(state==='ready'?'READY, CAPTAIN?':state==='paused'?'PAUSED':state==='over'?'FULL-TIME':'');
     }
   }
 

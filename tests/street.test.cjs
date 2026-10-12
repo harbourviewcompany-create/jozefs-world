@@ -10,7 +10,7 @@ function setup(){
  const nodes=new Map(), storage=new Map(), listeners={},callbacks=new Map(),rewards=[];
  let counter=0;
  const noop=()=>{};
- const context2d={setTransform:noop,fillRect:noop,beginPath:noop,roundRect:noop,fill:noop,stroke:noop,moveTo:noop,lineTo:noop,
+ const context2d={setTransform:noop,fillRect:noop,beginPath:noop,roundRect:noop,fill:noop,stroke:noop,moveTo:noop,lineTo:noop,arc:noop,
    closePath:noop,ellipse:noop,fillText:noop,createLinearGradient(){return{addColorStop:noop}}};
  class Node{
   constructor(id){this.id=id;this.children=[];this.textContent='';this.dataset={};this.events={};this.className='';this.style={};
