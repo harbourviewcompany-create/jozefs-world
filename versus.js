@@ -27,7 +27,7 @@
   function localKick(power=1){
     if(room.phase!=='playing'||!localActive||!room.remoteActive)return;
     const p=room.who==='Dad'?state.dad:state.jozef;
-    if(Math.hypot(p.x-state.ball.x,p.y-state.ball.y)>64){$('versus-tip').textContent='GET CLOSE TO THE BALL';return;}
+    if(Math.hypot(p.x-state.ball.x,p.y-state.ball.y)>92){$('versus-tip').textContent='GET CLOSE TO THE BALL';return;}
     const shot={aim:selectedAim,power:Math.max(.9,Math.min(1.6,power))};
     if(room.host){shotOptions[room.who]=shot;state.kick=room.who;}
     else send({type:'kick',aim:shot.aim,power:shot.power});
@@ -241,7 +241,7 @@
   }
   function save(side) {
     const diving = keeperState[side].commit > 8;
-    return Math.abs(state.ball.y - (state.keepers?.[side] || 210)) < (diving ? 28 : 16);
+    return Math.abs(state.ball.y - (state.keepers?.[side] || 210)) < (diving ? 22 : 14);
   }
   function burst(x, y, color, n) {
     if(reduced.matches)return;
@@ -349,24 +349,15 @@
     if (!forced && kickLock > 0) return;
     const dx = state.ball.x - p.x, dy = state.ball.y - p.y;
     const dist = Math.hypot(dx, dy) || 1;
-    if (dist > (forced ? 64 : 30)) return;
+    if (dist > (forced ? 92 : 30)) return;
     if (forced) {
       if (kickLock > 0) return;
       const who=p===state.dad?'Dad':'Jozef',shot=shotOptions[who];
-      const charged = shot.power > 1.15;
-      let vx, vy;
-      if (charged) {
-        const goalX = p === state.dad ? 24 : W-24;
-        const goalY=Math.max(GOAL.y+10,Math.min(GOAL.y+GOAL.h-10,SHOT_LANES[shot.aim]));
-        const sx=goalX-state.ball.x, sy=goalY-state.ball.y, length=Math.hypot(sx,sy)||1;
-        const speed=12.4*shot.power;
-        vx=sx/length*speed; vy=sy/length*speed;
-      } else {
-        const face = p.face || 1;
-        vx = face * 6.2 + p.vx;
-        vy = p.vy * 0.8;
-      }
-      state.ball.vx=vx; state.ball.vy=vy;
+      const goalX = p === state.dad ? 18 : W-18;
+      const goalY=Math.max(GOAL.y+14,Math.min(GOAL.y+GOAL.h-14,SHOT_LANES[shot.aim]));
+      const sx=goalX-state.ball.x, sy=goalY-state.ball.y, length=Math.hypot(sx,sy)||1;
+      const speed=(shot.power > 1.15 ? 13.2 : 9.4)*shot.power;
+      state.ball.vx=sx/length*speed; state.ball.vy=sy/length*speed;
       shot.power=1; kickLock=16; state.shots = (state.shots||0)+1;
       burst(state.ball.x, state.ball.y, '#fff', 10);
       return;
