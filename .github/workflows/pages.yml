@@ -34,11 +34,15 @@ jobs:
         run: node --test tests/*.test.cjs
       - name: Build PRIME ARENA (Phaser 4, TypeScript 7, Vite 8)
         run: |
-          npm install --prefix prime --no-audit --no-fund --package-lock=false
+          npm ci --prefix prime --no-audit --no-fund
           npm run check --prefix prime
           npm run test --prefix prime
           npm run build --prefix prime
           test -s prime/dist/index.html || { echo "::error::Prime Arena bundle missing"; exit 1; }
+      - name: Verify Prime mobile play, deep links and offline reload before publishing
+        run: |
+          npm exec --prefix prime -- playwright install --with-deps chromium webkit
+          node tests/prime-mobile-smoke.cjs
       - name: Stage root site and compiled Prime Arena
         run: |
           mkdir -p _site/prime

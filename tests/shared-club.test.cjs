@@ -50,7 +50,7 @@ test('both people enter one shared site with no role gate, toggle or locked back
  assert.equal((html.match(/id="clubhouse-import-button"/g)||[]).length,1);
  const dock=html.match(/<nav class="phone-dock"[^>]*>([\s\S]*?)<\/nav>/)?.[1];
  assert.ok(dock,'phone dock must exist');
- assert.equal((dock.match(/<button\b/g)||[]).length,5);
+ assert.equal((dock.match(/<button\b/g)||[]).length,6);
  assert.match(html,/data-section="notes"/);
  assert.match(fs.readFileSync(path.join(root,'stadium.js'),'utf8'),/\['notes',/);
  bundled.css(root,html,sw,'notes.css');

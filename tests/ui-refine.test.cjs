@@ -25,7 +25,7 @@ test('existing advanced Arena settings, match report and all routes are retained
   assert.ok(index.includes('id="'+id+'"'),'preserve '+id);
  }
  const dock=[...index.matchAll(/data-dock-section="([^"]+)"/g)].map(x=>x[1]);
- assert.deepEqual(dock,['home','arena','sports-arcade','playbook','club']);
+ assert.deepEqual(dock,['home','arena','sports-arcade','playbook','versus','club']);
  assert.ok(navigation.includes("['watch'")||navigation.includes("'watch'"));
  assert.match(navigation,/studio-command-options/);
  assert.match(navigation,/el\('jw-explore'\)\?\.addEventListener\('click'/);

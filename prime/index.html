@@ -3,8 +3,8 @@
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#08101a"/><meta name="description" content="Jozef Prime Arena — a premium, mobile-first multi-sport game. Original art and private progress."/>
 <title>PRIME ARENA // JOZEF'S WORLD</title>
-  <script type="module" crossorigin src="./assets/index-CHSq-Pp4.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-D-Ou8VHn.css">
+  <script type="module" crossorigin src="./assets/source-Ddu3Aekl.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/source-DByEVkRH.css">
 </head><body>
 <div class="shell">
 <header class="topbar">
@@ -34,17 +34,18 @@
 <section class="experience" aria-label="Live interactive game">
 <div class="experience-main">
  <div class="scorebar"><div class="scoreblock"><span>ON THE FLOOR</span><strong id="event-name">FOOTBALL SHOWDOWN</strong></div><div class="scoreblock"><span>ROUND</span><strong><span id="round">01</span> / 05</strong></div><div class="scoreblock score"><span>JOZEF FC</span><strong id="score">00 <small>POINTS</small></strong></div></div>
+ <div class="match-options"><label for="challenge">CHALLENGE</label><select id="challenge"><option value="rookie">ROOKIE</option><option value="pro">PRO</option><option value="legend">LEGEND</option></select><span id="streak">STREAK 0</span></div>
  <div id="game" class="game-mount" aria-label="Prime Arena playable game"></div>
- <div class="turnbar"><span id="turns" aria-label="Five-round score history">● ○ ○ ○ ○</span><span id="live-caption">THE MOMENT IS YOURS.</span></div>
- <p id="street-result" class="street-result">Ready when you are.</p>
+ <div class="turnbar"><span id="turns" aria-label="Five-round score history">● ○ ○ ○ ○</span><span id="live-caption" role="status" aria-live="polite">THE MOMENT IS YOURS.</span></div>
+ <p id="street-result" class="street-result" role="status" hidden>Ready when you are.</p>
  <div id="street-panel" class="game-controls" hidden><span id="street-score">0</span><span id="street-hearts">♥♥♥</span><span id="street-time">55</span><span id="street-best">0</span><button type="button" id="street-left">LEFT</button><button type="button" id="street-go">START</button><button type="button" id="street-right">RIGHT</button></div>
  <div class="game-controls" id="prime-controls"><div class="aim-group" role="group" aria-label="Aim or showmanship selection"><button class="aim selected" data-aim="0" aria-pressed="true">LEFT</button><button class="aim" data-aim="1" aria-pressed="false">CENTRE</button><button class="aim" data-aim="2" aria-pressed="false">RIGHT</button></div><button id="shoot" class="shoot">TAKE THE SHOT <span>↗</span></button></div>
- <div class="footer-strip"><span>TOUCH THE ARENA TO PLAY · ARROW KEYS TO AIM · SPACE TO SHOOT</span><button type="button" id="sound" aria-pressed="false">SOUND OFF <span>♪</span></button></div>
+ <div class="footer-strip"><span id="input-help">TAP TO PLAY · ARROWS TO AIM · SPACE TO SHOOT</span><button type="button" id="sound" aria-pressed="false">SOUND OFF <span>♪</span></button></div>
 </div>
-<aside class="experience-side">
+<details class="experience-side"><summary>COACH & CLUB RECORDS ↗</summary>
 <div class="moment-card"><div class="eyebrow">02 / THE SPOTLIGHT</div><h3>YOUR<br/><em>BIGGEST</em><br/>MOMENT.</h3><p id="coach">Pick your angle. Read the keeper. Then make the stadium remember you.</p><div class="moment-rule"></div><div class="moment-label">NEXT OBJECTIVE</div><strong id="objective">SCORE THREE OF FIVE</strong></div>
 <div class="records"><div class="eyebrow">03 / CLUB RECORD</div><div class="records-head">PERSONAL <em>BESTS.</em></div><div id="records-body" class="records-body"><p>Complete your first event to set a record.</p></div><p class="records-note">Your existing Sports Arcade bests are shared. No account or ads.</p></div>
-</aside>
+</details>
 </section>
 <section class="details"><div><span class="eyebrow">BUILT FOR PLAY</span><h2>NO PAYWALLS.<br/><em>JUST PRIME TIME.</em></h2></div><p>Original art. Five quick-play challenges. Skill-based scoring. Dramatic slow-motion moments. Private progress. Built to feel like a real game, not a dashboard.</p></section>
 </main>

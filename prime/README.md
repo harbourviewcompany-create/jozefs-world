@@ -24,6 +24,19 @@ npm run test
 npm run build
 ```
 
+`source.html` is the editable Vite entrypoint and imports `src/main.ts`.
+`npm run build` compiles that source and stages the same generated `index.html`
+and hashed assets in `dist/` and the static `prime/` directory. Commit the generated
+entrypoint and new assets with source changes: both existing GitHub Pages publishing
+paths then serve the verified build. Never edit `prime/index.html` directly.
+For local development, open `/source.html` in Vite.
+
+The compact phone view keeps the game and controls together. Completed challenges
+share Club XP with the existing daily reward caps; football bests are included in
+Club backup. Rookie, Pro and Legend use progressively faster keepers and narrower
+timing windows. Reduced motion removes decorative effects while retaining skill
+timing. Street supports swipe, keyboard, countdown protection and interruption pause.
+
 ## Why this engine over a wholesale Godot / Unity rewrite?
 
 The user experience starts on an iPhone and is already distributed through static GitHub Pages. Phaser 4 keeps installation friction at zero, supports fast input and layered GPU effects, and coexists with the old saved data. Full Unity/Godot web exports have a different asset/runtime budget and should be considered only if a tested vertical slice proves they are needed.

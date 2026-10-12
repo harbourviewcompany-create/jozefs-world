@@ -21,12 +21,12 @@ test('both entry points show one consistent compact header and a complete access
  assert.match(css,/--jw-ui-lime:#c8ff5a/);
  assert.match(css, /\.jw-explore:focus-visible/);
 });
-test('the five primary phone destinations are usable while every old page remains reachable',()=>{
+test('the six primary phone destinations are usable while every old page remains reachable',()=>{
  const dock=html.match(/<nav class="phone-dock"[^>]*>([\s\S]*?)<\/nav>/)?.[1];
  assert.ok(dock);
  const ids=[...dock.matchAll(/data-dock-section="([^"]+)"/g)].map(x=>x[1]);
- assert.deepEqual(ids,['home','arena','sports-arcade','playbook','club']);
- assert.equal((dock.match(/<button\b/g)||[]).length,5);
+ assert.deepEqual(ids,['home','arena','sports-arcade','playbook','versus','club']);
+ assert.equal((dock.match(/<button\b/g)||[]).length,6);
  for(const route of ['home','arena','street','games','club','playbook','tour','career',
   'news','sports-arcade','sports','watch','learn','training','matchday','notes','album','chronicle','fun']){
   assert.ok(html.includes('data-section="'+route+'"'),'preserve nav '+route);
@@ -47,7 +47,7 @@ test('phone home keeps a prominent match CTA and four clear sports, with no hori
  assert.match(css, /@media\(max-width:700px\)/);
  assert.match(css, /@media\(max-width:390px\)/);
  assert.match(css, /grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
- assert.match(css, /grid-template-columns:repeat\(5,minmax\(0,1fr\)\)/);
+ assert.match(css, /grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/);
  assert.match(css, /prefers-reduced-motion:reduce/);
  assert.doesNotMatch(css,/@import|url\(\s*https?:/);
  const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]);

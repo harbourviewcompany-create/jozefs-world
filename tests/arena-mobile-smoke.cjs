@@ -20,7 +20,8 @@ const close=()=>new Promise(resolve=>server.close(resolve));
  const port=await listen(),url='http://127.0.0.1:'+port+'/';
  let tested=0;
  try{
-  for(const engine of [chromium,webkit]){
+  const engines=(process.env.ARENA_BROWSERS||'chromium,webkit').split(',').map(name=>({chromium,webkit})[name]);
+  for(const engine of engines){
    const browser=await engine.launch({headless:true});
    try{
     for(const viewport of [{width:320,height:568},{width:375,height:667},{width:390,height:844},{width:844,height:390}]){

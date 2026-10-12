@@ -48,7 +48,7 @@
     const total=$('clubhouse-card-count');if(total)total.textContent=count+' / '+cardDefs.length;
   }
   const KEYS=['jozefs-world-player-v1','jozefs-world-tour-v1','jozefs-world-career-v1','jozefKeepyBest','jozefs-world-street-best-v1','jozefs-world-notes-v1','jozefs-world-album-v1','jozefs-world-sports-v1','jozefs-world-chronicle-v1','jozefs-world-multisport-v1','jozefs-world-playbook-v1',
-    'jozefs-world-matchday-v1','jozefs-world-formation-v1','jozefs-world-training-v1','jozefs-world-jersey-v1','jozefs-world-bingo-v1','jozefs-world-missions-v1','jozefs-world-squad-v1','jozefs-world-arena-v1'];
+    'jozefs-world-matchday-v1','jozefs-world-formation-v1','jozefs-world-training-v1','jozefs-world-jersey-v1','jozefs-world-bingo-v1','jozefs-world-missions-v1','jozefs-world-squad-v1','jozefs-world-arena-v1','jozefs-world-prime-football-v1'];
   const status=message=>{const el=$('clubhouse-backup-status');if(el)el.textContent=message};
   function read(key) {
     try {return localStorage.getItem(key)}catch(_){return null}
@@ -97,6 +97,10 @@
       if(!Object.prototype.hasOwnProperty.call(payload.data,key))continue;
       const value=payload.data[key];
       if(value===null){output[key]=null;continue;}
+      if(key==='jozefs-world-prime-football-v1'){
+        if(!Number.isInteger(value)||value<0||value>5)throw new Error('Invalid Prime football score.');
+        output[key]=JSON.stringify(value);continue;
+      }
       if(['jozefKeepyBest','jozefs-world-street-best-v1'].includes(key)){
         if(!/^[0-9]{1,7}$/.test(String(value)))throw new Error('Invalid keepy-uppy score.');
         output[key]=String(value);continue;

@@ -11,6 +11,14 @@ const code=ts.transpileModule(fs.readFileSync(filename,'utf8'),{
 const sandboxModule={exports:{}};
 vm.runInNewContext(code,{exports:sandboxModule.exports,module:sandboxModule,Math,Number,Date,JSON},{timeout:1000});
 const rules=sandboxModule.exports;
+test('game clock advances independently of decorative motion and feedback matches timing',()=>{
+ assert.equal(typeof rules.attemptPhase,'function');
+ const first=rules.attemptPhase(0),next=rules.attemptPhase(430);
+ assert.notEqual(first.timing,next.timing);
+ assert.equal(first.keeper,1);
+ assert.equal(rules.resolveAttempt('basketball',1,first.keeper,first.timing).made,true);
+ assert.equal(rules.resolveAttempt('basketball',1,next.keeper,next.timing).made,false);
+});
 function store(){
  const data=new Map();
  return{
@@ -19,6 +27,18 @@ function store(){
   setItem:(k,v)=>data.set(k,String(v))
  };
 }
+test('completed Prime events add shared XP without overwriting existing club identity or Arena career',()=>{
+ const s=store();s.setItem('jozefs-world-player-v1',JSON.stringify({xp:140,kit:'#246bdf',earned:['first-goal'],arenaWins:3}));
+ assert.equal(rules.awardClubProgress(s,'basketball',4),20);
+ const profile=JSON.parse(s.getItem('jozefs-world-player-v1'));
+ assert.equal(profile.xp,160);assert.equal(profile.kit,'#246bdf');assert.equal(profile.arenaWins,3);
+ assert.equal(profile.multisportGames,1);assert.equal(profile.multiSports[0],'basketball');
+ assert.equal(rules.awardClubProgress(s,'street',10),0);
+ assert.equal(JSON.parse(s.getItem('jozefs-world-player-v1')).xp,160);
+ assert.equal(rules.awardClubProgress(s,'football',NaN),0);
+ for(let i=0;i<3;i++)assert.equal(rules.awardClubProgress(s,'hockey',4),20);
+ assert.equal(rules.awardClubProgress(s,'baseball',5),0,'Club daily cap also applies to Prime');
+});
 test('sports scoring is transparent and based on actual timing and keeper lane',()=>{
  assert.equal(rules.resolveAttempt('hockey',0,0,.5).made,false);
  assert.equal(rules.resolveAttempt('hockey',2,0,.5).made,true);

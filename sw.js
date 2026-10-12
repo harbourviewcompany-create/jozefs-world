@@ -1,5 +1,5 @@
 /* Jozef FC offline shell: only same-origin public game assets. Never caches personal progress. */
-const CACHE='jozef-fc-app-shell-v64';
+const CACHE='jozef-fc-app-shell-v65';
 const CORE=[
  './','./index.html','./world.html','./site-foundation.css','./site-experience.css',
  './favicon.svg','./manifest.webmanifest','./matchday.css','./training.css','./jersey-bingo.css',
@@ -41,6 +41,10 @@ self.addEventListener('fetch',event=>{
    const cached=await caches.match(request);
    if(cached)return cached;
    if(request.mode==='navigate'){
+    if(url.pathname.startsWith(new URL('./prime/',root.href).pathname)){
+     const prime=await caches.match(new URL('./prime/',root.href),{ignoreSearch:true})||await caches.match(new URL('./prime/index.html',root.href),{ignoreSearch:true});
+     if(prime)return prime;
+    }
     const fallback=await caches.match(new URL('./index.html',root.href));
     if(fallback)return fallback;
    }

@@ -73,6 +73,18 @@ test('cancelled restore leaves existing progress unchanged',async()=>{
   assert.equal(app.storage.get('jozefs-world-player-v1'),'{"xp":999}');
   assert.equal(app.reloads,0);
 });
+test('Prime football best survives restore and rejects out-of-range records',async()=>{
+  const app=load();
+  await app.import({format:'jozefs-world-local-backup',version:1,data:{'jozefs-world-prime-football-v1':5}});
+  assert.equal(app.storage.get('jozefs-world-prime-football-v1'),'5');
+  assert.equal(app.reloads,1);
+  for(const value of [-1,6,1.5,'5']){
+    const invalid=load();
+    await invalid.import({format:'jozefs-world-local-backup',version:1,data:{'jozefs-world-prime-football-v1':value}});
+    assert.equal(invalid.reloads,0);
+    assert.equal(invalid.storage.size,0);
+  }
+});
 test('rejects malformed, untrusted and oversized backup data',async()=>{
   const app=load();
   const malicious=JSON.parse(JSON.stringify(valid));
