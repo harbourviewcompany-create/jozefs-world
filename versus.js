@@ -519,7 +519,7 @@
     $('versus-lobby').hidden=connected;$('versus-room').hidden=!connected||playing||room.practice;
     $('versus-leave').hidden=!connected;$('versus-again').hidden=room.phase!=='finished';
     $('versus-kick').disabled=room.phase!=='playing'||!localActive||!room.remoteActive;
-    $('versus-sprint').disabled=room.phase!=='playing'||!localActive||!room.remoteActive;
+    if ($('versus-sprint')) $('versus-sprint').disabled=room.phase!=='playing'||!localActive||!room.remoteActive;
     $('versus-ready').disabled=!room.other||room.ready;
     $('versus-ready').textContent=room.ready?'Ready — waiting for opponent':room.other?'Ready to play':'Waiting for opponent';
     $('versus-room-code').textContent=room.code;
@@ -672,8 +672,7 @@
           if(tip.dataset.guide!==advice){tip.dataset.guide=advice;tip.textContent=advice;}
         }
         const remain=Math.max(0,Math.ceil((nextLocalSprint-now)/1000));
-        $('versus-sprint').disabled=room.phase!=='playing'||!localActive||!room.remoteActive||remain>0;
-        $('versus-sprint').textContent=remain?'SPRINT '+remain+'s':'SPRINT';
+        if ($('versus-sprint')) { $('versus-sprint').disabled=room.phase!=='playing'||!localActive||!room.remoteActive||remain>0; $('versus-sprint').textContent=remain?'SPRINT '+remain+'s':'SPRINT'; }
         $('versus-score-dad').textContent=state.score.dad;$('versus-score-jozef').textContent=state.score.jozef;const seconds=Math.ceil(state.matchLeft);$('versus-clock').textContent=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');uiTime=now;}
     }else accumulator=0;
     // Retransmit an unacknowledged room invitation: initial WebRTC packets can be lost.
