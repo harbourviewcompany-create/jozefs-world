@@ -110,6 +110,16 @@
   }
 
   function inGoal(y) { return y > GOAL.y && y < GOAL.y + GOAL.h; }
+  function separate(p) {
+    const dx = state.ball.x - p.x, dy = state.ball.y - p.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    if (dist < 22) {
+      state.ball.x += dx / dist * (22 - dist);
+      state.ball.y += dy / dist * (22 - dist);
+      state.ball.vx += dx / dist * 0.8;
+      state.ball.vy += dy / dist * 0.8;
+    }
+  }
 
   function step() {
     if (!room.host) return;
@@ -120,10 +130,15 @@
     state.ball.x += state.ball.vx;
     state.ball.y += state.ball.vy;
     state.ball.vx *= 0.985; state.ball.vy *= 0.985;
-    if (state.ball.y < 30 || state.ball.y > H - 30) state.ball.vy *= -0.8;
+    separate(state.dad); separate(state.jozef);
+    if (state.ball.y < 34) { state.ball.y = 34; state.ball.vy = Math.abs(state.ball.vy) + 0.4; }
+    if (state.ball.y > H - 34) { state.ball.y = H - 34; state.ball.vy = -Math.abs(state.ball.vy) - 0.4; }
     if (state.ball.x < 30 && inGoal(state.ball.y)) { state.score.dad += 1; state.call = 'Dad scores'; reset(1); }
     else if (state.ball.x > W - 30 && inGoal(state.ball.y)) { state.score.jozef += 1; state.call = 'Jozef scores'; reset(-1); }
-    else if (state.ball.x < 30 || state.ball.x > W - 30) { state.ball.vx *= -0.7; state.call = ''; }
+    else if (state.ball.x < 34) { state.ball.x = 34; state.ball.vx = Math.abs(state.ball.vx) + 0.6; }
+    else if (state.ball.x > W - 34) { state.ball.x = W - 34; state.ball.vx = -Math.abs(state.ball.vx) - 0.6; }
+    if (state.ball.x < 70 && state.ball.y < 70 && Math.hypot(state.ball.vx, state.ball.vy) < 1) { state.ball.vx += 1.4; state.ball.vy += 1.4; }
+    if (state.ball.x > W - 70 && state.ball.y < 70 && Math.hypot(state.ball.vx, state.ball.vy) < 1) { state.ball.vx -= 1.4; state.ball.vy += 1.4; }
     if (Math.hypot(state.ball.vx, state.ball.vy) < 0.4) state.call = state.call === 'Kickoff' ? state.call : '';
     send({ type: 'state', state });
   }
