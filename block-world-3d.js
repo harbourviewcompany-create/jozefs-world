@@ -14,7 +14,7 @@ let selected=4,creative=true,third=false,sound=false,stage=0,stats={wood:0,place
 const hero={x:2.5,y:12,z:2.5,vy:0,yaw:0,pitch:-.07,role:0,hp:100,ground:false,double:false,inventory:{}};
 const companion={x:4.5,y:12,z:4.5,role:1,hp:100};
 let boss={x:32.5,y:12,z:32.5,hp:120,alive:true},mobs=[],clock=0,last=0,frames=0,dirty=false,saveClock=0,skyPhase=0;
-let keys={},joy={x:0,y:0},look=null,peer=null,conn=null,host=false,invite='',lastNet=0,remote=false,noticeTo=0,renderOk=false;
+let keys={},joy={x:0,y:0},gamepadHeld={mine:false,place:false,attack:false},jumpWasDown=false,look=null,peer=null,conn=null,host=false,invite='',lastNet=0,remote=false,noticeTo=0,renderOk=false;
 const rnd=(x,z,s)=>{let n=Math.imul(x,374761393)+Math.imul(z,668265263)+Math.imul(s|0,2246822519);n=Math.imul(n^(n>>>13),1274126177);return((n^(n>>>16))>>>0)/4294967296;};
 function noise(x,z,s){let X=Math.floor(x/s),Z=Math.floor(z/s),u=x/s-X,v=z/s-Z;
  u=u*u*(3-2*u);v=v*v*(3-2*v);
@@ -185,21 +185,24 @@ function spawn(){
 }
 function step(dt){
  clock+=dt;saveClock+=dt;
- const gp=navigator.getGamepads?.()?.find(Boolean);
+ const gp=Array.from(navigator.getGamepads?.()||[]).find(Boolean);
  if(gp){joy.x=Math.abs(gp.axes?.[0]||0)>.2?gp.axes[0]:0;joy.y=Math.abs(gp.axes?.[1]||0)>.2?gp.axes[1]:0;
   hero.yaw+=(Math.abs(gp.axes?.[2]||0)>.15?gp.axes[2]:0)*dt*2.4;
   hero.pitch=clamp(hero.pitch-(Math.abs(gp.axes?.[3]||0)>.15?gp.axes[3]:0)*dt*1.8,-1.38,1.38);
-  if(gp.buttons?.[0]?.pressed)keys.Space=true;else if(!document.activeElement||document.activeElement.id!=='jump')keys.Space=false;
-  if(gp.buttons?.[2]?.pressed&&!gp._mineHeld)change('mine');gp._mineHeld=!!gp.buttons?.[2]?.pressed;
-  if(gp.buttons?.[3]?.pressed&&!gp._placeHeld)change('place');gp._placeHeld=!!gp.buttons?.[3]?.pressed;
-  if(gp.buttons?.[1]?.pressed&&!gp._attackHeld)attack();gp._attackHeld=!!gp.buttons?.[1]?.pressed;
+  keys._padJump=!!gp.buttons?.[0]?.pressed;
+  if(gp.buttons?.[2]?.pressed&&!gamepadHeld.mine)change('mine');gamepadHeld.mine=!!gp.buttons?.[2]?.pressed;
+  if(gp.buttons?.[3]?.pressed&&!gamepadHeld.place)change('place');gamepadHeld.place=!!gp.buttons?.[3]?.pressed;
+  if(gp.buttons?.[1]?.pressed&&!gamepadHeld.attack)attack();gamepadHeld.attack=!!gp.buttons?.[1]?.pressed;
  }const f=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-joy.y;
  const a=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+joy.x;
  let dx=Math.sin(hero.yaw)*f+Math.cos(hero.yaw)*a,dz=-Math.cos(hero.yaw)*f+Math.sin(hero.yaw)*a;
  const len=Math.hypot(dx,dz);if(len>1){dx/=len;dz/=len;}const speed=hero.role?5.6:4.8;
  if(!visible(hero.x+dx*speed*dt,hero.y,hero.z))hero.x+=dx*speed*dt;
  if(!visible(hero.x,hero.y,hero.z+dz*speed*dt))hero.z+=dz*speed*dt;
- if(keys.Space&&hero.ground){hero.vy=8.3;hero.ground=false;hero.double=false;}
+ const jump=!!(keys.Space||keys._padJump);
+ if(jump&&hero.ground){hero.vy=8.3;hero.ground=false;hero.double=false;}
+ else if(jump&&!jumpWasDown&&hero.role===1&&!hero.ground&&!hero.double){hero.vy=7.2;hero.double=true;announce('Jozef double jump!',750);}
+ jumpWasDown=jump;
  let dy=hero.vy*dt;hero.vy=Math.max(-18,hero.vy-22*dt);
  const increments=Math.max(1,Math.ceil(Math.abs(dy)/.15));for(let i=0;i<increments;i++){
   if(!visible(hero.x,hero.y+dy/increments,hero.z))hero.y+=dy/increments;
