@@ -56,19 +56,33 @@ function modify(x,y,z,id,broadcast=true){
  dirty=true;if(broadcast&&host)send({t:'edit',x,y,z,id});return true;
 }
 function cube(v,x,y,z,id,size=1,mask=null){
- const c=col[id]||col[3];
- for(let j=0;j<6;j++){if(mask&&!mask[j])continue;const f=faces[j][1],shade=[1,.80,.81,.55,.75,.69][j];
-  for(const i of [0,1,2,0,2,3]){const q=f[i];v.push(x+q[0]*size,y+q[1]*size,z+q[2]*size,c[0]*shade,c[1]*shade,c[2]*shade);}
+ const c=col[id]||col[3],grain=.94+rnd(Math.floor(x*3),Math.floor(z*3),Math.floor(y*5)+id)*.12;
+ for(let j=0;j<6;j++){
+  if(mask&&!mask[j])continue;
+  const f=faces[j][1],shade=[1,.77,.84,.50,.70,.65][j]*grain;
+  for(const i of [0,1,2,0,2,3]){
+   const q=f[i];
+   v.push(x+q[0]*size,y+q[1]*size,z+q[2]*size,
+    Math.min(1,c[0]*shade),Math.min(1,c[1]*shade),Math.min(1,c[2]*shade));
+  }
  }
 }
 function chunkMesh(cx,cz){
  const v=[];
  for(let x=cx*CH;x<(cx+1)*CH;x++)for(let z=cz*CH;z<(cz+1)*CH;z++){
-  const h=height(x,z);for(let y=0;y<Math.min(MAX_Y,h+8);y++){
+  const h=height(x,z);
+  for(let y=0;y<Math.min(MAX_Y,h+8);y++){
    const id=block(x,y,z);if(!id)continue;
    const exposed=faces.map(f=>!block(x+f[0][0],y+f[0][1],z+f[0][2]));
    if(exposed.some(Boolean))cube(v,x,y,z,id,1,exposed);
   }
+  // Deterministic flowers and ice crystals are baked into the chunk buffer.
+  const top=height(x,z),zone=biome(x,z),chance=rnd(x,z,seed+915);
+  if(zone==='Meadows'&&chance>.972&&block(x,top+1,z)===0){
+   cube(v,x+.43,top+1,z+.43,5,.13);
+   cube(v,x+.39,top+1.12,z+.39,chance>.987?8:7,.23);
+  }
+  if(zone==='Snow Ridge'&&chance>.991&&block(x,top+1,z)===0)cube(v,x+.27,top+1,z+.27,8,.19);
  }
  const k=cx+':'+cz,old=chunks.get(k);if(old)gl.deleteBuffer(old.buffer);
  const buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(v),gl.STATIC_DRAW);
