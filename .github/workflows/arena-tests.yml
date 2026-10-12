@@ -10,6 +10,7 @@ on:
       - '*.js'
       - 'prime/**'
       - 'tests/prime-*.cjs'
+      - 'tests/hq-*.cjs'
       - '*.css'
       - 'world.html'
       - 'playmode.js'
@@ -32,6 +33,7 @@ on:
       - '*.js'
       - 'prime/**'
       - 'tests/prime-*.cjs'
+      - 'tests/hq-*.cjs'
       - '*.css'
       - 'world.html'
       - 'playmode.js'
@@ -90,3 +92,5 @@ jobs:
           npx playwright install --with-deps chromium webkit
       - name: Four mobile viewport tests in Chromium and WebKit
         run: node tests/arena-mobile-smoke.cjs
+      - name: HQ layout and navigation in Chromium and WebKit
+        run: node tests/hq-mobile-smoke.cjs

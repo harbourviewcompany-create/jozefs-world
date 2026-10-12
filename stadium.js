@@ -42,7 +42,7 @@ function navState(){
  });
  const explore=el('jw-explore');
  if(explore){
-  const visible=['home','arena','sports-arcade','playbook','club'].includes(current);
+  const visible=['home','arena','sports-arcade','playbook','versus','club'].includes(current);
   explore.classList.toggle('is-active',!visible);
   explore.setAttribute('aria-label',visible?'Explore all games and sections':'Explore all games and sections, currently '+current);
  }
@@ -62,7 +62,7 @@ function navigation(){
   navState();updateHud();
  };
  const goBack=()=>{
-  const id=location.hash.slice(1);
+  const id=location.hash.slice(1)||'home';
   if(!valid(id))return;
   skipHistory=true;window.showSection(id);skipHistory=false;
  };

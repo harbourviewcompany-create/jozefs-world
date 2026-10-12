@@ -124,11 +124,11 @@ body.nav-open .nav-extra{display:inline-flex}
       <div class="studio-hero-noise" aria-hidden="true"></div>
       <div class="studio-hero-copy">
         <div class="studio-overline"><span class="studio-status-dot"></span> JOZEF FC // EST. THE FUTURE <span class="studio-overline-rule"></span> PLAYER ONE</div>
-        <h1>YOUR GAME.<br><em>YOUR WORLD.</em><br><span>NO LIMITS.</span></h1>
+        <h1>YOUR WORLD.<br><em>LET’S PLAY.</em></h1>
         <p class="hero-subtitle">A universe built around one player. Train under the floodlights. Own the streets. Lead your club to the top.</p>
         <div class="hero-buttons">
           <button type="button" class="studio-button-primary" onclick="showSection('arena')"><span class="studio-button-icon">▶</span> PLAY FOOTBALL <span aria-hidden="true">↗</span></button>
-          <button type="button" class="studio-button-primary" onclick="document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));var v=document.getElementById('versus');v.classList.add('active');v.scrollIntoView()">VERSUS <span aria-hidden="true">↗</span></button>
+          <button type="button" class="studio-button-primary" onclick="showSection('versus')">VERSUS <span aria-hidden="true">↗</span></button>
           <button type="button" class="studio-button-outline" onclick="showSection('sports-arcade')">PLAY ALL SPORTS <span aria-hidden="true">↗</span></button>
         </div>
         <div class="studio-hero-foot"><span>01 / YOUR STORY STARTS HERE</span><span>OFFLINE-FIRST • NO ACCOUNTS • ALL YOU</span></div>
@@ -142,11 +142,26 @@ body.nav-open .nav-extra{display:inline-flex}
     </div>
 
 
+    <nav class="hq-launchpad" aria-label="Play Prime Arena sports">
+      <div class="hq-launch-heading"><h2>PICK YOUR GAME</h2><span>PRIME ARENA ↗</span></div>
+      <div class="hq-game-grid">
+        <a href="prime/?mode=football"><svg aria-hidden="true" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m12 7 5 4-2 6H9l-2-6 5-4Zm0-4v4m9 5-4-1m1 9-3-3m-9 3 3-3m-6-5 4-1"/></svg><strong>Football</strong><span class="hq-game-arrow" aria-hidden="true">↗</span></a>
+        <a href="prime/?mode=hockey"><svg aria-hidden="true" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m17 3-6 14H4v4h9L21 3"/><ellipse cx="19" cy="20" rx="3" ry="1.5"/></svg><strong>Hockey</strong><span class="hq-game-arrow" aria-hidden="true">↗</span></a>
+        <a href="prime/?mode=basketball"><svg aria-hidden="true" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3v18M5 6c9 2 9 10 0 12M19 6c-9 2-9 10 0 12"/></svg><strong>Basketball</strong><span class="hq-game-arrow" aria-hidden="true">↗</span></a>
+        <a href="prime/?mode=baseball"><svg aria-hidden="true" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M6 5c6 3 6 11 0 14M18 5c-6 3-6 11 0 14M7 8l3-1m-2 5h3m-4 4 3 1m7-9-3-1m2 5h-3m4 4-3 1"/></svg><strong>Baseball</strong><span class="hq-game-arrow" aria-hidden="true">↗</span></a>
+        <a href="prime/?mode=wrestling"><svg aria-hidden="true" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-6Z"/></svg><strong>Wrestling</strong><span class="hq-game-arrow" aria-hidden="true">↗</span></a>
+        <a href="prime/?mode=street"><svg aria-hidden="true" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V9h5v12m0-17h6v17m0-10h7v10M2 21h20M10 7h2m-2 4h2m-2 4h2m4 0h3M5 12h1"/></svg><strong>Street // 11</strong><span class="hq-game-arrow" aria-hidden="true">↗</span></a>
+      </div>
+      <p>One club. Every sport. Your XP comes with you.</p>
+    </nav>
+    <details class="hq-details">
+      <summary>Your club &amp; challenges <span>Progress · teams · more games</span></summary>
+      <div class="hq-details-body">
     <aside class="chronicle-home" aria-label="Play the new Prime Arena sports game">
       <div class="chronicle-home-copy">
-        <span class="studio-kicker">NEW ENGINE / PHASER 4 · 2026</span>
+        <span class="studio-kicker">YOUR NEXT MATCH STARTS HERE</span>
         <h2>ENTER <em>PRIME ARENA.</em></h2>
-        <p>Five sports, original stadium graphics, responsive controls, and big-match celebrations. A first playable glimpse of the next generation of Jozef's World.</p>
+        <p>Play five sports or take a Street run. Build your streak, beat your best, and earn Club XP.</p>
       </div>
       <a class="studio-button-primary" href="./prime/">PLAY PRIME ARENA ↗</a>
     </aside>
@@ -175,7 +190,7 @@ body.nav-open .nav-extra{display:inline-flex}
         </div>
         <div class="today-task" id="today-task-versus">
           <div class="today-task-info"><span class="today-task-number">03 / VERSUS</span><strong>PLAY EACH OTHER</strong><small>Same code. Both online.</small></div>
-          <button type="button" class="studio-button-primary" id="today-play-versus" onclick="document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));var v=document.getElementById('versus');v.classList.add('active');v.scrollIntoView()">VERSUS ↗</button>
+          <button type="button" class="studio-button-primary" id="today-play-versus" onclick="showSection('versus')">VERSUS ↗</button>
         </div>
         <div class="today-task" id="today-task-street">
           <div class="today-task-info"><span class="today-task-number">02 / NIGHT RUN</span><strong>TAKE THE STREETS</strong><small id="today-street-status">Not played today</small></div>
@@ -311,6 +326,8 @@ body.nav-open .nav-extra{display:inline-flex}
     <div class="message-box">
       <p>💪 Keep practicing, stay kind, and always have fun — you're a star, Jozef!</p>
     </div>
+      </div>
+    </details>
   </section>
 
 
@@ -1477,7 +1494,7 @@ body.nav-open .nav-extra{display:inline-flex}
     <button type="button" data-dock-section="arena" onclick="showSection('arena')"><span class="jw-dock-symbol" aria-hidden="true">⚽</span><span>Football</span></button>
     <button type="button" data-dock-section="sports-arcade" onclick="showSection('sports-arcade')"><span class="jw-dock-symbol" aria-hidden="true">✦</span><span>Sports</span></button>
     <button type="button" data-dock-section="playbook" onclick="showSection('playbook')"><span class="jw-dock-symbol" aria-hidden="true">◆</span><span>Playbook</span></button>
-    <button type="button" data-dock-section="versus" onclick="document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));var v=document.getElementById('versus');v.classList.add('active');v.scrollIntoView()"><span class="jw-dock-symbol" aria-hidden="true">⚡</span><span>Versus</span></button>
+    <button type="button" data-dock-section="versus" onclick="showSection('versus')"><span class="jw-dock-symbol" aria-hidden="true">⚡</span><span>Versus</span></button>
     <button type="button" data-dock-section="club" onclick="showSection('club')"><span class="jw-dock-symbol" aria-hidden="true">★</span><span>Club</span></button>
   </nav>
 
