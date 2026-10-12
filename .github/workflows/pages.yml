@@ -49,6 +49,7 @@ jobs:
           node tests/arena-mobile-smoke.cjs
           node tests/hq-mobile-smoke.cjs
           node tests/versus-mobile-smoke.cjs
+          node tests/adventure-mobile-smoke.cjs
       - name: Stage root site and compiled Prime Arena
         run: |
           mkdir -p _site/prime
