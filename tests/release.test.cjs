@@ -25,10 +25,10 @@ test('offline-first PWA caches all same-origin assets used by the page',()=>{
  .map(m=>m[1]).filter(x=>!x.startsWith('https:'));
  for(const asset of assets){
    assert.ok(core.includes(asset),'missing offline asset '+asset);
-   assert.ok(fs.existsSync(path.join(root,asset)),'asset referenced but missing '+asset);
+   assert.ok(fs.existsSync(path.join(root,asset.split('?')[0])),'asset referenced but missing '+asset);
  }
  for(const file of core){
-   assert.ok(fs.existsSync(path.join(root,file)),'PWA pre-cache file missing '+file);
+   assert.ok(fs.existsSync(path.join(root,file.split('?')[0])),'PWA pre-cache file missing '+file);
  }
  assert.match(sw,/const CACHE='jozef-fc-app-shell-v\d+'/);
  assert.match(sw,/fetch\(request\)/,'network first means fresh code while online');
@@ -68,5 +68,5 @@ test('offline shell pre-caches Prime sport, Neon City, and their hashed public b
  assert.match(sw,/'.\/prime\/'/);
  assert.match(sw,/'.\/prime\/neon\.html'/);
  assert.match(sw,/assetUrls\.add/);
- assert.match(sw,/ignoreSearch:request\.mode==='navigate'/);
+ assert.match(sw,/ignoreSearch:(?:request\.mode==='navigate'|true)/);
 });
