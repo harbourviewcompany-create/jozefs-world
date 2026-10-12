@@ -889,11 +889,13 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
    w:W,h:H,world:world.map(r=>r.slice()),surface:surface.slice(),
    players:players.map(p=>({x:p.x,y:p.y,vx:p.vx,vy:p.vy,facing:p.facing,ground:p.ground,health:p.health,inventory:{...p.inventory}})),
    creative,adventureSeed,realmIndex:window.__bw2dRealm?.get()??0,questStage,goals:{...goals},
+   friends:friends.map(c=>({...c})),nightClock,weatherType,
    achievements:achievements.slice(),explored:{...explored},portalUnlocked
   }),
   getState:()=>({
    players:players.map(p=>({x:p.x,y:p.y,vx:p.vx,vy:p.vy,facing:p.facing,ground:p.ground,health:p.health,inventory:{...p.inventory}})),
-   creative,realmIndex:window.__bw2dRealm?.get()??0,questStage,goals:{...goals},portalUnlocked
+   creative,realmIndex:window.__bw2dRealm?.get()??0,questStage,goals:{...goals},portalUnlocked,
+   friends:friends.map(c=>({...c})),nightClock,weatherType
   }),
   useWorld:s=>{
    if(!s||s.w!==W||s.h!==H)return false;
@@ -907,6 +909,9 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
    window.__bw2dRealm?.setGuest(s.realmIndex);questStage=s.questStage;goals={...s.goals};
    achievements=Array.isArray(s.achievements)?s.achievements.slice():[];
    explored={...s.explored};portalUnlocked=!!s.portalUnlocked;
+   if(Array.isArray(s.friends)&&s.friends.length<=40)friends=s.friends.map(c=>({...c}));
+   if(Number.isFinite(s.nightClock))nightClock=s.nightClock;
+   if(['clear','rain','snow'].includes(s.weatherType))weatherType=s.weatherType;
    teamFollow=false;focus=null;dirty=false;renderHotbar();questHud();return true;
   },
   useState:s=>{
@@ -919,6 +924,9 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
     if(q.inventory&&typeof q.inventory==='object')p.inventory={...q.inventory};
    });
    if(typeof s.creative==='boolean')creative=s.creative;
+   if(Array.isArray(s.friends)&&s.friends.length<=40)friends=s.friends.map(c=>({...c}));
+   if(Number.isFinite(s.nightClock))nightClock=s.nightClock;
+   if(['clear','rain','snow'].includes(s.weatherType))weatherType=s.weatherType;
    if(Number.isInteger(s.questStage))questStage=s.questStage;
    if(s.goals&&typeof s.goals==='object')goals={...s.goals};
    portalUnlocked=!!s.portalUnlocked;
