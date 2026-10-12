@@ -296,8 +296,9 @@
       const mind = keeperState[side];
       const shot = side === 'left' ? ball.vx < -2.4 && ball.x < 220 : ball.vx > 2.4 && ball.x > 500;
       if (shot && mind.commit <= 0) {
-        mind.target = Math.max(GOAL.y + 16, Math.min(GOAL.y + GOAL.h - 16, ball.y + ball.vy * 4));
-        mind.commit = 28;
+        const guess = ball.y < 190 ? 168 : ball.y > 230 ? 252 : 210;
+        mind.target = guess;
+        mind.commit = 26;
       }
       if (mind.commit > 0) {
         state.keepers[side] += (mind.target - state.keepers[side]) * 0.22;
@@ -311,8 +312,8 @@
     }
   }
   function save(side) {
-    const diving = keeperState[side].commit > 8;
-    return Math.abs(state.ball.y - (state.keepers?.[side] || 210)) < (diving ? 22 : 14);
+    if (keeperState[side].commit < 10) return false;
+    return Math.abs(state.ball.y - (state.keepers?.[side] || 210)) < 12;
   }
   function burst(x, y, color, n) {
     if(reduced.matches)return;
@@ -504,18 +505,18 @@
       else { state.call='Full time'; room.phase='finished'; finishPractice(); syncUI(); say((state.score.dad>state.score.jozef?'Dad':'Jozef')+' wins! Ready for a rematch?'); }
     }
     if (state.call === 'Full time') { broadcast(); return; }
-    const post = state.ball.y < GOAL.y + 6 || state.ball.y > GOAL.y + GOAL.h - 6;
-    if (state.ball.x < 30 && inGoal(state.ball.y) && !post) {
-      if (save('left')) { state.saves += 1; state.ball.vx = 5.5; state.ball.vy *= 0.4; state.call = 'Saved'; kickLock = 20; }
+    const post = state.ball.y < GOAL.y + 4 || state.ball.y > GOAL.y + GOAL.h - 4;
+    if (state.ball.x < 40 && inGoal(state.ball.y) && !post) {
+      if (save('left')) { state.saves += 1; state.ball.x = 56; state.ball.vx = 5.5; state.ball.vy *= 0.4; state.call = 'Saved'; kickLock = 20; }
       else { state.score.dad += 1; state.call = 'Dad scores'; state.freeze = 40; }
     }
-    else if (state.ball.x > W - 30 && inGoal(state.ball.y) && !post) {
-      if (save('right')) { state.saves += 1; state.ball.vx = -5.5; state.ball.vy *= 0.4; state.call = 'Saved'; kickLock = 20; }
+    else if (state.ball.x > W - 40 && inGoal(state.ball.y) && !post) {
+      if (save('right')) { state.saves += 1; state.ball.x = W - 56; state.ball.vx = -5.5; state.ball.vy *= 0.4; state.call = 'Saved'; kickLock = 20; }
       else { state.score.jozef += 1; state.call = 'Jozef scores'; state.freeze = 40; }
     }
-    else if ((state.ball.x < 34 || state.ball.x > W - 34) && post && inGoal(state.ball.y)) { state.ball.x = state.ball.x < W/2 ? 70 : W-70; state.ball.y = 60; state.ball.vx = 0; state.ball.vy = 0; state.call = 'Corner'; }
-    else if (state.ball.x < 34) { state.ball.x = 34; state.ball.vx = Math.abs(state.ball.vx) + 0.6; }
-    else if (state.ball.x > W - 34) { state.ball.x = W - 34; state.ball.vx = -Math.abs(state.ball.vx) - 0.6; }
+    else if ((state.ball.x < 40 || state.ball.x > W - 40) && post && inGoal(state.ball.y)) { state.ball.x = state.ball.x < W/2 ? 70 : W-70; state.ball.y = 60; state.ball.vx = 0; state.ball.vy = 0; state.call = 'Corner'; }
+    else if (!inGoal(state.ball.y) && state.ball.x < 34) { state.ball.x = 34; state.ball.vx = Math.abs(state.ball.vx) + 0.6; }
+    else if (!inGoal(state.ball.y) && state.ball.x > W - 34) { state.ball.x = W - 34; state.ball.vx = -Math.abs(state.ball.vx) - 0.6; }
     if (state.ball.x < 70 && state.ball.y < 70 && Math.hypot(state.ball.vx, state.ball.vy) < 1) { state.ball.vx += 1.4; state.ball.vy += 1.4; }
     if (state.ball.x > W - 70 && state.ball.y < 70 && Math.hypot(state.ball.vx, state.ball.vy) < 1) { state.ball.vx -= 1.4; state.ball.vy += 1.4; }
     if (Math.hypot(state.ball.vx, state.ball.vy) < 0.4) state.call = state.call === 'Kickoff' ? state.call : '';
