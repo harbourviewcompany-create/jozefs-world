@@ -64,6 +64,23 @@
   let lastCall = '';
   let shake = 0;
 
+  function chime() {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    try { if (localStorage.getItem('jozefs-world-voice-alerts') === 'off') return; } catch { /* play */ }
+    const ctx = new AudioCtx();
+    [494, 659, 880].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.16, ctx.currentTime + i * 0.08 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + i * 0.08 + 0.24);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + i * 0.08);
+      osc.stop(ctx.currentTime + i * 0.08 + 0.26);
+    });
+  }
   function voice(line) {
     try { if (localStorage.getItem('jozefs-world-voice-alerts') === 'off' || !window.speechSynthesis) return; } catch { /* speak */ }
     if (!window.speechSynthesis) return;
@@ -144,7 +161,7 @@
     ctx.save();
     if (shake > 0 && !reduced.matches) { ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake); shake -= 1; }
     pitch();
-    if (state.call && state.call !== lastCall && /scores|Full time|post/.test(state.call)) { burst(ball.x, ball.y, state.call.includes('Dad') ? '#d7ff4a' : '#7ee0ff', 24); shake = 10; voice(state.call); }
+    if (state.call && state.call !== lastCall && /scores|Full time|post/.test(state.call)) { burst(ball.x, ball.y, state.call.includes('Dad') ? '#d7ff4a' : '#7ee0ff', 24); shake = 10; chime(); voice(state.call); }
     lastCall = state.call;
     trail.push({ x: ball.x, y: ball.y });
     if (trail.length > 8) trail.shift();

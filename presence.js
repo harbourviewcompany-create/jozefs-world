@@ -12,6 +12,25 @@
   function alertsOn() {
     try { return localStorage.getItem(VOICE) !== 'off'; } catch { return true; }
   }
+
+  function chime(up) {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx || !alertsOn()) return;
+    const ctx = new AudioCtx();
+    const notes = up ? [523, 659, 784] : [392, 330];
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + i * 0.12 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + i * 0.12 + 0.28);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + i * 0.12);
+      osc.stop(ctx.currentTime + i * 0.12 + 0.3);
+    });
+  }
   function voice(who, line) {
     if (!alertsOn() || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
@@ -27,8 +46,8 @@
     if (theirs) theirs.classList.toggle('on', online);
     const line = document.getElementById('live-status');
     if (line) line.textContent = online ? other() + ' is here.' : 'Waiting for ' + other() + '.';
-    if (online && !wasOnline) voice(other(), other() + ' is here.');
-    if (!online && wasOnline) voice(other(), other() + ' left.');
+    if (online && !wasOnline) { chime(true); voice(other(), other() + ' is here.'); }
+    if (!online && wasOnline) { chime(false); voice(other(), other() + ' left.'); }
     wasOnline = online;
   }
   document.getElementById('voice-alerts')?.addEventListener('click', () => {
