@@ -104,7 +104,7 @@
   try{state=sanitize(JSON.parse(localStorage.getItem(KEY)||'null'))}catch(_){state=newState()}
   let players=[{x:1,y:1},{x:1,y:2}],active=0,battle=null,frameId=0,walkingTimer=null,walkingToken=0;
   let controllerLane=1,lastControllerSample=0,controllerButtons={action:false,switchPlayer:false,guide:false};
-  let displayed=[{x:1,y:1},{x:1,y:2}];
+  let displayed=[{x:1,y:1},{x:1,y:2}],plannedRoute=[];
   let toast='Explore the arena. Collect two energy stars and activate both beacons.',soundOff=true;
   const hits=['LEFT','CENTRE','RIGHT'];
   const sportMoves=[['LEFT POST','CENTRE','RIGHT POST'],['GLOVE','FIVE-HOLE','BLOCKER'],['LAYUP','JUMPER','THREE-POINT'],['ENTRANCE','CROWD','FINALE']];
@@ -118,7 +118,10 @@
     const node=$('jw-adventure-status');
     if(node)node.textContent=value;
   }
-  function stopWalking(){walkingToken++;if(walkingTimer!==null)clearTimeout(walkingTimer);walkingTimer=null;}
+  function stopWalking(){
+    walkingToken++;if(walkingTimer!==null)clearTimeout(walkingTimer);
+    walkingTimer=null;plannedRoute=[];
+  }
   function resetPlayers(){
     stopWalking();players=[{x:1,y:1},{x:1,y:2}];displayed=[{x:1,y:1},{x:1,y:2}];
     active=0;battle=null;
@@ -273,12 +276,14 @@
   function followRoute(route){
     stopWalking();
     if(!Array.isArray(route)||!route.length)return;
+    plannedRoute=route.slice();
     const token=walkingToken,which=active,zone=state.zone;
     let index=0;
     function walk(){
       if(token!==walkingToken||battle||state.zone!==zone||active!==which||index>=route.length)return;
       const next=route[index++],current=players[which];
-      if(!move(which,next[0]-current.x,next[1]-current.y))return;
+      if(!move(which,next[0]-current.x,next[1]-current.y)){plannedRoute=[];return;}
+      plannedRoute=route.slice(index);
       if(index<route.length&&!battle&&state.zone===zone)walkingTimer=setTimeout(walk,125);
     }
     walk();
@@ -416,6 +421,20 @@
     const zone=WORLDS[state.zone],w=canvas.width/WIDTH,h=canvas.height/HEIGHT;
     if(paintTerrain())ctx.drawImage(terrainCache.canvas,0,0);
     else {ctx.fillStyle=zone.shadow;ctx.fillRect(0,0,canvas.width,canvas.height);}
+    // The route is visibly traversable: a quiet light trail shows where the
+    // auto-walk will go, rather than unexpectedly moving the player's avatar.
+    if(plannedRoute.length){
+      ctx.save();
+      plannedRoute.forEach(([x,y],i)=>{
+        const px=(x+.5)*w,py=(y+.5)*h;
+        ctx.globalAlpha=Math.max(.18,.57-i*.013);
+        ctx.fillStyle=zone.color;
+        ctx.beginPath();ctx.arc(px,py,Math.max(5,8-i*.05),0,Math.PI*2);ctx.fill();
+        ctx.strokeStyle='#e6fff6';ctx.lineWidth=1;
+        ctx.strokeRect(px-9,py-9,18,18);
+      });
+      ctx.restore();
+    }
 
     const ring=(x,y,r,color,alpha)=>{
       ctx.save();ctx.globalAlpha=alpha;ctx.strokeStyle=color;ctx.lineWidth=3;ctx.beginPath();ctx.arc((x+.5)*w,(y+.5)*h,r,0,Math.PI*2);ctx.stroke();ctx.restore();
@@ -449,7 +468,12 @@
       const bob=moving&&!reducedMotion?Math.abs(Math.sin(t/65+i))*3:0;
       const px=(pose.x+.5)*w,py=(pose.y+.5)*h-bob,primary=i===0?outfit.color:outfit.second;
       ctx.fillStyle='rgba(0,0,0,.4)';ctx.beginPath();ctx.ellipse(px,py+19,18,6,0,0,7);ctx.fill();
-      if(state.coop&&i===active)ring(p.x,p.y,24,'#fff',.8);
+      if(i===active){
+        // Selection halo is readable on a phone even in Solo Adventure.
+        ring(p.x,p.y,28,i===0?'#d9ff6f':'#8be6ff',.92);
+        ctx.save();ctx.strokeStyle='#edfff6';ctx.lineWidth=2;
+        ctx.globalAlpha=.62;ctx.beginPath();ctx.arc(px,py+3,21,Math.PI*.13,Math.PI*.87);ctx.stroke();ctx.restore();
+      }
       rounded(px-17,py-14,34,32,9,primary);
       rounded(px-13,py-14,26,7,5,'#e9bf9e');
       ctx.fillStyle='#e9bf9e';ctx.beginPath();ctx.arc(px,py-18,11,0,7);ctx.fill();
