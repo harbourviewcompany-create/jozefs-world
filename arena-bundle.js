@@ -517,6 +517,11 @@ function mount(api){
  // Embedded browsers often resize the viewport without an orientationchange event.
  window.addEventListener('resize',ui,{passive:true});
  window.visualViewport?.addEventListener('resize',ui,{passive:true});
+ window.matchMedia?.('(orientation: landscape)')?.addEventListener?.('change',ui);
+ if(typeof ResizeObserver==='function'){
+  const observer=new ResizeObserver(()=>window.requestAnimationFrame?.(ui));
+  observer.observe(document.documentElement);
+ }
  ui();
  return Object.freeze({prefs,record,reset,finish,kitColor,haptic,ui,clearJoystick:clear,passCount:()=>passes});
 }

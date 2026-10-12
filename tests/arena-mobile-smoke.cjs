@@ -207,16 +207,19 @@ const close=()=>new Promise(resolve=>server.close(resolve));
       // Social-app browser chrome can shrink the viewport during a live game,
       // sometimes without firing an orientationchange event.
       await page.setViewportSize({width:390,height:675});
-      await page.waitForTimeout(130);
+      await page.waitForFunction(()=>{
+       const r=document.querySelector('#arena .arena-game')?.getBoundingClientRect();
+       return r&&r.bottom<=innerHeight+2;
+      },null,{timeout:5000});
       const shortBox=await page.locator('#arena .arena-game').boundingBox();
       assert.ok(shortBox&&shortBox.y+shortBox.height<=677,'Arena must fit after toolbar expansion');
       assert.equal((await page.evaluate(()=>window.JozefArena.getProgress())).mode,'playing');
       await page.setViewportSize({width:844,height:390});
-      await page.waitForTimeout(130);
+      await page.waitForFunction(()=>!document.querySelector('#arena').classList.contains('mobile-immersive'),null,{timeout:5000});
       assert.equal(await page.locator('#arena').evaluate(e=>e.classList.contains('mobile-immersive')),false,
        'Viewport-driven landscape switch must restore Classic controls');
       await page.setViewportSize({width:390,height:844});
-      await page.waitForTimeout(130);
+      await page.waitForFunction(()=>document.querySelector('#arena').classList.contains('mobile-immersive'),null,{timeout:5000});
       assert.equal(await page.locator('#arena').evaluate(e=>e.classList.contains('mobile-immersive')),true,
        'Portrait must restore immersive controls without losing the match');
      }
