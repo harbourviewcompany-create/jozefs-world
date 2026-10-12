@@ -1,7 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
-const root=path.resolve(__dirname,'..'),html=fs.readFileSync(path.join(root,'block-world.html'),'utf8');
+const root=path.resolve(__dirname,'..'),html=fs.readFileSync(path.join(root,'block-quest.html'),'utf8');
 const source=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 function boot(shared){
  const storage=shared||new Map(),nodes=new Map();
