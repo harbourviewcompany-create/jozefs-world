@@ -16,6 +16,32 @@ const hero={x:2.5,y:12,z:2.5,vy:0,yaw:0,pitch:-.07,role:0,hp:100,ground:false,do
 const companion={x:4.5,y:12,z:4.5,role:1,hp:100};
 let boss={x:32.5,y:12,z:32.5,hp:120,alive:true},mobs=[],clock=0,last=0,frames=0,dirty=false,saveClock=0,skyPhase=0;
 let quality='AUTO',adaptiveCap=1.5,renderCap=1.5,averageFrame=.0167;
+let effects=[],audioCtx=null;
+function tone(kind){
+ if(!sound)return;
+ try{
+  const Context=window.AudioContext||window.webkitAudioContext;if(!Context)return;
+  audioCtx??=new Context();
+  if(audioCtx.state==='suspended')audioCtx.resume?.().catch?.(()=>{});
+  const now=audioCtx.currentTime,osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
+  const first=kind==='reward'?520:kind==='place'?430:kind==='attack'?170:240;
+  osc.type=kind==='reward'?'sine':'triangle';
+  osc.frequency.setValueAtTime(first,now);
+  osc.frequency.exponentialRampToValueAtTime(kind==='reward'?880:first*.64,now+.17);
+  gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(.028,now+.014);
+  gain.gain.exponentialRampToValueAtTime(.0001,now+.19);
+  osc.connect(gain).connect(audioCtx.destination);osc.start(now);osc.stop(now+.21);
+ }catch{/* Sound never blocks gameplay on devices without Web Audio. */}
+}
+function effectBurst(x,y,z,id=8){
+ const count=quality==='ECO'?4:11;
+ for(let i=0;i<count&&effects.length<80;i++){
+  const a=i*2.39996;
+  effects.push({x:x+.5,y:y+.5,z:z+.5,
+   vx:Math.cos(a)*(1.3+i*.04),vy:1.2+(i%5)*.34,vz:Math.sin(a)*(1.3+i*.04),
+   life:.35+(i%3)*.12,id:id===4?4:id===3?7:8});
+ }
+}
 let guestActive=false;
 let keys={},joy={x:0,y:0},gamepadHeld={mine:false,place:false,attack:false},jumpWasDown=false,look=null,peer=null,conn=null,host=false,invite='',lastNet=0,remote=false,noticeTo=0,renderOk=false;
 const rnd=(x,z,s)=>{let n=Math.imul(x,374761393)+Math.imul(z,668265263)+Math.imul(s|0,2246822519);n=Math.imul(n^(n>>>13),1274126177);return((n^(n>>>16))>>>0)/4294967296;};
@@ -205,7 +231,10 @@ function render(){
   cube(v,40,height(40,40)+.1,40,8,.9);
   cube(v,40,height(40,40)+1.1+Math.sin(clock*2)*.12,40,11,.9);
  }
- gl.bindBuffer(gl.ARRAY_BUFFER,dynamic);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(v),gl.DYNAMIC_DRAW);renderBuffer(dynamic,v.length/6);drawAimOutline();renderOk=true;
+ gl.bindBuffer(gl.ARRAY_BUFFER,dynamic);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(v),gl.DYNAMIC_DRAW);for(const particle of effects)if(Math.hypot(particle.x-hero.x,particle.z-hero.z)<40)
+   cube(v,particle.x,particle.y,particle.z,particle.id,.10);
+ gl.bindBuffer(gl.ARRAY_BUFFER,dynamic);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(v),gl.DYNAMIC_DRAW);
+ renderBuffer(dynamic,v.length/6);drawAimOutline();renderOk=true;
 }
 function ground(x,z){return height(Math.floor(x),Math.floor(z))+1.02;}
 function resetPose(){hero.x=2.5;hero.z=2.5;hero.y=ground(hero.x,hero.z);hero.vy=0;hero.hp=100;companion.x=4.5;companion.z=4.5;companion.y=ground(4.5,4.5);}
@@ -229,7 +258,7 @@ function award(id,xp){
 function gain(kind,n=1){
  stats[kind]=(stats[kind]||0)+n;
  while(stage<missions.length&&stats[missions[stage][2]]>=missions[stage][3]){
-  const m=missions[stage];award('block3d-'+stage,m[4]);announce('MISSION COMPLETE · '+m[0]+' +'+m[4]+' XP',3500);stage++;
+  const m=missions[stage];award('block3d-'+stage,m[4]);announce('MISSION COMPLETE · '+m[0]+' +'+m[4]+' XP',3500);tone('reward');stage++;
  }
  dirty=true;hud();if(host&&conn?.open)send({t:'progress',stage,stats,rewards,defeated,portalOpened});
 }
@@ -277,12 +306,12 @@ function change(kind){
  if(kind==='mine'){
   const p=a.hit,id=block(p.x,p.y,p.z);if(p.y<1)return;
   if(conn?.open&&!host){send({t:'request',op:'mine',...p});return;}
-  if(modify(p.x,p.y,p.z,0)){hero.inventory[id]=(hero.inventory[id]||0)+1;if(id===4)gain('wood');if(id===8)gain('crystal');announce('MINED '+types[id],800);hotbar();}
+  if(modify(p.x,p.y,p.z,0)){hero.inventory[id]=(hero.inventory[id]||0)+1;if(id===4)gain('wood');if(id===8)gain('crystal');effectBurst(p.x,p.y,p.z,id);tone('mine');announce('MINED '+types[id],800);hotbar();}
  }else{
   const p=a.place;if(!p){announce('Aim at open space');return;}
   if(!creative&&!(hero.inventory[selected]>0)){announce('Mine '+types[selected]+' first');return;}
   if(conn?.open&&!host){send({t:'request',op:'place',...p,id:selected});return;}
-  if(modify(p.x,p.y,p.z,selected)){if(!creative)hero.inventory[selected]--;gain('placed');hotbar();}
+  if(modify(p.x,p.y,p.z,selected)){if(!creative)hero.inventory[selected]--;gain('placed');effectBurst(p.x,p.y,p.z,selected);tone('place');hotbar();}
  }
 }
 function attack(){
@@ -291,7 +320,7 @@ function attack(){
  if(boss.alive&&bd<4.3&&bd<=dist+.3)victim=boss;
  if(!victim){announce('Get closer to an enemy');return;}
  if(conn?.open&&!host){send({t:'request',op:'attack',x:victim.x,z:victim.z});return;}
- victim.hp-=hero.role?24:18;
+ victim.hp-=hero.role?24:18;effectBurst(victim.x,victim.y+.8,victim.z,8);tone('attack');
  if(victim===boss){send({t:'boss',hp:Math.max(0,boss.hp)});if(boss.hp<=0){boss.alive=false;defeated=true;gain('boss');announce('THE CRYSTAL GOLEM IS DEFEATED!',3400);}}
  else if(victim.hp<=0)announce('Creature defeated!');
  dirty=true;
@@ -304,6 +333,8 @@ function spawn(){
 }
 function step(dt){
  clock+=dt;saveClock+=dt;
+ for(const p of effects){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;p.vy-=5*dt;}
+ effects=effects.filter(p=>p.life>0);
  const gp=Array.from(navigator.getGamepads?.()||[]).find(Boolean);
  if(gp){joy.x=Math.abs(gp.axes?.[0]||0)>.2?gp.axes[0]:0;joy.y=Math.abs(gp.axes?.[1]||0)>.2?gp.axes[1]:0;
   hero.yaw+=(Math.abs(gp.axes?.[2]||0)>.15?gp.axes[2]:0)*dt*2.4;
