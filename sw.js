@@ -1,5 +1,5 @@
 /* Jozef FC offline shell: only same-origin public game assets. Never caches personal progress. */
-const CACHE='jozef-fc-app-shell-v105';
+const CACHE='jozef-fc-app-shell-v106';
 const CORE=[
  './','./index.html','./world.html','./block-world.html','./block-world.js','./block-world-coop.js','./block-world.css','./block-world-3d.html','./block-world-3d.js','./block-world-3d.css','./block-quest.html','./site-foundation.css','./site-experience.css',
  './favicon.svg','./manifest.webmanifest','./matchday.css','./training.css','./jersey-bingo.css',
@@ -56,7 +56,8 @@ self.addEventListener('fetch',event=>{
    }
    return response;
   }).catch(async()=>{
-   const cached=await caches.match(request,{ignoreSearch:request.mode==='navigate'});
+   // Versioned same-path game assets can still use the precached file offline.
+   const cached=await caches.match(request,{ignoreSearch:true});
    if(cached)return cached;
    if(request.mode==='navigate'){
     if(url.pathname.startsWith(new URL('./prime/',root.href).pathname)){
