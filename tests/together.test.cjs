@@ -40,7 +40,8 @@ test('controllers and finalist shield use deterministic valid inputs',()=>{
 });
 test('shared game has a visible launch, Club backup and offline source',()=>{
  const read=p=>fs.readFileSync(path.join(root,p),'utf8');
- assert.equal(read('index.html'),read('world.html'));
+ const html=read('index.html');
+ assert.equal(html,read('world.html'));
  assert.match(read('index.html'),/id="jw-together-game"/);
  assert.match(read('index.html'),/src="together\.js"/);
  assert.match(read('sw.js'),/'\.\/together\.js'/);
