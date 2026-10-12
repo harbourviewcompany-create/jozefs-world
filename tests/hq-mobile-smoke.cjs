@@ -45,6 +45,16 @@ const server=http.createServer((req,res)=>{
      assert.ok(nextBox.height>=40,'primary CTA stays tappable');
      await page.locator('#jw-worldcore-list-toggle').click();
      assert.equal(await page.locator('#jw-worldcore-index button').count(),12,'all plates in the accessible index');
+     const indexDebug=await page.evaluate(()=>{
+       const box=document.querySelector('#jw-worldcore-index');
+       const button=box.querySelector('button[data-world="1"]');
+       return {hidden:box.hidden,display:getComputedStyle(box).display,
+         buttonDisplay:getComputedStyle(button).display,
+         buttonVisibility:getComputedStyle(button).visibility,
+         parentOverflow:getComputedStyle(document.querySelector('#jw-worldcore')).overflow,
+         rect:button.getBoundingClientRect().toJSON()};
+     });
+     assert.ok(await page.locator('#jw-worldcore-index button[data-world="1"]').isVisible(),'index tile visible: '+JSON.stringify(indexDebug));
      await page.locator('#jw-worldcore-index button[data-world="1"]').click();
      assert.equal(await page.locator('#jw-worldcore-selected-title').textContent(),'Together');
      await page.locator('#jw-worldcore-index button[data-world="0"]').click();

@@ -2955,6 +2955,15 @@
 @media(prefers-reduced-motion:reduce){
  #home .jw-worldcore-quicknav button{transition:none}
 }
+/* An opened destination index must never be clipped by the cinematic viewport. */
+#home .jw-worldcore.index-open{overflow:visible!important}
+#home .jw-worldcore.index-open .jw-worldcore-index:not([hidden]){
+ display:grid!important;position:relative;z-index:10;visibility:visible!important;
+ min-height:60px;height:auto;max-height:60dvh;overflow-y:auto;
+}
+#home .jw-worldcore.index-open .jw-worldcore-index:not([hidden]) button{
+ display:flex!important;visibility:visible!important;opacity:1;min-height:50px;
+}
 
 /* BEGIN ui-refine-2026.css */
 /* JOZEF'S WORLD // VISUAL UX REFINEMENT 2026

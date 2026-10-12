@@ -237,7 +237,7 @@ function enter(i=selected){
  return false;
 }
 function graphicsFallback(message){
- forceFallback=true;host.classList.add('is-fallback');
+ forceFallback=true;host.classList.add('is-fallback','index-open');
  canvas.hidden=true;
  $('jw-worldcore-fallback').hidden=false;
  list.hidden=false;graphics?.dispose?.();graphics=null;
@@ -368,6 +368,7 @@ function init(){
  $('jw-worldcore-next')?.addEventListener('click',()=>focusPlate((selected+1)%DESTINATIONS.length));
  $('jw-worldcore-list-toggle').addEventListener('click',()=>{
   const opened=list.hidden;list.hidden=!opened;
+  host.classList.toggle('index-open',opened);
   $('jw-worldcore-list-toggle').setAttribute('aria-expanded',String(opened));
   if(opened){list.querySelector('button[data-world]')?.focus();say('World index opened. Choose a destination.');}
  });
