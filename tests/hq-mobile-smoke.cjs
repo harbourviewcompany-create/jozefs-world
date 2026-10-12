@@ -32,6 +32,11 @@ const server=http.createServer((req,res)=>{
      assert.equal(state.selected,'adventure');
      assert.equal(await page.locator('.studio-hero').isVisible(),false,'old marketing hero remains optional');
      assert.ok(state.webgl||state.fallback,'game is usable even without graphics support');
+     const gpuAvailable=await page.evaluate(()=>{
+       try{return Boolean(document.createElement('canvas').getContext('webgl'));}catch(_){return false;}
+     });
+     if(gpuAvailable)assert.equal(state.webgl,true,'WebGL-supported browsers must compile and display the actual 3D world, not silently fall back');
+
      await page.locator('#jw-worldcore-next').click();
      assert.equal(await page.locator('#jw-worldcore-selected-title').textContent(),'Together','next plate previews without navigating');
      await page.locator('#jw-worldcore-prev').click();
