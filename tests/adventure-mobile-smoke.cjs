@@ -76,6 +76,12 @@ const close=()=>new Promise(resolve=>server.close(resolve));
       await page.waitForFunction(()=>!document.querySelector('#jw-together-game').hidden);
       await page.waitForFunction(()=>document.querySelector('#adventure')?.classList.contains('active'),null,{timeout:5000});
       assert.ok((await page.locator('#jw-together-canvas').boundingBox()).width>=200,'Together canvas visible');
+      const screen=await page.evaluate(()=>{
+       const r=document.querySelector('#adventure').getBoundingClientRect();
+       return {top:r.top,bottom:r.bottom,width:r.width,screen:innerHeight,viewport:innerWidth};
+      });
+      assert.ok(screen.top>=-1&&screen.bottom<=screen.screen+1&&screen.width<=screen.viewport+1,
+        'Together game fits the device screen: '+JSON.stringify(screen));
       assert.equal(await page.locator('#jw-together-hero-0').count(),1);
       assert.equal(await page.locator('#jw-together-hero-1').count(),1);
       assert.equal(await page.locator('#jw-together-difficulty').count(),1);

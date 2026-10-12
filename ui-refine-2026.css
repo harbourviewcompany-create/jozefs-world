@@ -1248,3 +1248,42 @@ body.versus-focused #versus.is-playing #versus-leave{display:none}
 #jw-together-pulse{width:100%;min-height:47px;border:1px solid #dffba2;border-radius:11px;background:linear-gradient(135deg,#ccff79,#71dfe9);color:#102d2c;font:900 12px/1.2 var(--sf-ui);box-shadow:0 3px 18px #acff7940}
 #jw-together-pulse:disabled{opacity:.48;box-shadow:none}
 #jw-together-pulse[hidden]{display:none!important}
+
+/* Together Mode: screen-filling game surface, with safe-area-aware thumb controls. */
+@media(max-width:900px){
+ #adventure.together-focused.active{
+   box-sizing:border-box;display:block!important;position:fixed!important;inset:0;
+   z-index:1200;width:100%;height:100dvh;max-width:none;max-height:100dvh;
+   margin:0!important;padding:4px max(6px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))!important;
+   overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;background:#061321;
+ }
+ #adventure.together-focused.active>.jw-adventure-heading,
+ #adventure.together-focused.active>.jw-adventure-exit,
+ #adventure.together-focused.active>.jw-neon-launch,
+ #adventure.together-focused.active>.jw-adventure-worlds,
+ #adventure.together-focused.active>.jw-adventure-layout{display:none!important}
+ #adventure.together-focused.active>.jw-together-game{
+   box-sizing:border-box;display:block!important;max-width:800px;width:100%;
+   min-height:calc(100dvh - 10px);margin:0 auto!important;
+   border-radius:14px;box-shadow:none;
+ }
+ body:has(#adventure.together-focused.active) .phone-dock,
+ body:has(#adventure.together-focused.active) .mobile-bottom-nav{display:none!important}
+}
+@media(max-width:600px){
+ #adventure.together-focused.active>.jw-together-game{padding:7px;border-radius:10px}
+ #adventure.together-focused .jw-together-titlebar{gap:5px}
+ #adventure.together-focused .jw-together-titlebar h3{font-size:clamp(19px,5.5vw,26px)}
+ #adventure.together-focused #jw-together-close{min-height:42px}
+ #adventure.together-focused .jw-together-pitch{border-radius:8px}
+ #adventure.together-focused #jw-together-status{min-height:26px;padding:5px 9px;font-size:10px}
+ #adventure.together-focused .jw-together-controls{gap:5px}
+ #adventure.together-focused .jw-together-settings button{min-height:38px}
+ #adventure.together-focused .jw-together-heroes button{min-height:45px}
+}
+@media(max-width:370px) and (max-height:650px){
+ #adventure.together-focused .jw-together-pad{grid-template:repeat(3,41px)/repeat(3,41px)}
+ #adventure.together-focused .jw-together-titlebar h3{font-size:19px}
+ #adventure.together-focused .jw-together-maphead{padding:4px 7px}
+ #adventure.together-focused .jw-together-controls{padding:6px}
+}

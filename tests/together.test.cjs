@@ -75,5 +75,6 @@ test('shared game has a visible launch, Club backup and offline source',()=>{
  assert.match(read('clubhouse.js'),/'jozefs-world-together-v1'/);
  assert.match(html,/id="jw-together-club-cup"/);
  assert.match(html,/OUR SHARED LEGENDS/);
+ assert.match(read('ui-refine-2026.css'),/#adventure\.together-focused\.active/);
  assert.match(read('ui-refine-2026.css'),/#jw-together-club-perfect\[hidden\]/);
 });
