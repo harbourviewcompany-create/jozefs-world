@@ -2,3 +2,5 @@
 .compass{position:absolute;top:174px;right:max(12px,env(safe-area-inset-right));max-width:44vw;padding:8px 12px;border-radius:10px;border:1px solid #c0e9ffa3;background:#071b33c9;color:#d7f6fc;font:800 11px/1.5 system-ui;text-align:right;box-shadow:0 5px 22px #0006}
 @media(max-width:680px){.compass{top:146px;right:8px;max-width:38vw;font-size:9px;padding:6px}}
 @media(max-height:470px){.compass{top:57px;right:8px;max-width:31vw;padding:4px;font-size:9px}}
+
+#fallback{z-index:100;top:32%;left:6%;right:6%;width:min(480px,88vw);margin:auto;padding:22px;border:1px solid #f0d58b;color:white;box-shadow:0 12px 50px #000a;background:#102a43f4;backdrop-filter:blur(12px)}#fallback strong{font-size:18px}#fallback p{font-size:13px;line-height:1.5}#fallback .recover-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px}#fallback button,#fallback a{display:inline-flex;align-items:center;justify-content:center;padding:12px 14px;border-radius:10px;border:1px solid #a5d9ef;background:#1b4d6c;color:white;text-decoration:none;font-size:12px;font-weight:800}
