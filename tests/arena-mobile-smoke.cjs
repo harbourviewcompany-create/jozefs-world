@@ -172,7 +172,8 @@ const close=()=>new Promise(resolve=>server.close(resolve));
      assert.equal(await page.locator('#arena-joystick').isVisible(),true,'Joystick is visible in joystick mode');
      await page.locator('#arena-start').click();
      assert.equal((await page.evaluate(()=>window.JozefArena.getProgress())).mode,'playing','Resume after settings');
-     const before=await page.evaluate(()=>window.JozefArena.getProgress().playerY);
+     const beforeState=await page.evaluate(()=>window.JozefArena.getProgress());
+     const before=beforeState.playerY;
      const box=await page.locator('#arena-joystick').boundingBox();
      assert.ok(box&&box.width>=55,'Joystick touch area visible');
      await page.mouse.move(box.x+box.width/2,box.y+box.height/2);
@@ -184,8 +185,14 @@ const close=()=>new Promise(resolve=>server.close(resolve));
      await page.mouse.up();
      const afterState=await page.evaluate(()=>window.JozefArena.getProgress());
      const after=afterState.playerY;
-     assert.ok(after<before-1,'Virtual joystick must move Jozef; before='+
-      before+' after='+after+' mode='+afterState.mode+' stick='+liveStick);
+     assert.ok(Number.parseFloat(liveStick)<-10,'Up gesture must report a negative joystick vector');
+     // A rival goal can reset the pitch to y=493 during this sample: this is
+     // expected gameplay, not evidence the joystick moved the wrong way.
+     const reset=afterState.opponentGoals>beforeState.opponentGoals||
+       afterState.matchGoals>beforeState.matchGoals;
+     assert.ok(after<before-1||reset,'Virtual joystick must move upward unless a goal reset play; before='+
+      before+' after='+after+' mode='+afterState.mode+' stick='+liveStick+
+      ' score='+beforeState.score+' -> '+afterState.score);
      await page.locator('#arena-start').click();
      const pausedProgress=await page.evaluate(()=>window.JozefArena.getProgress());
      assert.equal(pausedProgress.mode,'paused','Pause button stops game');

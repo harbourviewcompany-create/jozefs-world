@@ -75,12 +75,21 @@ const poll=async(page,fn)=>page.waitForFunction(fn,null,{timeout:10000});
     assert.equal((await page.evaluate(()=>JSON.parse(localStorage.getItem('jozefs-world-player-v1')).xp)),20,'restart cannot award completed-event XP twice');
     await page.evaluate(()=>navigator.serviceWorker.ready);
     await poll(page,()=>!!navigator.serviceWorker.controller);
-    await poll(page,async()=>!!(await caches.match(location.href,{ignoreSearch:true})));
+    // The shell may cache HTML before the async Prime asset pre-cache finishes.
+    // A real offline replay must have the compiled script AND CSS, not only markup.
+    await poll(page,async()=>{
+      const cache=await caches.open('jozef-prime-public-v2');
+      const entry=new URL(location.href);entry.search='';entry.hash='';
+      const assets=[entry.href,...[...document.querySelectorAll('script[src],link[rel="stylesheet"][href]')].map(el=>el.src||el.href)];
+      return assets.length>=3&&(await Promise.all(assets.map(url=>cache.match(url)))).every(Boolean);
+    });
     await page.locator('[data-mode="hockey"]').click();
     await poll(page,()=>document.getElementById('event-name').textContent==='HOCKEY SHOOTOUT');
     // Drop the actual transport. WebKit's setOffline can bypass service workers.
-    networkDown=true;await page.reload({waitUntil:'load'});
-    await poll(page,()=>!!document.querySelector('canvas'));
+    try{
+      networkDown=true;await page.reload({waitUntil:'load'});
+      await poll(page,()=>!!document.querySelector('canvas'));
+    }finally{networkDown=false;}
     assert.equal(await page.locator('#event-name').textContent(),'HOCKEY SHOOTOUT','offline relaunch works after changing the event URL');
     assert.deepEqual(errors,[]);cases++;await context.close();networkDown=false;
    }finally{await browser.close();}
