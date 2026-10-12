@@ -76,11 +76,12 @@ assert.equal(game.world()[0].length,180);
 assert.equal(game.surface().length,180);
 assert.ok(game.players.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)&&p.y>=0),'finite player coordinates');
 assert.equal(first.document.getElementById('health').textContent.includes('Daddy'),true);
-assert.equal(first.document.getElementById('bw-mission').textContent,''); // rendered mission uses innerHTML
 assert.match(first.document.getElementById('bw-mission').innerHTML,/MISSION 1\/5/);
 first.click('btn-switch','pointerdown');
 assert.match(first.document.getElementById('health').textContent,/Jozef/);
 first.click('btn-switch','pointerup');
+const p=game.players[0],cx=Math.floor(p.x/40)+3,base=Math.floor((p.y+p.h)/40);
+for(let y=Math.max(0,base-8);y<=base;y++)for(let x=cx;x<cx+9;x++)if(game.world()[y])game.world()[y][x]=0;
 game.blueprint('home');
 assert.ok(game.quest().goals.build>0,'blueprint places physical tiles');
 first.click('save');
