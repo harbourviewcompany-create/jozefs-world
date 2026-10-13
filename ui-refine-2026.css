@@ -1606,3 +1606,9 @@ body.versus-focused #versus.is-playing .versus-match-settings{display:none!impor
  }
 }
 
+/* Ready / join must stay on top while a room waits for kickoff.
+   Scoreboard provides information only and never captures touch. */
+#versus .versus-scoreboard{pointer-events:none!important}
+#versus #versus-room:not([hidden]){position:relative!important;z-index:20!important}
+#versus #versus-lobby:not([hidden]){position:relative!important;z-index:10!important}
+
