@@ -231,6 +231,7 @@ function draw(){
  camX+=(Math.max(0,Math.min(W*TILE-viewW,goalX))-camX)*.14;
  camY+=(Math.max(0,Math.min(H*TILE-viewH,goalY))-camY)*.14;
  drawBackground();
+ if(window.BlockWorldArt?.caveBackdrop)window.BlockWorldArt.caveBackdrop(ctx,{surface,camX,camY,tileSize:TILE,w:viewW,h:viewH});
  const sx=Math.max(0,Math.floor(camX/TILE)-1),ex=Math.min(W,Math.ceil((camX+viewW)/TILE)+1);
  const sy=Math.max(0,Math.floor(camY/TILE)-1),ey=Math.min(H,Math.ceil((camY+viewH)/TILE)+1);
  for(let y=sy;y<ey;y++)for(let x=sx;x<ex;x++){const id=world[y][x];if(!id)continue;ctx.drawImage(tex(id),Math.round(x*TILE-camX),Math.round(y*TILE-camY),TILE+1,TILE+1);}
