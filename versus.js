@@ -25,7 +25,7 @@
     else{ctx.translate(screenX,screenY);ctx.scale(screenScale,screenScale);}
   }
   const GOAL = { x: 36, y: 150, w: 18, h: 120 };
-  const room = { code: '', who: 'Dad', spot: 'forward', otherSpot: 'forward', together: false, peer: null, conn: null, host: false, other: '', ready: false, remoteReady: false, practice: false, phase: 'lobby', remoteActive: true };
+  const room = { code: '', who: 'Dad', spot: 'forward', otherSpot: 'forward', pending: null, together: false, peer: null, conn: null, host: false, other: '', ready: false, remoteReady: false, practice: false, phase: 'lobby', remoteActive: true };
   const keeperTargets={left:null,right:null},dekeReady={Dad:0,Jozef:0};
   const keeperSide=who=>room.together?'left':who==='Dad'?'right':'left';
   const isKeeper=who=>who===room.who?room.spot==='keeper':room.otherSpot==='keeper';
@@ -557,6 +557,7 @@
     $('versus-ready').disabled=!room.other||room.ready;
     $('versus-ready').textContent=room.ready?'Ready — waiting for opponent':room.other?'Ready to play':'Waiting for opponent';
     $('versus-room-code').textContent=room.code;
+    const approval=$('versus-approval');if(approval)approval.hidden=!room.host||!room.pending;
     $('versus').classList.toggle('is-playing',playing);
     const stage=document.querySelector('.versus-stage'), play=document.querySelector('.versus-play'), board=document.querySelector('.versus-scoreboard'), card=document.querySelector('.versus-card');
     // Styles are owned by CSS and return to lobby without lingering inline sizing.
@@ -572,7 +573,7 @@
     renderPracticeRecord();
   }
   function stopInput(){keys.clear();stickVector=null;targets[room.who]=null;send({type:'aim',x:null,y:null});const nub=$('versus-nub'),stick=$('versus-stick');nub.style.left=(stick.clientWidth-nub.offsetWidth)/2+'px';nub.style.top=(stick.clientHeight-nub.offsetHeight)/2+'px';}
-  function cleanup(){clearTimeout(connectTimer);clearTimeout(countdownTimer);const oldConn=room.conn,oldPeer=room.peer;room.conn=null;room.peer=null;oldConn?.close();oldPeer?.destroy();room.other='';room.ready=false;room.remoteReady=false;room.host=false;room.practice=false;room.together=false;room.otherSpot='forward';room.remoteActive=true;room.phase='lobby';stopInput();syncUI();}
+  function cleanup(){clearTimeout(connectTimer);clearTimeout(countdownTimer);const pending=room.pending,oldConn=room.conn,oldPeer=room.peer;room.pending=null;room.conn=null;room.peer=null;pending?.close();oldConn?.close();oldPeer?.destroy();room.other='';room.ready=false;room.remoteReady=false;room.host=false;room.practice=false;room.together=false;room.otherSpot='forward';room.remoteActive=true;room.phase='lobby';stopInput();syncUI();}
   function fail(message){cleanup();say(message);}
   function freshMatch(){state.matchId=crypto.randomUUID?.()||Array.from(crypto.getRandomValues(new Uint8Array(16)),v=>v.toString(16).padStart(2,'0')).join('');state.kick='';state.score={dad:0,jozef:0};state.matchLeft=room.practice?practiceSeconds:120;state.call='Kickoff';kickLock=0;lastBotKick=-100;savedMatch=false;resultRecorded=false;state.overtime=false;state.star={x:360,y:120,on:true};state.super='';nextLocalSprint=0;dekeReady.Dad=dekeReady.Jozef=0;sprintUntil.Dad=sprintUntil.Jozef=0;sprintReady.Dad=sprintReady.Jozef=0;reset(0);
     const length=Math.ceil(state.matchLeft);$('versus-clock').textContent=Math.floor(length/60)+':'+String(length%60).padStart(2,'0');
@@ -634,11 +635,23 @@
     const peer=new Peer(host?'jw-rival-'+code:undefined);room.peer=peer;
     connectTimer=setTimeout(()=>{if(room.phase==='connecting')fail('Could not connect. Check the code and connection, then retry.');},15000);
     peer.on('open',()=>{if(room.peer!==peer)return;if(host){clearTimeout(connectTimer);room.phase='waiting';syncUI();say('Share the code. Your opponent joins automatically as the other player.');}else wire(peer.connect('jw-rival-'+code,{reliable:true}));});
-    peer.on('connection',conn=>{if(!room.host||room.conn){conn.on('open',()=>conn.close());return;}wire(conn);});
+    peer.on('connection',conn=>{
+      if(!room.host||room.conn||room.pending||room.phase!=='waiting'){conn.on('open',()=>conn.close());if(conn.open)conn.close();return;}
+      room.pending=conn;
+      conn.on('close',()=>{if(room.pending===conn){room.pending=null;syncUI();say('Player cancelled the join request.');}});
+      syncUI();say('Someone wants to join. Approve only if you shared the room code.');
+    });
     peer.on('error',err=>{if(room.peer===peer)fail(err.type==='peer-unavailable'?'Room not found. Check the code and ask the host to keep it open.':'Could not open the room. Try again or practice solo.');});
   }
   document.querySelectorAll('.versus-role').forEach(b=>b.addEventListener('click',()=>{if(room.phase==='lobby'){room.who=b.dataset.who;syncUI();}}));
   $('versus-open').addEventListener('click',()=>connect(true));$('versus-join').addEventListener('click',()=>connect(false));
+  $('versus-approve')?.addEventListener('click',()=>{
+    if(!room.host||!room.pending||room.phase!=='waiting')return;
+    const conn=room.pending;room.pending=null;wire(conn);syncUI();say('Approved. Both players can now tap Ready.');
+  });
+  $('versus-decline')?.addEventListener('click',()=>{
+    const conn=room.pending;room.pending=null;conn?.close();syncUI();say('Join request declined. Room remains private.');
+  });
   $('versus-code').addEventListener('keydown',e=>{if(e.key==='Enter')connect(false);});
   $('versus-ready').addEventListener('click',ready);
   $('versus-leave').addEventListener('click',()=>{cleanup();say('Create a room, join with a code, or warm up solo.');});
