@@ -28,7 +28,7 @@ test('family backup transfers all games, 2D/3D realms and IndexedDB recovery, no
  let mirror=null;
  const result=await kit.restore(JSON.stringify(backup),other,{read:async()=>null,write:async x=>{mirror=x;}});
  assert.equal(result.activities,5);
- assert.equal(result.worlds,3);
+ assert.equal(result.worlds,4);
  assert.equal(JSON.parse(other.getItem('jozefs-world-player-v1')).xp,1520);
  assert.equal(other.getItem('jozefs-world-family-pair-v1'),'my-own-family-pair');
  assert.equal(JSON.parse(other.getItem('jozefs-block-3d-dimensions-v1')).dimensions[0].bossHp,110);
