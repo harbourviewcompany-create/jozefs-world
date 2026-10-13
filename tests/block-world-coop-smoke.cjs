@@ -20,11 +20,12 @@ class Channel {
  close(){if(!this.open)return;this.open=false;this.partner.open=false;this.handlers.close?.();this.partner.handlers.close?.();}
 }
 class FakePeer {
+ static links=[];
  constructor(id){this.id=id||'random-guest';this.handlers={};if(id)peers.set(id,this);tasks.push(()=>this.handlers.open?.());}
  on(n,fn){this.handlers[n]=fn;}
  connect(id){
   const other=peers.get(id);if(!other)throw Error('missing host');
-  const guest=new Channel(),host=new Channel();guest.partner=host;host.partner=guest;
+  const guest=new Channel(),host=new Channel();guest.partner=host;host.partner=guest;FakePeer.links.push({guest,host});
   tasks.push(()=>other.handlers.connection?.(host));
   tasks.push(()=>{guest.open=host.open=true;guest.handlers.open?.();host.handlers.open?.();});
   return guest;
@@ -158,6 +159,40 @@ guest.game().requestAction('place',{x:tileX,y:tileY},2);
 for(let i=0;i<12;i++){guest.advance(1);host.advance(1);}
 assert.equal(host.game().getWorld().world[tileY][tileX],2,'Jozef can place a block on the host world');
 assert.equal(guest.game().getWorld().world[tileY][tileX],2,'new block appears on the second device');
+// Inventory remains available on both devices; opening Daddy's menu must
+// not halt host physics, and Jo's recipe request runs only on Daddy's host.
+assert.equal(guest.doc.getElementById('inventory').disabled,false,'Jo can open inventory');
+guest.click('inventory');
+assert.equal(guest.game().localCraft().open,true);
+const wood0=host.game().getState().players[1].inventory[4];
+const plank0=host.game().getState().players[1].inventory[7];
+guest.window.craftItem();
+for(let i=0;i<12;i++){guest.advance(1);host.advance(1);}
+const crafted=host.game().getState().players[1].inventory;
+assert.equal(crafted[4],wood0-1,'host consumed Jo wood for crafting');
+assert.equal(crafted[7],plank0+4,'host awarded Jo planks');
+assert.equal(guest.game().getState().players[1].inventory[7],plank0+4,'crafted items sync to guest');
+guest.click('inventory'); // close Jo's inventory
+host.click('inventory');
+const movementBefore=host.game().getState().players[1].x;
+guest.key('ArrowRight',true);
+for(let i=0;i<15;i++){guest.advance(1);host.advance(1);}
+guest.key('ArrowRight',false);
+assert.ok(host.game().getState().players[1].x>movementBefore+10,'Daddy opening inventory cannot freeze Jo');
+host.click('inventory');
+assert.equal(host.game().regroup(0),true,'Daddy can find a safe regroup point beside Jo');
+for(let i=0;i<12;i++){guest.advance(1);host.advance(1);}
+const dirt0=host.game().getState().players[1].inventory[2];
+guest.click('coop-give');
+for(let i=0;i<12;i++){guest.advance(1);host.advance(1);}
+assert.equal(host.game().getState().players[1].inventory[2],dirt0-1,'Jo can give one selected block to Daddy');
+assert.equal(guest.game().getState().players[1].inventory[2],dirt0-1,'gift reflected in Jo inventory');
+// A network drop must keep Daddy hosting and Jo in guest mode until reconnected.
+FakePeer.links.at(-1).guest.close();
+assert.equal(host.session().role(),'host','host room survives disconnection');
+assert.equal(guest.session().role(),'guest','guest waits for reconnection without solo-save reload');
+guest.click('coop-join');flush();
+assert.ok(host.session().connected()&&guest.session().connected(),'session can rejoin without sharing a new link');
 guest.click('save');
 assert.equal(guest.store.get('jozefs-world-block-v3'),ownSave,'Jozef joining must not overwrite their solo save');
 host.click('save');
@@ -165,4 +200,4 @@ assert.equal(JSON.parse(host.store.get('jozefs-world-block-v3')).world[tileY][ti
 assert.ok(host.game().getWorld().players[0].x>0,'Daddy remains independently present');
 guest.session().disconnect();
 assert.ok(guest.trace.includes('reload'),'guest reload restores own solo world on disconnect');
-console.log('Block World 2D co-op: local keyboard co-op, private invite, two-player physics, live positions, shared mining/building, host saves, guest save isolation PASS');
+console.log('Block World 2D co-op: local keyboard, two-device movement, mining/building, crafting, gifting, reconnect and save isolation PASS');
