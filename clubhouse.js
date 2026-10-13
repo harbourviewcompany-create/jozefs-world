@@ -53,7 +53,7 @@
   function read(key) {
     try {return localStorage.getItem(key)}catch(_){return null}
   }
-  function exportBackup(){
+  async function exportBackup(){
     try {
       const data={};
       for(const key of KEYS){
@@ -62,14 +62,16 @@
         data[key]=['jozefKeepyBest','jozefs-world-street-best-v1'].includes(key)?String(value):JSON.parse(value);
       }
       const backup={format:'jozefs-world-local-backup',version:1,createdAt:new Date().toISOString(),data};
-      const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+      const kit=window.JozefFamilyBackup;
+      const full=kit?kit.create(localStorage,await kit.readIndexedDb()):backup;
+      const blob=new Blob([JSON.stringify(full,null,2)],{type:'application/json'});
       const url=URL.createObjectURL(blob);
       const link=document.createElement('a');
       link.href=url;
-      link.download='jozefs-world-progress-'+new Date().toISOString().slice(0,10)+'.json';
+      link.download='jozefs-world-family-'+new Date().toISOString().slice(0,10)+'.json';
       document.body.appendChild(link);link.click();link.remove();
       window.setTimeout(()=>URL.revokeObjectURL(url),2000);
-      status('Backup downloaded. Keep the file private and store it somewhere safe.');
+      status('Family backup saved. Send this file privately to your other device, then choose Restore family backup there. No cloud upload is used.');
     }catch(_){status('Could not create a backup. Please make sure browser storage and downloads are available.')}
   }
   function safeJSON(value,depth=0) {
@@ -123,10 +125,19 @@
   async function importBackup(event) {
     const file=event.target.files?.[0];event.target.value='';
     if(!file)return;
-    if(file.size>250000){status('Backup is too large. Select a Jozef’s World backup smaller than 250 KB.');return;}
+    if(file.size>8000000){status('Backup is too large (8 MB maximum). Export Block World realms separately if needed.');return;}
     try {
       const text=await file.text();
-      const values=checkBackup(JSON.parse(text));
+      const parsed=JSON.parse(text);
+      if(parsed.format==='jozefs-world-family-backup'&&parsed.version===2){
+        if(!window.JozefFamilyBackup)throw Error('Family backup support unavailable. Reload the app.');
+        if(!window.confirm('Restore all included family progress and worlds on this device? Existing saved data for those games will be replaced. Keep the original backup file.')){status('Restore cancelled.');return;}
+        const restored=await window.JozefFamilyBackup.restore(parsed,localStorage);
+        status('Restored '+restored.activities+' saved activities and '+restored.worlds+' world files. Reloading...');
+        window.location.reload();return;
+      }
+      if(file.size>250000)throw Error('Old-format progress backups must be smaller than 250 KB.');
+      const values=checkBackup(parsed);
       const confirmMessage='Restore this backup? This will replace saved progress for the activities included in the file. Progress for activities not in this backup will stay unchanged. Continue?';
       if(!window.confirm(confirmMessage)){status('Restore cancelled. Your progress was not changed.');return;}
       const old={};
