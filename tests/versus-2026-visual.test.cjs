@@ -53,14 +53,13 @@ test('portrait cameras are relative to the local attacking team and buttons pres
 });
 
 test('both player names and kit numbers stay readable when sprites face left',()=>{
- const {c,g}=render();
- const scaleCalls=[],labels=[];
+ const {c,g,events}=render();
+ const scaleCalls=[];
  c.scale=(x,y)=>scaleCalls.push([x,y]);
- c.fillText=text=>labels.push(text);
  g.player(c,{x:340,y:230,vx:0,vy:0,face:-1},'#d7ff4a','Dad',true,true,50,false);
  assert.equal(scaleCalls.filter(([x,y])=>x===-1&&y===1).length,3,
    'sprite mirroring is inverted for jersey and nameplate text');
- assert.ok(labels.includes('Dad'));
+ assert.ok(events.some(([kind,label])=>kind==='text'&&label==='Dad'));
 });
 test('mobile portrait camera uses full screen width with camera-follow, not a shrunken pitch',()=>{
  const js=read('versus.js');
