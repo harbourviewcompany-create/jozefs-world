@@ -15,9 +15,9 @@ Block World 3D is a **native WebGL voxel game**, not a CSS imitation. The origin
 
 Block World 3D now starts with a collision-aware third-person camera and lets players switch to first-person mode in MENU. Camera mode, yaw and pitch persist as optional fields in the existing version-1 save, without resetting saved worlds.
 
-WebGL 1 procedural shaders receive a material ID for each cube vertex. The renderer distinguishes grass tops from soil sides, renders bark and plank grain, adds stone variation, and animates crystal highlights. Biome meshes include additional foliage and crystals. Distant chunks behind the player are culled from GPU submission while adaptive render resolution remains available.
+WebGL 1 procedural shaders receive a material ID for each cube vertex. The renderer distinguishes grass tops from soil sides, renders bark and plank grain, adds stone variation, and animates crystal highlights. Biome meshes include additional foliage and crystals. The Crystal Golem now uses an animated articulated voxel rig with a crystal heart, creatures have distinct silhouettes, and the team portal is a full 3D crystal arch. Third-person camera movement is smoothed while respecting solid surfaces. Distant chunks behind the player are culled from GPU submission while adaptive render resolution remains available.
 
-The updated mobile interface moves the quick-select hotbar to the bottom and provides a collapsible mission panel and expedition radar. Movement pauses only with an open offline menu. Touch cancellation is handled, and WebGL context-loss offers a save-protecting Retry option.
+The updated mobile interface moves the quick-select hotbar to the bottom and provides a collapsible mission panel and expedition radar. Movement pauses only with an open offline menu. Touch cancellation is handled, and WebGL context-loss saves progress, suspends GPU drawing, and offers a Retry option.
 
 Automated smoke tests validate WebGL initialization, material shader/attribute structure, chunk culling, camera persistence, radar/mission interaction, movement, saving, XP and private invitation creation. These tests simulate GPU and networking; physical-device shader compilation, mobile performance and real co-op still require acceptance testing.
 
