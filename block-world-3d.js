@@ -681,7 +681,11 @@ function hud(){
  $('quality').textContent='GRAPHICS '+quality;
  $('qualityState').textContent=quality==='AUTO'?'AUTO · '+Math.round(renderCap*100)+'%':quality;
  const beaconNear=forestBeacon?.realm===realm&&Math.hypot(forestBeacon.x-hero.x,forestBeacon.z-hero.z)<18;
-  $('compass').textContent=beaconNear?(forestBeacon.lit?'BEACON LIT ✓':'TEAM BEACON · 2 PADS'):
+  const padDad=beaconPad(0),padJo=beaconPad(1);
+  const dad=hero.role===0?hero:companion,jo=hero.role===1?hero:companion;
+  const dadReady=padDad&&Math.hypot(dad.x-padDad.x,dad.z-padDad.z)<=1.4;
+  const joReady=padJo&&Math.hypot(jo.x-padJo.x,jo.z-padJo.z)<=1.4;
+  $('compass').textContent=beaconNear?(forestBeacon.lit?'BEACON LIT ✓':'DAD '+(dadReady?'✓':'○')+' · JO '+(joReady?'✓':'○')):
    (biome(hero.x,hero.z)==='Evergreen Forest'?'FOREST':biome(hero.x,hero.z).toUpperCase())+' · X '+Math.floor(hero.x)+' Z '+Math.floor(hero.z);
  const done=stage>=missions.length,m=missions[Math.min(stage,missions.length-1)],ratio=done?1:clamp((stats[m[2]]||0)/m[3],0,1);
  $('mission').innerHTML='<strong>'+(done?'EXPEDITION COMPLETE':'MISSION '+(stage+1)+'/6 · '+m[0])+'</strong><small>'+m[1]+'</small><div class="progress"><i style="width:'+(ratio*100)+'%"></i></div><small>'+biome(hero.x,hero.z)+' · Realm '+(realm+1)+'</small>';
@@ -727,7 +731,9 @@ function guestAttack(req){
  lastGuestAttackAt=clock;
  const victim=req.target==='boss'?boss:mobs.find(m=>m.id===req.mobId);
  if(!victim||(victim===boss&&!boss.alive)||(victim!==boss&&victim.hp<=0))return;
- if(Math.hypot(companion.x-victim.x,companion.z-victim.z)>4.4)return;
+ if(!['mob','boss'].includes(req.target))return;
+ if(Math.hypot(companion.x-victim.x,companion.z-victim.z)>4.4||
+    Math.abs(companion.y-victim.y)>4.5)return;
  victim.hp=Math.max(0,victim.hp-24);
  effectBurst(victim.x,victim.y+.8,victim.z,8);
  if(victim===boss&&victim.hp===0){boss.alive=false;defeated=true;gain('boss');}
@@ -824,7 +830,7 @@ function validBeacon(b){return b&&Number.isFinite(b.x)&&Number.isFinite(b.z)&&Nu
 function beaconPad(role){
  if(!forestBeacon)return null;
  const side=role===0?-1:1;
- return {x:forestBeacon.x+side*1.6,z:forestBeacon.z+1.4};
+ return {x:forestBeacon.x+side*3.2,z:forestBeacon.z+3.4};
 }
 function celebrateBeacon(){
  hero.action=companion.action='celebrate';
@@ -858,8 +864,8 @@ function visitForest(){
    if(tree(Math.floor(cx),Math.floor(cz))||visible(cx,cy,cz))continue;
    // Require both rune-pad landing positions to be walkable, not on a cliff.
    const baseX=px+.7;
-   const padA={x:baseX-1.6,z:pz+1.4},padB={x:baseX+1.6,z:pz+1.4};
-   if([padA,padB].some(p=>Math.abs(ground(p.x,p.z)-py)>1.5||
+   const padA={x:baseX-3.2,z:pz+3.4},padB={x:baseX+3.2,z:pz+3.4};
+   if([padA,padB].some(p=>Math.abs(ground(p.x,p.z)-py)>2.0||
       visible(p.x,ground(p.x,p.z),p.z)))continue;
    goal={px,pz,py,cx,cz,cy};break;
   }
@@ -924,7 +930,7 @@ function captureDimension(){dimensions[realm]={seed,edits:[...edits].slice(-1400
 function save(force=false){if((!dirty&&!force)||guestActive)return;try{
  captureDimension();
  localStorage.setItem(DIMKEY,JSON.stringify({version:1,baseSeed,dimensions}));
- localStorage.setItem(KEY,JSON.stringify({version:1,seed,realm,edits:[...edits].slice(-14000),hero:{x:hero.x,y:hero.y,z:hero.z,role:hero.role,yaw:hero.yaw,pitch:hero.pitch,inventory:hero.inventory},viewThird:third,stage,stats,rewards,discovered,defeated,portalOpened,creative,forestBeacon,guestInventory}));
+ localStorage.setItem(KEY,JSON.stringify({version:1,seed,realm,edits:[...edits].slice(-14000),hero:{x:hero.x,y:hero.y,z:hero.z,hp:hero.hp,role:hero.role,yaw:hero.yaw,pitch:hero.pitch,inventory:hero.inventory},viewThird:third,stage,stats,rewards,discovered,defeated,portalOpened,creative,forestBeacon,guestInventory}));
  dirty=false;savedPose={x:hero.x,y:hero.y,z:hero.z,yaw:hero.yaw,pitch:hero.pitch,hp:hero.hp};}catch(e){announce('Save storage full · export a backup');}}
 function load(){try{const data=JSON.parse(localStorage.getItem(KEY)||'null');if(!data||data.version!==1)return false;
  seed=data.seed;realm=data.realm||0;
@@ -934,6 +940,7 @@ function load(){try{const data=JSON.parse(localStorage.getItem(KEY)||'null');if(
  edits=new Map(data.edits.filter(row=>Array.isArray(row)&&/^[-0-9]+,[-0-9]+,[-0-9]+$/.test(row[0])&&Number.isInteger(row[1])&&row[1]>=0&&row[1]<types.length));
  if(data.hero){Object.assign(hero,{x:data.hero.x,y:data.hero.y,z:data.hero.z,role:data.hero.role===1?1:0,inventory:data.hero.inventory||{}});}
  if(!Number.isFinite(hero.x+hero.y+hero.z))return false;
+  hero.hp=Number.isFinite(data.hero?.hp)?clamp(data.hero.hp,1,100):100;
   hero.yaw=Number.isFinite(data.hero?.yaw)?data.hero.yaw:hero.yaw;
   hero.pitch=Number.isFinite(data.hero?.pitch)?clamp(data.hero.pitch,-1.38,1.38):hero.pitch;
   if(typeof data.viewThird==='boolean')third=data.viewThird;
@@ -1040,11 +1047,17 @@ function receive(m){
  else if(m.t==='progress'&&!host){const previous=stage;stage=clamp(Number(m.stage)||0,0,6);stats=Object.assign(stats,m.stats||{});defeated=!!m.defeated;portalOpened=!!m.portalOpened;
   for(let i=previous;i<stage;i++)award('block3d-'+i,missions[i][4]);hud();dirty=true;}
  else if(m.t==='request'&&host){
-  if(!Number.isFinite(m.x+m.z))return;
+  // Combat requests use stable entity IDs, never voxel coordinates. Apply
+  // per-action validation; do not drop attacks just because x/z are absent.
   if(m.op==='attack'){guestAttack(m);return;}
-   if(m.op==='portal'){portal();return;}
-   if(m.op==='forest'){visitForest();return;}
-  if(![m.x,m.y,m.z].every(Number.isInteger)||Math.hypot(companion.x-m.x,companion.z-m.z)>6.5)return;
+  if(m.op==='portal'||m.op==='forest'){
+   if(!Number.isFinite(m.x)||!Number.isFinite(m.z)||
+      Math.hypot(companion.x-m.x,companion.z-m.z)>6.5)return;
+   if(m.op==='portal')portal();else visitForest();
+   return;
+  }
+  if(![m.x,m.y,m.z].every(Number.isInteger)||
+     Math.hypot(companion.x-(m.x+.5),companion.z-(m.z+.5))>6.5)return;
   if(m.op==='mine'){const id=block(m.x,m.y,m.z);
     if(id&&modify(m.x,m.y,m.z,0)){
      guestInventory[id]=(guestInventory[id]||0)+1;dirty=true;sendGuestInventory();
