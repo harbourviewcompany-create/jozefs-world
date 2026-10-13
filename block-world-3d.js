@@ -830,7 +830,7 @@ function validBeacon(b){return b&&Number.isFinite(b.x)&&Number.isFinite(b.z)&&Nu
 function beaconPad(role){
  if(!forestBeacon)return null;
  const side=role===0?-1:1;
- return {x:forestBeacon.x+side*1.6,z:forestBeacon.z+1.4};
+ return {x:forestBeacon.x+side*3.2,z:forestBeacon.z+3.4};
 }
 function celebrateBeacon(){
  hero.action=companion.action='celebrate';
@@ -864,8 +864,8 @@ function visitForest(){
    if(tree(Math.floor(cx),Math.floor(cz))||visible(cx,cy,cz))continue;
    // Require both rune-pad landing positions to be walkable, not on a cliff.
    const baseX=px+.7;
-   const padA={x:baseX-1.6,z:pz+1.4},padB={x:baseX+1.6,z:pz+1.4};
-   if([padA,padB].some(p=>Math.abs(ground(p.x,p.z)-py)>1.5||
+   const padA={x:baseX-3.2,z:pz+3.4},padB={x:baseX+3.2,z:pz+3.4};
+   if([padA,padB].some(p=>Math.abs(ground(p.x,p.z)-py)>2.0||
       visible(p.x,ground(p.x,p.z),p.z)))continue;
    goal={px,pz,py,cx,cz,cy};break;
   }
