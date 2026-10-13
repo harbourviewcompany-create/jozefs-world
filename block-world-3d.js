@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),canvas=$('view'),gl=canvas.getContext('w
 if(!gl){$('fallback').hidden=false;$('mission').textContent='WebGL is unavailable on this device.';return;}
 const CH=12,MAX_Y=27,R=2,KEY='jozefs-block-3d-v1';
 const types=['Air','Grass','Dirt','Stone','Wood','Leaves','Sand','Snow','Crystal','Planks','Brick','Glass'];
-const col=[[0,0,0],[.34,.72,.36],[.53,.38,.26],[.53,.60,.68],[.53,.32,.16],[.20,.51,.32],[.87,.74,.47],[.86,.92,.96],[.38,.80,.95],[.73,.51,.30],[.60,.36,.29],[.70,.85,.93], /* render-only hero palette */[.96,.71,.51],[.23,.14,.11],[.09,.56,.89],[.17,.74,.47],[.09,.17,.22],[.19,.32,.52],[.26,.19,.16],[.84,.95,.96],[.97,.72,.30],[.32,.19,.11],[.11,.39,.22],[.05,.14,.12],[.30,.57,.37],[.50,.62,.57]];
+const col=[[0,0,0],[.34,.72,.36],[.53,.38,.26],[.53,.60,.68],[.53,.32,.16],[.20,.51,.32],[.87,.74,.47],[.86,.92,.96],[.38,.80,.95],[.73,.51,.30],[.60,.36,.29],[.70,.85,.93], /* render-only hero palette */[.96,.71,.51],[.23,.14,.11],[.09,.56,.89],[.17,.74,.47],[.09,.17,.22],[.19,.32,.52],[.26,.19,.16],[.84,.95,.96],[.97,.72,.30],[.32,.19,.11],[.11,.39,.22],[.23,.40,.26],[.30,.57,.37],[.50,.62,.57]];
 const faces=[[[0,1,0],[[0,1,0],[0,1,1],[1,1,1],[1,1,0]]],[[0,0,1],[[0,0,1],[1,0,1],[1,1,1],[0,1,1]]],[[1,0,0],[[1,0,1],[1,0,0],[1,1,0],[1,1,1]]],[[0,-1,0],[[0,0,0],[1,0,0],[1,0,1],[0,0,1]]],[[-1,0,0],[[0,0,0],[0,0,1],[0,1,1],[0,1,0]]],[[0,0,-1],[[1,0,0],[0,0,0],[0,1,0],[1,1,0]]]];
 const missions=[['Gather wood','Mine eight wood blocks','wood',8,25],['Build our base','Place twelve blocks together','placed',12,30],['Explore a biome','Discover the far desert or snow ridge','explore',1,35],['Mine a crystal','Find a rare glowing crystal','crystal',1,40],['Defeat the Crystal Golem','Find the guardian at 32, 32','boss',1,60],['Activate the portal','Bring both heroes to 40, 40','portal',1,80]];
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
@@ -55,7 +55,12 @@ const surfaceCache=new Map(),biomeCache=new Map(),treeCache=new Map();
 function memo(cache,key,fn){if(cache.has(key))return cache.get(key);if(cache.size>50000)cache.clear();const v=fn();cache.set(key,v);return v;}
 function height(x,z){x=Math.floor(x);z=Math.floor(z);return memo(surfaceCache,seed+':'+x+':'+z,()=>clamp(Math.floor(4+noise(x,z,26)*8+noise(x,z,9)*4),3,19));}
 function biome(x,z){x=Math.floor(x);z=Math.floor(z);return memo(biomeCache,seed+':'+x+':'+z,()=>{const n=noise(x+132,z-45,75);return n>.68?'Snow Ridge':n<.34?'Desert':n>.51?'Evergreen Forest':'Meadows';});}
-function tree(x,z){return memo(treeCache,seed+':'+x+':'+z,()=>{if(x>=-4&&x<=8&&z>=-7&&z<=10)return false;return rnd(x,z,seed+42)>.982&&biome(x,z)!=='Desert';});}
+function tree(x,z){return memo(treeCache,seed+':'+x+':'+z,()=>{
+ if(x>=-4&&x<=8&&z>=-7&&z<=10)return false;
+ const b=biome(x,z),r=rnd(x,z,seed+42);
+ // Meadow woodland is open and varied; evergreen groves form closer stands.
+ return b==='Evergreen Forest'?r>.979:b==='Meadows'?r>.992:b==='Snow Ridge'?r>.996:false;
+});}
 const tag=(x,y,z)=>x+','+y+','+z;
 function natural(x,y,z){
  if(y<0)return 3;if(y>=MAX_Y)return 0;
@@ -71,7 +76,19 @@ function natural(x,y,z){
   const X=x+ox,Z=z+oz;if(!tree(X,Z))continue;
   const th=height(X,Z);
   if(!ox&&!oz&&y>th&&y<=th+4)return 4;
-  if(y>=th+3&&y<=th+6&&Math.abs(ox)+Math.abs(oz)+Math.abs(y-th-5)<=4)return 5;
+  if(biome(X,Z)==='Evergreen Forest'){
+   const dy=y-th;
+   if(dy>=3&&dy<=8){
+    // Narrower conifer crown at the top, larger layered skirt at the base.
+    const reach=dy>=7?0:dy>=6?1:dy>=5?1:2;
+    if(Math.abs(ox)+Math.abs(oz)<=reach+Math.floor(dy===4))return 5;
+   }
+  }else if(biome(X,Z)==='Snow Ridge'){
+   const dy=y-th;if(dy>=3&&dy<=6&&Math.abs(ox)+Math.abs(oz)<= (dy===6?0:dy===5?1:2))return 5;
+  }else{
+   const dy=y-th,rad=dy===4?3:dy===5?4:dy===6?2:0;
+   if(rad>0&&ox*ox+oz*oz<=rad)return 5;
+  }
  }
  return 0;
 }
@@ -111,7 +128,14 @@ function cube(v,x,y,z,id,size=1,mask=null){
   // Grassy/snowy surfaces have soil and rock sidewalls, not solid colour cubes.
   if(id===1&&j!==0)c=j===3?[.38,.29,.20]:[.48,.34,.22];
   if(id===7&&j!==0)c=[.55,.63,.69];
-  if(id===4&&j===0)c=[.72,.54,.32];
+  if(id===4&&j===0)c=[.70,.51,.30];
+  if(id===5){
+   const f=rnd(Math.floor(x*3),Math.floor(z*2),Math.floor(y*5)+seed+25);
+   c=j===0?[.29+.07*f,.61+.09*f,.35+.08*f]:
+     j===3?[.14+.05*f,.39+.07*f,.25+.05*f]:
+     [.19+.07*f,.50+.11*f,.29+.07*f];
+   shade*=j===0?1.08:1.10;
+  }
   for(const i of [0,1,2,0,2,3]){
    const q=f[i],light=shade*(qAO?qAO[i]:1);
    v.push(x+q[0]*size,y+q[1]*size,z+q[2]*size,
@@ -308,7 +332,9 @@ function render(){
  if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}gl.viewport(0,0,w,h);
  const forward=[Math.sin(hero.yaw)*Math.cos(hero.pitch),Math.sin(hero.pitch),-Math.cos(hero.yaw)*Math.cos(hero.pitch)];
  const eye=[hero.x,hero.y+1.55,hero.z];
- const desired=third?[eye[0]-forward[0]*7.0,eye[1]+2.4,eye[2]-forward[2]*7.0]:eye;
+ // Shoulder-level cinematic follow view: character stays near the lower middle,
+ // while the camera reveals the landscape rather than the back of a tree.
+ const desired=third?[eye[0]-forward[0]*5.8,eye[1]+1.5,eye[2]-forward[2]*5.8]:eye;
  let cam=eye;
  if(third){
   const diff=desired.map((n,i)=>n-eye[i]);let t=1;
@@ -323,8 +349,10 @@ function render(){
   else for(let i=0;i<3;i++)chaseCam[i]+=(cam[i]-chaseCam[i])*.22;
   cam=block(chaseCam[0],chaseCam[1],chaseCam[2])?cam:chaseCam.slice();
  }else chaseCam=null;
- const at=eye.map((n,i)=>n+forward[i]*5);
- const day=.50+.50*Math.sin(clock*.018),sky=[.16+.37*day,.18+.47*day,.32+.45*day];
+ const at=third?[eye[0]+forward[0]*4.3,eye[1]-.42,eye[2]+forward[2]*4.3]:
+  eye.map((n,i)=>n+forward[i]*5);
+ // Start in bright morning light; the day-night cycle remains dynamic.
+ const day=.50+.50*Math.sin(clock*.018+1.15),sky=[.16+.37*day,.18+.47*day,.32+.45*day];
  gl.clearColor(...sky,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
  if(skyPg){
   gl.disable(gl.DEPTH_TEST);gl.useProgram(skyPg);
@@ -351,7 +379,7 @@ function render(){
   const yaw=Number.isFinite(p.yaw)?p.yaw:hero.yaw;
   const cs=Math.cos(yaw),sn=Math.sin(yaw);
   // Grounded contact shadow follows the player independently of their height.
-  if(quality!=='ECO')voxelBox(v,p.x,ground(p.x,p.z)-.028,p.z,.65,.016,.45,23);
+  if(quality!=='ECO')voxelBox(v,p.x,ground(p.x,p.z)-.022,p.z,.56,.009,.37,23);
   const gait=Math.sin(clock*10.5+(role?1.5:0))*.12*Math.min(1,p.walkPower||0);
   const arm=-gait*.85;
   const jump=isActive&&!p.ground?.045:0;
