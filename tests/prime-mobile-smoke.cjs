@@ -86,9 +86,25 @@ const poll=async(page,fn)=>page.waitForFunction(fn,null,{timeout:20000});
     await page.locator('[data-mode="hockey"]').click();
     await poll(page,()=>document.getElementById('event-name').textContent==='HOCKEY SHOOTOUT');
     // Drop the actual transport. WebKit's setOffline can bypass service workers.
+    // Report actual missing assets or service-worker state if offline boot fails,
+    // rather than silently timing out without explaining the release blocker.
+    const requestFailures=[];
+    page.on('requestfailed',req=>requestFailures.push(req.url()+' :: '+(req.failure()?.errorText||'unknown')));
     try{
       networkDown=true;await page.reload({waitUntil:'load'});
-      await poll(page,()=>!!document.querySelector('canvas'));
+      try{await poll(page,()=>!!document.querySelector('canvas'));}
+      catch(err){
+        const diag=await page.evaluate(async()=>({
+          url:location.href,controller:navigator.serviceWorker?.controller?.scriptURL||null,
+          scripts:[...document.querySelectorAll('script[src]')].map(el=>el.src),
+          canvases:document.querySelectorAll('canvas').length,
+          cached:(await caches.keys()).map(String),
+          html:document.documentElement?.outerHTML.slice(0,360)
+        })).catch(error=>({evaluationError:String(error)}));
+        console.error('Prime offline relaunch diagnostics:',name,JSON.stringify(diag),
+          'failed requests:',JSON.stringify(requestFailures),'errors:',JSON.stringify(errors));
+        throw err;
+      }
     }finally{networkDown=false;}
     assert.equal(await page.locator('#event-name').textContent(),'HOCKEY SHOOTOUT','offline relaunch works after changing the event URL');
     assert.deepEqual(errors,[]);cases++;await context.close();networkDown=false;
