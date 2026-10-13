@@ -285,8 +285,8 @@ function stream(){
 function shader(type,src){const o=gl.createShader(type);gl.shaderSource(o,src);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(o));return o;}
 // Low-cost WebGL 1 atmospheric rendering: animated sky, sunset and night haze.
 // World normals stay in the geometry so lighting is consistent as the sun moves.
-const vertex='attribute vec3 p;attribute vec3 c;attribute float matId;attribute vec3 normal;attribute vec2 tileUV;varying vec2 atlasUV;uniform float tick;uniform mat4 proj;uniform mat4 view;uniform vec3 eye;varying vec3 color;varying vec3 worldPos;varying vec3 surfaceNormal;varying vec2 atlasUV;varying float material;varying float fog;void main(){vec3 pos=p; if(matId>21.5&&matId<22.5){pos.x+=sin(tick*1.6+p.x*2.7+p.z*2.3)*.05;}gl_Position=proj*view*vec4(pos,1.);color=c;worldPos=p;surfaceNormal=normal;atlasUV=tileUV;material=matId;fog=clamp((distance(p,eye)-22.)/84.,0.,1.);}';
-const frag='precision mediump float;varying vec3 color;varying vec3 worldPos;varying vec3 surfaceNormal;varying float material;varying float fog;uniform vec3 sky;uniform vec3 eye;uniform vec3 heroPos;uniform vec3 sunDir;uniform sampler2D tileAtlas;uniform float atlasReady;uniform float daylight;uniform float tick;float hash(vec3 p){return fract(sin(dot(p,vec3(17.13,41.17,79.19)))*43758.5453);}void main(){vec3 p=worldPos;float m=material;if(abs(m-5.)<.5){ float dist=distance(p,eye); if(dist<2.0)discard; float alpha=smoothstep(1.8,5.7,dist); vec3 axis=heroPos-eye; float denom=max(dot(axis,axis),.01); float along=dot(p-eye,axis)/denom; float nearRay=length(p-(eye+axis*clamp(along,0.,1.))); if(along>.05&&along<.99)alpha=min(alpha,mix(.22,1.,smoothstep(.80,2.2,nearRay))); float dither=fract(sin(dot(floor(gl_FragCoord.xy),vec2(12.9898,78.233)))*43758.5453); if(dither>alpha)discard;}vec3 base=color;if(atlasReady>.5){vec4 sampleColor=texture2D(tileAtlas,atlasUV); if(abs(m-5.)<.5&&sampleColor.a<.28)discard; base*=mix(vec3(1.),sampleColor.rgb*1.44+vec3(.34),.80);}vec3 grid=floor(p*17.0+vec3(.05));float grain=hash(grid);float coarse=hash(floor(p*3.0+vec3(.07)));float detail=.92+(grain-.5)*.19+(coarse-.5)*.14;vec3 norm=normalize(surfaceNormal);float sunny=max(0.,dot(norm,normalize(sunDir)));float diffuse=.54+sunny*.39;float skylight=.80+.2*max(norm.y,0.);if(m<.5)detail=1.0;else if(m<1.5){detail*=.93+.13*grain;float blades=step(.90,hash(floor(p*31.0)));base+=vec3(.10,.12,.015)*blades*max(norm.y,0.);}else if(m<3.5||abs(m-10.)<.5){float vein=sin(p.y*14.0+p.x*7.0+p.z*5.0);detail*=.93+.10*smoothstep(.64,.98,vein);}else if(abs(m-4.)<.5||abs(m-9.)<.5){detail*=.9+.12*sin(p.y*27.+coarse*6.);}else if(abs(m-5.)<.5){detail*=.82+.23*coarse;}else if(abs(m-8.)<.5||abs(m-19.)<.5){float pulse=.60+.40*sin(tick*2.0+p.x*2.0+p.z*3.0);base+=vec3(.04,.17,.23)*pulse;detail*=.98+.10*grain;diffuse+=.10*pulse;}else if(m>11.5){detail=.96+.06*grain;diffuse=max(diffuse,.72);}float day=.57+.43*daylight;vec3 lit=base*detail*(diffuse*day+(.10+.12*max(norm.y,0.))*skylight);lit+=vec3(.035,.040,.062)*(1.-daylight);vec3 graded=pow(max(lit,vec3(.003)),vec3(.89));float haze=smoothstep(.15,1.,fog);gl_FragColor=vec4(mix(graded,sky,haze*.86),1.);}';
+const vertex='attribute vec3 p;attribute vec3 c;attribute float matId;attribute vec3 normal;attribute vec2 tileUV;uniform float tick;uniform mat4 proj;uniform mat4 view;uniform vec3 eye;varying vec3 color;varying vec3 worldPos;varying vec3 surfaceNormal;varying vec2 atlasUV;varying float material;varying float fog;void main(){vec3 pos=p; if(matId>21.5&&matId<22.5){pos.x+=sin(tick*1.6+p.x*2.7+p.z*2.3)*.05;}gl_Position=proj*view*vec4(pos,1.);color=c;worldPos=p;surfaceNormal=normal;atlasUV=tileUV;material=matId;fog=clamp((distance(p,eye)-22.)/84.,0.,1.);}';
+const frag='precision mediump float;varying vec3 color;varying vec3 worldPos;varying vec3 surfaceNormal;varying vec2 atlasUV;varying float material;varying float fog;uniform vec3 sky;uniform vec3 eye;uniform vec3 heroPos;uniform vec3 sunDir;uniform sampler2D tileAtlas;uniform float atlasReady;uniform float daylight;uniform float tick;float hash(vec3 p){return fract(sin(dot(p,vec3(17.13,41.17,79.19)))*43758.5453);}void main(){vec3 p=worldPos;float m=material;if(abs(m-5.)<.5){ float dist=distance(p,eye); if(dist<2.0)discard; float alpha=smoothstep(1.8,5.7,dist); vec3 axis=heroPos-eye; float denom=max(dot(axis,axis),.01); float along=dot(p-eye,axis)/denom; float nearRay=length(p-(eye+axis*clamp(along,0.,1.))); if(along>.05&&along<.99)alpha=min(alpha,mix(.22,1.,smoothstep(.80,2.2,nearRay))); float dither=fract(sin(dot(floor(gl_FragCoord.xy),vec2(12.9898,78.233)))*43758.5453); if(dither>alpha)discard;}vec3 base=color;if(atlasReady>.5){vec4 sampleColor=texture2D(tileAtlas,atlasUV); if(abs(m-5.)<.5&&sampleColor.a<.28)discard; base*=mix(vec3(1.),sampleColor.rgb*1.44+vec3(.34),.80);}vec3 grid=floor(p*17.0+vec3(.05));float grain=hash(grid);float coarse=hash(floor(p*3.0+vec3(.07)));float detail=.92+(grain-.5)*.19+(coarse-.5)*.14;vec3 norm=normalize(surfaceNormal);float sunny=max(0.,dot(norm,normalize(sunDir)));float diffuse=.54+sunny*.39;float skylight=.80+.2*max(norm.y,0.);if(m<.5)detail=1.0;else if(m<1.5){detail*=.93+.13*grain;float blades=step(.90,hash(floor(p*31.0)));base+=vec3(.10,.12,.015)*blades*max(norm.y,0.);}else if(m<3.5||abs(m-10.)<.5){float vein=sin(p.y*14.0+p.x*7.0+p.z*5.0);detail*=.93+.10*smoothstep(.64,.98,vein);}else if(abs(m-4.)<.5||abs(m-9.)<.5){detail*=.9+.12*sin(p.y*27.+coarse*6.);}else if(abs(m-5.)<.5){detail*=.82+.23*coarse;}else if(abs(m-8.)<.5||abs(m-19.)<.5){float pulse=.60+.40*sin(tick*2.0+p.x*2.0+p.z*3.0);base+=vec3(.04,.17,.23)*pulse;detail*=.98+.10*grain;diffuse+=.10*pulse;}else if(m>11.5){detail=.96+.06*grain;diffuse=max(diffuse,.72);}float day=.57+.43*daylight;vec3 lit=base*detail*(diffuse*day+(.10+.12*max(norm.y,0.))*skylight);lit+=vec3(.035,.040,.062)*(1.-daylight);vec3 graded=pow(max(lit,vec3(.003)),vec3(.89));float haze=smoothstep(.15,1.,fog);gl_FragColor=vec4(mix(graded,sky,haze*.86),1.);}';
 const skyVertex='attribute vec2 xy;varying vec2 uv;void main(){uv=xy*.5+.5;gl_Position=vec4(xy,1.,1.);}';
 const skyFragment='precision mediump float;varying vec2 uv;uniform float t;uniform float daylight;void main(){float y=clamp(uv.y,0.,1.);vec3 zenith=mix(vec3(.016,.034,.112),vec3(.14,.44,.68),daylight);vec3 horizon=mix(vec3(.22,.12,.30),vec3(.65,.82,.86),daylight);vec3 sky=mix(horizon,zenith,smoothstep(.03,.9,y));float r=distance(uv,vec2(.73,.76));float halo=1.-smoothstep(.03,.30,r);float disc=1.-smoothstep(.023,.037,r);sky+=mix(vec3(.24,.16,.34),vec3(.96,.65,.30),daylight)*halo*.38;sky+=mix(vec3(.62,.77,.96),vec3(1.,.96,.72),daylight)*disc*.8;float wave=sin(uv.x*19.+t*.009+sin(uv.y*13.))*sin(uv.x*8.-uv.y*7.+t*.005);float clouds=smoothstep(.40,.83,wave)*smoothstep(.32,.66,y)*daylight;sky+=vec3(.27,.38,.38)*clouds*.25;float stars=step(.996,fract(sin(dot(floor(uv*vec2(330.,160.)),vec2(12.9898,78.233)))*43758.5453));sky+=vec3(.35,.46,.65)*stars*(1.-daylight)*smoothstep(.38,.70,y);gl_FragColor=vec4(sky,1.);}';
 // If a budget WebGL 1 GPU rejects the advanced material shader, keep the
@@ -319,6 +319,28 @@ try{
  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
  skyAttr=gl.getAttribLocation(skyPg,'xy');skyTime=gl.getUniformLocation(skyPg,'t');skyDay=gl.getUniformLocation(skyPg,'daylight');
 }catch(e){console.warn('Sky shader unavailable; falling back to clear color',e);skyPg=null;}
+// Material sheets are optional: a failed upload must not prevent 3D startup.
+let atlasTexture=null,atlasLoaded=false;
+try{
+ const atlasCanvas=materialAtlas?.createAtlas?.();
+ if(atlasCanvas&&gl.createTexture){
+  const texture=gl.createTexture();
+  if(texture){
+   gl.activeTexture(gl.TEXTURE0);
+   gl.bindTexture(gl.TEXTURE_2D,texture);
+   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+   gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,atlasCanvas);
+   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
+   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+   gl.generateMipmap(gl.TEXTURE_2D);
+   const ok=typeof gl.getError==='function'?gl.getError()===gl.NO_ERROR:true;
+   atlasLoaded=shaderMode==='CINEMATIC'&&ok;
+   atlasTexture=texture;
+  }
+ }
+}catch(e){console.warn('Optional illustrated materials unavailable; using procedural shading',e);atlasLoaded=false;}
 gl.useProgram(pg);
 function projection(fov,ratio,near,far){const f=1/Math.tan(fov/2),n=1/(near-far);return new Float32Array([f/ratio,0,0,0,0,f,0,0,0,0,(far+near)*n,-1,0,0,2*far*near*n,0]);}
 function camera(eye,target){
@@ -390,6 +412,9 @@ function render(){
  gl.uniformMatrix4fv(up,false,projection(third?1.03:1.15,w/h,.06,120));gl.uniformMatrix4fv(uv,false,camera(cam,at));
  gl.uniform3fv(ue,new Float32Array(cam));gl.uniform3fv(uh,new Float32Array([hero.x,hero.y+1.3,hero.z]));gl.uniform3fv(us,new Float32Array(sky));gl.uniform1f(ud,day);gl.uniform1f(ut,clock);
  gl.uniform3fv(ul,new Float32Array([Math.cos(clock*.018)*.51,.72,Math.sin(clock*.018)*.48]));
+ if(ua!=null)gl.uniform1i(ua,0);
+ if(ur!=null)gl.uniform1f(ur,atlasLoaded?1:0);
+ if(atlasLoaded){gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,atlasTexture);}
  lastChunksDrawn=0;
  for(const chunk of chunks.values()){
   const x=(chunk.cx+.5)*CH-hero.x,z=(chunk.cz+.5)*CH-hero.z;
@@ -903,5 +928,5 @@ function loop(now){
 }
 try{if(!load())resetPose();spawn();initUi();stream();requestAnimationFrame(loop);announce('3D WORLD READY · Explore and build!',3400);}
 catch(e){console.error('3D startup failure',e);window.__bw3dFail?.('Could not initialize the 3D engine. Retry or play Classic 2D.');$('fallback').hidden=false;}
-window.BlockWorld3D=Object.freeze({status:()=>({renderOk,seed,loadedChunks:chunks.size,realm,stage,quality,renderScale:renderCap,connected:!!conn?.open,hero:{x:hero.x,y:hero.y,z:hero.z,hp:hero.hp,role:hero.role},camera:third?'THIRD_PERSON':'FIRST_PERSON',shaderMode,drawnChunks:lastChunksDrawn,bossHp:boss.hp}),height,block});
+window.BlockWorld3D=Object.freeze({status:()=>({renderOk,seed,loadedChunks:chunks.size,realm,stage,quality,renderScale:renderCap,connected:!!conn?.open,hero:{x:hero.x,y:hero.y,z:hero.z,hp:hero.hp,role:hero.role},camera:third?'THIRD_PERSON':'FIRST_PERSON',shaderMode,atlasLoaded,drawnChunks:lastChunksDrawn,bossHp:boss.hp}),height,block});
 })();
