@@ -205,7 +205,8 @@ function chunkMesh(cx,cz){
  const v=[];
  for(let x=cx*CH;x<(cx+1)*CH;x++)for(let z=cz*CH;z<(cz+1)*CH;z++){
   const h=height(x,z);
-  for(let y=0;y<Math.min(MAX_Y,h+8);y++){
+  for(let y=0;y<Math.min(MAX_Y,h+11);y++){
+   // Include taller conifer crowns: natural() can generate leaves up to h+10.
    const id=block(x,y,z);if(!id)continue;
    const exposed=faces.map(f=>!block(x+f[0][0],y+f[0][1],z+f[0][2]));
    if(exposed.some(Boolean))cube(v,x,y,z,id,1,exposed);
