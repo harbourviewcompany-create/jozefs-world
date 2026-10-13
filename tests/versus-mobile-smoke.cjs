@@ -41,39 +41,42 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
 
  await host.locator('#versus-ready').click();assert.equal(await host.locator('#versus-clock').textContent(),'2:00');
  await guest.locator('#versus-ready').click();await host.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);await guest.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
+
  if(viewport.height>viewport.width){
    for(const page of [host,guest]){
-     // The canvas camera is recomputed after both players enter live play.
-     const calculate=()=>{
+     const framing=()=> {
        const camera=window.__versusTest.camera();
+       const state=window.__versusTest.state;
+       const who=window.__versusTest.room.who;
        const canvas=document.querySelector('#versus-canvas').getBoundingClientRect();
        const board=document.querySelector('.versus-scoreboard').getBoundingClientRect();
        const controls=document.querySelector('.versus-play').getBoundingClientRect();
-       return {goalY:canvas.top+camera.screenY+52*camera.screenScale,
-         playerY:canvas.top+camera.screenY+560*camera.screenScale,
-         boardBottom:board.bottom,controlsTop:controls.top,scale:camera.screenScale};
+       const worldX=x=>camera.cameraFlipped?720-x:x;
+       const actor=who==='Dad'?state.dad:state.jozef;
+       return {pitchWidth:420*camera.screenScale,screenWidth:canvas.width,
+         playerY:canvas.top+camera.screenY+worldX(actor.x)*camera.screenScale,
+         ballY:canvas.top+camera.screenY+worldX(state.ball.x)*camera.screenScale,
+         boardBottom:board.bottom,controlsTop:controls.top,phase:window.__versusTest.room.phase};
      };
      await page.waitForFunction(()=>{
-       const c=window.__versusTest.camera();
-       const board=document.querySelector('.versus-scoreboard').getBoundingClientRect();
+       const camera=window.__versusTest.camera(),state=window.__versusTest.state;
+       const me=window.__versusTest.room.who==='Dad'?state.dad:state.jozef;
+       const actorX=camera.cameraFlipped?720-me.x:me.x;
        const canvas=document.querySelector('#versus-canvas').getBoundingClientRect();
-       return c.screenY>board.bottom-canvas.top+5;
-     },undefined,{timeout:4500}).catch(async err=>{
-       const diagnostics=await page.evaluate(()=>{
-         const rect=id=>{const e=document.querySelector(id);if(!e)return null;
-           const r=e.getBoundingClientRect(),s=getComputedStyle(e);
-           return {x:r.x,y:r.y,width:r.width,height:r.height,display:s.display,position:s.position};};
-         return {camera:window.__versusTest.camera(),phase:window.__versusTest.room.phase,kickDisabled:document.getElementById('versus-kick').disabled,body:document.body.className,
-           section:document.getElementById('versus').className,
-           window:{w:innerWidth,h:innerHeight},canvas:rect('#versus-canvas'),
-           stage:rect('.versus-stage'),board:rect('.versus-scoreboard'),
-           controls:rect('.versus-play'),errors:[]};
-       });
-       throw Error('Camera did not settle below score HUD: '+JSON.stringify(diagnostics)+'; page errors: '+JSON.stringify(errors)+'; '+err.message);
-     });
-     const frame=await page.evaluate(calculate);
-     assert.ok(frame.goalY>frame.boardBottom,'goalkeeper below scoreboard: '+JSON.stringify(frame));
-     assert.ok(frame.playerY<frame.controlsTop-32,'attacker above controls: '+JSON.stringify(frame));
+       const controls=document.querySelector('.versus-play').getBoundingClientRect();
+       return window.__versusTest.room.phase==='playing'&&
+         Math.abs(420*camera.screenScale-canvas.width)<2&&
+         canvas.top+camera.screenY+actorX*camera.screenScale<controls.top-16;
+     },undefined,{timeout:5000});
+     const frame=await page.evaluate(framing);
+     assert.ok(Math.abs(frame.pitchWidth-frame.screenWidth)<2,
+       'pitch should fill mobile width without stretching: '+JSON.stringify(frame));
+     assert.ok(frame.playerY>frame.boardBottom+4,
+       'active player must not hide under match HUD: '+JSON.stringify(frame));
+     assert.ok(frame.playerY<frame.controlsTop-16,
+       'active player must stay above thumb controls: '+JSON.stringify(frame));
+     assert.ok(frame.ballY>frame.boardBottom-28&&frame.ballY<frame.controlsTop+16,
+       'ball stays near the unobstructed play area: '+JSON.stringify(frame));
    }
  }
 
@@ -124,6 +127,9 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  await guest.locator('#versus-practice-length').selectOption('60');
  await guest.locator('#versus-practice').click();await guest.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
  assert.ok(await guest.evaluate(()=>window.__versusTest.state.matchLeft<=60&&window.__versusTest.state.matchLeft>55),'Quick practice starts with a one-minute clock');
+ assert.ok((await guest.locator('.vs-team-dad .vs-team-name').innerText()).includes('ROVERS'),
+   'solo challenger scoreboard identifies the rival');
+
  await guest.evaluate(()=>{window.__versusTest.state.score.dad=1;window.__versusTest.state.matchLeft=.02;});
  await guest.waitForFunction(()=>!document.querySelector('#versus-again').hidden);
  const solo=await guest.evaluate(()=>JSON.parse(localStorage.getItem('jozefs-world-versus-v1')));
