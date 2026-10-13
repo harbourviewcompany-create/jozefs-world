@@ -4351,3 +4351,11 @@ body.versus-focused #versus.is-playing .versus-card{
     transition:none!important;animation:none!important;
   }
 }
+/* Immersive buttons must override older translucent match-mode declarations. */
+#versus .vs-team-name{display:block!important}
+body.versus-focused #versus.is-playing .versus-actions #versus-aim{background:linear-gradient(140deg,#155b9b,#042c64)!important;color:#fff!important;border-color:#6bcfff!important}
+body.versus-focused #versus.is-playing .versus-actions #versus-deke{background:linear-gradient(140deg,#883add,#421289)!important;color:#fff!important;border-color:#d18aff!important}
+body.versus-focused #versus.is-playing .versus-actions #versus-pass{background:linear-gradient(140deg,#188ce4,#043d82)!important;color:#fff!important;border-color:#63c9ff!important}
+body.versus-focused #versus.is-playing .versus-actions #versus-kick{background:radial-gradient(circle at 32% 13%,#abff48,#359e18 59%,#12621c)!important;color:#fff!important;border:3px solid #dcff93!important}
+body.versus-focused #versus.is-playing .vs-movement #versus-stick{background:radial-gradient(circle,#11445f80,#082036bd 68%,#041a35ed)!important;border:3px solid #4dcaff!important}
+body.versus-focused #versus.is-playing .vs-movement #versus-sprint{background:linear-gradient(#13466a,#052c48)!important}

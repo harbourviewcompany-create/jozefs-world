@@ -10,21 +10,19 @@
   const dpr = Math.min(devicePixelRatio || 1, 2);
   canvas.width = W * dpr; canvas.height = H * dpr;
   ctx.scale(dpr, dpr);
-  let portrait=false;
+  let portrait=false,screenScale=1,screenX=0,screenY=0,cameraW=0,cameraH=0;
   function fitCamera(){
-    const next = window.innerHeight > window.innerWidth;
-    if (next !== portrait || !canvas.width) {
-      portrait = next;
-      canvas.width = (portrait ? H : W) * dpr;
-      canvas.height = (portrait ? W : H) * dpr;
-    }
-    canvas.style.width = '100%';
-    canvas.style.height = '100%';
-    canvas.style.aspectRatio = 'auto';
-    canvas.style.maxHeight = 'none';
-    canvas.style.objectFit = 'contain';
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    if (portrait) { ctx.translate(H, 0); ctx.rotate(Math.PI / 2); }
+    const next=window.innerWidth<900;
+    const width=Math.max(1,Math.round(canvas.clientWidth||canvas.parentElement?.clientWidth||(next?420:720)));
+    const height=Math.max(1,Math.round(canvas.clientHeight||canvas.parentElement?.clientHeight||(next?720:420)));
+    if(next!==portrait||width!==cameraW||height!==cameraH){portrait=next;cameraW=width;cameraH=height;canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);}
+    canvas.style.width='100%';canvas.style.height='100%';canvas.style.maxHeight='none';canvas.style.aspectRatio='auto';canvas.style.objectFit='fill';
+    const vw=portrait?H:W,vh=portrait?W:H;
+    screenScale=Math.max(width/vw,height/vh);
+    screenX=(width-vw*screenScale)/2;screenY=(height-vh*screenScale)/2;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    if(portrait){ctx.translate(screenX+H*screenScale,screenY);ctx.scale(screenScale,screenScale);ctx.rotate(Math.PI/2);}
+    else{ctx.translate(screenX,screenY);ctx.scale(screenScale,screenScale);}
   }
   const GOAL = { x: 36, y: 150, w: 18, h: 120 };
   const room = { code: '', who: 'Dad', spot: 'forward', otherSpot: 'forward', together: false, peer: null, conn: null, host: false, other: '', ready: false, remoteReady: false, practice: false, phase: 'lobby', remoteActive: true };
@@ -38,7 +36,7 @@
   function pickAim(value){
     selectedAim=Math.max(0,Math.min(2,Math.round(value)));
     const label=['TOP','MIDDLE','BOTTOM'][selectedAim];
-    $('versus-aim').textContent=label+' ↻';
+    const aimLabel=$('versus-aim').querySelector('.vs-action-label');if(aimLabel)aimLabel.textContent=label;else $('versus-aim').textContent=label+' ↻';
     $('versus-aim').setAttribute('aria-label','Aim '+label+'. Tap to change.');
   }
   function localKick(power=1){
@@ -119,7 +117,7 @@
   const trail = [];
   const sparks = [];
   let tick = 0;
-  let lastCall = '';
+  let lastCall = '',callFlashUntil=0;
   let shake = 0;
 
   let soundContext=null;
@@ -217,35 +215,8 @@
   // Static stadium is rendered once; animation only redraws athletes and effects.
   const stadium = document.createElement('canvas'); stadium.width = W * dpr; stadium.height = H * dpr;
   const paint = stadium.getContext('2d'); paint.scale(dpr,dpr);
-  function buildStadium() {
-    const sky=paint.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#0b1c33');sky.addColorStop(1,'#050d16');paint.fillStyle=sky;paint.fillRect(0,0,W,H);
-    for(let row=0;row<7;row++){
-      for(let seat=0;seat<90;seat++){
-        paint.fillStyle=['#1d3a52','#274862','#c0392b','#1e6b4a','#f1c40f'][(row+seat)%5];
-        paint.fillRect(8+seat*8, 4+row*5, 6, 4);
-      }
-    }
-    paint.fillStyle='#0a1622';paint.fillRect(18,14,684,392);
-    for(let x=28;x<692;x+=36){paint.fillStyle=x%72?'#1a6b38':'#22884a';paint.fillRect(x,22,36,376);}
-    const shade=paint.createLinearGradient(0,22,0,398);shade.addColorStop(0,'rgba(0,0,0,.18)');shade.addColorStop(.5,'rgba(255,255,255,.04)');shade.addColorStop(1,'rgba(0,0,0,.22)');paint.fillStyle=shade;paint.fillRect(28,22,664,376);
-    paint.fillStyle='rgba(255,255,255,.05)';paint.fillRect(28,286,664,54);
-    paint.strokeStyle='rgba(236,255,244,.82)';paint.lineWidth=2;paint.strokeRect(28,22,664,376);
-    paint.beginPath();paint.moveTo(360,22);paint.lineTo(360,398);paint.stroke();
-    paint.beginPath();paint.arc(360,210,52,0,Math.PI*2);paint.stroke();
-    paint.beginPath();paint.arc(360,210,3,0,Math.PI*2);paint.fillStyle='#eafff4';paint.fill();
-    paint.strokeRect(28,108,96,204);paint.strokeRect(596,108,96,204);
-    paint.strokeRect(28,154,40,112);paint.strokeRect(652,154,40,112);
-    paint.beginPath();paint.arc(124,210,3,0,Math.PI*2);paint.fill();paint.beginPath();paint.arc(596,210,3,0,Math.PI*2);paint.fill();
-    for(const x of [8,690]){
-      paint.fillStyle='rgba(200,250,255,.12)';paint.fillRect(x,146,22,128);
-      paint.strokeStyle='rgba(220,245,255,.35)';paint.lineWidth=1;
-      for(let y=146;y<=274;y+=7){paint.beginPath();paint.moveTo(x,y);paint.lineTo(x+22,y);paint.stroke();}
-      for(let k=0;k<=22;k+=5){paint.beginPath();paint.moveTo(x+k,146);paint.lineTo(x+k,274);paint.stroke();}
-      paint.strokeStyle='#f4feff';paint.lineWidth=4;paint.strokeRect(x,146,22,128);
-    }
-    for(const x of [40,680]){const beam=paint.createRadialGradient(x,0,0,x,80,280);beam.addColorStop(0,'rgba(220,255,255,.28)');beam.addColorStop(1,'rgba(255,255,255,0)');paint.fillStyle=beam;paint.fillRect(0,0,W,H);}
-  }
-  buildStadium();
+  function buildStadium(){window.JozefVersusVisual.stadium(paint,W,H);}
+    buildStadium();
   function pitch(){ctx.drawImage(stadium,0,0,W,H);}
   function jozefKit() {
     try {
@@ -255,43 +226,9 @@
       return colors[team] || '#60c5ff';
     } catch { return '#60c5ff'; }
   }
-  function player(p,color,name){
-    const speed=Math.hypot(p.vx,p.vy);
-    const moving=speed>.25;
-    const phase=tick*(0.22+speed*0.12);
-    const stride=moving?Math.sin(phase)*(7+speed*1.8):0;
-    const bob=moving?Math.abs(Math.sin(phase*2))*-2.2:0;
-    const lean=Math.max(-0.28,Math.min(0.28,(p.vx||0)*0.05));
-    const kicking=kickLock>8 && state.call;
-    ctx.save();ctx.translate(p.x,p.y+bob);if(portrait)ctx.rotate(-Math.PI/2);ctx.scale(p.face||1,1);ctx.rotate(lean);ctx.scale(1.35,1.35);
-    ctx.fillStyle='rgba(0,0,0,.32)';ctx.beginPath();ctx.ellipse(1,20,11,3.5,0,0,Math.PI*2);ctx.fill();
-    if(name===room.who){ctx.strokeStyle=color;ctx.globalAlpha=.55;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(0,18,16,6,0,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;}
-    ctx.lineCap='round';ctx.lineJoin='round';
-    ctx.strokeStyle='#1d2430';ctx.lineWidth=5;
-    const kick=kicking?14:0;
-    ctx.beginPath();ctx.moveTo(-4,8);ctx.lineTo(-5+stride*.4,16);ctx.lineTo(-7+stride,22);ctx.moveTo(4,8);ctx.lineTo(5-stride*.4+kick,16);ctx.lineTo(8-stride+kick,22);ctx.stroke();
-    ctx.strokeStyle='#f2f5f3';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-5+stride*.2,12);ctx.lineTo(-5+stride*.2,17);ctx.moveTo(5-stride*.2,12);ctx.lineTo(5-stride*.2,17);ctx.stroke();
-    ctx.fillStyle='#1b1f27';ctx.beginPath();ctx.ellipse(-6+stride,21,4,2,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(6-stride,21,4,2,0,0,Math.PI*2);ctx.fill();
-    ctx.strokeStyle='#e0b08a';ctx.lineWidth=3.5;
-    ctx.beginPath();ctx.moveTo(-7,-2);ctx.lineTo(-13,-stride*.7);ctx.moveTo(7,-2);ctx.lineTo(13,stride*.7);ctx.stroke();
-    const kit=ctx.createLinearGradient(-9,-12,9,10);kit.addColorStop(0,color);kit.addColorStop(1,'#00000033');ctx.fillStyle=kit;ctx.beginPath();ctx.moveTo(-9,-9);ctx.quadraticCurveTo(0,-13,9,-9);ctx.lineTo(8,7);ctx.quadraticCurveTo(0,10,-8,7);ctx.closePath();ctx.fill();
-    ctx.fillStyle='#ffffffcc';ctx.fillRect(-8,4,16,3);
-    ctx.fillStyle='#fff';ctx.font='700 8px system-ui';ctx.textAlign='center';ctx.fillText('11',0,1);
-    const dad=name==='Dad';
-    ctx.fillStyle='#e7b898';ctx.beginPath();ctx.ellipse(-6.2,-15,1.4,2.2,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(6.2,-15,1.4,2.2,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle=dad?'#e8b48a':'#f3c7a6';ctx.beginPath();ctx.ellipse(0,-14.5,6.4,7.2,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle=dad?'#3a2a22':'#241c18';ctx.beginPath();ctx.ellipse(0,dad?-18.5:-19.2,6.6,dad?4.2:5.4,0,Math.PI,0);ctx.fill();
-    ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(-2.1,-14.6,1.5,1.1,0,0,Math.PI*2);ctx.ellipse(2.1,-14.6,1.5,1.1,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#243044';ctx.beginPath();ctx.arc(-2,-14.5,.7,0,Math.PI*2);ctx.arc(2,-14.5,.7,0,Math.PI*2);ctx.fill();
-    ctx.strokeStyle='#c49274';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,-14);ctx.lineTo(0,-12.2);ctx.stroke();
-    ctx.strokeStyle=dad?'#b8886c':'#d7a48c';ctx.beginPath();ctx.arc(0,-11.2,2,.15,Math.PI-.15);ctx.stroke();
-    if(dad){ctx.fillStyle='#c4a08a88';ctx.beginPath();ctx.ellipse(0,-10.4,3.2,1.4,0,0,Math.PI);ctx.fill();}
-    ctx.fillStyle='#071724e6';ctx.beginPath();ctx.roundRect(-22,-36,44,13,4);ctx.fill();
-    ctx.fillStyle='#f4fffb';ctx.font='700 9px system-ui';ctx.fillText(name,0,-27);
-    ctx.restore();
-  }
+  function player(p,color,name){window.JozefVersusVisual.player(ctx,p,color,name,name===room.who,portrait,tick);}
 
-  function keeper(side, color, name) {
+    function keeper(side, color, name) {
     const body = { x: side === 'left' ? 52 : 668, y: state.keepers?.[side] || 210, vx: 0, vy: 0, face: side === 'left' ? 1 : -1 };
     player(body, color, name);
   }
@@ -363,19 +300,17 @@
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, W, H);
     if (state.call && state.call !== lastCall && /scores|GOAL|Saved|Full time|post|Kickoff|Star|SUPER/.test(state.call)) { burst(ball.x, ball.y, state.call.includes('Dad') ? '#d7ff4a' : '#7ee0ff', 36); shake = 14; if (/scores/.test(state.call)) { net(); navigator.vibrate?.(40); } else if (/Saved/.test(state.call)) { punch(); navigator.vibrate?.(20); } else if (/Kickoff/.test(state.call)) whistle(); else chime(); voice(state.call); document.querySelector('.versus-scoreboard')?.classList.add('goal'); setTimeout(() => document.querySelector('.versus-scoreboard')?.classList.remove('goal'), 900); }
+    if(state.call!==lastCall)callFlashUntil=performance.now()+950;
     lastCall = state.call;
     trail.push({ x: ball.x, y: ball.y });
     if (trail.length > 8) trail.shift();
     trail.forEach((bit, i) => {
-      ctx.fillStyle = 'rgba(255,255,255,' + (i / trail.length * 0.35) + ')';
+      ctx.fillStyle = 'rgba(74,221,255,' + (i / trail.length * 0.48) + ')';
       ctx.beginPath(); ctx.arc(bit.x, bit.y, 3 + i * 0.3, 0, Math.PI * 2); ctx.fill();
     });
     sparks.forEach(s => { s.x += s.vx; s.y += s.vy; s.vy += 0.15; s.life -= 1; ctx.fillStyle = s.color; ctx.globalAlpha = Math.max(0, s.life / 18); ctx.fillRect(s.x, s.y, 4, 4); ctx.globalAlpha = 1; });
     for (let i = sparks.length - 1; i >= 0; i--) if (sparks[i].life <= 0) sparks.splice(i, 1);
-    if (state.star?.on) {
-      ctx.save(); ctx.translate(state.star.x, state.star.y); ctx.rotate(tick*0.05); ctx.fillStyle='#ffe14a';
-      ctx.beginPath(); for(let i=0;i<5;i++){const a=i*1.256-1.57,b=a+0.628;ctx.lineTo(Math.cos(a)*10,Math.sin(a)*10);ctx.lineTo(Math.cos(b)*4,Math.sin(b)*4);} ctx.closePath(); ctx.fill(); ctx.restore();
-    }
+    if (state.star?.on) window.JozefVersusVisual.star(ctx,state.star,tick,reduced.matches);
     for (const p of [state.dad, state.jozef]) {
       if (Math.hypot(p.vx,p.vy)>1.2 && tick%4===0) sparks.push({x:p.x,y:p.y+16,vx:(Math.random()-.5)*.4,vy:.2,life:10,color:'#c8b48a'});
     }
@@ -385,18 +320,10 @@
     const userKeeper=side=>[room.who,room.other].find(who=>['Dad','Jozef'].includes(who)&&isKeeper(who)&&keeperSide(who)===side);
     keeper('left','#f4f7f2',userKeeper('left')||'Keeper');
     keeper('right','#f4f7f2',userKeeper('right')||'Keeper');
-    ctx.fillStyle = 'rgba(0,0,0,.25)';
-    ctx.beginPath(); ctx.ellipse(ball.x + 2, ball.y + 5, 6, 3, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.shadowColor='#e2faff';ctx.shadowBlur=Math.hypot(state.ball.vx,state.ball.vy)>4?15:4;
-    const pace=Math.hypot(state.ball.vx,state.ball.vy);
-    ctx.fillStyle='rgba(0,0,0,.28)';ctx.beginPath();ctx.ellipse(ball.x+2,ball.y+7,7+pace*.2,3,0,0,Math.PI*2);ctx.fill();
-    const ballGrad=ctx.createRadialGradient(ball.x-2.4,ball.y-2.6,1,ball.x,ball.y,8);
-    ballGrad.addColorStop(0,'#ffffff');ballGrad.addColorStop(.7,'#e7eeea');ballGrad.addColorStop(1,'#b7c2bc');
-    ctx.fillStyle=ballGrad;ctx.beginPath();ctx.arc(ball.x,ball.y,8,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
-    ctx.strokeStyle='#24303a';ctx.lineWidth=1.1;ctx.stroke();
-    ctx.strokeStyle='#8e9aa3';ctx.lineWidth=1;
-    ctx.beginPath();ctx.moveTo(ball.x-6,ball.y-2);ctx.lineTo(ball.x-1,ball.y-6);ctx.lineTo(ball.x+4,ball.y-3);ctx.lineTo(ball.x+1,ball.y+2);ctx.closePath();ctx.stroke();
-    ctx.beginPath();ctx.moveTo(ball.x-2,ball.y+2);ctx.lineTo(ball.x-5,ball.y+6);ctx.moveTo(ball.x+2,ball.y+1);ctx.lineTo(ball.x+6,ball.y+4);ctx.stroke();
+    ctx.save();
+    ctx.fillStyle='rgba(0,0,0,.33)';ctx.beginPath();ctx.ellipse(ball.x+3,ball.y+6,9,3,0,0,Math.PI*2);ctx.fill();
+    window.JozefVersusVisual.ball(ctx,ball,Math.hypot(state.ball.vx,state.ball.vy));
+    ctx.restore();
     /* scoreboard is accessible HTML outside the canvas */
     /* ctx.fillStyle = '#08140f';
     ctx.fillRect(W / 2 - 78, 4, 156, 26);
@@ -406,7 +333,7 @@
     ctx.fillText(state.score.jozef + '  ·  ' + state.score.dad + '   ' + Math.ceil(state.matchLeft || 0) + 's', W / 2, 22);
     */
     if (/scores/.test(state.call)) { ctx.fillStyle='rgba(255,255,255,.35)'; ctx.beginPath(); ctx.ellipse(state.ball.x<W/2?20:W-20, state.ball.y, 16, 28, 0, 0, Math.PI*2); ctx.fill(); }
-    if (state.call) {
+    if (state.call && performance.now()<callFlashUntil) {
       const pop = /scores|Full time/.test(state.call) ? 1.15 : 1;
       ctx.save();
       ctx.translate(W / 2, H / 2);
@@ -735,7 +662,12 @@
     }
     targets[room.who]={x,y};if(!room.host)send({type:'aim',x,y});
   }
-  function aimFrom(e){const r=canvas.getBoundingClientRect(),vw=portrait?H:W,vh=portrait?W:H,scale=Math.min(r.width/vw,r.height/vh),x=(e.clientX-r.left-(r.width-vw*scale)/2)/scale,y=(e.clientY-r.top-(r.height-vh*scale)/2)/scale;aim(portrait?y:x,portrait?H-x:y);}
+  function aimFrom(e){
+    const r=canvas.getBoundingClientRect();
+    const cx=(e.clientX-r.left)*cameraW/r.width,cy=(e.clientY-r.top)*cameraH/r.height;
+    const px=(cx-screenX)/screenScale,py=(cy-screenY)/screenScale;
+    aim(portrait?py:px,portrait?H-px:py);
+  }
   canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);aimFrom(e);});canvas.addEventListener('pointermove',e=>{if(e.buttons)aimFrom(e);});canvas.addEventListener('pointercancel',stopInput);
   const stick=$('versus-stick'),nub=$('versus-nub');
   function fromStick(e){
