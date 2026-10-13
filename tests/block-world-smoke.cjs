@@ -137,6 +137,12 @@ assert.ok(game.players.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)&&p.y>
 
 assert.ok(game.cameraZoom()>=1.2,'new mobile worlds use a closer readable hero camera');
 assert.ok(game.players.every(p=>{const cell=Math.floor(p.x/40);return cell>=36&&cell<72;}),'new characters spawn in Forest biome');
+
+for(const p of game.players){
+ const x=Math.floor((p.x+p.w/2)/40),top=game.surface()[x];
+ for(let y=top-5;y<top;y++)assert.equal(game.world()[y][x],0,'spawn clearing must not contain a tree or leaves at x='+x);
+}
+
 const forestAction=first.document.getElementById('bw-actions').children.find(e=>e.textContent==='FOREST CAMP');
 assert.ok(forestAction,'existing worlds include an accessible Forest Camp travel action');
 const startWorld=game.world();
