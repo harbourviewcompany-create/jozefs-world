@@ -56,7 +56,11 @@ function navigation(){
  window.showSection=function(id){
   if(!valid(id))return;
   const act=()=>prev(id);
-  if(document.startViewTransition&&!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches){
+  // Mobile/WebKit view transitions can stall game navigation while the canvas is loading.
+  // Game sections always activate synchronously; desktop keeps the animated transition.
+  const desktopMotion=window.matchMedia?.('(min-width: 1101px) and (hover: hover)').matches &&
+    !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if(document.startViewTransition&&desktopMotion){
    try{document.startViewTransition(act);}catch(_){act();}
   }else act();
   if(!skipHistory&&location.hash!=='#'+id){
