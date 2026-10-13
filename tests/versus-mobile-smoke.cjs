@@ -29,7 +29,8 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  await host.locator('#versus-ready').click();assert.equal(await host.locator('#versus-clock').textContent(),'2:00');
  await guest.locator('#versus-ready').click();await host.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);await guest.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
  for(const p of [host,guest]){
- const box=await p.locator('#versus-kick').boundingBox();assert.ok(box.y>=0&&box.y+box.height<=viewport.height,'shoot within viewport');const stick=await p.locator('#versus-stick').boundingBox();assert.ok(stick.y+stick.height<=viewport.height,'stick within viewport');assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'no overflow');
+ const box=await p.locator('#versus-kick').boundingBox();assert.ok(box.y>=0&&box.y+box.height<=viewport.height,'shoot within viewport');const stick=await p.locator('#versus-stick').boundingBox();assert.ok(stick.y>=0&&stick.y+stick.height<=viewport.height,'stick within viewport');assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'no overflow');
+ const dims=await p.locator('#versus-canvas').evaluate(c=>({width:c.width,height:c.height}));assert.equal(dims.width>dims.height,viewport.width>viewport.height,'stadium camera follows orientation rather than viewport width');
  }
  await host.locator('#versus-canvas').focus();await host.keyboard.down('ArrowLeft');await host.waitForTimeout(200);await host.keyboard.up('ArrowLeft');await host.keyboard.press('Space');
  if(process.env.VERSUS_SCREENSHOTS)await host.screenshot({path:path.join(process.env.VERSUS_SCREENSHOTS,engine+'-'+viewport.width+'.png')});
@@ -42,6 +43,9 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  await host.evaluate(()=>window.__versusTest.onData({type:'aim',x:null,y:null}));
  assert.equal(await host.evaluate(()=>window.__versusTest.targets.Jozef),null);
  await host.evaluate(()=>{const t=window.__versusTest;t.targets.Dad=null;t.targets.Jozef=null;Object.assign(t.state.dad,{x:400,y:210,vx:0,vy:0});Object.assign(t.state.ball,{x:380,y:210,vx:0,vy:0});t.state.kick='Dad';t.step();t.step();if(t.state.ball.vx>=-5)throw Error('shot was swallowed by dribbling');});
+ await host.evaluate(()=>{window.__versusTest.state.matchLeft=.02;});
+ await host.waitForFunction(()=>window.__versusTest.state.overtime&&window.__versusTest.state.matchLeft>25);
+ assert.match(await host.locator('#versus-clock').textContent(),/0:3[0-9]/,'draw enters bounded golden-goal overtime');
  await host.evaluate(()=>{window.__versusTest.state.matchLeft=.02;});
  await host.waitForFunction(()=>!document.querySelector('#versus-again').hidden);await guest.waitForFunction(()=>!document.querySelector('#versus-again').hidden);
  await host.waitForTimeout(150);assert.equal(await host.locator('#versus-clock').textContent(),'0:00');
@@ -61,12 +65,45 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  await guest.locator('#versus-practice-length').selectOption('60');
  await guest.locator('#versus-practice').click();await guest.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
  assert.ok(await guest.evaluate(()=>window.__versusTest.state.matchLeft<=60&&window.__versusTest.state.matchLeft>55),'Quick practice starts with a one-minute clock');
- await guest.evaluate(()=>{window.__versusTest.state.matchLeft=.02;});
+ await guest.evaluate(()=>{window.__versusTest.state.score.dad=1;window.__versusTest.state.matchLeft=.02;});
  await guest.waitForFunction(()=>!document.querySelector('#versus-again').hidden);
  const solo=await guest.evaluate(()=>JSON.parse(localStorage.getItem('jozefs-world-versus-v1')));
  assert.equal(solo.played,1,'one full-time Solo Challenge equals one local record');
  assert.match(await guest.locator('#versus-practice-record').textContent(),/1 PLAYED/);
  await guest.locator('#versus-leave').click();
+ // Real two-device Same Team has both players in the room and a third AI opponent.
+ await host.locator('#versus-together').click();
+ await host.waitForFunction(()=>document.querySelector('#versus-room-code').textContent.length===6);
+ const teamCode=await host.locator('#versus-room-code').textContent();
+ await guest.locator('#versus-code').fill(teamCode);await guest.locator('#versus-join').click();
+ await guest.waitForFunction(()=>!document.querySelector('#versus-ready').disabled,undefined,{timeout:20000});
+ assert.equal(await guest.evaluate(()=>window.__versusTest.room.together),true,'joined mode is cooperative');
+ await host.locator('#versus-ready').click();await guest.locator('#versus-ready').click();
+ await host.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
+ await guest.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
+ assert.equal(await host.locator('#versus-pass').textContent(),'PASS','co-op uses real passing');
+ await host.evaluate(()=>{
+   const t=window.__versusTest;
+   t.targets.Dad=t.targets.Jozef=null;
+   Object.assign(t.state.dad,{x:220,y:210,vx:0,vy:0});
+   Object.assign(t.state.jozef,{x:400,y:210,vx:0,vy:0});
+   Object.assign(t.state.ball,{x:380,y:210,vx:0,vy:0});
+   t.onData({type:'kick',mode:'pass',power:1,aim:1});t.step();
+   if(t.state.ball.vx>=0)throw Error('coop pass did not target Dad');
+   Object.assign(t.state.jozef,{x:400,y:210,vx:0,vy:0});
+   Object.assign(t.state.ball,{x:410,y:210,vx:0,vy:0});
+   const before=t.state.jozef.x;t.onData({type:'deke'});
+   if(t.state.jozef.x<=before)throw Error('host did not execute validated guest deke');
+   t.room.otherSpot='keeper';t.onData({type:'keeper',y:160});t.step();
+   if(!(t.state.keepers.left<210))throw Error('remote goalkeeper was not controlled by host');
+   t.room.otherSpot='forward';
+ });
+ await host.evaluate(()=>{const t=window.__versusTest;t.state.score.jozef=1;t.state.matchLeft=.02;});
+ await host.waitForFunction(()=>!document.querySelector('#versus-again').hidden);
+ await guest.waitForFunction(()=>!document.querySelector('#versus-again').hidden);
+ assert.equal(await host.evaluate(()=>JSON.parse(localStorage.getItem('jozefs-world-season')||'[]').length),1,'coop match must not pollute competitive season');
+ await host.locator('#versus-leave').click();
+ assert.equal(await host.evaluate(()=>window.__versusTest.room.together),false,'leaving clears co-op mode');
  assert.deepEqual(errors,[]);console.log(engine+' '+viewport.width+'x'+viewport.height+' versus PASS');await context.close();
  }
  }finally{await browser.close();}
