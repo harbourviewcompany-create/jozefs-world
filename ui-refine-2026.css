@@ -1466,3 +1466,18 @@ body.versus-focused #versus.is-playing .versus-actions #versus-pass{background:l
 body.versus-focused #versus.is-playing .versus-actions #versus-kick{background:radial-gradient(circle at 32% 13%,#abff48,#359e18 59%,#12621c)!important;color:#fff!important;border:3px solid #dcff93!important}
 body.versus-focused #versus.is-playing .vs-movement #versus-stick{background:radial-gradient(circle,#11445f80,#082036bd 68%,#041a35ed)!important;border:3px solid #4dcaff!important}
 body.versus-focused #versus.is-playing .vs-movement #versus-sprint{background:linear-gradient(#13466a,#052c48)!important}
+
+/* Versus input safety: score panels never steal touch targets; exit stays reachable. */
+body.versus-focused #versus.is-playing .versus-scoreboard{pointer-events:none!important}
+body.versus-focused #versus.is-playing .vs-exit:not([hidden]){
+  position:absolute!important;z-index:30!important;pointer-events:auto!important;
+  top:calc(env(safe-area-inset-top) + clamp(76px,12dvh,108px))!important;
+  right:max(10px,env(safe-area-inset-right))!important;
+  display:grid!important;place-items:center;min-width:44px;min-height:44px;
+}
+@media(orientation:landscape) and (max-height:550px){
+ body.versus-focused #versus.is-playing .vs-exit:not([hidden]){
+  top:calc(env(safe-area-inset-top) + 59px)!important;
+  right:max(10px,env(safe-area-inset-right))!important;
+ }
+}
