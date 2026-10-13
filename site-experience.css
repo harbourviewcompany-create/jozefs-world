@@ -4651,3 +4651,7 @@ body.versus-focused #versus.is-playing .versus-match-settings{display:none!impor
 body.versus-focused #versus.is-playing .vs-finish:not([hidden]){display:block!important}
 @media(max-width:355px){#versus .vs-finish{top:48%;width:94vw}#versus .vs-finish h3{font-size:25px}}
 @media(prefers-reduced-motion:reduce){#versus .vs-finish{animation:none!important}}
+/* The match-report overlay replaces the legacy in-field rematch button. */
+@supports selector(:has(*)) {
+ body.versus-focused #versus.is-playing:has(#versus-finish:not([hidden])) #versus-again{display:none!important}
+}

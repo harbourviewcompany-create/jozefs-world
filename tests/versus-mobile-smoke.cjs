@@ -150,7 +150,7 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
     const ids=await p.evaluate(()=>JSON.parse(localStorage.getItem('jozefs-world-season-match-ids')||'[]'));
     assert.deepEqual(ids,[finalState.matchId],'host and guest share one recorded match ID');
  }
- await guest.locator('#versus-again').click();await host.waitForFunction(()=>!document.querySelector('#versus-ready').disabled);
+ await guest.locator('#versus-finish-next').click();await host.waitForFunction(()=>!document.querySelector('#versus-ready').disabled);
  await host.locator('#versus-ready').click();await guest.locator('#versus-ready').click();await host.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
  await host.locator('#versus-leave').click({timeout:7000});await guest.waitForFunction(()=>document.querySelector('#versus-status').textContent.includes('disconnected'));
  await guest.locator('#versus-leave').click();
@@ -221,7 +221,7 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
    assert.equal(await guest.locator('#versus-mode-label').textContent(),title);
    await guest.evaluate(()=>{const t=window.__versusTest;t.state.score.jozef=3;t.state.freeze=0;});
    await guest.waitForFunction(()=>window.__versusTest.room.phase==='finished',{},{timeout:2500});
-   if(title!=='Legends Final')await guest.locator('#versus-again').click();
+   if(title!=='Legends Final')await guest.locator('#versus-finish-next').click();
  }
  assert.equal(await guest.evaluate(()=>localStorage.getItem('jozefs-world-versus-cup')),'won','winning three cup rounds awards a persistent trophy');
  assert.equal(await guest.locator('#versus-finish').isVisible(),true,'match report appears after final whistle');
