@@ -58,6 +58,9 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
          ballY:canvas.top+camera.screenY+worldX(state.ball.x)*camera.screenScale,
          boardBottom:board.bottom,controlsTop:controls.top,phase:window.__versusTest.room.phase};
      };
+     // Capture the visible pitch before assertions, including on a failing run.
+     if(process.env.VERSUS_SCREENSHOTS)await page.screenshot({path:path.join(process.env.VERSUS_SCREENSHOTS,
+       engine+'-'+viewport.width+'-'+(page===host?'dad':'jozef')+'-framing.png')});
      await page.waitForFunction(()=>{
        const camera=window.__versusTest.camera(),state=window.__versusTest.state;
        const me=window.__versusTest.room.who==='Dad'?state.dad:state.jozef;
@@ -67,7 +70,17 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
        return window.__versusTest.room.phase==='playing'&&
          Math.abs(420*camera.screenScale-canvas.width)<2&&
          canvas.top+camera.screenY+actorX*camera.screenScale<controls.top-16;
-     },undefined,{timeout:5000});
+     },undefined,{timeout:5000}).catch(async err=>{
+       const frame=await page.evaluate(()=>{
+         const camera=window.__versusTest.camera(),state=window.__versusTest.state;
+         const me=window.__versusTest.room.who==='Dad'?state.dad:state.jozef;
+         const rect=el=>{const r=document.querySelector(el).getBoundingClientRect();return {top:r.top,bottom:r.bottom,width:r.width,height:r.height};};
+         return {camera,phase:window.__versusTest.room.phase,player:me,ball:state.ball,
+           canvas:rect('#versus-canvas'),controls:rect('.versus-play'),scoreboard:rect('.versus-scoreboard'),
+           viewport:{width:innerWidth,height:innerHeight}};
+       });
+       throw Error('Versus camera could not maintain visible player: '+JSON.stringify(frame)+'; '+err.message);
+     });
      const frame=await page.evaluate(framing);
      assert.ok(Math.abs(frame.pitchWidth-frame.screenWidth)<2,
        'pitch should fill mobile width without stretching: '+JSON.stringify(frame));
