@@ -180,6 +180,7 @@ function voxelBox(v,x,y,z,w,h,d,id,yaw=0){
    Their alpha masks come from the material atlas, and they sway in the existing
    GPU vertex program. They are visual-only, so terrain collision never changes. */
 function foliageCross(v,x,y,z,width,height,id=5,twist=0){
+ if(!atlasLoaded)return;
  const c=col[id]||col[5],face=1,idx=[0,1,2,0,2,3];
  for(const turn of [twist+.785398,twist+2.356194]){
   const co=Math.cos(turn),si=Math.sin(turn);
