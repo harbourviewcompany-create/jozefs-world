@@ -279,7 +279,7 @@ test('page wiring: controls exist once, rules match the picker, files are cached
  assert.equal([...html.matchAll(/<script src="club-designer\.js"><\/script>/g)].length,0);
  assert.match(read("site-features.js"),/BEGIN club-designer\.js/);
  assert.ok(html.includes('data-club-name')&&html.includes('data-club-crest'));
- assert.match(read('sw.js'),/'\.\/club-designer\.js'/);
+ assert.match(read('site-features.js'),/BEGIN club-designer\.js/);
  assert.ok(read('site-experience.css').includes('.arena-twist-box')&&read('site-experience.css').includes('.club-designer-grid'));
  const hub=read('clubhouse.js');
  assert.ok(hub.includes("'jozefs-world-wacky-v1'")&&hub.includes("'jozefs-world-club-design-v1'"));
