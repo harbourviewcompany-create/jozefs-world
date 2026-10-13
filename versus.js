@@ -21,6 +21,25 @@
     const vw=portrait?H:W,vh=portrait?W:H;
     screenScale=Math.max(width/vw,height/vh);
     screenX=(width-vw*screenScale)/2;screenY=(height-vh*screenScale)/2;
+    // During portrait matches, keep the defending goal below the score HUD and
+    // the controlled attacker above the action controls. Scale is still uniform.
+    if(portrait && ['playing','countdown','finished'].includes(room.phase)){
+      const rect=canvas.getBoundingClientRect();
+      const scoreboard=document.querySelector('#versus .versus-scoreboard')?.getBoundingClientRect();
+      const controls=document.querySelector('#versus .versus-play')?.getBoundingClientRect();
+      const hudBottom=scoreboard?.bottom-rect.top||0;
+      const controlsTop=controls?.top-rect.top||height;
+      const topInset=Math.max(72,Math.min(height*.3,hudBottom+18));
+      const playableEnd=Math.min(height-65,controlsTop-54);
+      if(playableEnd>topInset+100){
+        // Initial attacker starts 560 world units from the opposing goal.
+        // Reserve room for the player sprite, the scoreboard and touch controls.
+        const scale=(playableEnd-topInset)/560;
+        screenScale=Math.max(.3,Math.min(width/vw,scale));
+        screenX=(width-vw*screenScale)/2;
+        screenY=topInset;
+      }
+    }
     ctx.setTransform(dpr,0,0,dpr,0,0);
     if(portrait){
       if(cameraFlipped){ctx.translate(screenX,screenY+W*screenScale);ctx.scale(screenScale,screenScale);ctx.rotate(-Math.PI/2);}
