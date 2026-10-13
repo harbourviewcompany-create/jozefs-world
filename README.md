@@ -55,6 +55,15 @@ node tests/block-world-3d-smoke.cjs
 
 Both smoke tests are wired into `.github/workflows/block-world-smoke.yml` on changes to the game sources. The 3D runtime test uses a simulated WebGL context to cover startup, chunk streaming, movement, HUD and save/reload. Real mobile GPU performance and two-device networking still need in-device acceptance testing.
 
+### Current online co-op improvements
+
+- Jozef opens **Inventory** and crafts his own items. Daddy's host validates the selected recipe and materials; neither player's crafting menu pauses the shared world.
+- The **partner locator** shows direction and distance. **GIVE 1** transfers one selected item when within four blocks; **REGROUP** finds a safe location near the other player, with a cooldown.
+- Guests receive interpolated character positions to reduce visible movement jitter. The host still determines physics and block changes.
+- If the link drops, Daddy's room waits for Jo and Jo automatically makes a limited number of reconnection attempts. The **JOIN AS JOZEF** button can retry manually. An explicit Disconnect restores Jo's independent solo game.
+- Jozef's double jump works when his remote input is processed by the host.
+- For two-device co-op, both devices need an internet connection and a compatible WebRTC network path. Two real phones have not yet completed acceptance testing.
+
 ## Play Classic 2D together — two players at once
 
 **Direct link:** https://harbourviewcompany-create.github.io/jozefs-world/block-world.html
