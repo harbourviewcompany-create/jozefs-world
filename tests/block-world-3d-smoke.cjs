@@ -23,7 +23,7 @@ assert.match(script,/uniform vec3 sunDir/,'fragment shader receives a dynamic su
 assert.match(script,/function voxelBox\(/,'animated hero has true oriented rectangular voxel geometry');
 assert.match(script,/function chunkMesh\(/,'forest props stay integrated with streamed terrain');
 assert.match(script,/quality!=='ECO'/,'scenery density respects mobile ECO mode');
-assert.match(script,/block-world-3d-v1/,'existing saved-world schema is unchanged');
+assert.match(script,/jozefs-block-3d-v1/,'existing saved-world schema is unchanged');
 assert.match(script,/gl\.vertexAttribPointer\(am,1,gl\.FLOAT,false,40,24\)/,'GPU material stride includes texture type');
 assert.match(script,/function chunkMesh\(/,'chunk mesher preserved');
 assert.match(script,/const skyFragment=/,'procedural GPU sky present');
