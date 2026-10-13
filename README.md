@@ -11,6 +11,20 @@ An interactive family game universe with a spatial 3D headquarters and a shared 
 
 Block World 3D is a **native WebGL voxel game**, not a CSS imitation. The original 2D edition and its device saves remain independently playable.
 
+### Forest Co-op Expedition — autosave, shared combat and beacon (13 October 2026)
+
+This release prioritizes reliability and an explorable **shared forest landmark**. It remains the existing offline-first WebGL 1 game, rather than resetting worlds or adopting an untested engine.
+
+- **Travel saves:** Player position, camera orientation and damage now make the game dirty; the 15-second autosave persists travel without mining or building. Pagehide and background events also force a save. Existing `jozefs-block-3d-v1` games remain valid.
+- **Authoritative two-device combat:** Host resolves guest creature/Golem attacks with range and cooldown checks, sends enemy health and positions, and owns boss rewards. The guest no longer simulates divergent enemy AI during connected play.
+- **Shared realms:** Host validates portal eligibility, broadcasts the destination realm/seed/world edits/boss state, and the guest reinitializes in that realm instead of silently staying behind.
+- **Survival building:** Host keeps an optional guest inventory, validates resource spending and synchronizes updated counts/creative settings to the guest. No new server or account is required.
+- **Forest Camp:** MENU → VISIT FOREST now works for host and guest. Two rune pads require Daddy and Jozef to approach them together. Completing the **Forest Beacon** grants idempotent XP, celebrates with a visible character pose and illuminates an animated crystal landmark. Completion is saved and sent to both players.
+- **Visual polish:** The camp has an animated shallow blue pond that sits over editable ground (water is currently decorative, not a swimmable or mineable fluid), low-cost local beacon illumination and hand-authored glowing voxel pads. ECO mode simplifies effects; the existing illustrated material atlas remains.
+- **Compatibility:** Single-player games, 2D modes, multi-realm export/import, local autosaves and existing block edits remain intact. All added persisted fields are optional.
+
+**Checks:** All three game smoke suites pass, including simulated guest attacks, inventory use, saved exploration, two-device camp travel, shared beacon activation, realm synchronization and save/reload. Real iPhone WebGL performance, continuous long-session memory use and WebRTC across two physical devices still require acceptance testing.
+
 ### Illustrated textures and animated heroes (October 2026)
 
 Block World 3D now includes a **self-contained illustrated WebGL1 8×4 atlas**, generated from deterministic pixel artwork in `block-world-3d-textures.js`. The atlas contains separate grass-top and grassy-soil edge tiles, dirt and stone grain, bark and end rings, foliage with alpha-cutout clusters, sand, snow, glowing crystal, wood planks, brick, glass, skin tones, cloth, denim, boots and accessories. The existing chunk mesher now transmits UVs (12 floats/vertex) for every terrain tile and character mesh. GPU material light and fog calculations are retained; if atlas creation or upload fails, the existing procedural material shading continues to work. The atlas is power-of-two, mipmapped and bundled offline rather than downloaded from an external asset library.
