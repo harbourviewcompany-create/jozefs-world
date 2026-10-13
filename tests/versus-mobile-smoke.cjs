@@ -45,7 +45,7 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  await host.evaluate(()=>{const t=window.__versusTest;t.targets.Dad=null;t.targets.Jozef=null;Object.assign(t.state.dad,{x:400,y:210,vx:0,vy:0});Object.assign(t.state.ball,{x:380,y:210,vx:0,vy:0});t.state.kick='Dad';t.step();t.step();if(t.state.ball.vx>=-5)throw Error('shot was swallowed by dribbling');});
  await host.evaluate(()=>{window.__versusTest.state.matchLeft=.02;});
  await host.waitForFunction(()=>window.__versusTest.state.overtime&&window.__versusTest.state.matchLeft>25);
- assert.match(await host.locator('#versus-clock').textContent(),/0:3[0-9]/,'draw enters bounded golden-goal overtime');
+ await host.waitForFunction(()=>/0:3[0-9]/.test(document.querySelector('#versus-clock')?.textContent||''),undefined,{timeout:5000});
  await host.evaluate(()=>{window.__versusTest.state.matchLeft=.02;});
  await host.waitForFunction(()=>!document.querySelector('#versus-again').hidden);await guest.waitForFunction(()=>!document.querySelector('#versus-again').hidden);
  await host.waitForFunction(()=>document.querySelector('#versus-clock').textContent==='0:00',undefined,{timeout:5000});
@@ -57,16 +57,11 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  for(const p of [host,guest]){
    const scores=await p.evaluate(()=>JSON.parse(localStorage.getItem('jozefs-world-season')||'[]'));
    assert.equal(scores.length,1,'one match only counts once despite repeated finished packets');
+    const ids=await p.evaluate(()=>JSON.parse(localStorage.getItem('jozefs-world-season-match-ids')||'[]'));
+    assert.deepEqual(ids,[finalState.matchId],'host and guest share one recorded match ID');
  }
  await guest.locator('#versus-again').click();await host.waitForFunction(()=>!document.querySelector('#versus-ready').disabled);
  await host.locator('#versus-ready').click();await guest.locator('#versus-ready').click();await host.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
- const beforeLeave=await host.evaluate(()=>{
-   const t=window.__versusTest,b=document.querySelector('#versus-leave');
-   return {phase:t.room.phase,other:t.room.other,code:t.room.code,active:document.querySelector('#versus').className,
-     focused:document.body.classList.contains('versus-focused'),hidden:b.hidden,css:getComputedStyle(b).display,
-     remoteActive:t.room.remoteActive,status:document.querySelector('#versus-status').textContent};
- });
- console.log('Versus rematch leave diagnostic',engine,beforeLeave);
  await host.locator('#versus-leave').click({timeout:7000});await guest.waitForFunction(()=>document.querySelector('#versus-status').textContent.includes('disconnected'));
  await guest.locator('#versus-cpu-difficulty').selectOption('legend');
  await guest.locator('#versus-practice-length').selectOption('60');
