@@ -85,10 +85,22 @@ const poll=async(page,fn)=>page.waitForFunction(fn,null,{timeout:20000});
     });
     await page.locator('[data-mode="hockey"]').click();
     await poll(page,()=>document.getElementById('event-name').textContent==='HOCKEY SHOOTOUT');
+    console.log('Prime offline-check engine: '+name);
     // Drop the actual transport. WebKit's setOffline can bypass service workers.
     try{
       networkDown=true;await page.reload({waitUntil:'load'});
-      await poll(page,()=>!!document.querySelector('canvas'));
+      await poll(page,()=>!!document.querySelector('canvas')).catch(async error=>{
+       const details=await page.evaluate(async()=>{
+        const assets=[...document.querySelectorAll('script[src],link[href]')].map(el=>el.src||el.href);
+        const keys=await caches.keys();
+        const cached={};
+        for(const key of keys){const c=await caches.open(key);cached[key]=(await c.keys()).map(req=>req.url).filter(url=>url.includes('/prime/')).slice(0,18);}
+        return {url:location.href,readyState:document.readyState,controller:navigator.serviceWorker?.controller?.scriptURL,
+         title:document.title,body:document.body?.innerText.slice(0,250),scripts:assets,cache:cached};
+       }).catch(e=>({inspectError:String(e)}));
+       throw Error('Prime offline reload failed in '+name+': '+JSON.stringify(details)+
+         '; runtime errors: '+JSON.stringify(errors)+'; '+error.message);
+      });
     }finally{networkDown=false;}
     assert.equal(await page.locator('#event-name').textContent(),'HOCKEY SHOOTOUT','offline relaunch works after changing the event URL');
     assert.deepEqual(errors,[]);cases++;await context.close();networkDown=false;

@@ -1,0 +1,35 @@
+name: Prime offline reliability
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'sw.js'
+      - 'prime/**'
+      - 'tests/prime-mobile-smoke.cjs'
+      - '.github/workflows/prime-offline-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build Prime offline game
+        run: |
+          npm ci --prefix prime --no-audit --no-fund
+          npm run build --prefix prime
+      - name: Install browser
+        run: npm exec --prefix prime -- playwright install --with-deps ${{ matrix.engine }}
+      - name: Real offline reload regression
+        env:
+          PRIME_BROWSERS: ${{ matrix.engine }}
+        run: node tests/prime-mobile-smoke.cjs
