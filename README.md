@@ -78,6 +78,8 @@ Both smoke tests are wired into `.github/workflows/block-world-smoke.yml` on cha
 
 The 2D game is built with Canvas and PeerJS. Real two-device WebRTC connections still require live-network testing; the repository includes a simulated two-peer integration test at `tests/block-world-coop-smoke.cjs`.
 
+**Mobile scene refinement:** the first scenic edition was reviewed using an iPhone screenshot. The huge sun rings and oversized triangular snow peak were replaced with a smaller sun, layered valleys, low snowy mountains and a distant waterfall. The separate floating World Menu now lives inside the main MENU drawer. The mission card is compact until tapped, freeing more of the live playfield. Mined-out underground spaces have a cave backdrop instead of blue sky. Natural desert, snow and rocky surface heights restore correctly from older world saves. No world wipe is required. On iPhone, Add to Home Screen can launch the game without normal Safari browser controls; a website cannot forcibly remove the in-app browser toolbar.
+
 ### Scenic art overhaul — October 2026
 
 The playable Classic 2D game now uses a procedural cinematic voxel-art renderer, inspired by a vivid block-world expedition reference. **This is a live interactive game, not a screenshot or generated image.** Visual upgrades include textured grass, stone, wood, planks, ore and crystal blocks; layered parallax snowy mountains; a sun glow, clouds and a distant waterfall; flowers, reeds and warm cave torches; richer Daddy and Jozef characters with tools; multiple creature appearances; and ambient particles. Actual tiles remain destructible, placeable and saved.
