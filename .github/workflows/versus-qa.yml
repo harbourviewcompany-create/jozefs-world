@@ -3,6 +3,8 @@ on:
   push:
     branches: [main]
     paths:
+      - 'versus-modes-2026.js'
+      - 'tests/versus-modes-2026.test.cjs'
       - 'versus.js'
       - 'versus-physics.js'
       - 'versus-2026.css'
@@ -16,6 +18,8 @@ on:
       - '.github/workflows/versus-qa.yml'
   pull_request:
     paths:
+      - 'versus-modes-2026.js'
+      - 'tests/versus-modes-2026.test.cjs'
       - 'versus.js'
       - 'versus-physics.js'
       - 'versus-2026.css'
@@ -43,6 +47,8 @@ jobs:
       - name: Syntax and site consistency
         run: |
           node --check versus.js
+          node --check versus-modes-2026.js
+          node --test tests/versus-modes-2026.test.cjs
           node --check versus-visual-2026.js
           node --check tests/versus-mobile-smoke.cjs
           node --test tests/versus-2026-visual.test.cjs

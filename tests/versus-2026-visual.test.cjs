@@ -33,7 +33,7 @@ test('stadium, actors, glowing star and ball render offline without external ass
 test('both published pages use the new renderer before gameplay and retain all match actions',()=>{
  const html=read('index.html');
  assert.equal(html,read('world.html'),'published homepage and world must be identical');
- const a=html.indexOf('src="versus-visual-2026.js?v=3"'),b=html.indexOf('src="versus.js?v=88"');
+ const a=html.indexOf('src="versus-visual-2026.js?v=4"'),b=html.indexOf('src="versus.js?v=89"');
  assert.ok(a>=0&&b>a,'art renderer precedes match controller');
  for(const id of ['versus-score-jozef','versus-score-dad','versus-clock','versus-stick','versus-aim','versus-deke','versus-pass','versus-sprint','versus-kick','versus-again','versus-leave']){
   assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,id+' id must be unique');
@@ -100,4 +100,18 @@ test('curved shots remain bounded and lose spin rather than gaining energy',()=>
  assert.ok(Math.abs(a.spin)<.025&&Math.abs(b.spin)<.025,'spin decays');
  assert.ok(Math.hypot(a.vx,a.vy)<9,'kinetic energy decays');
  assert.ok(a.x<350&&a.x>195,'travel remains bounded');
+});
+
+
+test('mode selector, rule engine and match detail HUD appear in both entrypoints',()=>{
+ const html=read('index.html');
+ assert.equal(html,read('world.html'));
+ assert.ok(html.indexOf('versus-modes-2026.js?v=1')<html.indexOf('versus.js?v=89'),'rule module precedes controller');
+ for(const id of ['versus-match-mode','versus-mode-description','versus-match-detail','versus-mode-label']){
+  assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,'unique '+id);
+ }
+ for(const name of ['classic','first5','golden','penalties','cup','duo']){
+  assert.match(html,new RegExp('option value="'+name+'"'));
+ }
+ assert.match(read('sw.js'),/versus-modes-2026\.js/);
 });

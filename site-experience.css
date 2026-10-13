@@ -4589,3 +4589,31 @@ body.versus-focused #versus.is-playing .vs-movement #versus-sprint{
 @media(prefers-reduced-motion:reduce){
  #versus .versus-scoreboard.goal{animation:none!important}
 }
+
+/* Versus tournament and teamwork display: minimal HUD footprint on phones. */
+#versus .versus-match-settings{display:grid;grid-template-columns:minmax(0,1fr);gap:5px;margin:11px 0;padding:12px;border-radius:16px;border:1px solid #77d5ff52;background:linear-gradient(130deg,#123b55aa,#091928b3)}
+#versus .versus-match-settings label{display:flex;flex-direction:column;gap:7px;color:#b8e6f6;font:900 11px/1.2 system-ui;letter-spacing:.08em}
+#versus #versus-match-mode{display:block;width:100%;min-height:44px;padding:9px 32px 9px 12px;border:1px solid #73cce0a6;background:#082943;color:#f4faff;border-radius:10px;font:700 13px/1.25 system-ui}
+#versus #versus-mode-description{margin:0;color:#cce4f5;font:500 12px/1.4 system-ui}
+#versus #versus-match-mode:focus-visible{outline:3px solid #e2ff83;outline-offset:2px}
+#versus #versus-match-mode:disabled{opacity:.7}
+#versus #versus-match-detail[hidden]{display:none!important}
+#versus #versus-match-detail{font:800 clamp(9px,2.6vw,12px)/1.2 system-ui;letter-spacing:.045em;text-align:center;color:#d9f5ff;background:linear-gradient(135deg,#06182cd9,#132e4ed9);border:1px solid #5dc2fa78;box-shadow:0 3px 12px #0008;border-radius:999px;padding:7px 14px;pointer-events:none;max-width:min(74vw,320px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.versus-focused #versus.is-playing #versus-match-detail:not([hidden]){
+ position:absolute!important;z-index:7!important;top:calc(env(safe-area-inset-top) + clamp(74px,11dvh,102px));left:50%!important;transform:translateX(-50%);
+}
+body.versus-focused #versus.is-playing .versus-match-settings{display:none!important}
+#versus .vs-center #versus-mode-label{font-size:clamp(6px,1.6vw,9px);letter-spacing:.03em}
+@media(max-width:375px){
+ body.versus-focused #versus.is-playing #versus-match-detail:not([hidden]){
+  top:calc(env(safe-area-inset-top) + 69px);
+  max-width:73vw;
+  font-size:9px;padding:5px 9px
+ }
+}
+@media(orientation:landscape) and (max-height:550px){
+ body.versus-focused #versus.is-playing #versus-match-detail:not([hidden]){
+  top:calc(env(safe-area-inset-top) + 55px);
+  max-width:60vw;
+ }
+}
