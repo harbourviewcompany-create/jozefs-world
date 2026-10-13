@@ -19,7 +19,7 @@ assert.match(html,/block-world-ui\.js/,'live game loads functional HUD controls'
 function boot(storage=new Map()){
   const nodes=new Map(),events=new Map(),clock={now:0,frame:null};
   const context=new Proxy({},{
-    get(_o,k){return k==='createLinearGradient'?()=>({addColorStop(){}}):k==='measureText'?()=>({width:50}):()=>{};},
+    get(_o,k){return (k==='createLinearGradient'||k==='createRadialGradient')?()=>({addColorStop(){}}):k==='measureText'?()=>({width:50}):()=>{};},
     set(){return true;}
   });
   function node(initial=''){
