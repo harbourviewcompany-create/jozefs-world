@@ -1271,3 +1271,115 @@ body.versus-focused #versus-tip{font-weight:800;letter-spacing:.03em;color:#e4ff
  #adventure.together-focused .jw-together-maphead{padding:4px 7px}
  #adventure.together-focused .jw-together-controls{padding:6px}
 }
+
+/* Versus 2026 — gameplay-first, aspect-safe and touch-optimized. */
+#versus .versus-card{isolation:isolate}
+#versus .versus-join button{min-width:0}
+#versus .versus-coop-note{font:700 11px/1.45 system-ui,sans-serif;color:#a9d6dd;margin:0}
+#versus .versus-spot.is-on{background:#d0ff69;color:#102b20}
+body.versus-focused #versus.is-playing{
+  position:fixed;inset:0;z-index:1100;width:100%;height:100dvh;max-width:none;
+  padding:0!important;overflow:hidden!important;background:#061018;touch-action:none;
+}
+body.versus-focused #versus.is-playing .versus-card{
+  display:block;position:relative;width:100%;max-width:none;height:100dvh!important;
+  margin:0;padding:0!important;overflow:hidden;border:0;border-radius:0;box-shadow:none;
+  background:radial-gradient(ellipse at center,#143a32,#061018 80%);
+}
+#versus.is-playing .versus-head{position:absolute;top:calc(60px + env(safe-area-inset-top));right:12px;z-index:12}
+#versus.is-playing .versus-head>div{display:none}
+#versus.is-playing #versus-leave{
+  display:block;min-height:36px;padding:7px 12px;border:1px solid #f0ffff75;
+  background:#061a25cc;color:#f4fffa;border-radius:11px;font-size:11px;
+  box-shadow:0 3px 18px #0009;
+}
+#versus.is-playing #versus-status,
+#versus.is-playing #versus-season-line,
+#versus.is-playing #versus-trophy,
+#versus.is-playing .versus-help,
+#versus.is-playing .versus-coop-note{display:none!important}
+#versus.is-playing .versus-stage{
+  position:absolute;inset:0;display:flex;justify-content:center;align-items:center;
+  width:100%;height:100%;min-height:0!important;margin:0;padding:0;border:0;border-radius:0;
+  background:radial-gradient(ellipse at center,#123c38 0%,#06131c 76%);
+  overflow:hidden;box-shadow:none;
+}
+#versus.is-playing .versus-stage::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,#00151b44,transparent 15%,transparent 75%,#00101855);
+}
+#versus.is-playing #versus-canvas,
+#versus.is-playing .versus-stage canvas{
+  display:block;width:100%!important;height:100%!important;max-height:none!important;
+  max-width:none!important;aspect-ratio:auto!important;object-fit:contain!important;
+  filter:none;border:0;border-radius:0;touch-action:none;
+}
+#versus.is-playing .versus-scoreboard{
+  position:absolute;z-index:11;top:max(7px,env(safe-area-inset-top));
+  left:8px;right:8px;min-width:0;margin:0;padding:7px 12px;
+  display:flex;justify-content:space-between;align-items:center;gap:5px;
+  border:1px solid #d6ffe65a;border-radius:14px;background:#04141de3;
+  box-shadow:0 7px 24px #0009;backdrop-filter:blur(9px);
+  font:800 11px/1 system-ui,sans-serif;
+}
+#versus.is-playing .versus-scoreboard span{display:flex;align-items:center;gap:6px;white-space:nowrap}
+#versus.is-playing .versus-scoreboard b{font-size:clamp(19px,5vw,28px);text-shadow:none}
+#versus.is-playing #versus-clock{font-size:clamp(16px,5vw,25px);color:#fff}
+#versus.is-playing #versus-stats,
+#versus.is-playing #versus-cpu-label{display:none!important}
+#versus.is-playing .versus-play{
+  position:absolute;z-index:10;left:0;right:0;bottom:0;min-width:0;
+  padding:8px max(10px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));
+  display:grid;grid-template-columns:clamp(80px,26vw,112px) minmax(0,1fr);
+  gap:10px;align-items:end;background:linear-gradient(0deg,#03141bb5,transparent);
+  pointer-events:none;
+}
+#versus.is-playing .versus-play>*{pointer-events:auto}
+#versus.is-playing #versus-stick{
+  width:clamp(80px,26vw,112px);height:clamp(80px,26vw,112px);margin:0;
+  border:2px solid #c7fff288;background:radial-gradient(circle,#245861c9,#051925ed);
+  box-shadow:inset 0 0 21px #000b,0 9px 25px #0008;touch-action:none;
+}
+#versus.is-playing #versus-nub{background:linear-gradient(145deg,#ddffdb,#8ed8c1)}
+#versus.is-playing #versus-tip{display:none!important}
+#versus.is-playing .versus-actions{
+  width:min(100%,214px);justify-self:end;display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;align-items:stretch;
+}
+#versus.is-playing .versus-actions button{
+  min-width:0;min-height:38px;margin:0;padding:6px 4px;border-radius:12px;
+  border:1px solid #a3e4df77;background:#0b2635e5;color:#fff;
+  font:900 11px/1.15 system-ui,sans-serif;touch-action:manipulation;
+  backdrop-filter:blur(5px);
+}
+#versus.is-playing #versus-kick{
+  grid-column:1/-1;min-height:58px;font-size:17px;letter-spacing:.05em;
+  background:#d0ff69;color:#0b2b1e;border:2px solid #efffcb;
+  box-shadow:0 5px 28px #88e83d77;
+}
+#versus.is-playing #versus-kick.in-range{background:#e3ff8e}
+#versus.is-playing #versus-kick:disabled{background:#718c70;color:#18362a;opacity:.85}
+#versus.is-playing #versus-sprint{background:#14527d;color:#eaffff}
+#versus.is-playing #versus-pass{background:#184c3e;color:#eaffef}
+#versus.is-playing #versus-aim{color:#d4eefd}
+#versus.is-playing #versus-again{grid-column:1/-1}
+@media (max-width:350px){
+  #versus.is-playing .versus-scoreboard{padding:6px 8px;font-size:10px}
+  #versus.is-playing .versus-actions{width:192px}
+  #versus.is-playing .versus-actions button{font-size:10px;padding:5px 2px}
+  #versus.is-playing #versus-stick{width:80px;height:80px}
+}
+@media (orientation:landscape) and (max-height:500px){
+  #versus.is-playing .versus-play{left:auto;width:min(36vw,235px);padding:5px max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom));grid-template-columns:66px 1fr;gap:5px}
+  #versus.is-playing #versus-stick{width:66px;height:66px}
+  #versus.is-playing .versus-actions{width:100%;gap:3px}
+  #versus.is-playing .versus-actions button{min-height:29px;font-size:9px}
+  #versus.is-playing #versus-kick{min-height:42px;font-size:13px}
+  #versus.is-playing .versus-head{top:calc(53px + env(safe-area-inset-top));right:8px}
+  #versus.is-playing .versus-scoreboard{right:min(38vw,247px);padding:5px 7px}
+}
+@media (prefers-reduced-motion:reduce){
+  #versus.is-playing *,#versus.is-playing *::before,#versus.is-playing *::after{
+    transition:none!important;animation:none!important;
+  }
+}
