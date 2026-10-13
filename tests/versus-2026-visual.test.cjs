@@ -26,7 +26,7 @@ test('stadium, actors, glowing star and ball render offline without external ass
  g.star(c,{x:340,y:140},30,false);
  g.ball(c,{x:280,y:200},5);
  assert.ok(events.filter(e=>e[0]==='roundRect').length>8,'layered stadium and sprites');
- assert.ok(events.filter(e=>e[0]==='arc').length>5,'heads, targets and details');
+ assert.ok(events.filter(e=>e[0]==='ellipse').length>8,'heads, shadows and figure details');
  assert.ok(events.some(e=>e[0]==='text'&&e[1]==='Jozef'));
  assert.ok(events.some(e=>e[0]==='text'&&e[1]==='Dad'));
 });
