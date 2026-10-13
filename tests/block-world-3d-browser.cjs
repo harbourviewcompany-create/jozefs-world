@@ -23,14 +23,30 @@ async function check(width,height){
    await page.waitForFunction(()=>window.BlockWorld3D?.status().renderOk===true,null,{timeout:20000});
    const before=await page.evaluate(()=>window.BlockWorld3D.status());
    assert.ok(before.loadedChunks>0,'terrain chunks should stream');
+   // Phone HUD intentionally starts with the expedition radar collapsed:
+   // verify the accessible MAP control first, then expand the actual map.
+   const collapsed=await page.locator('#radar').evaluate(el=>el.classList.contains('collapsed'));
+   assert.equal(collapsed,width<=700,'mobile radar collapses to preserve the playfield');
+   const toggle=page.locator('#radar-toggle');
+   const toggleBox=await toggle.boundingBox();
+   assert.ok(toggleBox&&toggleBox.width>=35&&toggleBox.x>=0&&toggleBox.x+toggleBox.width<=width+1,'radar control is reachable');
+   if(collapsed){
+     await toggle.click();
+     await page.waitForFunction(()=>!document.getElementById('radar').classList.contains('collapsed'));
+     assert.equal(await toggle.getAttribute('aria-expanded'),'true','radar announces expanded state');
+   }
    const box=await page.evaluate(()=>({
     width:document.documentElement.scrollWidth,
     radar:document.querySelector('#minimap').getBoundingClientRect().toJSON(),
     controls:[...document.querySelectorAll('.actions button')].map(b=>b.getBoundingClientRect().toJSON())
    }));
    assert.ok(box.width<=width+1,'no horizontal overflow');
-   assert.ok(box.radar.right<=width+1&&box.radar.width>65,'radar visible');
+   assert.ok(box.radar.left>=0&&box.radar.right<=width+1&&box.radar.width>65,'expanded radar visible');
    for(const b of box.controls)assert.ok(b.left>=-1&&b.right<=width+1,'actions stay on-screen');
+   if(collapsed){
+     await toggle.click();
+     assert.equal(await toggle.getAttribute('aria-expanded'),'false','radar can collapse again');
+   }
    await page.locator('#options').click();
    await page.locator('#quality').click();
    assert.equal(await page.evaluate(()=>window.BlockWorld3D.status().quality),'ECO');
