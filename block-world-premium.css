@@ -118,3 +118,41 @@ html,body{overscroll-behavior:none;background:#087cde!important;touch-action:non
  .coop-live{top:49px!important;right:9px!important}
  #toolbar-extra{top:51px!important;max-height:65dvh}
 }
+
+
+/* October 2026: clearer, tighter HUD; prioritize the playable scene. */
+#bw-quality{
+ flex:1 1 100%!important;min-height:42px!important;
+ border:1px solid #6fe4eea8!important;border-radius:11px!important;
+ background:linear-gradient(140deg,#235b79,#103e62)!important;
+ letter-spacing:.05em;color:#dbfdff;font:900 11px system-ui!important;
+ box-shadow:inset 0 1px 3px #cdfcff2a;
+}
+#bw-quality:focus-visible{outline:3px solid #ffe18b;outline-offset:3px}
+#toolbar-extra #bw-actions{margin-top:2px}
+#toolbar-extra{border-radius:17px!important;background:linear-gradient(140deg,#071e3af7,#0b3559f4)!important}
+#bw-mission.compact{backdrop-filter:blur(6px)}
+#ui h2{text-shadow:0 2px 0 #1d4a76,0 4px 0 #0c315d,0 6px 12px #01152ea6}
+#health{font-variant-numeric:tabular-nums}
+.hotbar .slot.selected:after{
+ content:'';position:absolute;left:22%;right:22%;bottom:2px;height:2px;
+ border-radius:8px;background:#ffe6a0;box-shadow:0 0 5px #fff4c2;
+}
+.action-controls .ctrl-btn{transition:transform .09s ease,filter .09s ease}
+.action-controls .ctrl-btn:active{transform:translateY(2px) scale(.98)}
+.movement-pad,.pad-knob{transition:box-shadow .15s ease}
+.bw-balanced .movement-pad,.bw-balanced .action-controls .ctrl-btn,
+.bw-balanced .hotbar,.bw-balanced #toolbar .bw-hq-link{
+ box-shadow:0 3px 10px #00152988!important;
+}
+@media(max-width:430px){
+ #ui{max-width:56vw!important}
+ #toolbar{top:calc(env(safe-area-inset-top) + 61px)!important;gap:5px!important}
+ #toolbar>.bw-hq-link,#toolbar>button{min-height:37px!important;padding:7px 10px!important}
+ .health{padding:8px 10px!important}
+ #bw-mission.compact{max-width:min(55vw,210px)!important}
+ #controls{bottom:calc(env(safe-area-inset-bottom) + 75px)!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .action-controls .ctrl-btn,.movement-pad,.pad-knob{transition:none!important}
+}

@@ -6,7 +6,7 @@ const vm=require('node:vm');
 const assert=require('node:assert/strict');
 const html=fs.readFileSync(require('node:path').join(__dirname,'..','block-world.html'),'utf8');
 const js=fs.readFileSync(require('node:path').join(__dirname,'..','block-world.js'),'utf8');
-const art=fs.readFileSync(require('node:path').join(__dirname,'..','block-world-art.js'),'utf8');
+const art=fs.readFileSync(require('node:path').join(__dirname,'..','block-world-art-forest.js'),'utf8');
 const mobileUi=fs.readFileSync(require('node:path').join(__dirname,'..','block-world-ui.js'),'utf8');
 assert.match(html,/src="\.\/block-world\.js(?:\?v=[A-Za-z0-9._-]+)?"/,'HTML loads the extracted gameplay module');
 assert.match(html,/src="\.\/block-world-coop\.js(?:\?v=[A-Za-z0-9._-]+)?"/,'HTML loads the real co-op runtime');
@@ -14,8 +14,9 @@ assert.ok(js,'Block World script must exist');
 new vm.Script(js,{filename:'block-world.html'});
 new vm.Script(art,{filename:'block-world-art.js'});
 new vm.Script(mobileUi,{filename:'block-world-ui.js'});
-assert.match(html,/block-world-art\.js/,'live game loads procedural art');
+assert.match(html,/block-world-art-forest\.js/,'live game loads updated forest art');
 assert.match(html,/block-world-ui\.js/,'live game loads functional HUD controls');
+assert.match(html,/block-world-premium-forest\.css/,'live game loads final forest mobile styling');
 function boot(storage=new Map()){
   const nodes=new Map(),events=new Map(),clock={now:0,frame:null};
   const context=new Proxy({},{
@@ -56,7 +57,7 @@ function boot(storage=new Map()){
   };
   const addEventListener=(t,fn)=>(events.get(t)||events.set(t,[]).get(t)).push(fn);
   const testScript=js.replace(/requestAnimationFrame\(frame\);\s*\}\)\(\);/,
-    'window.__inspect={players,world:()=>world,surface:()=>surface,quest:()=>({questStage,goals}),blueprint:buildBlueprint,visitPortal:()=>{questStage=4;players.forEach(p=>{p.x=portalX*TILE;p.y=surface[portalX]*TILE-p.h;});activateTeamPortal();}};requestAnimationFrame(frame);})();');
+    'window.__inspect={players,world:()=>world,surface:()=>surface,cameraZoom:()=>cameraZoom,quest:()=>({questStage,goals}),blueprint:buildBlueprint,visitPortal:()=>{questStage=4;players.forEach(p=>{p.x=portalX*TILE;p.y=surface[portalX]*TILE-p.h;});activateTeamPortal();}};requestAnimationFrame(frame);})();');
   const sandbox={
     window,document,localStorage,
     performance:{now:()=>clock.now},
@@ -85,6 +86,22 @@ const game=first.window.__inspect;
 assert.ok(first.window.BlockWorldArt,'procedural art engine registered');
 assert.ok(first.window.BlockWorldArt.tile(1),'grass texture generated');
 assert.ok(first.window.BlockWorldArt.tile(18),'diamond ore texture generated');
+
+const terrain=first.window.BlockWorldArt.terrain;
+assert.equal(typeof terrain,'function','seamless terrain renderer exposed');
+const grassX=70,grassY=game.surface()[grassX];
+const sample1=terrain(game.world(),game.world()[grassY][grassX],grassX,grassY);
+const sample2=terrain(game.world(),game.world()[grassY][grassX],grassX,grassY);
+assert.equal(sample1,sample2,'adjacency-derived terrain atlases use cached canvas frames');
+assert.ok(first.window.BlockWorldArt.getQuality()==='cinematic','cinematic mode is the visual default');
+first.click('bw-quality');
+assert.equal(first.window.BlockWorldVisuals.graphics(),'cinematic','graphics menu selects cinematic');
+first.click('bw-quality');
+assert.equal(first.window.BlockWorldVisuals.graphics(),'balanced','graphics menu selects balanced');
+assert.equal(first.storage.get('jozefs-block-visual-quality-v1'),'balanced','graphics preference persists separately from world saves');
+first.click('bw-quality');
+assert.equal(first.window.BlockWorldVisuals.graphics(),'cinematic','auto mode restores full effects when performance allows');
+
 assert.equal(typeof first.window.BlockWorldArt.caveBackdrop,'function','caves render with a dark background instead of blue sky');
 assert.ok(first.window.BlockWorldVisuals,'mobile controls initialized');
 assert.ok(first.document.getElementById('toolbar-extra').children.includes(first.document.getElementById('bw-actions')),'world actions consolidated inside primary menu');
@@ -108,10 +125,33 @@ assert.equal(first.window.BlockWorld2D.input().left,false,'joystick releases lef
 assert.equal(first.window.BlockWorld2D.input().right,false,'joystick releases right');
 assert.ok(first.document.getElementById('btn-attack').events.pointerdown?.length,'attack button handles touch');
 
+const sprite=game.players[0];
+assert.ok(sprite.renderX>=0&&sprite.renderY>=0,'sprite coordinates render');
+assert.ok(first.window.BlockWorldArt.background,'biome-aware background present');
+first.window.BlockWorldArt.character(first.document.getElementById('game').getContext(),sprite,0,{camX:0,camY:0,w:390,h:844,active:0,time:2});
+
+
 assert.equal(game.world().length,72);
 assert.equal(game.world()[0].length,180);
 assert.equal(game.surface().length,180);
 assert.ok(game.players.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)&&p.y>=0),'finite player coordinates');
+
+assert.ok(game.cameraZoom()>=1.2,'new mobile worlds use a closer readable hero camera');
+assert.ok(game.players.every(p=>{const cell=Math.floor(p.x/40);return cell>=36&&cell<72;}),'new characters spawn in Forest biome');
+
+for(const p of game.players){
+ const x=Math.floor((p.x+p.w/2)/40),top=game.surface()[x];
+ for(let y=top-5;y<top;y++)assert.equal(game.world()[y][x],0,'spawn clearing must not contain a tree or leaves at x='+x);
+}
+
+const forestAction=first.document.getElementById('bw-actions').children.find(e=>e.textContent==='FOREST CAMP');
+assert.ok(forestAction,'existing worlds include an accessible Forest Camp travel action');
+const startWorld=game.world();
+const originalDirt=startWorld[game.surface()[58]+2][58];
+forestAction.events.click[0]();
+assert.ok(game.players.every(p=>p.x/40>=55&&p.x/40<=66),'Forest Camp returns both heroes to the safe forest clearing');
+assert.equal(game.world()[game.surface()[58]+2][58],originalDirt,'Forest Camp travel does not replace the existing world grid');
+
 assert.equal(first.document.getElementById('health').textContent.includes('DADDY'),true);
 assert.match(first.document.getElementById('bw-mission').innerHTML,/MISSION 1\/5/);
 first.click('btn-switch','pointerdown');

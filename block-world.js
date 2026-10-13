@@ -81,7 +81,7 @@ function generate(){
  for(let x=65;x<81;x++)for(let y=surface[x]-4;y<surface[x];y++)world[y][x]=0;
 }
 function initPlayers(){
- [71,74].forEach((x,i)=>{const p=players[i];p.x=x*TILE;p.y=surface[x]*TILE-p.h-.1;p.vx=p.vy=0;p.ground=true;p.facing=1;p.walk=0;p.inventory={};});
+ [58,61].forEach((x,i)=>{const p=players[i];p.x=x*TILE;p.y=surface[x]*TILE-p.h-.1;p.vx=p.vy=0;p.ground=true;p.facing=1;p.walk=0;p.inventory={};});
  players[0].inventory={2:24,4:12,7:24,6:10,8:15};
  players[1].inventory={2:24,4:12,7:24,6:10,8:15};
 }
@@ -123,7 +123,8 @@ function update(dt){
  if(craftingOpen&&!window.BlockWorld2D?.connected?.())return;
  clock+=dt;actionCooldown=Math.max(0,actionCooldown-dt);
  players.forEach((p,i)=>{
-  const remote=i===1&&window.BlockWorld2D?.isHost?.()?window.BlockWorld2D.remoteInput:null;
+  p.actionT=Math.max(0,(p.actionT||0)-dt);
+   const remote=i===1&&window.BlockWorld2D?.isHost?.()?window.BlockWorld2D.remoteInput:null;
   const left=remote?!!remote.left:(i===0?down.has('KeyA'):down.has('ArrowLeft'));
   const right=remote?!!remote.right:(i===0?down.has('KeyD'):down.has('ArrowRight'));
   const dir=remote?Number(right)-Number(left):Number(right||(i===active&&touch.right))-Number(left||(i===active&&touch.left));
@@ -152,7 +153,8 @@ function mine(){
  if(!id||id===14){say('Aim at a nearby block to mine');return;}
  if(!reachable(x,y)){say('Move closer to mine');return;}
  if(set(x,y,0)){
-  const p=players[active];const drop=({1:2,3:8,10:25,11:11,17:17,18:18,21:21,22:29,23:30,24:31})[id]||id;
+  const p=players[active];p.action='mine';p.actionT=.4;
+   const drop=({1:2,3:8,10:25,11:11,17:17,18:18,21:21,22:29,23:30,24:31})[id]||id;
   p.inventory[drop]=(p.inventory[drop]||0)+1;
   focus=null;renderHotbar();say('+1 '+names[drop],900);
  }
@@ -166,6 +168,7 @@ function place(){
  if(!creative&&(p.inventory[selected]||0)<1){say('Mine '+names[selected]+' first');return;}
  if(players.some(q=>x*TILE<q.x+q.w&&x*TILE+TILE>q.x&&y*TILE<q.y+q.h&&y*TILE+TILE>q.y)){say('Cannot build inside a player');return;}
  if(set(x,y,selected)){
+  p.action='mine';p.actionT=.33;
   if(!creative)p.inventory[selected]--;
   focus=null;renderHotbar();say('Placed '+names[selected],800);
  }
@@ -212,7 +215,7 @@ function craftItem(){
 function smeltItem(){recipeIndex=4;renderCrafting();say('Select an ingot recipe and press Craft');}
 Object.assign(window,{craftItem,smeltItem,closeCrafting});
 function drawBackground(){
- if(window.BlockWorldArt){window.BlockWorldArt.background(ctx,{w:cssW/cameraZoom,h:cssH/cameraZoom,camX,camY,time:clock,dpr,zoom:cameraZoom});return;}
+ if(window.BlockWorldArt){window.BlockWorldArt.background(ctx,{w:cssW/cameraZoom,h:cssH/cameraZoom,camX,camY,time:clock,biome:biome(Math.max(0,Math.min(W-1,Math.floor((camX+cssW/cameraZoom*.5)/TILE)))),dpr,zoom:cameraZoom});return;}
  const grad=ctx.createLinearGradient(0,0,0,cssH);grad.addColorStop(0,'#4e83d6');grad.addColorStop(.6,'#a4d8ec');grad.addColorStop(1,'#e8dab5');
  ctx.fillStyle=grad;ctx.fillRect(0,0,cssW,cssH);
  const sunX=cssW*.75-Math.sin(clock*.03)*25,sunY=cssH*.22;
@@ -225,22 +228,46 @@ function drawBackground(){
   ctx.lineTo(cssW,cssH);ctx.closePath();ctx.fill();
  }
 }
-let cameraZoom=1;
+let cameraZoom=(window.innerWidth||800)<650?1.25:1.08;
+/* Preserve deliberate zoom settings while upgrading the old 100% mobile
+   default once. Existing world terrain and progress remain untouched. */
+function restoreCameraZoom(v){
+ const n=Number(v);
+ if(!Number.isFinite(n)||n<=0)return cameraZoom;
+ if(n<=1.001&&(window.innerWidth||800)<650){
+  try{
+   if(!localStorage.getItem('jozef-block-camera-upgrade-v1')){
+    localStorage.setItem('jozef-block-camera-upgrade-v1','1');
+    return 1.25;
+   }
+  }catch(_){}
+ }
+ return Math.max(1,Math.min(2,n));
+}
+
 function draw(){
  ctx.setTransform(dpr*cameraZoom,0,0,dpr*cameraZoom,0,0);ctx.imageSmoothingEnabled=false;
  const viewW=cssW/cameraZoom,viewH=cssH/cameraZoom;
  const smooth=window.BlockWorld2D?.isGuest?.() ? .27 : 1;
   for(const q of players){q.renderX=Number.isFinite(q.renderX)?q.renderX+(q.x-q.renderX)*smooth:q.x;q.renderY=Number.isFinite(q.renderY)?q.renderY+(q.y-q.renderY)*smooth:q.y;}
-  const p=players[active],goalX=p.renderX+p.w/2-viewW*.5,goalY=p.renderY+p.h/2-viewH*.46;
+  const p=players[active],partner=players[1-active];
+  const separation=Math.abs(partner.renderX-p.renderX);
+  const together=!window.BlockWorld2D?.connected?.()&&separation<viewW*.60;
+  const centerX=p.renderX+p.w/2+(together?(partner.renderX-p.renderX)*.28:0);
+  const goalX=centerX-viewW*.5+p.vx*.10,goalY=p.renderY+p.h/2-viewH*.46;
  camX+=(Math.max(0,Math.min(W*TILE-viewW,goalX))-camX)*.14;
  camY+=(Math.max(0,Math.min(H*TILE-viewH,goalY))-camY)*.14;
  drawBackground();
  if(window.BlockWorldArt?.caveBackdrop)window.BlockWorldArt.caveBackdrop(ctx,{surface,camX,camY,tileSize:TILE,w:viewW,h:viewH});
  const sx=Math.max(0,Math.floor(camX/TILE)-1),ex=Math.min(W,Math.ceil((camX+viewW)/TILE)+1);
  const sy=Math.max(0,Math.floor(camY/TILE)-1),ey=Math.min(H,Math.ceil((camY+viewH)/TILE)+1);
- for(let y=sy;y<ey;y++)for(let x=sx;x<ex;x++){const id=world[y][x];if(!id)continue;ctx.drawImage(tex(id),Math.round(x*TILE-camX),Math.round(y*TILE-camY),TILE+1,TILE+1);}
+ for(let y=sy;y<ey;y++)for(let x=sx;x<ex;x++){
+  const id=world[y][x];if(!id)continue;
+  const texture=window.BlockWorldArt?.terrain?.(world,id,x,y)||tex(id);
+  ctx.drawImage(texture,Math.round(x*TILE-camX),Math.round(y*TILE-camY),TILE+1,TILE+1);
+ }
  if(window.BlockWorldArt)window.BlockWorldArt.embellish(ctx,{world,surface,camX,camY,tileSize:TILE,w:viewW,h:viewH,time:clock});
- if(window.BlockWorldArt)players.forEach((q,i)=>window.BlockWorldArt.character(ctx,q,i,{camX,camY,w:viewW,h:viewH,active}));
+ if(window.BlockWorldArt)players.forEach((q,i)=>window.BlockWorldArt.character(ctx,q,i,{camX,camY,w:viewW,h:viewH,active,time:clock}));
  else players.forEach((q,i)=>{
   const x=Math.round(q.renderX-camX),y=Math.round(q.renderY-camY),bob=q.ground&&Math.abs(q.vx)>5?Math.sin(q.walk)*1.8:0;
   ctx.fillStyle='#14294466';ctx.beginPath();ctx.ellipse(x+q.w/2,y+q.h+1,15,4,0,0,Math.PI*2);ctx.fill();
@@ -259,7 +286,8 @@ function draw(){
 function frame(now){
  const dt=Math.min(.05,(now-lastTime)/1000);lastTime=now;acc+=dt;
  let n=0;while(acc>=1/60&&n<4){if(!window.BlockWorld2D?.isGuest?.())update(1/60);acc-=1/60;n++;}
- draw();window.BlockWorld2D?.onFrame?.(now);requestAnimationFrame(frame);
+ if(window.BlockWorld2D?.isGuest?.())for(const hero of players)hero.actionT=Math.max(0,(hero.actionT||0)-dt);
+ draw();window.BlockWorld2D?.onFrame?.(now);window.BlockWorldVisuals?.onFrame?.(now);requestAnimationFrame(frame);
 }
 function bindButton(id,key,once){
  const el=$('btn-'+id);el.setAttribute('role','button');el.setAttribute('tabindex','0');el.setAttribute('aria-label',id==='switch'?'Switch active player':id);
@@ -298,6 +326,7 @@ function createAdventureUi(){
  const panel=document.createElement('section');panel.id='bw-panel';panel.hidden=true;document.body.appendChild(panel);
  function action(label,fn){const b=document.createElement('button');b.type='button';b.textContent=label;b.addEventListener('click',fn);actions.appendChild(b);return b;}
  const followButton=action('FOLLOW ✓',()=>{teamFollow=!teamFollow;followButton.textContent=teamFollow?'FOLLOW ✓':'FOLLOW OFF';say(teamFollow?'Companion follows the leader':'Both players move independently');queueSave();});
+ action('FOREST CAMP',()=>travelToForest());
  action('BUILD KIT',()=>showKit());
  action('MAP',()=>showMap());
  action('TEAM PORTAL',()=>activateTeamPortal());
@@ -347,6 +376,32 @@ function createAdventureUi(){
  }
  document.addEventListener('keydown',ev=>{if(ev.code==='Escape')panel.hidden=true;});
  questHud();
+}
+/* Teleport is a menu-only travel convenience, not a world reset. The host
+   moves both players so co-op snapshots stay authoritative. */
+function travelToForest(){
+ if(window.BlockWorld2D?.isGuest?.()){say('Ask Daddy to open Forest Camp on the host device');return false;}
+ const targets=[];
+ for(let i=0;i<2;i++){
+  const p=players[i],start=i===0?58:61;
+  let spot=null;
+  for(let distance=0;distance<=6&&!spot;distance++){
+   for(const x of [start+distance,start-distance]){
+    if(x<55||x>66)continue;
+    let y=0;while(y<H-1&&get(x,y)===0)y++;
+    const py=y*TILE-p.h-.2,px=x*TILE+(TILE-p.w)/2;
+    if(y>2&&y<H-1&&!collision(p,px,py)) {spot={x:px,y:py};break;}
+   }
+  }
+  if(!spot){say('Forest Camp is blocked. Clear the landing area first.');return false;}
+  targets.push(spot);
+ }
+ players.forEach((p,i)=>{p.x=targets[i].x;p.y=targets[i].y;p.vx=p.vy=0;p.ground=true;p.renderX=p.x;p.renderY=p.y;});
+ const viewWidth=cssW/cameraZoom,viewHeight=cssH/cameraZoom;
+ camX=Math.max(0,Math.min(W*TILE-viewWidth,(players[0].x+players[1].x)/2-viewWidth/2));
+ camY=Math.max(0,Math.min(H*TILE-viewHeight,players[active].y-viewHeight*.48));
+ focus=null;queueSave();say('Back at Forest Camp — your world is preserved',2800);
+ return true;
 }
 function questHud(){
  const q=$('bw-mission');if(!q)return;
@@ -410,6 +465,7 @@ function attackEnemy(){
  }
  if(!victim){say('Move closer to a creature to attack',1150);return false;}
  nextAttackAt=now+360;
+ p.action='attack';p.actionT=.42;
  victim.hp=(Number.isFinite(victim.hp)?victim.hp:active===0?40:35)-(active===0?20:16);
  spark(victim.x+8,victim.y+7,15);chime();
  if(victim.hp<=0){
@@ -442,7 +498,12 @@ generate=function(){
    x+=2;
   }
  }
- for(let x=68;x<=77;x++){let y=0;while(y<H&&get(x,y)===0)y++;for(let k=1;k<5;k++)if(y-k>0)world[y-k][x]=0;}
+ for(const [start,end] of [[56,63],[68,77]])for(let x=start;x<=end;x++){
+   // Anchor the landing clearance to actual terrain, not the topmost leaves.
+   // Otherwise trees can leave solid trunks inside the player's spawn.
+   const ground=surface[x];
+   for(let y=Math.max(0,ground-9);y<ground;y++)world[y][x]=0;
+  }
  const px=portalX;let sy=0;while(sy<H&&get(px,sy)===0)sy++;
  for(let j=1;j<=5;j++){world[sy-j][px-2]=18;world[sy-j][px+2]=18;}for(let x=px-2;x<=px+2;x++)world[sy-5][x]=18;
  const oreX=Math.floor(W*.7);let oreY=0;while(oreY<H&&get(oreX,oreY)===0)oreY++;world[Math.min(H-4,oreY+17)][oreX]=18;
@@ -452,7 +513,7 @@ generate=function(){
 const baseRead=readSave;
 readSave=function(){
  const wasLoaded=baseRead();
- try{const s=JSON.parse(localStorage.getItem(advSaveKey)||'null');if(s){adventureSeed=s.adventureSeed||adventureSeed;questStage=Math.max(0,Math.min(Q.length,s.questStage||0));goals=Object.assign(goals,s.goals||{});explored=s.explored||{};achievements=s.achievements||[];portalUnlocked=!!s.portalUnlocked;teamFollow=s.teamFollow!==false;cameraZoom=Math.max(1,Math.min(2,Number(s.cameraZoom)||1));}}catch(_){}
+ try{const s=JSON.parse(localStorage.getItem(advSaveKey)||'null');if(s){adventureSeed=s.adventureSeed||adventureSeed;questStage=Math.max(0,Math.min(Q.length,s.questStage||0));goals=Object.assign(goals,s.goals||{});explored=s.explored||{};achievements=s.achievements||[];portalUnlocked=!!s.portalUnlocked;teamFollow=s.teamFollow!==false;cameraZoom=restoreCameraZoom(s.cameraZoom);}}catch(_){}
  return wasLoaded;
 };
 const baseSave=save;
@@ -675,7 +736,7 @@ createAdventureUi();
       });
       const e=data.extra||{};questStage=Math.max(0,Math.min(Q.length,Number(e.questStage)||0));goals=Object.assign(goals,e.goals||{});
       explored=e.explored||{};achievements=Array.isArray(e.achievements)?e.achievements:[];portalUnlocked=!!e.portalUnlocked;
-      teamFollow=e.teamFollow!==false;cameraZoom=Math.max(1,Math.min(2,Number(e.cameraZoom)||1));
+      teamFollow=e.teamFollow!==false;cameraZoom=restoreCameraZoom(e.cameraZoom);
       dirty=true;save();renderHotbar();questHud();say('Recovered your world from offline storage',3600);
      };
     }catch(err){console.warn('Offline recovery unavailable',err);}
@@ -928,13 +989,13 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
   onBlockChanged:null,onFrame:null,requestAction:null,
   getWorld:()=>({
    w:W,h:H,world:world.map(r=>r.slice()),surface:surface.slice(),
-   players:players.map(p=>({x:p.x,y:p.y,vx:p.vx,vy:p.vy,facing:p.facing,ground:p.ground,health:p.health,inventory:{...p.inventory}})),
+   players:players.map(p=>({x:p.x,y:p.y,vx:p.vx,vy:p.vy,facing:p.facing,ground:p.ground,health:p.health,action:p.action,actionT:p.actionT||0,inventory:{...p.inventory}})),
    creative,adventureSeed,realmIndex:window.__bw2dRealm?.get()??0,questStage,goals:{...goals},
    friends:friends.map(c=>({...c})),nightClock,weatherType,
    achievements:achievements.slice(),explored:{...explored},portalUnlocked
   }),
   getState:()=>({
-   players:players.map(p=>({x:p.x,y:p.y,vx:p.vx,vy:p.vy,facing:p.facing,ground:p.ground,health:p.health,inventory:{...p.inventory}})),
+   players:players.map(p=>({x:p.x,y:p.y,vx:p.vx,vy:p.vy,facing:p.facing,ground:p.ground,health:p.health,action:p.action,actionT:p.actionT||0,inventory:{...p.inventory}})),
    creative,realmIndex:window.__bw2dRealm?.get()??0,questStage,goals:{...goals},portalUnlocked,
    friends:friends.map(c=>({...c})),nightClock,weatherType
   }),
@@ -943,7 +1004,8 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
    world=s.world.map(r=>r.slice());surface=s.surface.slice();
    players.forEach((p,i)=>{
     const q=s.players[i];if(!q)return;
-    for(const k of ['x','y','vx','vy','facing','health'])if(Number.isFinite(q[k]))p[k]=q[k];
+    for(const k of ['x','y','vx','vy','facing','health','actionT'])if(Number.isFinite(q[k]))p[k]=q[k];
+    if(['mine','attack','idle'].includes(q.action))p.action=q.action;
     p.ground=!!q.ground;p.inventory={...q.inventory};
    });
    active=1;creative=!!s.creative;adventureSeed=s.adventureSeed;
@@ -960,7 +1022,8 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
    const oldInventory=JSON.stringify(players[1].inventory),oldCreative=creative;
    players.forEach((p,i)=>{
     const q=s.players[i];if(!q)return;
-    for(const k of ['x','y','vx','vy','facing','health'])if(Number.isFinite(q[k]))p[k]=q[k];
+    for(const k of ['x','y','vx','vy','facing','health','actionT'])if(Number.isFinite(q[k]))p[k]=q[k];
+    if(['mine','attack','idle'].includes(q.action))p.action=q.action;
     p.ground=!!q.ground;
     if(q.inventory&&typeof q.inventory==='object')p.inventory={...q.inventory};
    });

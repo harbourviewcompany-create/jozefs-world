@@ -59,6 +59,57 @@ function tile(id){
  if(id===1)for(let x=0;x<32;x+=5)rect(g,x,0,2,2,'#c9fa79');
  textures[id]=c;return c;
 }
+/* Adjacent soil and rock form seamless autotiled surfaces. Decorative variations
+   are cached by material, exposed edges, and deterministic position variants. */
+const terrainCache=new Map();
+let quality='cinematic';
+const sameMaterial=(a,b)=>{
+ if(!a||!b)return false;
+ const group=n=>[1,2].includes(n)?1:([3,8,9,10,11,14,17,18,21,22,23,24].includes(n)?3:n);
+ return group(a)===group(b);
+};
+function terrain(world,id,x,y){
+ const up=world[y-1]?.[x]||0,down=world[y+1]?.[x]||0,left=world[y]?.[x-1]||0,right=world[y]?.[x+1]||0;
+ const joins=(sameMaterial(id,up)?1:0)|(sameMaterial(id,right)?2:0)|
+  (sameMaterial(id,down)?4:0)|(sameMaterial(id,left)?8:0);
+ const variant=Math.floor(hash(x,y,id+801)*3);
+ const k=id+':'+joins+':'+variant;
+ if(terrainCache.has(k))return terrainCache.get(k);
+ const c=document.createElement('canvas');c.width=c.height=32;
+ const g=c.getContext('2d');if(!g)return tile(id);
+ g.drawImage(tile(id),0,0);
+ // Remove repeated cube outlines only on joined sides.
+ const main=[1,2].includes(id)?['#81512f','#9e6a42','#7d4d31'][variant]:
+  [3,8,9,10,11,17,18,21,22,23,24].includes(id)?['#798793','#8996a1','#71808b'][variant]:null;
+ if(main){
+  if(joins&8)rect(g,0,2,2,28,main);
+  if(joins&2)rect(g,30,2,2,28,main);
+  if(joins&1&&id!==1)rect(g,2,0,28,2,main);
+  if(joins&4)rect(g,2,30,28,2,main);
+ }
+ if(id===1){
+  // Grass fringe follows open cliff edges but never changes block collision.
+  if(!(joins&8)){rect(g,0,3,3,8,'#48912d');rect(g,2,9,2,5,'#3e812d');}
+  if(!(joins&2)){rect(g,29,2,3,9,'#5aa637');rect(g,29,11,2,4,'#3a812c');}
+  if(up===0){
+   for(let i=0;i<5;i++){const px=3+i*6,hh=2+Math.floor(hash(x,y,i)*6);
+    rect(g,px,0,2,hh,i%2?'#c8ef69':'#82d94c');
+   }
+  }
+ }else if(id===3||id===8){
+  if(!(joins&1))rect(g,4,0,20,2,'#d0d9df55');
+  if(!(joins&4))rect(g,3,29,25,2,'#2137495a');
+  if(variant===2){rect(g,9,9,10,2,'#33495945');rect(g,17,11,2,7,'#33495945');}
+ }else if(id===2){
+  if(variant===1){rect(g,5,8,6,2,'#54382880');rect(g,11,9,2,7,'#54382860');}
+  if(variant===2){rect(g,20,18,7,2,'#c7986580');}
+ }
+ if(terrainCache.size>600)terrainCache.clear();
+ terrainCache.set(k,c);return c;
+}
+function setQuality(v){
+ quality=v==='balanced'?'balanced':'cinematic';
+}
 function sun(g,x,y,r,time){
  g.save();
  const glow=g.createRadialGradient(x,y,2,x,y,r*2.9);
@@ -113,6 +164,38 @@ function distantTrees(g,w,h,cam,t){
   for(let l=0;l<3;l++){const width=19+hash(world,l,5)*18;path(g,[[x-width*.6,y-hei+l*12+16],[x+3,y-hei-l*10],[x+width*.7,y-hei+l*12+16]],l%2?'#3c886c':'#2d795b');}
  }
 }
+/* Forest backdrop is biome-aware. Every silhouette is fixed to world
+   coordinates so it scrolls naturally instead of sliding across the screen. */
+function forestBackdrop(g,w,h,cam,t){
+ const spacing=106,scroll=cam*.12,offset=((scroll%spacing)+spacing)%spacing;
+ for(let i=-2;i<Math.ceil(w/spacing)+3;i++){
+  const ix=Math.floor(scroll/spacing)+i,x=i*spacing-offset;
+  const y=h*.80+hash(ix,4,1)*23,ht=50+hash(ix,7,2)*40;
+  const thick=9+Math.floor(hash(ix,3,7)*5);
+  rect(g,x,y-ht,thick,h-y+ht,'#376a6a');
+  // Conifer silhouettes in three tiers create near/mid/far depth.
+  for(let tier=0;tier<3;tier++){
+   const yy=y-ht+12+tier*17,ww=24+tier*10+hash(ix,tier,11)*15;
+   path(g,[[x+thick/2,yy-23],[x-ww/2,yy+16],
+    [x+thick/2,yy+7],[x+thick/2+ww/2,yy+16]],
+    tier%2?'#307968':'#399a75');
+   rect(g,x-2,yy+11,thick+4,3,'#35775a');
+  }
+  if(hash(ix,9,4)>.72){
+   const cy=y-ht+13;
+   rect(g,x-14,cy,5,18,'#557b67');rect(g,x-22,cy-2,21,5,'#54a77b');
+  }
+ }
+ // Slender animated sunbeams between the trees.
+ if(quality==='cinematic'){
+  g.save();g.globalAlpha=.11;g.fillStyle='#fff8c3';
+  for(let i=0;i<3;i++){
+   const x=(i*237-scroll*.4+900)%Math.max(1,w);
+   path(g,[[x-6,h*.27],[x+9,h*.25],[x+58,h*.87],[x+11,h*.87]],'#fff3ba');
+  }
+  g.restore();
+ }
+}
 function cliff(g,w,h,cam,t){
  // Distant waterfall tucked to the right of the valley, behind the editable terrain.
  const offset=cam*.11,cliffX=w*.90+Math.sin(offset/400)*25,cliffY=h*.71;
@@ -137,8 +220,11 @@ function background(g,o){
  g.save();g.setTransform(o.dpr*o.zoom,0,0,o.dpr*o.zoom,0,0);
  const sky=g.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#0678dd');sky.addColorStop(.42,'#5cc7f8');sky.addColorStop(.78,'#c2f4fe');sky.addColorStop(1,'#f4e6b8');g.fillStyle=sky;g.fillRect(0,0,w,h);
  sun(g,w*.59,h*.19,18,t);
- for(let i=0;i<9;i++){const x=((i*151-pan*.09+t*(i%3+1)*.28)%(w+320)+(w+320))%(w+320)-150,y=h*(.14+.29*hash(i,0,9));cloud(g,x,y,21+hash(i,2,15)*28,.55+.38*hash(i,6,3));}
- mountains(g,w,h,pan,t);distantTrees(g,w,h,pan,t);cliff(g,w,h,pan,t);
+ for(let i=0;i<(quality==='balanced'?5:9);i++){const x=((i*151-pan*.09+t*(i%3+1)*.28)%(w+320)+(w+320))%(w+320)-150,y=h*(.14+.29*hash(i,0,9));cloud(g,x,y,21+hash(i,2,15)*28,.55+.38*hash(i,6,3));}
+ mountains(g,w,h,pan,t);
+ if(o.biome===1){forestBackdrop(g,w,h,pan,t);distantTrees(g,w,h,pan,t);}
+ else distantTrees(g,w,h,pan,t);
+ cliff(g,w,h,pan,t);
  const haze=g.createLinearGradient(0,h*.56,0,h);haze.addColorStop(0,'#daebff00');haze.addColorStop(1,'#9fd3e550');g.fillStyle=haze;g.fillRect(0,h*.55,w,h*.45);
  g.restore();
 }
@@ -191,10 +277,44 @@ function embellish(g,o){
    light.addColorStop(0,'#ffec9a65');light.addColorStop(1,'#ffac3e00');g.fillStyle=light;g.fillRect(wx-20,wy-70,84,84);
   }
  }
+ // Forest-only detail layer: fallen leaves, mushrooms, ferns and a trail sign.
+ // These sit on the real surface but don't introduce invisible collision geometry.
+ for(let x=start;x<=stop;x++){
+  const zone=Math.floor(x/36);
+  if(zone!==1||world[surface[x]]?.[x]!==1)continue;
+  const wx=x*T-camX,wy=surface[x]*T-camY,seed=hash(x,83,9);
+  if(wy<0||wy>h+30)continue;
+  if(seed>.38&&seed<.72){
+   const fx=wx+12,fy=wy;
+   rect(g,fx,fy-9,3,9,'#2a784c');
+   rect(g,fx-8,fy-12,10,4,'#4aa86a');
+   rect(g,fx+1,fy-17,8,4,'#82d98b');
+   rect(g,fx-5,fy-23,3,6,'#5abb70');
+  }
+  if(seed>.79&&seed<.94){
+   const mx=wx+20,my=wy-2;
+   rect(g,mx,my-11,4,10,'#f6dfae');
+   rect(g,mx-6,my-12,16,5,'#e45955');
+   rect(g,mx-3,my-15,11,4,'#f27e58');
+   rect(g,mx+2,my-13,3,2,'#fff7db');
+  }
+  if(quality==='cinematic'&&hash(x,9,31)>.82){
+   const px=wx+8+hash(x,4,6)*17,py=wy-14+Math.sin(time*1.2+x)*6;
+   rect(g,px,py,3,3,'#f6d85e');rect(g,px-3,py-2,3,3,'#b0f0e7');
+  }
+ }
+ if(start<=68&&stop>=68&&world[surface[68]]?.[68]===1){
+  const sx=68*T-camX,sy=surface[68]*T-camY;
+  rect(g,sx+15,sy-57,5,58,'#80542d');rect(g,sx-17,sy-60,65,28,'#704628');
+  rect(g,sx-14,sy-57,59,22,'#bd8551');rect(g,sx-11,sy-55,53,2,'#f4c781');
+  g.font='bold 8px system-ui';g.textAlign='center';g.fillStyle='#fef3bc';
+  g.fillText('OUR FOREST',sx+15,sy-43);
+  rect(g,sx-11,sy-38,18,2,'#ecd397');
+ }
  // Real, mineable ore deposits emit soft coloured light in deep cave layers.
  const firstY=clamp(Math.floor(camY/T)-1,0,world.length-1),lastY=clamp(Math.ceil((camY+h)/T)+1,0,world.length-1);
  for(let y=firstY;y<=lastY;y++)for(let x=start;x<=stop;x++){
-  const id=world[y]?.[x];if(![17,18,22,23].includes(id))continue;
+  const id=world[y]?.[x];if(quality==='balanced'||![17,18,22,23].includes(id))continue;
   const cx=x*T-camX+T*.5,cy=y*T-camY+T*.5;
   const tint=id===18?'#4cf0ff':id===17?'#ffe18f':id===22?'#53ffad':'#5c92ff';
   g.save();g.globalCompositeOperation='screen';
@@ -216,28 +336,88 @@ function pickaxe(g,x,y,flip){
  path(g,[[-11,-13],[-9,-18],[0,-22],[10,-20],[14,-15],[5,-17],[-5,-16]],'#e1f2f8');
  rect(g,-4,-19,8,3,'#6e8aa0');g.restore();
 }
+/* A small deterministic sprite atlas keeps detailed hero animations inexpensive.
+   Both characters share the same silhouette and movements, with their own colours. */
+const heroSprites=new Map();
+function heroSprite(i,pose,frame){
+ const key=i+':'+pose+':'+frame;
+ if(heroSprites.has(key))return heroSprites.get(key);
+ const canvas=document.createElement('canvas');canvas.width=32;canvas.height=48;
+ const g=canvas.getContext('2d');if(!g)return canvas;
+ const bob=pose==='run'?(frame%2?1:-1):pose==='idle'?(frame===2?1:0):0;
+ const leg=pose==='run'?[0,4,-2,3][frame]:pose==='jump'?-3:pose==='fall'?2:0;
+ const hoodie=i===0?'#148cc5':'#36b86a',highlight=i===0?'#58d7f8':'#83ef91';
+ const dark=i===0?'#14527f':'#207b4c';
+ // Boots and animated legs.
+ rect(g,7,33+leg,7,10-leg,'#30445f');rect(g,19,33-leg,7,10+leg,'#273951');
+ rect(g,5,41+leg,11,4,'#46382b');rect(g,18,41-leg,11,4,'#48382c');
+ rect(g,8,33+leg,3,7-leg,'#6e87a6');rect(g,20,33-leg,3,7+leg,'#6385a4');
+ // Shirt, backpack, arms, badge and belt.
+ rect(g,4,18+bob,24,18,'#082c42');
+ rect(g,7,17+bob,19,18,hoodie);rect(g,7,18+bob,4,14,highlight);
+ rect(g,22,18+bob,4,14,dark);
+ rect(g,9,29+bob,16,3,'#1a3e56');
+ rect(g,15,29+bob,5,3,'#f3c96b');
+ rect(g,4,19+bob,4,14,'#ecb38b');rect(g,25,19+bob,4,14,'#edbc8d');
+ rect(g,10,20+bob,13,6,i===0?'#dce9f6':'#ddfbde');
+ rect(g,14,20+bob,4,5,i===0?'#236cad':'#2b8b50');
+ // Face, brows, nose and smile.
+ rect(g,7,5+bob,19,15,'#ffcc9f');
+ rect(g,8,8+bob,3,10,'#e0a175');
+ rect(g,24,10+bob,2,8,'#ffe0b8');
+ rect(g,11,11+bob,5,2,'#68412e');
+ rect(g,20,11+bob,4,2,'#68412e');
+ rect(g,13,13+bob,3,4,'#142e41');
+ rect(g,21,13+bob,3,4,'#142e41');
+ rect(g,14,14+bob,1,1,'#fff');rect(g,22,14+bob,1,1,'#fff');
+ rect(g,17,17+bob,4,1,'#b9785c');
+ rect(g,17,18+bob,3,1,'#914a46');
+ // Hair styles: Dad has a short dark swept cut; Jo has a light fringe.
+ if(i===0){
+  rect(g,6,4+bob,22,6,'#38291f');rect(g,7,9+bob,4,3,'#38291f');
+  rect(g,10,2+bob,15,3,'#5b3a26');rect(g,15,5+bob,11,2,'#67432d');
+  rect(g,12,17+bob,4,2,'#9d6e58');rect(g,21,17+bob,2,2,'#9d6e58');
+ }else{
+  rect(g,6,5+bob,22,5,'#77451f');rect(g,7,3+bob,19,3,'#a36b36');
+  rect(g,9,9+bob,5,3,'#77451f');rect(g,17,7+bob,7,3,'#b17c47');
+ }
+ // Gloved tool hand for resource gathering.
+ if(pose==='mine'||pose==='attack'){
+  rect(g,25,26+bob,5,5,i===0?'#f4d182':'#9ce5d2');
+ }
+ if(pose==='jump')rect(g,3,17+bob,6,5,'#ffc899');
+ if(pose==='fall')rect(g,3,25+bob,6,5,'#ffc899');
+ if(heroSprites.size>70)heroSprites.clear();
+ heroSprites.set(key,canvas);return canvas;
+}
 function character(g,p,i,o){
- const x=Math.round(p.renderX-o.camX),y=Math.round(p.renderY-o.camY),w=p.w,h=p.h;
- if(x< -70||x>o.w+70||y< -75||y>o.h+80)return;
- const walk=Math.sin(p.walk||0)*Math.min(3,Math.abs(p.vx||0)*.05),fl=p.facing===-1?-1:1;
- g.save();shadow(g,x,y+h,w);
- // Pixel characters occupy exact collision-space feet with a bit of decorative silhouette.
- rect(g,x+4,y+27+walk,7,11-walk,'#2a3348');rect(g,x+w-11,y+27-walk,7,11+walk,'#273249');
- rect(g,x+3,y+34+walk,10,4,'#493025');rect(g,x+w-13,y+34-walk,10,4,'#493025');
- rect(g,x+2,y+15,w-4,16,i===0?'#159edb':'#37b75b');
- rect(g,x+2,y+16,4,13,i===0?'#76e5ff':'#8aed92');
- rect(g,x+w-6,y+16,4,13,i===0?'#0b5185':'#187c42');
- rect(g,x+4,y+5,w-8,13,'#ffc895');rect(g,x+3,y+4,w-6,5,i===0?'#3c241b':'#73431e');
- rect(g,x+4,y+1,w-9,5,i===0?'#4a3023':'#9c602a');
- rect(g,x+2,y+12,4,9,'#ce8c6d');
- const ex=fl===1?x+w-9:x+6;
- rect(g,ex,y+10,4,4,'#172c40');rect(g,ex+1,y+11,1,1,'#fff');
- if(i===0){rect(g,ex-1,y+14,6,3,'#623d30');rect(g,x+8,y+17,8,3,'#4a3125');}
- rect(g,x+w-3,y+18,5,8,'#e4a77b');
- pickaxe(g,x+w/2+fl*14,y+20,fl);
- g.font='800 10px system-ui';g.textAlign='center';g.lineWidth=2.5;g.strokeStyle='#08283c';g.strokeText(p.name,x+w/2,y-10);
- g.fillStyle='#fff';g.fillText(p.name,x+w/2,y-10);
- if(o.active===i){g.strokeStyle='#84f4ff';g.lineWidth=1.7;g.strokeRect(x-3,y-3,w+6,h+6);}
+ const x=p.renderX-o.camX,y=p.renderY-o.camY,w=p.w,h=p.h;
+ if(x< -70||x>o.w+70||y< -70||y>o.h+70)return;
+ const anim=p.actionT>0?p.action||'mine':!p.ground?(p.vy<0?'jump':'fall'):(Math.abs(p.vx)>5?'run':'idle');
+ const frame=anim==='run'?Math.abs(Math.floor((p.walk||0)*.55))%4:Math.floor((o.time||0)*2.3)%4;
+ const fl=p.facing===-1?-1:1;
+ const scale=1.0;
+ const px=Math.round(x+w/2),feet=Math.round(y+h);
+ g.save();
+ shadow(g,x-2,feet,w+4);
+ if(o.active===i){
+  g.strokeStyle='#8df7ff';g.lineWidth=2;g.beginPath();
+  g.ellipse(px,feet+3,w*.75,5,0,0,twopi);g.stroke();
+ }
+ g.translate(px,feet);g.scale(fl*scale,scale);
+ g.drawImage(heroSprite(i,anim,frame),-16,-47);
+ if(anim==='mine'||anim==='attack'){
+  g.save();g.rotate((-0.34+Math.sin((1-(p.actionT||0)) *17)*.42));
+  pickaxe(g,19,-23,1);g.restore();
+ }else{
+  pickaxe(g,20,-15,1);
+ }
+ g.restore();
+ g.save();
+ const label=p.name|| (i===0?'Daddy':'Jozef');
+ g.font='900 10px system-ui';g.textAlign='center';g.lineWidth=2.5;
+ g.strokeStyle='#092a3ed8';g.strokeText(label,px,y-12);
+ g.fillStyle='#f6fcff';g.fillText(label,px,y-12);
  g.restore();
 }
 function creature(g,c,o){
@@ -265,7 +445,7 @@ function foreground(g,o){
  g.save();
  // Tiny moving fireflies and atmospheric sunlight particles, reduced at low quality.
  g.globalCompositeOperation='screen';
- for(let i=0;i<17;i++){
+ for(let i=0;i<(quality==='balanced'?5:17);i++){
   const x=(hash(i,5,3)*w+Math.sin(time*(.3+hash(i,1,8)) + i)*22+w)%w;
   const y=(hash(i,6,4)*h+Math.cos(time*.4+i)*18+h)%h;
   g.globalAlpha=.16+.20*(.5+.5*Math.sin(time*2+i));
@@ -273,5 +453,5 @@ function foreground(g,o){
  }
  g.globalAlpha=1;g.restore();
 }
-window.BlockWorldArt=Object.freeze({tile,background,caveBackdrop,embellish,character,creature,foreground});
+window.BlockWorldArt=Object.freeze({tile,terrain,setQuality,getQuality:()=>quality,background,caveBackdrop,embellish,character,creature,foreground});
 })();
