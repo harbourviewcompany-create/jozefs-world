@@ -12,7 +12,7 @@ const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 let seed=Math.floor(Math.random()*1e9),realm=0,baseSeed=seed,dimensions={},edits=new Map(),chunks=new Map(),queue=[],lastCX=Infinity,lastCZ=Infinity;
 const DIMKEY='jozefs-block-3d-dimensions-v1';
 let selected=4,creative=true,third=true,sound=false,stage=0,stats={wood:0,placed:0,explore:0,crystal:0,boss:0,portal:0},rewards=[],discovered={},defeated=false,portalOpened=false;
-const hero={x:2.5,y:12,z:2.5,vy:0,yaw:0,pitch:-.24,role:0,hp:100,ground:false,double:false,inventory:{}};
+const hero={x:2.5,y:12,z:2.5,vy:0,yaw:0,pitch:-.24,role:0,hp:100,ground:false,double:false,inventory:{},action:'idle',actionUntil:0};
 const companion={x:4.5,y:12,z:4.5,role:1,hp:100};
 let boss={x:32.5,y:12,z:32.5,hp:120,alive:true},mobs=[],clock=0,last=0,frames=0,dirty=false,saveClock=0,skyPhase=0;
 let quality='AUTO',adaptiveCap=1.5,renderCap=1.5,averageFrame=.0167,lastChunksDrawn=0,webglLost=false,chaseCam=null;
@@ -431,8 +431,11 @@ function render(){
   // Grounded contact shadow follows the player independently of their height.
   if(quality!=='ECO')voxelBox(v,p.x,ground(p.x,p.z)-.022,p.z,.56,.009,.37,23);
   const gait=Math.sin(clock*10.5+(role?1.5:0))*.12*Math.min(1,p.walkPower||0);
+  const activity=p.actionUntil>clock&&['mine','build','attack'].includes(p.action);
+  const swing=activity?Math.sin(clamp(1-(p.actionUntil-clock)/.52,0,1)*Math.PI)*.38:0;
+  const idleBounce=p.walkPower>.1?Math.abs(Math.sin(clock*10.5))*.032:Math.sin(clock*1.8+(role?1:0))*.011;
   const arm=-gait*.85;
-  const jump=isActive&&!p.ground?.045:0;
+  const jump=(isActive&&!p.ground?.045:0)+idleBounce;
   const part=(ox,y,oz,w,h,d,id)=>{
    voxelBox(v,p.x+ox*cs+oz*sn,p.y+y+jump,p.z+oz*cs-ox*sn,w,h,d,id,yaw);
   };
@@ -440,8 +443,9 @@ function render(){
    const off=side*.135,swing=side*gait;
    part(off,.035,swing,.23,.20,.28,18);
    part(off,.235,swing*.6,.215,.41,.215,17);
-   part(side*.29,.81,-side*arm,.16,.38,.18,shirt);
-   part(side*.29,.69,-side*arm,.17,.19,.19,skin);
+   const working=side===1?swing:0;
+   part(side*.29,.81+working*.27,-side*arm-working*.55,.16,.36,.18,shirt);
+   part(side*.29,.69+working*.48,-side*arm-working*.75,.17,.18,.19,skin);
   }
   part(0,.60,0,.52,.52,.37,shirt);
   part(0,.63,-.20,.32,.12,.06,accent);
@@ -469,7 +473,17 @@ function render(){
   }
   part(0,1.26,-.243,.14,.035,.045,21);
   part(dad?.23:-.23,.94,-.19,.10,.10,.04,accent);
-  if(isActive&&(keys.KeyE||keys.KeyF))part(.39,.53,-.18,.10,.48,.10,9);
+  // Visible animated pickaxe / short wooden mallet held in the right hand.
+  if(activity){
+   const ty=.70+swing*.44,tz=-.34-swing*.64;
+   part(.40,ty,tz,.072,.49,.073,4);
+   const head=p.action==='attack'?3:p.action==='build'?9:3;
+   part(.40,ty+.40,tz,.43,.115,.13,head);
+   if(p.action==='mine'){
+    part(.16,ty+.42,tz,.12,.09,.17,19);
+    part(.64,ty+.42,tz,.12,.09,.17,19);
+   }
+  }
  };
  figure(companion,companion.role);if(third)figure(hero,hero.role,true);
  // Scattered magical fireflies drift near the player in forest clearings.
@@ -614,6 +628,7 @@ function hotbar(){const bar=$('hotbar');bar.replaceChildren();for(let id=1;id<ty
  b.addEventListener('click',()=>{selected=id;hotbar();});bar.appendChild(b);
 }}
 function change(kind){
+ hero.action=kind==='mine'?'mine':'build';hero.actionUntil=clock+.44;
  const a=target();if(!a){announce('Aim at a block within reach');return;}
  if(kind==='mine'){
   const p=a.hit,id=block(p.x,p.y,p.z);if(p.y<1)return;
@@ -627,6 +642,7 @@ function change(kind){
  }
 }
 function attack(){
+ hero.action='attack';hero.actionUntil=clock+.52;
  let victim=null,dist=4.3;for(const m of mobs){const d=Math.hypot(m.x-hero.x,m.z-hero.z);if(m.hp>0&&d<dist){victim=m;dist=d;}}
  const bd=Math.hypot(boss.x-hero.x,boss.z-hero.z);
  if(boss.alive&&bd<4.3&&bd<=dist+.3)victim=boss;
@@ -688,7 +704,7 @@ function step(dt){
  if(boss.alive&&d<13){if(d>2){boss.x+=(hero.x-boss.x)/d*.45*dt;boss.z+=(hero.z-boss.z)/d*.45*dt;boss.y=ground(boss.x,boss.z);}
  else if(clock-(boss.last||0)>1.4&&!creative){hero.hp=Math.max(0,hero.hp-16);boss.last=clock;announce('The Crystal Golem attacks!');}}
  const zone=biome(hero.x,hero.z);if(!discovered[zone]&&Math.hypot(hero.x-2,hero.z-2)>24){discovered[zone]=true;gain('explore');}
- if(conn?.open){lastNet+=dt;if(lastNet>.13){lastNet=0;send({t:'move',x:hero.x,y:hero.y,z:hero.z,yaw:hero.yaw,hp:hero.hp});}}
+ if(conn?.open){lastNet+=dt;if(lastNet>.13){lastNet=0;send({t:'move',x:hero.x,y:hero.y,z:hero.z,yaw:hero.yaw,hp:hero.hp,action:hero.actionUntil>clock?hero.action:null});}}
  if(saveClock>15){saveClock=0;if(dirty)save();}
  stream();if(frames%15===0)hud();
 }
@@ -806,6 +822,7 @@ function receive(m){
   if(!Number.isFinite(m.x+m.y+m.z)||Math.abs(m.x)>1e6||Math.abs(m.z)>1e6)return;
   companion.x=m.x;companion.y=m.y;companion.z=m.z;companion.hp=m.hp;
    if(Number.isFinite(m.yaw))companion.yaw=m.yaw;
+   if(['mine','build','attack'].includes(m.action)){companion.action=m.action;companion.actionUntil=clock+.28;}
  }else if(m.t==='edit'&&!host){modify(m.x,m.y,m.z,m.id,false);}
  else if(m.t==='boss'&&!host){boss.hp=clamp(Number(m.hp)||0,0,120);boss.alive=boss.hp>0;if(!boss.alive)defeated=true;}
  else if(m.t==='progress'&&!host){const previous=stage;stage=clamp(Number(m.stage)||0,0,6);stats=Object.assign(stats,m.stats||{});defeated=!!m.defeated;portalOpened=!!m.portalOpened;
