@@ -89,7 +89,11 @@ function readSave(){
  try{
   const raw=localStorage.getItem(KEY);if(!raw)return false;const s=JSON.parse(raw);
   if(s.version!==3||!Array.isArray(s.world)||s.world.length!==H||s.world.some(row=>!Array.isArray(row)||row.length!==W))return false;
-  world=s.world;surface=new Array(W);for(let x=0;x<W;x++){let found=38;for(let y=0;y<H;y++)if(world[y][x]===1){found=y;break;}surface[x]=found;}
+  world=s.world;surface=new Array(W);for(let x=0;x<W;x++){
+   let found=38;
+   for(let y=0;y<H;y++){const id=world[y][x];if(id===1||id===6||id===16||id===3){found=y;break;}}
+   surface[x]=found;
+  }
   creative=!!s.creative;active=s.active===1?1:0;selected=blockable.includes(s.selected)?s.selected:2;
   players.forEach((p,i)=>{const data=s.players?.[i];if(!data)return;p.x=Number.isFinite(data.x)?Math.max(0,Math.min(W*TILE-p.w,data.x)):p.x;p.y=Number.isFinite(data.y)?Math.max(0,Math.min(H*TILE-p.h,data.y)):p.y;p.inventory=data.inventory&&typeof data.inventory==='object'?data.inventory:p.inventory;p.facing=data.facing===-1?-1:1;p.vx=p.vy=0;});
   return true;
