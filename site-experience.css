@@ -4440,3 +4440,11 @@ body.versus-focused #versus.is-playing #versus-leave:not([hidden]){
   position:absolute!important;z-index:60!important;pointer-events:auto!important;
   top:calc(env(safe-area-inset-top) + clamp(82px,12dvh,112px))!important;right:10px!important;
 }
+/* Private room approvals: clear, touch-size confirmations for the room host. */
+#versus #versus-approval:not([hidden]){display:flex;flex-wrap:wrap;align-items:center;gap:8px;min-height:56px;
+ padding:10px;margin:7px 0;border:1px solid #90d7fa;border-radius:14px;
+ background:linear-gradient(135deg,#12304a,#09202c);color:#effffc}
+#versus #versus-approval strong{flex:1 1 100%;font:800 12px/1.4 system-ui,sans-serif}
+#versus #versus-approval button{min-height:44px;padding:9px 15px;border:1px solid #a8e1ff;
+ border-radius:10px;background:#155a79;color:#fff;font:800 12px/1 system-ui,sans-serif}
+#versus #versus-approval #versus-approve{background:#d0ff69;color:#11271d;border-color:#e7ffaa}

@@ -1507,7 +1507,7 @@ body.nav-open .nav-extra{display:inline-flex}
       <label class="versus-code-label" for="versus-code">Have a room code?</label>
       <div class="versus-join"><input id="versus-code" placeholder="6-letter code" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false"><button type="button" id="versus-join">Join room</button></div>
     </div>
-    <div id="versus-room" hidden><div class="versus-room-row"><strong id="versus-room-code"></strong><button type="button" id="versus-share">Copy invite</button></div><button type="button" id="versus-ready" disabled>Waiting for opponent</button></div>
+    <div id="versus-room" hidden><div class="versus-room-row"><strong id="versus-room-code"></strong><button type="button" id="versus-share">Copy invite</button></div><div id="versus-approval" hidden role="group" aria-label="Approve room player"><strong>Someone wants to join your private room.</strong><button type="button" id="versus-approve">Allow player</button><button type="button" id="versus-decline">Decline</button></div><button type="button" id="versus-ready" disabled>Waiting for opponent</button></div>
     <div class="versus-scoreboard" aria-label="Match score">
       <div class="vs-team vs-team-jozef"><span class="vs-avatar" aria-hidden="true"><span class="vs-avatar-face"></span></span><span class="vs-team-name">JOZEF<small>HOME</small></span><b id="versus-score-jozef">0</b></div>
       <div class="vs-center"><span class="vs-match-label">JOZEF'S WORLD CUP</span><strong id="versus-clock">2:00</strong><span class="vs-period">MATCH TIME</span></div>
