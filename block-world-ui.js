@@ -10,6 +10,39 @@ if(!menu||!content||!pad||!knob)return;
 const worldActions=$('bw-actions');
 if(worldActions){content.appendChild(worldActions);worldActions.classList.remove('closed');}
 const worldToggle=$('bw-menu-toggle');if(worldToggle)worldToggle.hidden=true;
+// Graphics preset is entirely client-side and doesn't touch player/world saves.
+const QUALKEY='jozefs-block-visual-quality-v1';
+let qualityPref='auto',qualityFrames=0,qualityStart=0,qualityResolved=false;
+try{const stored=localStorage.getItem(QUALKEY);if(['auto','cinematic','balanced'].includes(stored))qualityPref=stored;}catch(_){}
+const reduceMotion=!!window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+const qualityButton=document.createElement('button');
+qualityButton.type='button';qualityButton.id='bw-quality';qualityButton.className='bw-quality';
+function effectiveQuality(){return qualityPref==='auto'?(reduceMotion||qualityResolved?'balanced':'cinematic'):qualityPref;}
+function applyQuality(){
+ const level=effectiveQuality();
+ window.BlockWorldArt?.setQuality?.(level);
+ qualityButton.textContent='GRAPHICS · '+qualityPref.toUpperCase()+(qualityPref==='auto'?' ('+level+')':'');
+ document.body.classList?.toggle?.('bw-balanced',level==='balanced');
+}
+qualityButton.addEventListener('click',()=>{
+ qualityPref=qualityPref==='auto'?'cinematic':qualityPref==='cinematic'?'balanced':'auto';
+ qualityFrames=0;qualityStart=0;qualityResolved=false;
+ try{localStorage.setItem(QUALKEY,qualityPref);}catch(_){}
+ applyQuality();
+});
+content.appendChild(qualityButton);
+applyQuality();
+function sampleFrame(now){
+ if(qualityPref!=='auto'||qualityResolved||reduceMotion)return;
+ if(!qualityStart){qualityStart=now;return;}
+ qualityFrames++;
+ if(now-qualityStart<4800)return;
+ const fps=qualityFrames*1000/(now-qualityStart);
+ // Avoid switching profiles for a brief startup stutter.
+ if(fps<37){qualityResolved=true;applyQuality();}
+ else{qualityStart=now;qualityFrames=0;}
+}
+
 const mission=$('bw-mission');
 if(mission){
  mission.classList.add('compact');mission.setAttribute('role','button');
@@ -54,5 +87,5 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)release();}
 // Support touchscreen users whose first contact lands on the translucent directional
 // control, and desktop keyboard users who expect left/right arrows.
 pad.addEventListener('dblclick',e=>e.preventDefault());
-window.BlockWorldVisuals=Object.freeze({version:'2026.10.1',menuOpen:()=>!content.hidden,missionExpanded:()=>!!mission?.classList.contains('expanded')});
+window.BlockWorldVisuals=Object.freeze({version:'2026.10.2',menuOpen:()=>!content.hidden,missionExpanded:()=>!!mission?.classList.contains('expanded'),graphics:()=>effectiveQuality(),onFrame:sampleFrame});
 })();
