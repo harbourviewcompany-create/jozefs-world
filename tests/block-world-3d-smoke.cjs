@@ -225,9 +225,10 @@ hostGame.tick(1);hostGame.testHooks.makeHost(outgoing);
 const enemy=hostGame.testHooks.mobs()[0];
 assert.ok(enemy&&Number.isInteger(enemy.id),'mob IDs are stable for network references');
 hostGame.testHooks.moveCompanion(enemy.x,enemy.z);
-hostGame.testHooks.guestAttack({target:'mob',mobId:enemy.id});
+hostGame.testHooks.receive({t:'request',op:'attack',target:'mob',mobId:enemy.id});
 assert.equal(enemy.hp,6,'host applies Jozef combat damage to ordinary enemies');
 assert.ok(outgoing.some(m=>m.t==='combat'),'host broadcasts authoritative creature health');
+assert.equal(hostGame.testHooks.mobs()[0].hp,6,'request message without x/z is accepted by host dispatch');
 const guestGame=boot(),guestOutgoing=[];
 guestGame.tick(1);guestGame.testHooks.makeGuest(guestOutgoing);
 guestGame.testHooks.receive({t:'hello',...hostGame.testHooks.worldSnapshot(),x:2.5,y:10,z:2.5});
@@ -240,6 +241,9 @@ assert.ok(Math.abs(guestGame.status().hero.x-11.5)<.01&&
 
 guestGame.testHooks.receive(outgoing.find(m=>m.t==='combat'));
 assert.equal(guestGame.testHooks.mobs().find(m=>m.id===enemy.id).hp,6,'guest applies host creature health');
+const invalidHp=enemy.hp;
+hostGame.testHooks.receive({t:'request',op:'attack',target:'mob',mobId:-1000,x:NaN});
+assert.equal(enemy.hp,invalidHp,'invalid enemy id cannot alter host combat state');
 hostGame.testHooks.guestAttack({target:'mob',mobId:enemy.id});
 assert.equal(enemy.hp,6,'rate-limited repeated attack cannot instantly kill an enemy');
 
