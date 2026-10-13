@@ -11,6 +11,16 @@ An interactive family game universe with a spatial 3D headquarters and a shared 
 
 Block World 3D is a **native WebGL voxel game**, not a CSS imitation. The original 2D edition and its device saves remain independently playable.
 
+### Cinematic Forest Expedition (13 October 2026)
+
+The real interactive 3D game has received a deeper graphical overhaul. It now renders ten-float voxels with true face normals, directional day/night sunlight, procedural terrain detail, material shading for bark/soil/crystal, smooth distance fog, and a WebGL 1 compatibility shader when enhanced fragment compilation fails.
+
+Daddy and Jozef now use articulated, locally rotated 3D models with distinct hair, facial features, clothing, denim, boots, equipment and walking animation. The follow camera is pulled back, gently smoothed and collision-aware; nearby opaque foliage can no longer force the view directly into tree crowns. Dynamic fireflies, swaying ferns, mushrooms, sparing flowers, and canopy detail make the Evergreen Forest more recognizable. **ECO** graphics skips decorative extras; AUTO and QUALITY retain richer scenery.
+
+The top mobile bar now shows a single MENU button. Headquarters, mode selection and PLAY TOGETHER remain available inside it. The compass, collapsible radar, compact mission HUD, joystick and action buttons occupy less of the screen. The previous save schema, inventory, creative mode, private peer-to-peer sessions, realms and both 2D editions are preserved.
+
+**Verification:** the repository smoke tests simulate WebGL startup, directional shader registration, fallback shader selection, movement, camera preferences, world saves, game progression, UI, and multiplayer invitations. Physical iPhone Safari GPU compilation, real-device visual quality, frame rate, and two-device network performance still require acceptance testing.
+
 ### October 2026 voxel rendering and mobile upgrade
 
 Block World 3D now starts with a collision-aware third-person camera and lets players switch to first-person mode in MENU. Camera mode, yaw and pitch persist as optional fields in the existing version-1 save, without resetting saved worlds.
