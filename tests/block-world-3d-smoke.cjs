@@ -105,7 +105,7 @@ function boot(shared=new Map(),options={}){
  assert.equal(sample.width,256,'atlas width is WebGL1 power of two');
  assert.equal(sample.height,128,'atlas height is WebGL1 power of two');
  assert.notEqual(window.BlockWorld3DTextures.tileFor(1,0),window.BlockWorld3DTextures.tileFor(1,1),'grass top and dirt side use different artwork');
- const instrumented=script.replace('window.BlockWorld3D=Object.freeze',`window.__block3dTests={award,modify,portal,visitForest,receive,worldSnapshot,applyRealm,guestAttack,sendCombat,save,spawn,updateBeacon,mobs:()=>mobs,boss:()=>boss,beacon:()=>forestBeacon,inventory:()=>hero.inventory,guestInventory:()=>guestInventory,setCreative:(v)=>{creative=v;},unlockPortal:()=>{defeated=true;portalOpened=true;hero.x=40;hero.z=40;companion.x=40;companion.z=40;},makeHost:(sent)=>{host=true;conn={open:true,send:v=>sent.push(v)};},makeGuest:(sent)=>{host=false;guestActive=true;conn={open:true,send:v=>sent.push(v)};},moveCompanion:(x,z)=>{companion.x=x;companion.z=z;companion.y=ground(x,z);},setPlayer:(x,z)=>{hero.x=x;hero.z=z;hero.y=ground(x,z);}};window.BlockWorld3D=Object.freeze`);
+ const instrumented=script.replace('window.BlockWorld3D=Object.freeze',`window.__block3dTests={award,modify,portal,visitForest,receive,worldSnapshot,applyRealm,guestAttack,sendCombat,save,spawn,updateBeacon,mobs:()=>mobs,boss:()=>boss,beacon:()=>forestBeacon,inventory:()=>hero.inventory,guestInventory:()=>guestInventory,setCreative:(v)=>{creative=v;},unlockPortal:()=>{defeated=true;portalOpened=true;hero.x=40;hero.z=40;companion.x=40;companion.z=40;},makeHost:(sent)=>{host=true;conn={open:true,send:v=>sent.push(v)};},makeGuest:(sent)=>{host=false;guestActive=true;conn={open:true,send:v=>sent.push(v)};},moveCompanion:(x,z)=>{companion.x=x;companion.z=z;companion.y=ground(x,z);},setHealth:(hp)=>{hero.hp=hp;},setPlayer:(x,z)=>{hero.x=x;hero.z=z;hero.y=ground(x,z);}};window.BlockWorld3D=Object.freeze`);
   assert.notEqual(instrumented,script,'test instrumentation inserted');
   vm.runInNewContext(instrumented,sandbox,{timeout:15000});
  const status=()=>window.BlockWorld3D?.status();
@@ -218,6 +218,12 @@ assert.ok(movementSave.hero.z<moving.status().hero.z+.001,'traversal saved on pa
 assert.ok(movementSave.hero.z<2.5,'movement persisted without mining');
 const movementReload=boot(moving.shared);movementReload.tick(1);
 assert.ok(Math.abs(movementReload.status().hero.z-movementSave.hero.z)<.01,'saved traversal reloads');
+moving.testHooks.setHealth(63);
+for(const fn of moving.events.get('pagehide')||[])fn({});
+const healthSave=JSON.parse(moving.shared.get('jozefs-block-3d-v1')||'{}');
+assert.equal(healthSave.hero.hp,63,'health is included in saved hero state');
+const healthReload=boot(moving.shared);healthReload.tick(1);
+assert.equal(healthReload.status().hero.hp,63,'health remains intact after reload');
 
 // Host controls enemy health; guest receives state rather than simulating its own mobs.
 const hostGame=boot(),outgoing=[];
@@ -264,11 +270,13 @@ beaconGame.tick(2);
 assert.equal(beaconGame.testHooks.visitForest(),true,'forest camp remains accessible');
 const beacon=beaconGame.testHooks.beacon();
 assert.ok(beacon&&!beacon.lit,'new forest monument starts unlit');
-beaconGame.testHooks.setPlayer(beacon.x-1.6,beacon.z+1.4);
-beaconGame.testHooks.moveCompanion(beacon.x+6,beacon.z+1.4);
+beaconGame.tick(3);
+assert.equal(beaconGame.testHooks.beacon().lit,false,'forest travel starts outside the cooperative rune pads');
+beaconGame.testHooks.setPlayer(beacon.x-3.2,beacon.z+3.4);
+beaconGame.testHooks.moveCompanion(beacon.x+7,beacon.z+3.4);
 beaconGame.testHooks.updateBeacon();
 assert.equal(beaconGame.testHooks.beacon().lit,false,'one hero alone cannot activate the team beacon');
-beaconGame.testHooks.moveCompanion(beacon.x+1.6,beacon.z+1.4);
+beaconGame.testHooks.moveCompanion(beacon.x+3.2,beacon.z+3.4);
 beaconGame.testHooks.updateBeacon();
 assert.equal(beaconGame.testHooks.beacon().lit,true,'both heroes activate the two-pad beacon');
 beaconGame.testHooks.save(true);
