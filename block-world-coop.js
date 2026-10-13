@@ -8,7 +8,7 @@ const g=window.BlockWorld2D,$=id=>document.getElementById(id);
 if(!g||!$('coop-panel'))return;
 let peer=null,conn=null,role='solo',invite='',ready=false,closed=false;
 let stateAt=0,inputAt=0,snapshotAt=0,lastRealm=-1,lastInput={left:false,right:false,jump:false};
-let lastPacketAt=0,editCount=0,lastActionAt=0,joinTimeout=0,lastGiveAt=0,lastRegroupAt=[0,0],lastLocatorAt=0;
+let lastPacketAt=0,editCount=0,lastActionAt=0,joinTimeout=0,lastGiveAt=0,lastRegroupAt=[-15000,-15000],lastLocatorAt=0;
 let retryTimer=0,retryCount=0,joiningCode='',peerReady=false;
 const COOP_RE=/^[0-9a-f]{32}$/i;
 const copyInput=s=>({left:!!s?.left,right:!!s?.right,jump:!!s?.jump});
@@ -191,7 +191,10 @@ function startHost(){
   });
   peer.on('connection',c=>{if(conn||ready){c.close();return;}attach(c);});
   peer.on('disconnected',()=>{peerReady=false;if(typeof peer.reconnect==='function')try{peer.reconnect();}catch(_){};if(!connected())setStatus('Signalling interrupted · reconnecting…');});
-  peer.on('error',e=>{const reason='Could not host: '+(e?.type||'network error');leave({reason,skipReload:true});show();});
+  peer.on('error',e=>{
+   if(connected()){setStatus('Game connected · signalling temporarily interrupted');return;}
+   const reason='Could not host: '+(e?.type||'network error');leave({reason,skipReload:true});show();
+  });
   setStatus('Creating private game…');
  }catch(e){leave({reason:e.message,skipReload:true});}
 }
@@ -207,7 +210,7 @@ function join(){
  if(role==='host'){setStatus('Close your hosted game before joining another');return;}
  if(role==='guest'){if(!connected()&&!ready){clearTimeout(retryTimer);retryTimer=0;tryReconnect();}else setStatus('Already connecting');return;}
  g.saveHost();
- role='guest';ready=false;joiningCode=code;retryCount=0;peerReady=false;
+ role='guest';ready=false;joiningCode=code;retryCount=0;peerReady=false;$('coop-disconnect').disabled=false;
  try{
   peer=new window.Peer();
   peer.on('open',()=>{peerReady=true;setStatus('Connecting to Daddy…');
