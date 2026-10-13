@@ -361,15 +361,16 @@ body.nav-open .nav-extra{display:inline-flex}
     <div class="arena-layout">
       <div class="arena-game">
         <div class="arena-topbar">
-          <span class="arena-brand"><span class="studio-status-dot"></span> JOZEF FC <small id="arena-venue">NEIGHBOURHOOD COURT</small></span>
+          <span class="arena-brand"><span class="studio-status-dot"></span> <span data-club-name>JOZEF FC</span> <small id="arena-venue">NEIGHBOURHOOD COURT</small></span>
           <div class="arena-header-actions">
             <button id="arena-settings-toggle" type="button" aria-label="Match settings" aria-expanded="false" aria-controls="arena-settings">⚙</button>
             <button id="arena-start" type="button" class="arena-kickoff">KICK OFF →</button>
             <button type="button" class="play-exit" aria-label="Close game">×</button>
           </div>
         </div>
-        <div class="arena-scoreboard"><div><small>JOZEF FC</small><strong id="arena-score">0 : 0</strong><small>RIVALS</small></div><div><small>TIME</small><strong id="arena-clock">75s</strong><small id="arena-tactic">BALANCED</small></div></div>
+        <div class="arena-scoreboard"><div><small><span class="club-crest-mini" data-club-crest aria-hidden="true"></span><span data-club-name>JOZEF FC</span></small><strong id="arena-score">0 : 0</strong><small>RIVALS</small></div><div><small>TIME</small><strong id="arena-clock">75s</strong><small id="arena-tactic">BALANCED</small></div></div>
         <div class="arena-mini-ticker"><span>SHOTS <strong id="arena-shots">0</strong></span><span>SAVES <strong id="arena-keeper-saves">0</strong></span><span class="arena-chance-badge">SHOT <strong id="arena-shot-quality" aria-label="Shot on-target chance">9%</strong></span><button id="arena-daily-progress" type="button" aria-label="Open daily Arena challenges">DAILY 0/4</button></div>
+        <div class="arena-twists" role="status" aria-live="polite"><span id="arena-wacky-chip" class="arena-chip arena-chip-wacky" hidden></span><span id="arena-ghost-chip" class="arena-chip arena-chip-ghost" hidden></span></div>
         <div class="arena-pitch-frame"><canvas id="arena-canvas" width="420" height="600" tabindex="0" role="img" aria-label="Live football game. Move using the directional pad or arrow keys. Aim with 1 2 3, pass using J, shoot using K and skill burst with L."></canvas></div>
         <div class="arena-aim-bar" role="group" aria-label="Choose a shot target">
           <div class="arena-aim-caption">AIM YOUR SHOT <strong id="arena-aim-label">LEFT POST</strong></div>
@@ -410,6 +411,20 @@ body.nav-open .nav-extra{display:inline-flex}
           <label><input id="arena-camera-toggle" type="checkbox" checked> Dynamic camera</label>
           <label><input id="arena-haptics-toggle" type="checkbox" checked> Haptic feedback (where supported)</label>
           <label>Player kit <select id="arena-kit-select"><option value="club">My Club kit</option><option value="night">Neon City kit · 2 wins</option><option value="gold">Legend kit · 5 wins</option></select></label>
+          <div class="arena-twist-box">
+            <strong>🤪 WACKY RULES</strong>
+            <label>Match twist <select id="arena-wacky-choice"><option value="off">Off · normal football</option><option value="spin">🎲 Surprise me (1 twist)</option><option value="double">🎲🎲 Double wacky (2 twists)</option><option value="moon">🌙 Moon Gravity</option><option value="giant">⚽ Giant Ball</option><option value="tiny">🔸 Tiny Ball</option><option value="banana">🍌 Banana Pitch</option><option value="bighead">🤪 Big Heads</option><option value="goldrain">🪙 Gold Rain</option><option value="mirror">🪞 Mirror Mode</option></select></label>
+            <p id="arena-wacky-note">Normal football.</p>
+          </div>
+          <div class="arena-twist-box">
+            <strong>👻 GHOST RACE</strong>
+            <label>Race a ghost <select id="arena-ghost-mode"><option value="off">No ghost</option><option value="best">My best match</option><option value="last">My last match</option><option value="friend">A friend’s ghost</option></select></label>
+            <label>Name on my ghost <input id="arena-ghost-name" type="text" maxlength="12" autocomplete="off" spellcheck="false" placeholder="JOZEF"></label>
+            <label>Share my ghost <select id="arena-ghost-share-slot"><option value="best">My best match</option><option value="last">My last match</option></select></label>
+            <div class="arena-ghost-row"><input id="arena-ghost-share" type="text" readonly aria-label="Ghost code to share" autocomplete="off"><button id="arena-ghost-copy" type="button">COPY</button></div>
+            <div class="arena-ghost-row"><input id="arena-ghost-import" type="text" autocomplete="off" spellcheck="false" placeholder="Paste a friend’s ghost code" aria-label="Paste a friend’s ghost code"><button id="arena-ghost-load" type="button">LOAD</button></div>
+            <p id="arena-ghost-note" role="status" aria-live="polite">Finish a match to record your first ghost.</p>
+          </div>
           <div class="arena-upgrade-row">
             <label>Train Jozef <select id="arena-upgrade-type"><option value="speed">Speed</option><option value="shot">Finishing</option><option value="pass">Passing</option></select></label>
             <button type="button" id="arena-buy-upgrade">UPGRADE · 3 STARS</button>
@@ -945,6 +960,23 @@ body.nav-open .nav-extra{display:inline-flex}
       <div class="jw-section-head"><div><span class="jw-eyebrow">YOUR PLAYERS</span><h3>✨ Jozef FC Collector Cards</h3></div><span class="jw-level-chip"><span id="clubhouse-card-count">1 / 7</span> unlocked</span></div>
       <p>Earn these cards through goals, league matches, learning and adventures. No purchases or random prizes.</p>
       <div class="clubhouse-card-grid" id="clubhouse-cards" aria-label="Soccer player card collection"></div>
+    </div>
+    <div class="jw-card club-designer" id="club-designer">
+      <div class="jw-section-head"><div><span class="jw-eyebrow">DESIGN YOUR CLUB</span><h3>🛡️ Crest, colours &amp; mascot</h3></div></div>
+      <p>Make the club yours! Your crest shows up on the Arena scoreboard and on your Chronicle poster, and your teammates wear your colours.</p>
+      <div class="club-designer-grid">
+        <div class="club-designer-preview-wrap"><div class="club-designer-preview" id="club-designer-preview" role="img" aria-label="Your club crest preview"></div><p class="club-designer-caption" id="club-design-caption">Give your mascot a name!</p></div>
+        <div class="club-design-form">
+          <label for="club-design-name">Club name <input id="club-design-name" type="text" maxlength="14" autocomplete="off" spellcheck="false" placeholder="JOZEF FC"></label>
+          <fieldset><legend>Crest shape</legend><div class="club-chip-row" id="club-design-shapes" role="radiogroup" aria-label="Crest shape"></div></fieldset>
+          <fieldset><legend>Main colour</legend><div class="club-swatch-row" id="club-design-primary" role="radiogroup" aria-label="Main colour"></div></fieldset>
+          <fieldset><legend>Second colour</legend><div class="club-swatch-row" id="club-design-secondary" role="radiogroup" aria-label="Second colour"></div></fieldset>
+          <fieldset><legend>Mascot</legend><div class="club-chip-row" id="club-design-mascots" role="radiogroup" aria-label="Mascot"></div></fieldset>
+          <label for="club-design-mascot-name">Mascot name <input id="club-design-mascot-name" type="text" maxlength="14" autocomplete="off" spellcheck="false" placeholder="e.g. BLAZE"></label>
+          <button type="button" id="club-design-reset">Reset to Jozef FC</button>
+        </div>
+      </div>
+      <p class="jw-privacy-note" id="club-design-status" role="status" aria-live="polite">Your club design stays on this device. Nothing is uploaded.</p>
     </div>
     <div class="jw-card clubhouse-backup">
       <div class="jw-section-head"><div><span class="jw-eyebrow">KEEP YOUR CLUB SAFE</span><h3>💾 Save club progress</h3></div></div>
@@ -1609,8 +1641,8 @@ body.nav-open .nav-extra{display:inline-flex}
         <button type="button" id="chronicle-print">PRINT POSTER ↗</button>
       </div>
       <article class="chronicle-poster" id="chronicle-poster" aria-label="Print-ready Jozef FC matchday poster">
-        <div class="chronicle-poster-top"><span>JOZEF FC <b>// AFTER DARK</b></span><span>EST. THE FUTURE</span></div>
-        <div class="chronicle-poster-field" aria-hidden="true"><span class="chronicle-poster-shield">J <b>/ 11</b></span></div>
+        <div class="chronicle-poster-top"><span><span data-club-name>JOZEF FC</span> <b>// AFTER DARK</b></span><span>EST. THE FUTURE</span></div>
+        <div class="chronicle-poster-field" aria-hidden="true"><span class="chronicle-poster-shield">J <b>/ 11</b></span><span class="chronicle-poster-crest" data-club-crest></span></div>
         <div class="chronicle-poster-body">
           <p id="chronicle-cover-category">THE CLUB CHRONICLE / ISSUE 01</p>
           <h3 id="chronicle-cover-headline">THE STORY STARTS HERE.</h3>
@@ -1620,7 +1652,7 @@ body.nav-open .nav-extra{display:inline-flex}
             <span>LEVEL <strong id="chronicle-cover-level">01</strong></span>
           </div>
         </div>
-        <div class="chronicle-poster-footer"><span>BUILT FOR JOZEF FC</span><span id="chronicle-cover-date">CLUB EDITION</span></div>
+        <div class="chronicle-poster-footer"><span>BUILT FOR <span data-club-name>JOZEF FC</span></span><span id="chronicle-cover-date">CLUB EDITION</span></div>
       </article>
       <p class="chronicle-print-help">Use Print Poster to print or save your cover as a PDF using your device’s print menu. No online sharing is required.</p>
     </div>
@@ -1687,6 +1719,7 @@ body.nav-open .nav-extra{display:inline-flex}
   <script src="career.js" defer></script>
   <script src="clubhouse.js"></script>
   <script src="squad.js"></script>
+
   <script src="arena-bundle.js"></script>
   <script src="scramble-positions.js" defer></script>
   <script src="celebrate.js" defer></script>
