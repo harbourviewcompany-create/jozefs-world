@@ -102,11 +102,11 @@
     call: 'Kickoff',
     star: { x: 360, y: 120, on: true }, super: '',
     keepers: { left: 210, right: 210 },
-    shots: 0, saves: 0
+    shots: 0, saves: 0, lastShot: null
   };
   const keeperState = { left: { commit: 0, target: 210 }, right: { commit: 0, target: 210 } };
   const targets = { Dad: null, Jozef: null };
-  let kickLock = 0;
+  let kickLock = 0, goalFxFrames = 0;
   // Host-authoritative stamina keeps two-player matches fair.
   const sprintUntil={Dad:0,Jozef:0},sprintReady={Dad:0,Jozef:0};
   let nextLocalSprint=0;
@@ -274,7 +274,11 @@
       return colors[team] || '#60c5ff';
     } catch { return '#60c5ff'; }
   }
-  function player(p,color,name){window.JozefVersusVisual.player(ctx,p,color,name,name===room.who,portrait,tick,cameraFlipped);}
+  function player(p,color,name){
+    const shot=state.lastShot,active=shot&&shot.age<13&&shot.who===name;
+    const saved=state.call==='Saved'&&name==='Keeper';
+    window.JozefVersusVisual.player(ctx,p,color,name,name===room.who,portrait,tick,cameraFlipped,active?'kick':saved?'save':'run');
+  }
 
     function keeper(side, color, name) {
     const body = { x: side === 'left' ? 52 : 668, y: state.keepers?.[side] || 210, vx: 0, vy: 0, face: side === 'left' ? 1 : -1 };
@@ -347,7 +351,9 @@
     glow.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, W, H);
-    if (state.call && state.call !== lastCall && /scores|GOAL|Saved|Full time|post|Kickoff|Star|SUPER/.test(state.call)) { burst(ball.x, ball.y, state.call.includes('Dad') ? '#d7ff4a' : '#7ee0ff', 36); shake = 14; if (/scores/.test(state.call)) { net(); navigator.vibrate?.(40); } else if (/Saved/.test(state.call)) { punch(); navigator.vibrate?.(20); } else if (/Kickoff/.test(state.call)) whistle(); else chime(); voice(state.call); document.querySelector('.versus-scoreboard')?.classList.add('goal'); setTimeout(() => document.querySelector('.versus-scoreboard')?.classList.remove('goal'), 900); }
+    if (state.call && state.call !== lastCall && /scores|GOAL|Saved|Full time|post|Kickoff|Star|SUPER/.test(state.call)) {
+      if(/scores|GOAL/.test(state.call))goalFxFrames=18;
+      burst(ball.x, ball.y, state.call.includes('Dad') ? '#d7ff4a' : '#7ee0ff', 36); shake = reduced.matches?0:14; if (/scores/.test(state.call)) { net(); navigator.vibrate?.(40); } else if (/Saved/.test(state.call)) { punch(); navigator.vibrate?.(20); } else if (/Kickoff/.test(state.call)) whistle(); else chime(); voice(state.call); document.querySelector('.versus-scoreboard')?.classList.add('goal'); setTimeout(() => document.querySelector('.versus-scoreboard')?.classList.remove('goal'), 900); }
     if(state.call!==lastCall)callFlashUntil=performance.now()+950;
     lastCall = state.call;
     trail.push({ x: ball.x, y: ball.y });
@@ -359,6 +365,12 @@
     sparks.forEach(s => { s.x += s.vx; s.y += s.vy; s.vy += 0.15; s.life -= 1; ctx.fillStyle = s.color; ctx.globalAlpha = Math.max(0, s.life / 18); ctx.fillRect(s.x, s.y, 4, 4); ctx.globalAlpha = 1; });
     for (let i = sparks.length - 1; i >= 0; i--) if (sparks[i].life <= 0) sparks.splice(i, 1);
     if (state.star?.on) window.JozefVersusVisual.star(ctx,state.star,tick,reduced.matches);
+    if(state.lastShot&&state.lastShot.age<12)window.JozefVersusVisual.impact(
+      ctx,state.lastShot.x,state.lastShot.y,state.lastShot.age,'shot',reduced.matches);
+    if(goalFxFrames>0){
+      window.JozefVersusVisual.impact(ctx,ball.x,ball.y,18-goalFxFrames,'goal',reduced.matches);
+      goalFxFrames--;
+    }
     for (const p of [state.dad, state.jozef]) {
       if (Math.hypot(p.vx,p.vy)>1.2 && tick%4===0) sparks.push({x:p.x,y:p.y+16,vx:(Math.random()-.5)*.4,vy:.2,life:10,color:'#c8b48a'});
     }
@@ -370,7 +382,7 @@
     keeper('right','#f4f7f2',userKeeper('right')||'Keeper');
     ctx.save();
     ctx.fillStyle='rgba(0,0,0,.33)';ctx.beginPath();ctx.ellipse(ball.x+3,ball.y+6,9,3,0,0,Math.PI*2);ctx.fill();
-    window.JozefVersusVisual.ball(ctx,ball,Math.hypot(state.ball.vx,state.ball.vy));
+    window.JozefVersusVisual.ball(ctx,ball,Math.hypot(state.ball.vx,state.ball.vy),tick);
     ctx.restore();
     /* scoreboard is accessible HTML outside the canvas */
     /* ctx.fillStyle = '#08140f';
@@ -441,6 +453,9 @@
       if(mode==='shot'&&state.super===who){state.super='';state.call='SUPER';}
       state.ball.vx=sx/length*speed;
       state.ball.vy=sy/length*speed+(Math.random()-.5)*(bouncing?1.4:.35)*(mode==='shot'?8:2);
+      // A deliberately small, host-simulated curve: aim above/below centre to bend.
+      state.ball.spin=mode==='shot'?(shot.aim-1)*.016*Math.min(1.5,power):0;
+      state.lastShot={who,x:state.ball.x,y:state.ball.y,age:0};
       if(bouncing)state.call='Off balance';
       shot.power=1;kickLock=16;
       if(mode==='shot')state.shots=(state.shots||0)+1;
@@ -526,6 +541,7 @@
       broadcast();return;}
     if(kickoffHold>0){kickoffHold--;broadcast();return;}
     const cpuPace=practiceRival(),now=performance.now();
+    if(state.lastShot&&state.lastShot.age<24)state.lastShot.age++;
     if(!isKeeper('Dad'))move(state.dad,targets.Dad,room.practice&&room.who!=='Dad'?cpuPace:(now<sprintUntil.Dad?6.2:4.4));
     if(!isKeeper('Jozef'))move(state.jozef,targets.Jozef,room.practice&&room.who!=='Jozef'?cpuPace:(now<sprintUntil.Jozef?6.2:4.4));
     cooperativeRival();
@@ -633,7 +649,7 @@
   function stopInput(){keys.clear();stickVector=null;targets[room.who]=null;send({type:'aim',x:null,y:null});const nub=$('versus-nub'),stick=$('versus-stick');nub.style.left=(stick.clientWidth-nub.offsetWidth)/2+'px';nub.style.top=(stick.clientHeight-nub.offsetHeight)/2+'px';}
   function cleanup(){clearTimeout(connectTimer);clearTimeout(countdownTimer);clearTimeout(recoveryTimer);clearTimeout(connectWatchdog);reconnectAttempts=0;const pending=room.pending,oldConn=room.conn,oldPeer=room.peer;room.pending=null;room.conn=null;room.peer=null;pending?.close();oldConn?.close();oldPeer?.destroy();room.other='';room.otherPeer='';room.reconnecting=false;room.ready=false;room.remoteReady=false;room.host=false;room.practice=false;room.together=false;room.otherSpot='forward';room.remoteActive=true;room.phase='lobby';cameraYReady=false;cameraPhase='';stopInput();syncUI();}
   function fail(message){cleanup();say(message);}
-  function freshMatch(){state.matchId=crypto.randomUUID?.()||Array.from(crypto.getRandomValues(new Uint8Array(16)),v=>v.toString(16).padStart(2,'0')).join('');state.kick='';state.score={dad:0,jozef:0};state.matchLeft=room.practice?practiceSeconds:120;state.call='Kickoff';kickLock=0;lastBotKick=-100;savedMatch=false;resultRecorded=false;state.overtime=false;state.star={x:360,y:120,on:true};state.super='';nextLocalSprint=0;dekeReady.Dad=dekeReady.Jozef=0;sprintUntil.Dad=sprintUntil.Jozef=0;sprintReady.Dad=sprintReady.Jozef=0;reset(0);
+  function freshMatch(){state.matchId=crypto.randomUUID?.()||Array.from(crypto.getRandomValues(new Uint8Array(16)),v=>v.toString(16).padStart(2,'0')).join('');state.kick='';state.score={dad:0,jozef:0};state.matchLeft=room.practice?practiceSeconds:120;state.call='Kickoff';kickLock=0;lastBotKick=-100;savedMatch=false;resultRecorded=false;state.overtime=false;state.star={x:360,y:120,on:true};state.super='';state.lastShot=null;goalFxFrames=0;nextLocalSprint=0;dekeReady.Dad=dekeReady.Jozef=0;sprintUntil.Dad=sprintUntil.Jozef=0;sprintReady.Dad=sprintReady.Jozef=0;reset(0);
     const length=Math.ceil(state.matchLeft);$('versus-clock').textContent=Math.floor(length/60)+':'+String(length%60).padStart(2,'0');
   }
   function startMatch(){
@@ -816,9 +832,24 @@
     if(!room.host||room.phase!=='playing'||isKeeper(who))return false;
     const now=performance.now();if(now<dekeReady[who])return false;
     const me=who==='Dad'?state.dad:state.jozef;
-    if(Math.hypot(me.x-state.ball.x,me.y-state.ball.y)>42)return false;
-    dekeReady[who]=now+1600;
     const other=room.together?state.rival:who==='Dad'?state.jozef:state.dad;
+    const hasBall=Math.hypot(me.x-state.ball.x,me.y-state.ball.y)<=42;
+    const contest=Math.hypot(me.x-other.x,me.y-other.y)<55&&
+      Math.hypot(other.x-state.ball.x,other.y-state.ball.y)<40;
+    if(!hasBall&&!contest)return false;
+    dekeReady[who]=now+1600;
+    if(!hasBall&&contest){
+      // Host adjudicates takeaways: no remote client can move a ball directly.
+      const drive=room.together?1:me.face||1;
+      state.ball.x=Math.max(40,Math.min(W-40,me.x+drive*23));
+      state.ball.y=Math.max(36,Math.min(H-36,me.y));
+      state.ball.vx=drive*4.2;
+      state.ball.vy=(me.y-other.y)*.09;
+      state.ball.spin=0;
+      state.call='TAKEAWAY';
+      burst(me.x,me.y,'#93ddff',15);
+      return true;
+    }
     const gap=Math.hypot(me.x-other.x,me.y-other.y),direction=room.together?1:(me.face||1);
     me.x=Math.max(46,Math.min(W-46,me.x+direction*28));
     me.y=Math.max(40,Math.min(H-40,me.y+(other.y>me.y?-10:10)));
@@ -886,6 +917,19 @@
       const vector=stickVector||(x||y?{x,y}:null);
       const inRange=Math.hypot(me.x-state.ball.x,me.y-state.ball.y)<92;
       $('versus-kick')?.classList.toggle('in-range', inRange && room.phase==='playing');
+      const foe=room.together?state.rival:room.who==='Dad'?state.jozef:state.dad;
+      const canTackle=room.phase==='playing'&&!isKeeper(room.who)&&
+        Math.hypot(me.x-state.ball.x,me.y-state.ball.y)>42&&
+        Math.hypot(me.x-foe.x,me.y-foe.y)<55&&
+        Math.hypot(foe.x-state.ball.x,foe.y-state.ball.y)<40;
+      const dekeButton=$('versus-deke');
+      const dekeLabel=dekeButton?.querySelector('.vs-action-label');
+      if(dekeLabel){
+        const action=canTackle?'TACKLE':'DEKE';
+        if(dekeLabel.textContent!==action)dekeLabel.textContent=action;
+        dekeButton.setAttribute('aria-label',canTackle?'Tackle and attempt to win the ball':'Deke to beat a defender');
+        dekeButton.classList.toggle('can-tackle',canTackle);
+      }
       if(vector&&now-lastSent>40){
         const worldDx=portrait?(cameraFlipped?-vector.y:vector.y):vector.x;
         const worldDy=portrait?(cameraFlipped?vector.x:-vector.x):vector.y;

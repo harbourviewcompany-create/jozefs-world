@@ -1521,3 +1521,60 @@ body.versus-focused #versus.is-playing .versus-stage{background:#061827!importan
    grid-template-rows:repeat(2,clamp(42px,12vh,60px))!important
  }
 }
+
+/* Versus Arcade 2026: unobstructed touch HUD, defensive contextual actions,
+   and responsive feedback. Rendering and input remain local and offline safe. */
+body.versus-focused #versus.is-playing .versus-actions .vs-action{
+  background-color:rgba(6,28,53,.74)!important;
+  border-width:1.5px!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 -12px 20px rgba(0,16,42,.25),0 2px 9px rgba(0,8,23,.5)!important;
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  touch-action:manipulation;
+}
+body.versus-focused #versus.is-playing .versus-actions #versus-aim{
+ background:linear-gradient(145deg,rgba(15,90,152,.84),rgba(5,30,71,.68))!important;
+ border-color:rgba(91,202,255,.92)!important;
+}
+body.versus-focused #versus.is-playing .versus-actions #versus-deke{
+ background:linear-gradient(145deg,rgba(119,43,201,.82),rgba(56,15,112,.70))!important;
+ border-color:rgba(218,145,255,.9)!important;
+}
+body.versus-focused #versus.is-playing .versus-actions #versus-deke.can-tackle{
+ background:linear-gradient(145deg,rgba(230,135,39,.88),rgba(112,46,18,.78))!important;
+ border-color:#ffce7c!important;
+}
+body.versus-focused #versus.is-playing .versus-actions #versus-pass{
+ background:linear-gradient(145deg,rgba(21,132,203,.82),rgba(9,60,115,.68))!important;
+ border-color:rgba(114,210,255,.92)!important;
+}
+body.versus-focused #versus.is-playing .versus-actions #versus-kick{
+ background:radial-gradient(circle at 34% 18%,rgba(145,239,76,.92),rgba(23,130,47,.88) 65%,rgba(13,79,26,.8))!important;
+ border:2px solid rgba(216,255,144,.95)!important;
+ box-shadow:inset 0 2px 2px #ffffffe0,0 0 12px rgba(141,255,92,.5),0 4px 10px #031e1499!important;
+}
+body.versus-focused #versus.is-playing #versus-stick{
+ background:radial-gradient(circle,rgba(3,35,59,.32),rgba(5,25,47,.56) 72%,rgba(4,16,37,.77))!important;
+ box-shadow:inset 0 0 18px #0008,0 0 0 2px #1b9bff2b,0 0 12px #29acff70!important;
+ border-color:rgba(73,200,255,.82)!important;
+}
+body.versus-focused #versus.is-playing .vs-movement #versus-sprint{
+ background:rgba(9,52,85,.76)!important;
+ box-shadow:inset 0 1px 0 #ffffff44,0 3px 10px #001326a6!important;
+ backdrop-filter:blur(10px);
+}
+#versus .vs-action-icon{font-size:clamp(20px,5.4vw,30px);line-height:1}
+#versus .vs-action-label{font-size:clamp(10px,3vw,14px);letter-spacing:.015em}
+#versus .vs-action:focus-visible,#versus #versus-stick:focus-visible,
+#versus #versus-sprint:focus-visible{
+ outline:3px solid #fff7a1!important;outline-offset:3px!important;
+}
+#versus .versus-scoreboard.goal{animation:vs-score-flash .8s ease-out 1}
+@keyframes vs-score-flash{
+  0%{filter:brightness(1.7);box-shadow:0 0 22px rgba(193,255,130,.65)}
+  100%{filter:brightness(1);box-shadow:inset 0 1px #ffffff42,0 8px 26px #000b}
+}
+@media(prefers-reduced-motion:reduce){
+ #versus .versus-scoreboard.goal{animation:none!important}
+}
+

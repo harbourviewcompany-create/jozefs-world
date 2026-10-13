@@ -33,7 +33,7 @@ test('stadium, actors, glowing star and ball render offline without external ass
 test('both published pages use the new renderer before gameplay and retain all match actions',()=>{
  const html=read('index.html');
  assert.equal(html,read('world.html'),'published homepage and world must be identical');
- const a=html.indexOf('src="versus-visual-2026.js?v=2"'),b=html.indexOf('src="versus.js?v=87"');
+ const a=html.indexOf('src="versus-visual-2026.js?v=3"'),b=html.indexOf('src="versus.js?v=88"');
  assert.ok(a>=0&&b>a,'art renderer precedes match controller');
  for(const id of ['versus-score-jozef','versus-score-dad','versus-clock','versus-stick','versus-aim','versus-deke','versus-pass','versus-sprint','versus-kick','versus-again','versus-leave']){
   assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,id+' id must be unique');
@@ -67,4 +67,37 @@ test('mobile portrait camera uses full screen width with camera-follow, not a sh
  assert.match(js,/const focus=Math\.max\(distance\(state\.ball\.x\),distance\(me\.x\)\)/);
  assert.match(js,/cameraYReady/);
  assert.match(js,/room\.practice&&room\.who==='Dad'\?'ROVERS'/);
+});
+
+
+test('kinematic pose, shot halo and goalkeeper save animate in canvas without affecting gameplay',()=>{
+ const {c,g,events}=render();
+ g.player(c,{x:140,y:210,vx:5,vy:0,face:-1},'#e2ff69','Dad',true,true,42,false,'kick');
+ g.player(c,{x:52,y:210,vx:0,vy:0,face:1},'#f6f7fc','Keeper',false,true,48,true,'save');
+ g.impact(c,240,180,9,'shot',false);
+ g.impact(c,60,210,6,'save',false);
+ g.ball(c,{x:350,y:210,spin:.012},8,70);
+ assert.ok(events.some(([kind,label])=>kind==='text'&&label==='Dad'));
+ assert.ok(events.filter(([kind])=>kind==='ellipse').length>8);
+});
+test('host controlled tackle, spin and visual action state stay finite and available to both players',()=>{
+ const code=read('versus.js');
+ const physics=read('versus-physics.js');
+ assert.match(code,/state\.lastShot=\{who,x:state\.ball\.x,y:state\.ball\.y,age:0\}/);
+ assert.match(code,/state\.call='TAKEAWAY'/);
+ assert.match(code,/dekeButton\.classList\.toggle\('can-tackle',canTackle\)/);
+ assert.match(code,/shot\.aim-1\)\*\.016/);
+ assert.match(physics,/body\.spin\*=\.984/);
+});
+test('curved shots remain bounded and lose spin rather than gaining energy',()=>{
+ const window={};
+ vm.runInNewContext(read('versus-physics.js'),{window,Math},{timeout:3000});
+ const {BALL,integrate}=window.JozefPhysics;
+ const a={x:180,y:200,vx:9,vy:0,spin:.025};
+ const b={x:180,y:200,vx:9,vy:0,spin:-.025};
+ for(let t=0;t<18;t++){integrate(a,BALL);integrate(b,BALL);}
+ assert.ok(a.y>200&&b.y<200,'opposite spin steers the ball in opposite directions');
+ assert.ok(Math.abs(a.spin)<.025&&Math.abs(b.spin)<.025,'spin decays');
+ assert.ok(Math.hypot(a.vx,a.vy)<9,'kinetic energy decays');
+ assert.ok(a.x<350&&a.x>195,'travel remains bounded');
 });

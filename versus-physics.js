@@ -41,6 +41,16 @@
   }
 
   function integrate(body, spec) {
+    if(spec===BALL&&Number.isFinite(body.spin)&&Math.abs(body.spin)>.0001){
+      // Gentle curved shots. Rotation preserves kinetic energy and stays deterministic
+      // for the host simulation; clients only receive the authoritative ball state.
+      const angle=Math.max(-.035,Math.min(.035,body.spin));
+      const vx=body.vx,vy=body.vy,co=Math.cos(angle),si=Math.sin(angle);
+      body.vx=vx*co-vy*si;
+      body.vy=vx*si+vy*co;
+      body.spin*=.984;
+      if(Math.abs(body.spin)<.0004)body.spin=0;
+    }
     body.x += body.vx;
     body.y += body.vy;
     const speed = Math.hypot(body.vx, body.vy);
