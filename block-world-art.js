@@ -154,6 +154,20 @@ function embellish(g,o){
    light.addColorStop(0,'#ffec9a65');light.addColorStop(1,'#ffac3e00');g.fillStyle=light;g.fillRect(wx-20,wy-70,84,84);
   }
  }
+ // Real, mineable ore deposits emit soft coloured light in deep cave layers.
+ const firstY=clamp(Math.floor(camY/T)-1,0,world.length-1),lastY=clamp(Math.ceil((camY+h)/T)+1,0,world.length-1);
+ for(let y=firstY;y<=lastY;y++)for(let x=start;x<=stop;x++){
+  const id=world[y]?.[x];if(![17,18,22,23].includes(id))continue;
+  const cx=x*T-camX+T*.5,cy=y*T-camY+T*.5;
+  const tint=id===18?'#4cf0ff':id===17?'#ffe18f':id===22?'#53ffad':'#5c92ff';
+  g.save();g.globalCompositeOperation='screen';
+  const light=g.createRadialGradient(cx,cy,1,cx,cy,39);
+  light.addColorStop(0,tint+'a0');light.addColorStop(.32,tint+'46');light.addColorStop(1,tint+'00');
+  g.fillStyle=light;g.fillRect(cx-39,cy-39,78,78);
+  const sparkle=Math.sin(time*2.9+x*3+y*4);
+  if(sparkle>.83){g.fillStyle='#fff';g.fillRect(cx-1,cy-5,2,10);g.fillRect(cx-5,cy-1,10,2);}
+  g.restore();
+ }
  g.restore();
 }
 function shadow(g,x,y,w){
