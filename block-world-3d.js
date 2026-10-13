@@ -362,6 +362,8 @@ function spawn(){
  boss={x:32.5,z:32.5,y:ground(32.5,32.5),hp:bossHp,alive:bossHp>0};
 }
 function step(dt){
+ const blocked=!$('drawer').hidden||!$('pairPanel').hidden;
+ if(blocked&&!conn?.open){stream();return;}
  clock+=dt;saveClock+=dt;
  for(const p of effects){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;p.vy-=5*dt;}
  effects=effects.filter(p=>p.life>0);
@@ -373,13 +375,13 @@ function step(dt){
   if(gp.buttons?.[2]?.pressed&&!gamepadHeld.mine)change('mine');gamepadHeld.mine=!!gp.buttons?.[2]?.pressed;
   if(gp.buttons?.[3]?.pressed&&!gamepadHeld.place)change('place');gamepadHeld.place=!!gp.buttons?.[3]?.pressed;
   if(gp.buttons?.[1]?.pressed&&!gamepadHeld.attack)attack();gamepadHeld.attack=!!gp.buttons?.[1]?.pressed;
- }const f=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-joy.y;
- const a=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+joy.x;
+ }const f=blocked?0:(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-joy.y;
+ const a=blocked?0:(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+joy.x;
  let dx=Math.sin(hero.yaw)*f+Math.cos(hero.yaw)*a,dz=-Math.cos(hero.yaw)*f+Math.sin(hero.yaw)*a;
  const len=Math.hypot(dx,dz);if(len>1){dx/=len;dz/=len;}const speed=hero.role?5.6:4.8;
  if(!visible(hero.x+dx*speed*dt,hero.y,hero.z))hero.x+=dx*speed*dt;
  if(!visible(hero.x,hero.y,hero.z+dz*speed*dt))hero.z+=dz*speed*dt;
- const jump=!!(keys.Space||keys._padJump);
+ const jump=!blocked&&!!(keys.Space||keys._padJump);
  if(jump&&hero.ground){hero.vy=8.3;hero.ground=false;hero.double=false;}
  else if(jump&&!jumpWasDown&&hero.role===1&&!hero.ground&&!hero.double){hero.vy=7.2;hero.double=true;announce('Jozef double jump!',750);}
  jumpWasDown=jump;
@@ -519,6 +521,24 @@ function joinRoom(code){
  peer.on('error',()=>status('Cannot connect · host must be online'));
 }
 function initUi(){
+ const mission=$('mission');
+ if(mission){
+  const toggle=()=>{const expanded=mission.classList.toggle('expanded');mission.setAttribute('aria-expanded',String(expanded));mission.setAttribute('aria-label',expanded?'Collapse mission details':'Expand mission details');};
+  mission.addEventListener('click',toggle);
+  mission.addEventListener('keydown',e=>{if(e.code==='Enter'||e.code==='Space'){e.preventDefault();toggle();}});
+ }
+ const radar=$('radar'),radarToggle=$('radar-toggle');
+ if(radar&&radarToggle){
+  let expanded=(innerWidth||900)>700;
+  const setRadar=(show)=>{
+   expanded=show;radar.classList.toggle('collapsed',!expanded);
+   radarToggle.setAttribute('aria-expanded',String(expanded));
+   radarToggle.setAttribute('aria-label',expanded?'Collapse terrain radar':'Expand terrain radar');
+   radarToggle.textContent=expanded?'−':'MAP';
+  };
+  radarToggle.addEventListener('click',()=>setRadar(!expanded));
+  setRadar(expanded);
+ }
  function show(id){$('drawer').hidden=id!=='drawer';$('pairPanel').hidden=id!=='pairPanel';$('options').setAttribute('aria-expanded',String(id==='drawer'));}
  $('options').onclick=()=>show($('drawer').hidden?'drawer':null);$('close').onclick=()=>show(null);$('pair').onclick=()=>show('pairPanel');$('pairClose').onclick=()=>show(null);
  $('swap').onclick=()=>{if(conn?.open){announce('Heroes stay assigned during co-op');return;}hero.role=1-hero.role;companion.role=1-hero.role;hud();};
@@ -540,14 +560,15 @@ function initUi(){
  const inviteMatch=location.hash.match(/room=([a-f0-9]{32})/i);
  if(inviteMatch){$('invite').value=inviteMatch[1];show('pairPanel');history.replaceState(null,'',location.pathname);}
  $('mine').onclick=()=>change('mine');$('place').onclick=()=>change('place');$('attack').onclick=attack;
- $('jump').addEventListener('pointerdown',()=>keys.Space=true);for(const type of ['pointerup','pointercancel'])$('jump').addEventListener(type,()=>keys.Space=false);
+ $('jump').addEventListener('pointerdown',e=>{e.preventDefault();keys.Space=true;});
+  for(const type of ['pointerup','pointercancel','lostpointercapture'])$('jump').addEventListener(type,()=>keys.Space=false);
  const stick=$('stick'),knob=$('knob');
  const updateStick=e=>{const r=stick.getBoundingClientRect(),x=e.clientX-r.left-r.width/2,y=e.clientY-r.top-r.height/2,m=Math.max(1,Math.hypot(x,y)/(r.width*.33));
  joy.x=clamp(x/m/(r.width*.33),-1,1);joy.y=clamp(y/m/(r.width*.33),-1,1);knob.style.transform='translate('+(joy.x*30)+'px,'+(joy.y*30)+'px)';};
  stick.addEventListener('pointerdown',e=>{stick.setPointerCapture(e.pointerId);updateStick(e);});
  stick.addEventListener('pointermove',e=>{if(stick.hasPointerCapture(e.pointerId))updateStick(e);});
  const resetStick=()=>{joy.x=joy.y=0;knob.style.transform='';};
- stick.addEventListener('pointerup',resetStick);stick.addEventListener('pointercancel',resetStick);
+ for(const type of ['pointerup','pointercancel','lostpointercapture'])stick.addEventListener(type,resetStick);
  canvas.addEventListener('pointerdown',e=>look={id:e.pointerId,x:e.clientX,y:e.clientY});
  canvas.addEventListener('pointermove',e=>{if(!look||look.id!==e.pointerId)return;hero.yaw+=(e.clientX-look.x)*.005;hero.pitch=clamp(hero.pitch-(e.clientY-look.y)*.005,-1.38,1.38);look.x=e.clientX;look.y=e.clientY;});
  canvas.addEventListener('pointerup',()=>look=null);canvas.addEventListener('pointercancel',()=>look=null);
@@ -556,6 +577,13 @@ function initUi(){
  });document.addEventListener('keyup',e=>keys[e.code]=false);window.addEventListener('blur',()=>{keys={};resetStick();save();});
  window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)save();});
  canvas.addEventListener('contextmenu',e=>e.preventDefault());
+ canvas.addEventListener('webglcontextlost',e=>{
+  e.preventDefault();dirty=true;save();const panel=$('fallback');
+  $('fallback-reason').textContent='3D graphics paused. Your saved world is safe. Tap Retry 3D to restart rendering.';
+  if(panel)panel.hidden=false;
+ });
+ canvas.addEventListener('webglcontextrestored',()=>location.reload());
+
  const portalButton=document.createElement('button');portalButton.textContent='TEAM PORTAL';portalButton.onclick=portal;$('drawer').querySelector('.buttons').appendChild(portalButton);
  hotbar();hud();
 }
@@ -567,7 +595,7 @@ function loop(now){
   else if(averageFrame<.018)adaptiveCap=Math.min(1.5,adaptiveCap+.1);
  }
  renderCap=quality==='QUALITY'?Math.min(2,devicePixelRatio||1):quality==='ECO'?1:adaptiveCap;
- if(frames%15===0)drawRadar();
+ if(frames%15===0&&!$('radar')?.classList?.contains?.('collapsed'))drawRadar();
  try{step(dt);render();if(renderOk)window.__bw3dReady?.();if(noticeTo&&now>noticeTo){$('toast').classList.remove('on');noticeTo=0;}}
  catch(e){console.error('3D frame failure',e);window.__bw3dFail?.('3D rendering stopped unexpectedly. Retry or play Classic 2D.');announce('3D rendering problem · reload or use Classic');}
  requestAnimationFrame(loop);
