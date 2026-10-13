@@ -466,7 +466,7 @@ function render(){
   // Grounded contact shadow follows the player independently of their height.
   if(quality!=='ECO')voxelBox(v,p.x,ground(p.x,p.z)-.022,p.z,.56,.009,.37,23);
   const gait=Math.sin(clock*10.5+(role?1.5:0))*.12*Math.min(1,p.walkPower||0);
-  const activity=p.actionUntil>clock&&['mine','build','attack'].includes(p.action);
+  const activity=p.actionUntil>clock&&['mine','build','attack','celebrate'].includes(p.action);
   const swing=activity?Math.sin(clamp(1-(p.actionUntil-clock)/.52,0,1)*Math.PI)*.38:0;
   const idleBounce=p.walkPower>.1?Math.abs(Math.sin(clock*10.5))*.032:Math.sin(clock*1.8+(role?1:0))*.011;
   const arm=-gait*.85;
@@ -478,7 +478,7 @@ function render(){
    const off=side*.135,swing=side*gait;
    part(off,.035,swing,.23,.20,.28,18);
    part(off,.235,swing*.6,.215,.41,.215,17);
-   const working=side===1?swing:0;
+   const working=p.action==='celebrate'&&activity?.75:side===1?swing:0;
    part(side*.29,.81+working*.27,-side*arm-working*.55,.16,.36,.18,shirt);
    part(side*.29,.69+working*.48,-side*arm-working*.75,.17,.18,.19,skin);
   }
@@ -509,7 +509,7 @@ function render(){
   part(0,1.26,-.243,.14,.035,.045,21);
   part(dad?.23:-.23,.94,-.19,.10,.10,.04,accent);
   // Visible animated pickaxe / short wooden mallet held in the right hand.
-  if(activity){
+  if(activity&&p.action!=='celebrate'){
    const ty=.70+swing*.44,tz=-.34-swing*.64;
    part(.40,ty,tz,.072,.49,.073,4);
    const head=p.action==='attack'?3:p.action==='build'?9:3;
@@ -776,12 +776,34 @@ function step(dt){
   if(!savedPose||Math.hypot(hero.x-savedPose.x,hero.y-savedPose.y,hero.z-savedPose.z)>.10||
      Math.abs(hero.yaw-savedPose.yaw)>.04||Math.abs(hero.pitch-savedPose.pitch)>.04||hero.hp!==savedPose.hp)dirty=true;
   if(saveClock>15){saveClock=0;if(dirty)save();}
- stream();if(frames%15===0)hud();
+ updateBeacon();stream();if(frames%15===0)hud();
 }
 /* Optional, non-destructive scenic forest shortcut. It only moves the local
    two-character party, never regenerates the saved world or changes edits. */
+function validBeacon(b){return b&&Number.isFinite(b.x)&&Number.isFinite(b.z)&&Number.isInteger(b.realm)&&b.realm>=0&&b.realm<3&&typeof b.lit==='boolean';}
+function beaconPad(role){
+ if(!forestBeacon)return null;
+ const side=role===0?-1:1;
+ return {x:forestBeacon.x+side*1.6,z:forestBeacon.z+1.4};
+}
+function celebrateBeacon(){
+ hero.action=companion.action='celebrate';
+ hero.actionUntil=companion.actionUntil=clock+2.2;
+ effectBurst(forestBeacon.x,ground(forestBeacon.x,forestBeacon.z)+1.5,forestBeacon.z,8);
+}
+function updateBeacon(){
+ if(!forestBeacon||forestBeacon.lit||forestBeacon.realm!==realm||conn?.open&&!host)return;
+ const dad=hero.role===0?hero:companion,jo=hero.role===1?hero:companion;
+ const first=beaconPad(0),second=beaconPad(1);
+ if(Math.hypot(dad.x-first.x,dad.z-first.z)>1.4||Math.hypot(jo.x-second.x,jo.z-second.z)>1.4)return;
+ forestBeacon.lit=true;dirty=true;
+ award('block3d-forest-beacon',55);
+ celebrateBeacon();tone('reward');
+ announce('TEAM BEACON LIT · Daddy + Jozef +55 XP',3900);
+ if(host&&conn?.open)send({t:'beacon',realm,beacon:forestBeacon});
+}
 function visitForest(){
- if(conn?.open){announce('Finish the shared session before scenic travel');return false;}
+ if(conn?.open&&!host){send({t:'request',op:'forest',x:hero.x,z:hero.z});announce('Daddy is opening Forest Camp');return false;}
  const hx=Math.floor(hero.x),hz=Math.floor(hero.z),step=8;
  let goal=null;
  for(let ring=1;ring<=23&&!goal;ring++){
@@ -801,17 +823,19 @@ function visitForest(){
  hero.vy=0;hero.ground=false;hero.double=false;
  companion.x=goal.cx;companion.y=goal.cy;companion.z=goal.cz;
  hero.walkPower=companion.walkPower=0;chaseCam=null;
+ forestBeacon={x:goal.px+.7,z:goal.pz,realm,lit:!!(forestBeacon?.realm===realm&&forestBeacon.lit)};
  chunks.forEach(c=>gl.deleteBuffer(c.buffer));chunks.clear();lastCX=Infinity;lastCZ=Infinity;
  dirty=true;stream();save();hud();
+ if(host&&conn?.open)send({t:'forestTravel',beacon:forestBeacon,host:{x:hero.x,y:hero.y,z:hero.z},guest:{x:companion.x,y:companion.y,z:companion.z}});
  // Travelling from the menu must return control immediately to the game.
  menuPaused=false;$('drawer').hidden=true;$('options').setAttribute('aria-expanded','false');
- announce('FOREST VISTA · Welcome to the Evergreen Forest',3400);
+ announce('FOREST CAMP · Stand on both rune pads to light the beacon',3900);
  return true;
 }
 function worldSnapshot(){
  captureDimension();
  return {realm,seed,baseSeed,edits:[...edits].slice(-14000),stage,stats,
-  defeated,portalOpened,bossHp:boss.hp,discovered};
+  defeated,portalOpened,bossHp:boss.hp,discovered,forestBeacon};
 }
 function sendRealm(){
  if(host&&conn?.open)send({t:'realm',...worldSnapshot()});
@@ -826,6 +850,7 @@ function applyRealm(m){
  stats=Object.assign({wood:0,placed:0,explore:0,crystal:0,boss:0,portal:0},m.stats||{});
  defeated=!!m.defeated;portalOpened=!!m.portalOpened;
  discovered=m.discovered&&typeof m.discovered==='object'?m.discovered:{};
+ forestBeacon=validBeacon(m.forestBeacon)?{...m.forestBeacon}:null;
  dimensions[realm]={seed,edits:[...edits],bossHp:clamp(Number(m.bossHp)||0,0,120)};
  chunks.forEach(c=>gl.deleteBuffer(c.buffer));chunks.clear();lastCX=lastCZ=Infinity;
  resetPose();if(guestActive){
@@ -841,7 +866,7 @@ function portal(){
  if(!defeated&&!portalOpened){announce('Defeat the Crystal Golem first');return;}
  if(Math.hypot(hero.x-40,hero.z-40)>5||Math.hypot(companion.x-40,companion.z-40)>5){announce('Both heroes must reach the portal at 40, 40');return;}
  if(!portalOpened){portalOpened=true;gain('portal');}
- captureDimension();realm=(realm+1)%3;
+ captureDimension();realm=(realm+1)%3;forestBeacon=null;
  const next=dimensions[realm];
  if(next){seed=next.seed;edits=new Map(next.edits||[]);}else{seed=baseSeed+realm*1973+1;edits=new Map();}
  chunks.forEach(c=>gl.deleteBuffer(c.buffer));chunks.clear();lastCX=Infinity;
@@ -851,7 +876,7 @@ function captureDimension(){dimensions[realm]={seed,edits:[...edits].slice(-1400
 function save(force=false){if((!dirty&&!force)||guestActive)return;try{
  captureDimension();
  localStorage.setItem(DIMKEY,JSON.stringify({version:1,baseSeed,dimensions}));
- localStorage.setItem(KEY,JSON.stringify({version:1,seed,realm,edits:[...edits].slice(-14000),hero:{x:hero.x,y:hero.y,z:hero.z,role:hero.role,yaw:hero.yaw,pitch:hero.pitch,inventory:hero.inventory},viewThird:third,stage,stats,rewards,discovered,defeated,portalOpened,creative}));
+ localStorage.setItem(KEY,JSON.stringify({version:1,seed,realm,edits:[...edits].slice(-14000),hero:{x:hero.x,y:hero.y,z:hero.z,role:hero.role,yaw:hero.yaw,pitch:hero.pitch,inventory:hero.inventory},viewThird:third,stage,stats,rewards,discovered,defeated,portalOpened,creative,forestBeacon}));
  dirty=false;savedPose={x:hero.x,y:hero.y,z:hero.z,yaw:hero.yaw,pitch:hero.pitch,hp:hero.hp};}catch(e){announce('Save storage full · export a backup');}}
 function load(){try{const data=JSON.parse(localStorage.getItem(KEY)||'null');if(!data||data.version!==1)return false;
  seed=data.seed;realm=data.realm||0;
@@ -865,7 +890,7 @@ function load(){try{const data=JSON.parse(localStorage.getItem(KEY)||'null');if(
   hero.pitch=Number.isFinite(data.hero?.pitch)?clamp(data.hero.pitch,-1.38,1.38):hero.pitch;
   if(typeof data.viewThird==='boolean')third=data.viewThird;
  stage=clamp(data.stage||0,0,6);stats=Object.assign(stats,data.stats||{});rewards=Array.isArray(data.rewards)?data.rewards:[];
- discovered=data.discovered||{};defeated=!!data.defeated;portalOpened=!!data.portalOpened;creative=data.creative!==false;
+ discovered=data.discovered||{};forestBeacon=validBeacon(data.forestBeacon)?{...data.forestBeacon}:null;defeated=!!data.defeated;portalOpened=!!data.portalOpened;creative=data.creative!==false;
  savedPose={x:hero.x,y:hero.y,z:hero.z,yaw:hero.yaw,pitch:hero.pitch,hp:hero.hp};return true;
  }catch(e){console.warn('Save could not load',e);return false;}}
 /* Backup packs preserve all visited realms and use strict import validation. */
@@ -915,6 +940,7 @@ function receive(m){
  if(m.t==='hello'&&!host){
   if(!Number.isInteger(m.seed)||!Array.isArray(m.edits)||m.edits.length>14000)return;
   seed=m.seed;realm=Number.isInteger(m.realm)&&m.realm>=0&&m.realm<3?m.realm:0;
+   forestBeacon=validBeacon(m.forestBeacon)?{...m.forestBeacon}:null;
    baseSeed=Number.isFinite(m.baseSeed)?m.baseSeed:seed;
    edits=new Map(m.edits.filter(a=>Array.isArray(a)&&typeof a[0]==='string'&&Number.isInteger(a[1])&&a[1]>=0&&a[1]<types.length));
    dimensions[realm]={seed,edits:[...edits],bossHp:clamp(Number(m.bossHp)||0,0,120)};
