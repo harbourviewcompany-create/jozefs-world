@@ -176,6 +176,22 @@ function voxelBox(v,x,y,z,w,h,d,id,yaw=0){
   }
  }
 }
+/* Two crossed leaf cards add a ragged vegetation silhouette without six cube faces.
+   Their alpha masks come from the material atlas, and they sway in the existing
+   GPU vertex program. They are visual-only, so terrain collision never changes. */
+function foliageCross(v,x,y,z,width,height,id=5,twist=0){
+ const c=col[id]||col[5],face=1,idx=[0,1,2,0,2,3];
+ for(const turn of [twist+.785398,twist+2.356194]){
+  const co=Math.cos(turn),si=Math.sin(turn);
+  const points=[[-.5,0],[.5,0],[.5,1],[-.5,1]];
+  for(const k of idx){
+   const [u,vv]=points[k],lu=u*width;
+   const yy=y+height*vv,xx=x+lu*co,zz=z+lu*si;
+   const shade=.86+.14*vv;
+   v.push(xx,yy,zz,c[0]*shade,c[1]*shade,c[2]*shade,id,si,0,-co,...(materialAtlas?.uv(materialAtlas.tileFor(id,face),u+.5,vv)||[u+.5,vv]));
+  }
+ }
+}
 function chunkMesh(cx,cz){
  const v=[];
  for(let x=cx*CH;x<(cx+1)*CH;x++)for(let z=cz*CH;z<(cz+1)*CH;z++){
@@ -191,6 +207,8 @@ function chunkMesh(cx,cz){
   if(block(x,top+1,z)===0&&quality!=='ECO'){
    const ox=x+.5,oz=z+.5,stemY=top+1;
    if(zone==='Evergreen Forest'){
+    // Alpha-cutout leaf cards soften small fern and bush outlines.
+    if(chance>.895&&chance<.913)foliageCross(v,ox,stemY,oz,.36,.51,5,chance*13);
     // Understory follows soil contours without creating collision tiles.
     if(chance>.910&&chance<.945){
      const spread=(chance-.910)/.035;
@@ -224,6 +242,7 @@ function chunkMesh(cx,cz){
     }
    }else if(zone==='Meadows'&&chance>.914&&chance<.964){
     const stature=.19+rnd(x,z,seed+519)*.30;
+    if(quality==='QUALITY')foliageCross(v,ox,stemY,oz,.26,stature+.14,5,chance*17);
     voxelBox(v,ox,stemY+.02,oz,.045,stature,.045,22);
     for(const sign of [-1,1]){
      voxelBox(v,ox+sign*.105,stemY+stature*.47,oz,.19,.048,.055,5);
@@ -254,6 +273,8 @@ function chunkMesh(cx,cz){
     voxelBox(v,x+.5,th+5.30,z+.5,evergreen?1.85:1.40,.20,evergreen?1.88:1.40,variation>.48?24:5);
     voxelBox(v,x+.5,th+6.12,z+.5,evergreen?1.4:1.05,.30,evergreen?1.45:1.05,5);
     voxelBox(v,x+.5,th+6.6,z+.5,.72,.37,.72,variation>.60?22:5);
+    // A small number of cutout leaf sheets adds an irregular canopy edge.
+    foliageCross(v,x+.5,th+5.15,z+.5,evergreen?2.65:2.0,.68,5,variation*6.28);
     if(dense){
      for(const dx of [-1,1]){
       voxelBox(v,x+.5+dx*1.0,th+5.25,z+.5,.92,.41,1.08,variation>.66?24:5);
@@ -286,7 +307,7 @@ function shader(type,src){const o=gl.createShader(type);gl.shaderSource(o,src);g
 // Low-cost WebGL 1 atmospheric rendering: animated sky, sunset and night haze.
 // World normals stay in the geometry so lighting is consistent as the sun moves.
 const vertex='attribute vec3 p;attribute vec3 c;attribute float matId;attribute vec3 normal;attribute vec2 tileUV;uniform float tick;uniform mat4 proj;uniform mat4 view;uniform vec3 eye;varying vec3 color;varying vec3 worldPos;varying vec3 surfaceNormal;varying vec2 atlasUV;varying float material;varying float fog;void main(){vec3 pos=p; if(matId>21.5&&matId<22.5){pos.x+=sin(tick*1.6+p.x*2.7+p.z*2.3)*.05;}gl_Position=proj*view*vec4(pos,1.);color=c;worldPos=p;surfaceNormal=normal;atlasUV=tileUV;material=matId;fog=clamp((distance(p,eye)-22.)/84.,0.,1.);}';
-const frag='precision mediump float;varying vec3 color;varying vec3 worldPos;varying vec3 surfaceNormal;varying vec2 atlasUV;varying float material;varying float fog;uniform vec3 sky;uniform vec3 eye;uniform vec3 heroPos;uniform vec3 sunDir;uniform sampler2D tileAtlas;uniform float atlasReady;uniform float daylight;uniform float tick;float hash(vec3 p){return fract(sin(dot(p,vec3(17.13,41.17,79.19)))*43758.5453);}void main(){vec3 p=worldPos;float m=material;if(abs(m-5.)<.5){ float dist=distance(p,eye); if(dist<2.0)discard; float alpha=smoothstep(1.8,5.7,dist); vec3 axis=heroPos-eye; float denom=max(dot(axis,axis),.01); float along=dot(p-eye,axis)/denom; float nearRay=length(p-(eye+axis*clamp(along,0.,1.))); if(along>.05&&along<.99)alpha=min(alpha,mix(.22,1.,smoothstep(.80,2.2,nearRay))); float dither=fract(sin(dot(floor(gl_FragCoord.xy),vec2(12.9898,78.233)))*43758.5453); if(dither>alpha)discard;}vec3 base=color;if(atlasReady>.5){vec4 sampleColor=texture2D(tileAtlas,atlasUV); if(abs(m-5.)<.5&&sampleColor.a<.28)discard; base*=mix(vec3(1.),sampleColor.rgb*1.44+vec3(.34),.80);}vec3 grid=floor(p*17.0+vec3(.05));float grain=hash(grid);float coarse=hash(floor(p*3.0+vec3(.07)));float detail=.92+(grain-.5)*.19+(coarse-.5)*.14;vec3 norm=normalize(surfaceNormal);float sunny=max(0.,dot(norm,normalize(sunDir)));float diffuse=.54+sunny*.39;float skylight=.80+.2*max(norm.y,0.);if(m<.5)detail=1.0;else if(m<1.5){detail*=.93+.13*grain;float blades=step(.90,hash(floor(p*31.0)));base+=vec3(.10,.12,.015)*blades*max(norm.y,0.);}else if(m<3.5||abs(m-10.)<.5){float vein=sin(p.y*14.0+p.x*7.0+p.z*5.0);detail*=.93+.10*smoothstep(.64,.98,vein);}else if(abs(m-4.)<.5||abs(m-9.)<.5){detail*=.9+.12*sin(p.y*27.+coarse*6.);}else if(abs(m-5.)<.5){detail*=.82+.23*coarse;}else if(abs(m-8.)<.5||abs(m-19.)<.5){float pulse=.60+.40*sin(tick*2.0+p.x*2.0+p.z*3.0);base+=vec3(.04,.17,.23)*pulse;detail*=.98+.10*grain;diffuse+=.10*pulse;}else if(m>11.5){detail=.96+.06*grain;diffuse=max(diffuse,.72);}float day=.57+.43*daylight;vec3 lit=base*detail*(diffuse*day+(.10+.12*max(norm.y,0.))*skylight);lit+=vec3(.035,.040,.062)*(1.-daylight);vec3 graded=pow(max(lit,vec3(.003)),vec3(.89));float haze=smoothstep(.15,1.,fog);gl_FragColor=vec4(mix(graded,sky,haze*.86),1.);}';
+const frag='precision mediump float;varying vec3 color;varying vec3 worldPos;varying vec3 surfaceNormal;varying vec2 atlasUV;varying float material;varying float fog;uniform vec3 sky;uniform vec3 eye;uniform vec3 heroPos;uniform vec3 sunDir;uniform sampler2D tileAtlas;uniform float atlasReady;uniform float daylight;uniform float tick;float hash(vec3 p){return fract(sin(dot(p,vec3(17.13,41.17,79.19)))*43758.5453);}void main(){vec3 p=worldPos;float m=material;if(abs(m-5.)<.5){ float dist=distance(p,eye); if(dist<2.0)discard; float alpha=smoothstep(1.8,5.7,dist); vec3 axis=heroPos-eye; float denom=max(dot(axis,axis),.01); float along=dot(p-eye,axis)/denom; float nearRay=length(p-(eye+axis*clamp(along,0.,1.))); if(along>.05&&along<.99)alpha=min(alpha,mix(.22,1.,smoothstep(.80,2.2,nearRay))); float dither=fract(sin(dot(floor(gl_FragCoord.xy),vec2(12.9898,78.233)))*43758.5453); if(dither>alpha)discard;}vec3 base=color;if(atlasReady>.5){vec4 sampleColor=texture2D(tileAtlas,atlasUV); if((abs(m-5.)<.5||abs(m-24.)<.5)&&sampleColor.a<.28)discard; base*=mix(vec3(1.),sampleColor.rgb*1.44+vec3(.34),.80);}vec3 grid=floor(p*17.0+vec3(.05));float grain=hash(grid);float coarse=hash(floor(p*3.0+vec3(.07)));float detail=.92+(grain-.5)*.19+(coarse-.5)*.14;vec3 norm=normalize(surfaceNormal);float sunny=max(0.,dot(norm,normalize(sunDir)));float diffuse=.54+sunny*.39;float skylight=.80+.2*max(norm.y,0.);if(m<.5)detail=1.0;else if(m<1.5){detail*=.93+.13*grain;float blades=step(.90,hash(floor(p*31.0)));base+=vec3(.10,.12,.015)*blades*max(norm.y,0.);}else if(m<3.5||abs(m-10.)<.5){float vein=sin(p.y*14.0+p.x*7.0+p.z*5.0);detail*=.93+.10*smoothstep(.64,.98,vein);}else if(abs(m-4.)<.5||abs(m-9.)<.5){detail*=.9+.12*sin(p.y*27.+coarse*6.);}else if(abs(m-5.)<.5){detail*=.82+.23*coarse;}else if(abs(m-8.)<.5||abs(m-19.)<.5){float pulse=.60+.40*sin(tick*2.0+p.x*2.0+p.z*3.0);base+=vec3(.04,.17,.23)*pulse;detail*=.98+.10*grain;diffuse+=.10*pulse;}else if(m>11.5){detail=.96+.06*grain;diffuse=max(diffuse,.72);}float day=.57+.43*daylight;vec3 lit=base*detail*(diffuse*day+(.10+.12*max(norm.y,0.))*skylight);lit+=vec3(.035,.040,.062)*(1.-daylight);vec3 graded=pow(max(lit,vec3(.003)),vec3(.89));float haze=smoothstep(.15,1.,fog);gl_FragColor=vec4(mix(graded,sky,haze*.86),1.);}';
 const skyVertex='attribute vec2 xy;varying vec2 uv;void main(){uv=xy*.5+.5;gl_Position=vec4(xy,1.,1.);}';
 const skyFragment='precision mediump float;varying vec2 uv;uniform float t;uniform float daylight;void main(){float y=clamp(uv.y,0.,1.);vec3 zenith=mix(vec3(.016,.034,.112),vec3(.14,.44,.68),daylight);vec3 horizon=mix(vec3(.22,.12,.30),vec3(.65,.82,.86),daylight);vec3 sky=mix(horizon,zenith,smoothstep(.03,.9,y));float r=distance(uv,vec2(.73,.76));float halo=1.-smoothstep(.03,.30,r);float disc=1.-smoothstep(.023,.037,r);sky+=mix(vec3(.24,.16,.34),vec3(.96,.65,.30),daylight)*halo*.38;sky+=mix(vec3(.62,.77,.96),vec3(1.,.96,.72),daylight)*disc*.8;float wave=sin(uv.x*19.+t*.009+sin(uv.y*13.))*sin(uv.x*8.-uv.y*7.+t*.005);float clouds=smoothstep(.40,.83,wave)*smoothstep(.32,.66,y)*daylight;sky+=vec3(.27,.38,.38)*clouds*.25;float stars=step(.996,fract(sin(dot(floor(uv*vec2(330.,160.)),vec2(12.9898,78.233)))*43758.5453));sky+=vec3(.35,.46,.65)*stars*(1.-daylight)*smoothstep(.38,.70,y);gl_FragColor=vec4(sky,1.);}';
 // If a budget WebGL 1 GPU rejects the advanced material shader, keep the
