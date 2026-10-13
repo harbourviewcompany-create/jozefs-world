@@ -161,7 +161,56 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  assert.equal(solo.played,1,'one full-time Solo Challenge equals one local record');
  assert.match(await guest.locator('#versus-practice-record').textContent(),/1 PLAYED/);
  await guest.locator('#versus-leave').click();
- // Real two-device Same Team has both players in the room and a third AI opponent.
+ // The new modes are real match rules, not cosmetic lobby selections.
+ await guest.locator('#versus-match-mode').selectOption('first5');
+ await guest.locator('#versus-practice').click();
+ await guest.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
+ assert.equal(await guest.evaluate(()=>window.__versusTest.room.mode),'first5');
+ assert.ok(await guest.evaluate(()=>window.__versusTest.state.matchLeft>175),'First to Five starts a three-minute match');
+ await guest.evaluate(()=>{const t=window.__versusTest;t.state.score.jozef=5;t.state.freeze=0;t.state.matchLeft=40;});
+ await guest.waitForFunction(()=>window.__versusTest.room.phase==='finished',{},{timeout:3000});
+ await guest.locator('#versus-leave').click();
+
+ await guest.locator('#versus-match-mode').selectOption('golden');
+ await guest.locator('#versus-practice').click();
+ await guest.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
+ assert.equal(await guest.evaluate(()=>window.__versusTest.room.mode),'golden');
+ await guest.evaluate(()=>{const t=window.__versusTest;t.state.score.jozef=1;t.state.freeze=0;});
+ await guest.waitForFunction(()=>window.__versusTest.room.phase==='finished',{},{timeout:3000});
+ await guest.locator('#versus-leave').click();
+
+ await guest.locator('#versus-match-mode').selectOption('penalties');
+ await guest.locator('#versus-practice').click();
+ await guest.waitForFunction(()=>window.__versusTest.room.phase==='playing');
+ assert.equal(await guest.evaluate(()=>window.__versusTest.state.penalty?.active),'Dad');
+ await guest.evaluate(()=>{
+   const t=window.__versusTest;
+   t.state.penalty.frames=539;t.state.penalty.shot=false;t.step();
+   if(t.state.penalty.turn!==1)throw Error('Penalty timeout did not award next turn');
+   t.state.penalty.pause=1;t.step();
+   if(t.state.penalty.active!=='Jozef')throw Error('Penalty rounds did not alternate');
+   t.state.keepers.right=160;
+   t.state.kick='Jozef';t.step();
+   if(!t.state.penalty.shot)throw Error('Human penalty kick was not registered');
+   Object.assign(t.state.ball,{x:688,y:210,vx:9,vy:0});
+   t.step();
+   if(t.state.score.jozef!==1)throw Error('Goal did not count in penalty shootout');
+ });
+ await guest.locator('#versus-leave').click();
+
+ await guest.locator('#versus-match-mode').selectOption('cup');
+ await guest.locator('#versus-practice').click();
+ for(const title of ['Rookie Cup','Pro Cup','Legends Final']){
+   await guest.waitForFunction(()=>window.__versusTest.room.phase==='playing',{},{timeout:6000});
+   assert.equal(await guest.locator('#versus-mode-label').textContent(),title);
+   await guest.evaluate(()=>{const t=window.__versusTest;t.state.score.jozef=3;t.state.freeze=0;});
+   await guest.waitForFunction(()=>window.__versusTest.room.phase==='finished',{},{timeout:2500});
+   if(title!=='Legends Final')await guest.locator('#versus-again').click();
+ }
+ assert.equal(await guest.evaluate(()=>localStorage.getItem('jozefs-world-versus-cup')),'won','winning three cup rounds awards a persistent trophy');
+ await guest.locator('#versus-leave').click();
+ // Real two-device Same Team now faces two host-authoritative Rovers defenders.
+ await host.locator('#versus-match-mode').selectOption('duo');
  await host.locator('#versus-together').click();
  await host.waitForFunction(()=>document.querySelector('#versus-room-code').textContent.length===6);
  const teamCode=await host.locator('#versus-room-code').textContent();
@@ -170,6 +219,8 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  await host.locator('#versus-approve').click();
  await guest.waitForFunction(()=>!document.querySelector('#versus-ready').disabled,undefined,{timeout:20000});
  assert.equal(await guest.evaluate(()=>window.__versusTest.room.together),true,'joined mode is cooperative');
+ assert.equal(await host.evaluate(()=>window.__versusTest.room.mode),'duo','host selected the two-defender mode');
+ assert.equal(await guest.evaluate(()=>window.__versusTest.room.mode),'duo','guest receives the approved host mode');
  assert.equal(await guest.locator('.vs-team-jozef .vs-team-name').innerText().then(s=>s.includes('DAD + JO')),true,'co-op scoreboard names the team');
  if(viewport.height>viewport.width){
    await host.waitForFunction(()=>window.__versusTest.camera().cameraFlipped,{},{timeout:3500});
@@ -179,6 +230,7 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  await host.locator('#versus-ready').click();await guest.locator('#versus-ready').click();
  await host.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
  await guest.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
+ assert.ok(await host.evaluate(()=>Number.isFinite(window.__versusTest.state.rival2.x)),'2v2 creates the second rival');
  assert.equal(await host.locator('#versus-pass .vs-action-label').textContent(),'PASS','co-op uses real passing');
  assert.equal(await host.locator('#versus-pass .vs-action-icon').count(),1,'co-op keeps the PASS icon');
  await host.evaluate(()=>{
