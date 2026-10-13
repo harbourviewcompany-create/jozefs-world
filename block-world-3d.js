@@ -269,7 +269,7 @@ function chunkMesh(cx,cz){
     voxelBox(v,ox,stemY,oz,.30,.26,.30,8);
    }
   }
-  if(forestBeacon?.realm===realm&&quality!=='ECO'){
+  if(forestBeacon?.realm===realm){
    const wx=forestBeacon.x+5,wz=forestBeacon.z+1.6;
    const d=Math.hypot(x+.5-wx,z+.5-wz);
    if(d<2.9&&d>.5&&block(x,top,z)===1&&block(x,top+1,z)===0&&
@@ -321,7 +321,7 @@ function shader(type,src){const o=gl.createShader(type);gl.shaderSource(o,src);g
 // Low-cost WebGL 1 atmospheric rendering: animated sky, sunset and night haze.
 // World normals stay in the geometry so lighting is consistent as the sun moves.
 const vertex='attribute vec3 p;attribute vec3 c;attribute float matId;attribute vec3 normal;attribute vec2 tileUV;uniform float tick;uniform mat4 proj;uniform mat4 view;uniform vec3 eye;varying vec3 color;varying vec3 worldPos;varying vec3 surfaceNormal;varying vec2 atlasUV;varying float material;varying float fog;void main(){vec3 pos=p; if((matId>21.5&&matId<22.5)||(matId>25.5&&matId<26.5)){pos.x+=sin(tick*1.6+p.x*2.7+p.z*2.3)*.05; if(matId>26.5&&matId<27.5){pos.y+=sin(tick*1.9+p.x*2.5+p.z*3.2)*.022;}}gl_Position=proj*view*vec4(pos,1.);color=c;worldPos=p;surfaceNormal=normal;atlasUV=tileUV;material=matId;fog=clamp((distance(p,eye)-22.)/84.,0.,1.);}';
-const frag='precision mediump float;varying vec3 color;varying vec3 worldPos;varying vec3 surfaceNormal;varying vec2 atlasUV;varying float material;varying float fog;uniform vec3 sky;uniform vec3 eye;uniform vec3 heroPos;uniform vec3 sunDir;uniform sampler2D tileAtlas;uniform float atlasReady;uniform float daylight;uniform float tick;float hash(vec3 p){return fract(sin(dot(p,vec3(17.13,41.17,79.19)))*43758.5453);}void main(){vec3 p=worldPos;float m=material;if(abs(m-5.)<.5){ float dist=distance(p,eye); if(dist<2.0)discard; float alpha=smoothstep(1.8,5.7,dist); vec3 axis=heroPos-eye; float denom=max(dot(axis,axis),.01); float along=dot(p-eye,axis)/denom; float nearRay=length(p-(eye+axis*clamp(along,0.,1.))); if(along>.05&&along<.99)alpha=min(alpha,mix(.22,1.,smoothstep(.80,2.2,nearRay))); float dither=fract(sin(dot(floor(gl_FragCoord.xy),vec2(12.9898,78.233)))*43758.5453); if(dither>alpha)discard;}vec3 base=color;if(atlasReady>.5){vec4 sampleColor=texture2D(tileAtlas,atlasUV); if((abs(m-5.)<.5||abs(m-24.)<.5||abs(m-26.)<.5)&&sampleColor.a<.28)discard; base*=mix(vec3(1.),sampleColor.rgb*1.44+vec3(.34),.80);}vec3 grid=floor(p*17.0+vec3(.05));float grain=hash(grid);float coarse=hash(floor(p*3.0+vec3(.07)));float detail=.92+(grain-.5)*.19+(coarse-.5)*.14;vec3 norm=normalize(surfaceNormal);float sunny=max(0.,dot(norm,normalize(sunDir)));float diffuse=.54+sunny*.39;float skylight=.80+.2*max(norm.y,0.);if(m<.5)detail=1.0;else if(m<1.5){detail*=.93+.13*grain;float blades=step(.90,hash(floor(p*31.0)));base+=vec3(.10,.12,.015)*blades*max(norm.y,0.);}else if(m<3.5||abs(m-10.)<.5){float vein=sin(p.y*14.0+p.x*7.0+p.z*5.0);detail*=.93+.10*smoothstep(.64,.98,vein);}else if(abs(m-4.)<.5||abs(m-9.)<.5){detail*=.9+.12*sin(p.y*27.+coarse*6.);}else if(abs(m-5.)<.5){detail*=.82+.23*coarse;}else if(abs(m-27.)<.5){float ripples=sin(tick*1.5+p.x*4.5+p.z*4.0);base=mix(base,vec3(.46,.82,.94),.33+.18*ripples);detail=1.0;diffuse+=.13;}else if(abs(m-8.)<.5||abs(m-19.)<.5){float pulse=.60+.40*sin(tick*2.0+p.x*2.0+p.z*3.0);base+=vec3(.04,.17,.23)*pulse;detail*=.98+.10*grain;diffuse+=.10*pulse;}else if(m>11.5){detail=.96+.06*grain;diffuse=max(diffuse,.72);}float day=.57+.43*daylight;vec3 lit=base*detail*(diffuse*day+(.10+.12*max(norm.y,0.))*skylight);lit+=vec3(.035,.040,.062)*(1.-daylight);vec3 graded=pow(max(lit,vec3(.003)),vec3(.89));float haze=smoothstep(.15,1.,fog);gl_FragColor=vec4(mix(graded,sky,haze*.86),1.);}';
+const frag='precision mediump float;varying vec3 color;varying vec3 worldPos;varying vec3 surfaceNormal;varying vec2 atlasUV;varying float material;varying float fog;uniform vec3 sky;uniform vec3 eye;uniform vec3 heroPos;uniform vec3 sunDir;uniform vec3 beaconPoint;uniform float beaconPower;uniform sampler2D tileAtlas;uniform float atlasReady;uniform float daylight;uniform float tick;float hash(vec3 p){return fract(sin(dot(p,vec3(17.13,41.17,79.19)))*43758.5453);}void main(){vec3 p=worldPos;float m=material;if(abs(m-5.)<.5){ float dist=distance(p,eye); if(dist<2.0)discard; float alpha=smoothstep(1.8,5.7,dist); vec3 axis=heroPos-eye; float denom=max(dot(axis,axis),.01); float along=dot(p-eye,axis)/denom; float nearRay=length(p-(eye+axis*clamp(along,0.,1.))); if(along>.05&&along<.99)alpha=min(alpha,mix(.22,1.,smoothstep(.80,2.2,nearRay))); float dither=fract(sin(dot(floor(gl_FragCoord.xy),vec2(12.9898,78.233)))*43758.5453); if(dither>alpha)discard;}vec3 base=color;if(atlasReady>.5){vec4 sampleColor=texture2D(tileAtlas,atlasUV); if((abs(m-5.)<.5||abs(m-24.)<.5||abs(m-26.)<.5)&&sampleColor.a<.28)discard; base*=mix(vec3(1.),sampleColor.rgb*1.44+vec3(.34),.80);}vec3 grid=floor(p*17.0+vec3(.05));float grain=hash(grid);float coarse=hash(floor(p*3.0+vec3(.07)));float detail=.92+(grain-.5)*.19+(coarse-.5)*.14;vec3 norm=normalize(surfaceNormal);float sunny=max(0.,dot(norm,normalize(sunDir)));float diffuse=.54+sunny*.39;float skylight=.80+.2*max(norm.y,0.);if(m<.5)detail=1.0;else if(m<1.5){detail*=.93+.13*grain;float blades=step(.90,hash(floor(p*31.0)));base+=vec3(.10,.12,.015)*blades*max(norm.y,0.);}else if(m<3.5||abs(m-10.)<.5){float vein=sin(p.y*14.0+p.x*7.0+p.z*5.0);detail*=.93+.10*smoothstep(.64,.98,vein);}else if(abs(m-4.)<.5||abs(m-9.)<.5){detail*=.9+.12*sin(p.y*27.+coarse*6.);}else if(abs(m-5.)<.5){detail*=.82+.23*coarse;}else if(abs(m-27.)<.5){float ripples=sin(tick*1.5+p.x*4.5+p.z*4.0);base=mix(base,vec3(.46,.82,.94),.33+.18*ripples);detail=1.0;diffuse+=.13;}else if(abs(m-8.)<.5||abs(m-19.)<.5){float pulse=.60+.40*sin(tick*2.0+p.x*2.0+p.z*3.0);base+=vec3(.04,.17,.23)*pulse;detail*=.98+.10*grain;diffuse+=.10*pulse;}else if(m>11.5){detail=.96+.06*grain;diffuse=max(diffuse,.72);}float day=.57+.43*daylight;vec3 lit=base*detail*(diffuse*day+(.10+.12*max(norm.y,0.))*skylight);lit+=vec3(.035,.040,.062)*(1.-daylight);vec3 graded=pow(max(lit,vec3(.003)),vec3(.89));float glow=beaconPower/(1.0+distance(p,beaconPoint)*distance(p,beaconPoint)*.10);graded+=vec3(.03,.16,.20)*glow;float haze=smoothstep(.15,1.,fog);gl_FragColor=vec4(mix(graded,sky,haze*.86),1.);}';
 const skyVertex='attribute vec2 xy;varying vec2 uv;void main(){uv=xy*.5+.5;gl_Position=vec4(xy,1.,1.);}';
 const skyFragment='precision mediump float;varying vec2 uv;uniform float t;uniform float daylight;void main(){float y=clamp(uv.y,0.,1.);vec3 zenith=mix(vec3(.016,.034,.112),vec3(.14,.44,.68),daylight);vec3 horizon=mix(vec3(.22,.12,.30),vec3(.65,.82,.86),daylight);vec3 sky=mix(horizon,zenith,smoothstep(.03,.9,y));float r=distance(uv,vec2(.73,.76));float halo=1.-smoothstep(.03,.30,r);float disc=1.-smoothstep(.023,.037,r);sky+=mix(vec3(.24,.16,.34),vec3(.96,.65,.30),daylight)*halo*.38;sky+=mix(vec3(.62,.77,.96),vec3(1.,.96,.72),daylight)*disc*.8;float wave=sin(uv.x*19.+t*.009+sin(uv.y*13.))*sin(uv.x*8.-uv.y*7.+t*.005);float clouds=smoothstep(.40,.83,wave)*smoothstep(.32,.66,y)*daylight;sky+=vec3(.27,.38,.38)*clouds*.25;float stars=step(.996,fract(sin(dot(floor(uv*vec2(330.,160.)),vec2(12.9898,78.233)))*43758.5453));sky+=vec3(.35,.46,.65)*stars*(1.-daylight)*smoothstep(.38,.70,y);gl_FragColor=vec4(sky,1.);}';
 // If a budget WebGL 1 GPU rejects the advanced material shader, keep the
@@ -344,7 +344,7 @@ catch(e){
  catch(err){$('fallback').hidden=false;console.error(err);return;}
 }
 gl.useProgram(pg);gl.enable(gl.DEPTH_TEST);
-const ap=gl.getAttribLocation(pg,'p'),ac=gl.getAttribLocation(pg,'c'),am=gl.getAttribLocation(pg,'matId'),an=gl.getAttribLocation(pg,'normal'),au=gl.getAttribLocation(pg,'tileUV'),up=gl.getUniformLocation(pg,'proj'),uv=gl.getUniformLocation(pg,'view'),ue=gl.getUniformLocation(pg,'eye'),us=gl.getUniformLocation(pg,'sky'),ud=gl.getUniformLocation(pg,'daylight'),ut=gl.getUniformLocation(pg,'tick'),ul=gl.getUniformLocation(pg,'sunDir'),uh=gl.getUniformLocation(pg,'heroPos'),ua=gl.getUniformLocation(pg,'tileAtlas'),ur=gl.getUniformLocation(pg,'atlasReady'),dynamic=gl.createBuffer();
+const ap=gl.getAttribLocation(pg,'p'),ac=gl.getAttribLocation(pg,'c'),am=gl.getAttribLocation(pg,'matId'),an=gl.getAttribLocation(pg,'normal'),au=gl.getAttribLocation(pg,'tileUV'),up=gl.getUniformLocation(pg,'proj'),uv=gl.getUniformLocation(pg,'view'),ue=gl.getUniformLocation(pg,'eye'),us=gl.getUniformLocation(pg,'sky'),ud=gl.getUniformLocation(pg,'daylight'),ut=gl.getUniformLocation(pg,'tick'),ul=gl.getUniformLocation(pg,'sunDir'),ub=gl.getUniformLocation(pg,'beaconPoint'),ug=gl.getUniformLocation(pg,'beaconPower'),uh=gl.getUniformLocation(pg,'heroPos'),ua=gl.getUniformLocation(pg,'tileAtlas'),ur=gl.getUniformLocation(pg,'atlasReady'),dynamic=gl.createBuffer();
 let skyPg=null,skyBuf=null,skyAttr=-1,skyTime=null,skyDay=null;
 try{
  skyPg=gl.createProgram();gl.attachShader(skyPg,shader(gl.VERTEX_SHADER,skyVertex));
@@ -447,6 +447,8 @@ function render(){
  gl.uniformMatrix4fv(up,false,projection(third?1.03:1.15,w/h,.06,120));gl.uniformMatrix4fv(uv,false,camera(cam,at));
  gl.uniform3fv(ue,new Float32Array(cam));gl.uniform3fv(uh,new Float32Array([hero.x,hero.y+1.3,hero.z]));gl.uniform3fv(us,new Float32Array(sky));gl.uniform1f(ud,day);gl.uniform1f(ut,clock);
  gl.uniform3fv(ul,new Float32Array([Math.cos(clock*.018)*.51,.72,Math.sin(clock*.018)*.48]));
+ if(ub!=null)gl.uniform3fv(ub,new Float32Array(forestBeacon?[forestBeacon.x,ground(forestBeacon.x,forestBeacon.z)+1.4,forestBeacon.z]:[0,-100,0]));
+ if(ug!=null)gl.uniform1f(ug,forestBeacon?.lit&&forestBeacon.realm===realm?1:0);
  if(ua!=null)gl.uniform1i(ua,0);
  if(ur!=null)gl.uniform1f(ur,atlasLoaded?1:0);
  if(atlasLoaded){gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,atlasTexture);}
@@ -521,6 +523,29 @@ function render(){
   }
  };
  figure(companion,companion.role);if(third)figure(hero,hero.role,true);
+ // The beacon and pair of rune pads are a real landmark in the live scene.
+ if(forestBeacon?.realm===realm&&Math.hypot(hero.x-forestBeacon.x,hero.z-forestBeacon.z)<65){
+  const x=forestBeacon.x,z=forestBeacon.z,y=ground(x,z),lit=forestBeacon.lit;
+  voxelBox(v,x,y-.10,z,1.35,.24,1.35,3);
+  voxelBox(v,x,y+.10,z,.82,.65,.83,10);
+  voxelBox(v,x,y+.75,z,.62,.17,.64,8);
+  voxelBox(v,x,y+.95+Math.sin(clock*2.2)*.10,z,.43,.68,.45,lit?19:8);
+  voxelBox(v,x,y+1.55+Math.sin(clock*2.2)*.10,z,.26,.26,.28,lit?19:11);
+  for(const role of [0,1]){
+   const p=beaconPad(role),py=ground(p.x,p.z);
+   voxelBox(v,p.x,py-.05,p.z,1.50,.12,1.46,3);
+   voxelBox(v,p.x,py+.07,p.z,1.03,.08,.98,lit?19:8);
+   for(const dx of [-.36,.36])for(const dz of [-.34,.34])
+    voxelBox(v,p.x+dx,py+.14,p.z+dz,.15,.12,.17,lit?8:11);
+  }
+  if(lit&&quality!=='ECO'){
+   for(let i=0;i<9;i++){
+    const ang=i*2.3999+clock*.5;
+    voxelBox(v,x+Math.cos(ang)*1.04,y+1.20+Math.sin(clock+i)*.35,
+     z+Math.sin(ang)*1.04,.12,.16,.12,19);
+   }
+  }
+ }
  // Scattered magical fireflies drift near the player in forest clearings.
  // The lower quality setting skips these entirely.
  if(quality!=='ECO'&&biome(hero.x,hero.z)==='Evergreen Forest'){
@@ -798,7 +823,8 @@ function updateBeacon(){
  if(!forestBeacon||forestBeacon.lit||forestBeacon.realm!==realm||conn?.open&&!host)return;
  const dad=hero.role===0?hero:companion,jo=hero.role===1?hero:companion;
  const first=beaconPad(0),second=beaconPad(1);
- if(Math.hypot(dad.x-first.x,dad.z-first.z)>1.4||Math.hypot(jo.x-second.x,jo.z-second.z)>1.4)return;
+ if(Math.hypot(dad.x-first.x,dad.z-first.z)>1.4||Math.hypot(jo.x-second.x,jo.z-second.z)>1.4||
+    Math.abs(dad.y-ground(first.x,first.z))>2||Math.abs(jo.y-ground(second.x,second.z))>2)return;
  forestBeacon.lit=true;dirty=true;
  award('block3d-forest-beacon',55);
  celebrateBeacon();tone('reward');
@@ -818,6 +844,11 @@ function visitForest(){
    if(tree(x,z)||visible(px,py,pz)||!Number.isFinite(py))continue;
    const cx=px+1.4,cz=pz+1.4,cy=ground(cx,cz);
    if(tree(Math.floor(cx),Math.floor(cz))||visible(cx,cy,cz))continue;
+   // Require both rune-pad landing positions to be walkable, not on a cliff.
+   const baseX=px+.7;
+   const padA={x:baseX-1.6,z:pz+1.4},padB={x:baseX+1.6,z:pz+1.4};
+   if([padA,padB].some(p=>Math.abs(ground(p.x,p.z)-py)>1.5||
+      visible(p.x,ground(p.x,p.z),p.z)))continue;
    goal={px,pz,py,cx,cz,cy};break;
   }
  }
