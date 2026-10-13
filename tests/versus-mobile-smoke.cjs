@@ -113,9 +113,26 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  const matchBefore=await host.evaluate(()=>window.__versusTest.state.matchId);
  await guest.evaluate(()=>window.__versusTest.room.conn.close());
  await host.waitForFunction(()=>window.__versusTest.room.remoteActive===false,undefined,{timeout:4000});
+ // Verify the authoritative step never advances during a disconnect.
+ // The guest may reconnect within the 150 ms observation interval; a clock
+ // change AFTER remoteActive becomes true is legitimate, not a pause failure.
+ await host.evaluate(()=>{
+   const t=window.__versusTest;
+   if(t.room.remoteActive)throw Error('Disconnect state was not observed');
+   const frozen=t.state.matchLeft;
+   for(let n=0;n<12;n++)t.step();
+   if(t.state.matchLeft!==frozen)throw Error('Host advanced a disconnected match');
+ });
  const clockWhileOffline=await host.evaluate(()=>window.__versusTest.state.matchLeft);
  await host.waitForTimeout(150);
- assert.equal(await host.evaluate(()=>window.__versusTest.state.matchLeft),clockWhileOffline,'host pauses physics during disconnect');
+ const observed=await host.evaluate(()=>({
+   clock:window.__versusTest.state.matchLeft,
+   connected:window.__versusTest.room.remoteActive,
+   sameMatch:window.__versusTest.state.matchId
+ }));
+ assert.ok(observed.connected||observed.clock===clockWhileOffline,
+   'clock must remain frozen until peer is reconnected: '+JSON.stringify(observed));
+ assert.equal(observed.sameMatch,matchBefore,'reconnect must not replace the match');
  await guest.waitForFunction(()=>window.__versusTest.room.remoteActive&&!window.__versusTest.room.reconnecting&&
    window.__versusTest.room.phase==='playing',undefined,{timeout:15000});
  await host.waitForFunction(()=>window.__versusTest.room.remoteActive,undefined,{timeout:5000});
