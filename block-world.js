@@ -38,6 +38,7 @@ function resize(){
 resize();addEventListener('resize',resize);
 function rand(x,y,z=0){let v=Math.imul(x+z*13,374761393)+Math.imul(y+17,668265263);v=Math.imul(v^(v>>>13),1274126177);return ((v^(v>>>16))>>>0)/4294967296;}
 function tex(id){
+ if(window.BlockWorldArt)return window.BlockWorldArt.tile(id);
  if(textures[id])return textures[id];
  const c=document.createElement('canvas');c.width=c.height=32;
  const g=c.getContext('2d');const main=colors[id]||'#898989';g.fillStyle=main;g.fillRect(0,0,32,32);
@@ -177,7 +178,7 @@ function renderHotbar(){
   bar.appendChild(slot);
  });
  $('mode').textContent=creative?'CREATIVE':'SURVIVAL';
- $('health').textContent=players[active].name+' · '+(creative?'Unlimited blocks':'Resources')+'  |  D '+Math.round(players[0].health)+' · J '+Math.round(players[1].health);
+ $('health').textContent=players[active].name.toUpperCase()+'  ♥ '+Math.round(players[active].health)+'   LVL '+(1+Math.floor((goals.wood+goals.build+goals.diamond*4+goals.portal*10)/15));
 }
 function ingredientLabel(need){return Object.entries(need).map(([id,n])=>n+' '+names[id]).join(', ');}
 function renderCrafting(){
@@ -207,6 +208,7 @@ function craftItem(){
 function smeltItem(){recipeIndex=4;renderCrafting();say('Select an ingot recipe and press Craft');}
 Object.assign(window,{craftItem,smeltItem,closeCrafting});
 function drawBackground(){
+ if(window.BlockWorldArt){window.BlockWorldArt.background(ctx,{w:cssW/cameraZoom,h:cssH/cameraZoom,camX,camY,time:clock,dpr,zoom:cameraZoom});return;}
  const grad=ctx.createLinearGradient(0,0,0,cssH);grad.addColorStop(0,'#4e83d6');grad.addColorStop(.6,'#a4d8ec');grad.addColorStop(1,'#e8dab5');
  ctx.fillStyle=grad;ctx.fillRect(0,0,cssW,cssH);
  const sunX=cssW*.75-Math.sin(clock*.03)*25,sunY=cssH*.22;
@@ -232,7 +234,9 @@ function draw(){
  const sx=Math.max(0,Math.floor(camX/TILE)-1),ex=Math.min(W,Math.ceil((camX+viewW)/TILE)+1);
  const sy=Math.max(0,Math.floor(camY/TILE)-1),ey=Math.min(H,Math.ceil((camY+viewH)/TILE)+1);
  for(let y=sy;y<ey;y++)for(let x=sx;x<ex;x++){const id=world[y][x];if(!id)continue;ctx.drawImage(tex(id),Math.round(x*TILE-camX),Math.round(y*TILE-camY),TILE+1,TILE+1);}
- players.forEach((q,i)=>{
+ if(window.BlockWorldArt)window.BlockWorldArt.embellish(ctx,{world,surface,camX,camY,tileSize:TILE,w:viewW,h:viewH,time:clock});
+ if(window.BlockWorldArt)players.forEach((q,i)=>window.BlockWorldArt.character(ctx,q,i,{camX,camY,w:viewW,h:viewH,active}));
+ else players.forEach((q,i)=>{
   const x=Math.round(q.renderX-camX),y=Math.round(q.renderY-camY),bob=q.ground&&Math.abs(q.vx)>5?Math.sin(q.walk)*1.8:0;
   ctx.fillStyle='#14294466';ctx.beginPath();ctx.ellipse(x+q.w/2,y+q.h+1,15,4,0,0,Math.PI*2);ctx.fill();
   ctx.fillStyle=i===0?'#2365d0':'#3d9a55';ctx.fillRect(x+2,y+15+bob,q.w-4,17);
@@ -460,10 +464,10 @@ update=function(dt){
 const baseDraw=draw;
 draw=function(){
  baseDraw();ctx.save();
- for(const c of friends){const x=c.x-camX,y=c.y-camY+Math.sin(c.phase)*2;if(x<0||x>cssW||y<0||y>cssH)continue;
+ for(const c of friends){if(window.BlockWorldArt){window.BlockWorldArt.creature(ctx,c,{camX,camY,w:cssW/cameraZoom,h:cssH/cameraZoom});continue;}const x=c.x-camX,y=c.y-camY+Math.sin(c.phase)*2;if(x<0||x>cssW||y<0||y>cssH)continue;
    ctx.fillStyle=['#a4db87','#e4bd84','#86d9cf','#b2a1ed'][c.c];ctx.fillRect(x,y+4,18,11);ctx.fillRect(x+3,y,12,6);
    ctx.fillStyle='#203442';ctx.fillRect(x+5,y+5,2,2);ctx.fillRect(x+12,y+5,2,2);}
- players.forEach((p,i)=>{const x=Math.round(p.renderX-camX),y=Math.round(p.renderY-camY),step=Math.sin(p.walk)*Math.min(3,Math.abs(p.vx)/40);
+ if(!window.BlockWorldArt)players.forEach((p,i)=>{const x=Math.round(p.renderX-camX),y=Math.round(p.renderY-camY),step=Math.sin(p.walk)*Math.min(3,Math.abs(p.vx)/40);
    ctx.fillStyle='#27354c';ctx.fillRect(x+3,y+30,6,9+step);ctx.fillRect(x+p.w-9,y+30,6,9-step);
    ctx.fillStyle=i===0?'#2363cb':'#36b06d';ctx.fillRect(x+1,y+15,p.w-2,15);
    ctx.fillStyle='#edb992';ctx.fillRect(x+3,y+3,p.w-6,14);
@@ -477,6 +481,7 @@ draw=function(){
    ctx.font='bold 11px system-ui';ctx.textAlign='center';ctx.fillStyle='#fff9d0';ctx.fillText(portalUnlocked?'PORTAL OPEN':'TEAM PORTAL',px+60,py-9);}
  const dark=Math.max(0,Math.sin(nightClock/120*Math.PI*2))*.20;
  if(dark){ctx.fillStyle='rgba(12,18,57,'+dark+')';ctx.fillRect(0,0,cssW,cssH);}
+ if(window.BlockWorldArt)window.BlockWorldArt.foreground(ctx,{w:cssW/cameraZoom,h:cssH/cameraZoom,time:nightClock});
  if(weatherType==='rain'){ctx.strokeStyle='#b8ddff88';for(let i=0;i<35;i++){const x=(i*83+nightClock*120)%(cssW+40),y=(i*97+nightClock*230)%(cssH+50);ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+5,y+11);ctx.stroke();}}
  ctx.restore();
 };
