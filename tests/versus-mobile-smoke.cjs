@@ -30,8 +30,10 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  await guest.waitForFunction(()=>!document.querySelector('#versus-ready').disabled,undefined,{timeout:20000}).catch(async err=>{throw Error('Versus join timeout: host='+await host.locator('#versus-status').textContent()+' guest='+await guest.locator('#versus-status').textContent()+'; '+err.message);});
  assert.match(await guest.locator('#versus-status').textContent(),/Connected as Jozef|You are Jozef/);
  assert.equal(await guest.inputValue('#versus-who'),'Jozef','joining guest retains the assigned opposite player');
- // In portrait Jozef attacks upward; on landscape both see the same wide pitch.
- await host.waitForFunction(()=>document.querySelector('#versus-canvas').width>0);
+ // Joining updates the local camera on the next animation frame, not synchronously.
+ await host.waitForFunction(()=>window.__versusTest.camera().portrait=== (innerHeight>innerWidth));
+ await guest.waitForFunction(expected=>window.__versusTest.camera().cameraFlipped===expected,
+   viewport.height>viewport.width,{timeout:3500});
  const hostCamera=await host.evaluate(()=>window.__versusTest.camera());
  const guestCamera=await guest.evaluate(()=>window.__versusTest.camera());
  assert.equal(hostCamera.cameraFlipped,false,'Dad sees his attacking side from the lower pitch');
@@ -61,6 +63,11 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  await host.waitForFunction(()=>!document.querySelector('#versus-again').hidden);await guest.waitForFunction(()=>!document.querySelector('#versus-again').hidden);
  await host.waitForFunction(()=>document.querySelector('#versus-clock').textContent==='0:00',undefined,{timeout:5000});
  const finalState=await host.evaluate(()=>JSON.parse(JSON.stringify(window.__versusTest.state)));
+ // Result saving may wait for another same-origin tab's Web Lock.
+ await host.waitForFunction(id=>{
+   try{return JSON.parse(localStorage.getItem('jozefs-world-season-match-ids')||'[]').includes(id)}
+   catch{return false}
+ },finalState.matchId,{timeout:5000});
  await guest.evaluate(state=>{
    const t=window.__versusTest;
    for(let i=0;i<4;i++)t.onData({type:'state',state,phase:'finished',active:true});
@@ -95,8 +102,8 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  assert.equal(await guest.evaluate(()=>window.__versusTest.room.together),true,'joined mode is cooperative');
  assert.equal(await guest.locator('.vs-team-jozef .vs-team-name').innerText().then(s=>s.includes('DAD + JO')),true,'co-op scoreboard names the team');
  if(viewport.height>viewport.width){
-   assert.equal(await host.evaluate(()=>window.__versusTest.camera().cameraFlipped),true,'co-op team attacks toward top goal');
-   assert.equal(await guest.evaluate(()=>window.__versusTest.camera().cameraFlipped),true,'both teammates attack toward top goal');
+   await host.waitForFunction(()=>window.__versusTest.camera().cameraFlipped,{},{timeout:3500});
+   await guest.waitForFunction(()=>window.__versusTest.camera().cameraFlipped,{},{timeout:3500});
  }
 
  await host.locator('#versus-ready').click();await guest.locator('#versus-ready').click();

@@ -195,20 +195,27 @@
       try{localStorage.setItem('jozefs-world-coop-result',text);}catch(_){}
       return;
     }
-    try {
-      // Every completed match has one host-generated ID. Both browser tabs may
-      // share localStorage; on separate devices each retains its own local record.
-      const idKey='jozefs-world-season-match-ids';
-      const old=JSON.parse(localStorage.getItem(idKey)||'[]');
-      const ids=Array.isArray(old)?old.filter(x=>typeof x==='string').slice(0,19):[];
-      if(matchId&&ids.includes(matchId)){paintSeason();return;}
-      const season=readSeason();
-      season.unshift(state.score.jozef+'-'+state.score.dad);
-      localStorage.setItem('jozefs-world-season',JSON.stringify(season.slice(0,5)));
-      if(matchId)localStorage.setItem(idKey,JSON.stringify([matchId,...ids].slice(0,20)));
-      localStorage.setItem('jozefs-world-versus-result',text);
-    }catch(_){/* Device storage can be disabled or full. */}
-    paintSeason();
+    const score=state.score.jozef+'-'+state.score.dad;
+    const persist=()=>{
+      try {
+        // A named Web Lock serializes read-modify-write across same-origin tabs.
+        // Without the lock, two tabs can both read the old list and count once each.
+        const idKey='jozefs-world-season-match-ids';
+        const old=JSON.parse(localStorage.getItem(idKey)||'[]');
+        const ids=Array.isArray(old)?old.filter(x=>typeof x==='string').slice(0,19):[];
+        if(!matchId||!ids.includes(matchId)){
+          const season=readSeason();
+          season.unshift(score);
+          localStorage.setItem('jozefs-world-season',JSON.stringify(season.slice(0,5)));
+          if(matchId)localStorage.setItem(idKey,JSON.stringify([matchId,...ids].slice(0,20)));
+          localStorage.setItem('jozefs-world-versus-result',text);
+        }
+      }catch(_){/* Storage can be disabled or full. */}
+      paintSeason();
+    };
+    if(matchId&&typeof navigator.locks?.request==='function'){
+      navigator.locks.request('jozefs-world-versus-season',persist).catch(persist);
+    }else persist();
   }
   function lights() {
     $('light-dad')?.classList.toggle('on', room.who === 'Dad' || room.other === 'Dad');
