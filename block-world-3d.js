@@ -897,7 +897,7 @@ function applyRealm(m){
  discovered=m.discovered&&typeof m.discovered==='object'?m.discovered:{};
  guestInventory=validInventory(m.guestInventory);creative=m.creative!==false;
  forestBeacon=validBeacon(m.forestBeacon)?{...m.forestBeacon}:null;
- dimensions[realm]={seed,edits:[...edits],bossHp:clamp(Number(m.bossHp)||0,0,120)};
+ dimensions[realm]={seed,edits:[...edits],bossHp:clamp(Number(m.bossHp)||0,0,120),forestBeacon:validBeacon(forestBeacon)?{...forestBeacon}:null};
  chunks.forEach(c=>gl.deleteBuffer(c.buffer));chunks.clear();lastCX=lastCZ=Infinity;
  resetPose();if(guestActive){
   hero.x=4.5;hero.z=4.5;hero.y=ground(hero.x,hero.z);
@@ -912,13 +912,14 @@ function portal(){
  if(!defeated&&!portalOpened){announce('Defeat the Crystal Golem first');return;}
  if(Math.hypot(hero.x-40,hero.z-40)>5||Math.hypot(companion.x-40,companion.z-40)>5){announce('Both heroes must reach the portal at 40, 40');return;}
  if(!portalOpened){portalOpened=true;gain('portal');}
- captureDimension();realm=(realm+1)%3;forestBeacon=null;
+ captureDimension();realm=(realm+1)%3;
+ forestBeacon=validBeacon(dimensions[realm]?.forestBeacon)?{...dimensions[realm].forestBeacon}:null;
  const next=dimensions[realm];
  if(next){seed=next.seed;edits=new Map(next.edits||[]);}else{seed=baseSeed+realm*1973+1;edits=new Map();}
  chunks.forEach(c=>gl.deleteBuffer(c.buffer));chunks.clear();lastCX=Infinity;
  resetPose();spawn();dirty=true;save();sendRealm();announce('PORTAL OPEN · REALM '+(realm+1),3300);
 }
-function captureDimension(){dimensions[realm]={seed,edits:[...edits].slice(-14000),bossHp:boss.hp};}
+function captureDimension(){dimensions[realm]={seed,edits:[...edits].slice(-14000),bossHp:boss.hp,forestBeacon:validBeacon(forestBeacon)?{...forestBeacon}:null};}
 function save(force=false){if((!dirty&&!force)||guestActive)return;try{
  captureDimension();
  localStorage.setItem(DIMKEY,JSON.stringify({version:1,baseSeed,dimensions}));
@@ -1000,7 +1001,7 @@ function receive(m){
    forestBeacon=validBeacon(m.forestBeacon)?{...m.forestBeacon}:null;
    baseSeed=Number.isFinite(m.baseSeed)?m.baseSeed:seed;
    edits=new Map(m.edits.filter(a=>Array.isArray(a)&&typeof a[0]==='string'&&Number.isInteger(a[1])&&a[1]>=0&&a[1]<types.length));
-   dimensions[realm]={seed,edits:[...edits],bossHp:clamp(Number(m.bossHp)||0,0,120)};
+   dimensions[realm]={seed,edits:[...edits],bossHp:clamp(Number(m.bossHp)||0,0,120),forestBeacon:validBeacon(forestBeacon)?{...forestBeacon}:null};
   hero.role=1;companion.role=0;stage=clamp(Number(m.stage)||0,0,6);stats=Object.assign(stats,m.stats||{});defeated=!!m.defeated;portalOpened=!!m.portalOpened;companion.x=m.x;companion.y=m.y;companion.z=m.z;
   const guestPose=m.guest;
   if(guestPose&&[guestPose.x,guestPose.y,guestPose.z].every(Number.isFinite)&&
