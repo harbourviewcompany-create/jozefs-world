@@ -1480,3 +1480,44 @@ body.versus-focused #versus.is-playing #versus-leave:not([hidden]){
 #versus #versus-approval button{min-height:44px;padding:9px 15px;border:1px solid #a8e1ff;
  border-radius:10px;background:#155a79;color:#fff;font:800 12px/1 system-ui,sans-serif}
 #versus #versus-approval #versus-approve{background:#d0ff69;color:#11271d;border-color:#e7ffaa}
+/* Cooperative scoreboard labels remain legible on smaller phones. */
+#versus.is-coop .vs-team-name{font-size:clamp(9px,2.6vw,16px)!important;letter-spacing:-.015em!important}
+#versus.is-coop .vs-team-jozef .vs-avatar{border-color:#66d5ff}
+#versus.is-coop .vs-team-dad .vs-avatar{border-color:#ef846b}
+/* Versus broadcast camera: smaller thumb controls leave more of the live field visible. */
+body.versus-focused #versus.is-playing .versus-play{
+  bottom:calc(env(safe-area-inset-bottom) + 8px)!important;
+  gap:clamp(7px,2vw,14px)!important;
+}
+body.versus-focused #versus.is-playing #versus-stick{
+  width:clamp(96px,31vw,140px)!important;
+  height:clamp(96px,31vw,140px)!important;
+}
+body.versus-focused #versus.is-playing .versus-actions{
+  width:clamp(164px,46vw,214px)!important;
+  grid-template-rows:repeat(2,clamp(58px,17.5vw,87px))!important;
+  gap:clamp(5px,1.2vw,8px)!important;
+}
+body.versus-focused #versus.is-playing .versus-actions .vs-action{
+  border-radius:clamp(16px,4.8vw,23px)!important;
+}
+body.versus-focused #versus.is-playing #versus-kick{border-radius:50%!important}
+body.versus-focused #versus.is-playing .vs-movement #versus-sprint{min-height:29px!important}
+body.versus-focused #versus.is-playing .versus-stage{background:#061827!important}
+#versus.is-playing .versus-scoreboard .vs-team-name{letter-spacing:-.02em}
+@media (max-width:375px){
+ body.versus-focused #versus.is-playing #versus-stick{width:100px!important;height:100px!important}
+ body.versus-focused #versus.is-playing .versus-actions{
+   width:clamp(156px,48vw,174px)!important;
+   grid-template-rows:repeat(2,58px)!important
+ }
+}
+@media (orientation:landscape) and (max-height:550px){
+ body.versus-focused #versus.is-playing #versus-stick{
+   width:clamp(78px,20vh,105px)!important;height:clamp(78px,20vh,105px)!important
+ }
+ body.versus-focused #versus.is-playing .versus-actions{
+   width:clamp(145px,24vw,183px)!important;
+   grid-template-rows:repeat(2,clamp(42px,12vh,60px))!important
+ }
+}

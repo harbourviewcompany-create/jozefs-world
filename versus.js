@@ -10,9 +10,10 @@
   const dpr = Math.min(devicePixelRatio || 1, 2);
   canvas.width = W * dpr; canvas.height = H * dpr;
   ctx.scale(dpr, dpr);
-  let portrait=false,screenScale=1,screenX=0,screenY=0,cameraW=0,cameraH=0;
+  let portrait=false,cameraFlipped=false,cameraYReady=false,cameraPhase='',screenScale=1,screenX=0,screenY=0,cameraW=0,cameraH=0;
   function fitCamera(){
     const next=window.innerHeight>window.innerWidth;
+    cameraFlipped=next&&(room.together||room.who==='Jozef');
     const width=Math.max(1,Math.round(canvas.clientWidth||canvas.parentElement?.clientWidth||(next?420:720)));
     const height=Math.max(1,Math.round(canvas.clientHeight||canvas.parentElement?.clientHeight||(next?720:420)));
     if(next!==portrait||width!==cameraW||height!==cameraH){portrait=next;cameraW=width;cameraH=height;canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);}
@@ -20,9 +21,42 @@
     const vw=portrait?H:W,vh=portrait?W:H;
     screenScale=Math.max(width/vw,height/vh);
     screenX=(width-vw*screenScale)/2;screenY=(height-vh*screenScale)/2;
+    // Broadcast portrait camera: fill the phone width instead of shrinking the
+    // stadium. Follow active play vertically rather than stretching the world.
+    if(portrait && ['playing','countdown','finished'].includes(room.phase)){
+      screenScale=width/vw;
+      screenX=0;
+      const rect=canvas.getBoundingClientRect();
+      const hud=document.querySelector('#versus .versus-scoreboard')?.getBoundingClientRect();
+      const controls=document.querySelector('#versus .versus-play')?.getBoundingClientRect();
+      const hudBottom=(hud?.bottom??rect.top+64)-rect.top;
+      const controlsTop=(controls?.top??rect.top+height-135)-rect.top;
+      const upper=Math.max(55,Math.min(height*.28,hudBottom+13));
+      const lower=Math.min(height-24,Math.max(upper+96,controlsTop-30));
+      const me=room.who==='Jozef'?state.jozef:state.dad;
+      const distance=worldX=>cameraFlipped?W-worldX:worldX;
+      // Reserve a soft safety area for the ball and the controlled player.
+      const focus=Math.max(distance(state.ball.x),distance(me.x));
+      const showAttackingGoal=upper-52*screenScale;
+      const keepActionClear=lower-focus*screenScale;
+      const desired=keepActionClear>=showAttackingGoal
+        ?showAttackingGoal+(keepActionClear-showAttackingGoal)*.42
+        :keepActionClear;
+      const target=Math.max(-W*screenScale+lower,Math.min(upper,desired));
+      // Snap on kickoff/phase transitions so the first playable frame is safe,
+      // then ease tracking during an active match. Hidden browser tabs can
+      // throttle requestAnimationFrame, so a delayed camera is not acceptable.
+      if(cameraYReady&&cameraPhase===room.phase&&room.phase==='playing'&&Math.abs(target-screenY)<400)
+        screenY+=(target-screenY)*.24;
+      else screenY=target;
+      cameraPhase=room.phase;
+      cameraYReady=true;
+    }else if(portrait){cameraYReady=false;cameraPhase='';}
     ctx.setTransform(dpr,0,0,dpr,0,0);
-    if(portrait){ctx.translate(screenX+H*screenScale,screenY);ctx.scale(screenScale,screenScale);ctx.rotate(Math.PI/2);}
-    else{ctx.translate(screenX,screenY);ctx.scale(screenScale,screenScale);}
+    if(portrait){
+      if(cameraFlipped){ctx.translate(screenX,screenY+W*screenScale);ctx.scale(screenScale,screenScale);ctx.rotate(-Math.PI/2);}
+      else {ctx.translate(screenX+H*screenScale,screenY);ctx.scale(screenScale,screenScale);ctx.rotate(Math.PI/2);}
+    }else{ctx.translate(screenX,screenY);ctx.scale(screenScale,screenScale);}
   }
   const GOAL = { x: 36, y: 150, w: 18, h: 120 };
   const room = { code: '', who: 'Dad', spot: 'forward', otherSpot: 'forward', pending: null, otherPeer: '', reconnecting: false, together: false, peer: null, conn: null, host: false, other: '', ready: false, remoteReady: false, practice: false, phase: 'lobby', remoteActive: true };
@@ -192,34 +226,27 @@
       try{localStorage.setItem('jozefs-world-coop-result',text);}catch(_){}
       return;
     }
-    const scoreLine=state.score.jozef+'-'+state.score.dad;
-    const writerIsHost=room.host;
-    const writeSeason=()=>{
+    const score=state.score.jozef+'-'+state.score.dad;
+    const persist=()=>{
       try {
+        // A named Web Lock serializes read-modify-write across same-origin tabs.
+        // Without the lock, two tabs can both read the old list and count once each.
         const idKey='jozefs-world-season-match-ids';
         const old=JSON.parse(localStorage.getItem(idKey)||'[]');
         const ids=Array.isArray(old)?old.filter(x=>typeof x==='string').slice(0,19):[];
-        if(matchId&&ids.includes(matchId)){paintSeason();return;}
-        const season=readSeason();
-        season.unshift(scoreLine);
-        localStorage.setItem('jozefs-world-season',JSON.stringify(season.slice(0,5)));
-        if(matchId)localStorage.setItem(idKey,JSON.stringify([matchId,...ids].slice(0,20)));
-        localStorage.setItem('jozefs-world-versus-result',text);
-      }catch(_){/* Device storage can be disabled or full. */}
+        if(!matchId||!ids.includes(matchId)){
+          const season=readSeason();
+          season.unshift(score);
+          localStorage.setItem('jozefs-world-season',JSON.stringify(season.slice(0,5)));
+          if(matchId)localStorage.setItem(idKey,JSON.stringify([matchId,...ids].slice(0,20)));
+          localStorage.setItem('jozefs-world-versus-result',text);
+        }
+      }catch(_){/* Storage can be disabled or full. */}
       paintSeason();
     };
-    // Two windows on one browser can share storage and finish at nearly the
-    // same time. Lock the read+write transaction; guests yield briefly to
-    // the host. Independent devices still store their own match result.
-    const record=async()=>{
-      if(!writerIsHost)await new Promise(resolve=>setTimeout(resolve,180));
-      writeSeason();
-    };
-    if(navigator.locks?.request){
-      navigator.locks.request('jozefs-world-versus-season',{mode:'exclusive'},record)
-        .catch(()=>{if(writerIsHost)writeSeason();else setTimeout(writeSeason,180);});
-    }else if(writerIsHost)writeSeason();
-    else setTimeout(writeSeason,180);
+    if(matchId&&typeof navigator.locks?.request==='function'){
+      navigator.locks.request('jozefs-world-versus-season',persist).catch(persist);
+    }else persist();
   }
   function lights() {
     $('light-dad')?.classList.toggle('on', room.who === 'Dad' || room.other === 'Dad');
@@ -240,7 +267,7 @@
       return colors[team] || '#60c5ff';
     } catch { return '#60c5ff'; }
   }
-  function player(p,color,name){window.JozefVersusVisual.player(ctx,p,color,name,name===room.who,portrait,tick);}
+  function player(p,color,name){window.JozefVersusVisual.player(ctx,p,color,name,name===room.who,portrait,tick,cameraFlipped);}
 
     function keeper(side, color, name) {
     const body = { x: side === 'left' ? 52 : 668, y: state.keepers?.[side] || 210, vx: 0, vy: 0, face: side === 'left' ? 1 : -1 };
@@ -351,7 +378,7 @@
       const pop = /scores|Full time/.test(state.call) ? 1.15 : 1;
       ctx.save();
       ctx.translate(W / 2, H / 2);
-      if(portrait)ctx.rotate(-Math.PI/2);
+      if(portrait)ctx.rotate(cameraFlipped?Math.PI/2:-Math.PI/2);
       ctx.scale(pop, pop);
       ctx.fillStyle = /scores/.test(state.call) ? 'rgba(202,250,96,.92)' : 'rgba(8,20,15,.82)';
       ctx.fillRect(-120, -22, 240, 44);
@@ -576,10 +603,20 @@
     const stage=document.querySelector('.versus-stage'), play=document.querySelector('.versus-play'), board=document.querySelector('.versus-scoreboard'), card=document.querySelector('.versus-card');
     // Styles are owned by CSS and return to lobby without lingering inline sizing.
     for(const el of [card,stage,canvas,board,play])if(el)el.removeAttribute('style');
-    const pass=$('versus-pass');if(pass)pass.textContent=room.together?'PASS':'PUSH';
-    const blue=document.querySelector('.versus-blue'),lime=document.querySelector('.versus-lime');
-    if(blue)blue.firstChild.textContent=room.together?'DAD + JO ':'Jozef ';
-    if(lime)lime.lastChild.textContent=room.together?' Rovers':' Dad';
+    const pass=$('versus-pass');
+    if(pass){
+      const label=pass.querySelector('.vs-action-label');
+      const name=room.together?'PASS':'PUSH';
+      if(label)label.textContent=name;else pass.textContent=name;
+      pass.setAttribute('aria-label',room.together?'Pass to teammate':'Push ball forward');
+    }
+    const team=$('versus').querySelector('.vs-team-jozef .vs-team-name');
+    const opposition=$('versus').querySelector('.vs-team-dad .vs-team-name');
+    const blueName=room.together?'DAD + JO':room.practice&&room.who==='Dad'?'ROVERS':'JOZEF';
+    const limeName=room.together?'ROVERS':room.practice&&room.who==='Jozef'?'ROVERS':'DAD';
+    if(team){team.firstChild.textContent=blueName;const small=team.querySelector('small');if(small)small.textContent=room.together?'TEAM':room.practice?'SOLO':'HOME';}
+    if(opposition){opposition.firstChild.textContent=limeName;const small=opposition.querySelector('small');if(small)small.textContent=room.together?'RIVAL':room.practice?'SOLO':'AWAY';}
+    $('versus').classList.toggle('is-coop',room.together);
     document.body.classList.toggle('versus-focused',connected&&$('versus').classList.contains('active'));
     document.querySelectorAll('.versus-role').forEach(b=>{b.classList.toggle('is-on',b.dataset.who===room.who);b.setAttribute('aria-pressed',String(b.dataset.who===room.who));});
     $('versus-who').value=room.who; try{localStorage.setItem('jozefs-world-who', room.who);}catch(_){ }
@@ -587,7 +624,7 @@
     renderPracticeRecord();
   }
   function stopInput(){keys.clear();stickVector=null;targets[room.who]=null;send({type:'aim',x:null,y:null});const nub=$('versus-nub'),stick=$('versus-stick');nub.style.left=(stick.clientWidth-nub.offsetWidth)/2+'px';nub.style.top=(stick.clientHeight-nub.offsetHeight)/2+'px';}
-  function cleanup(){clearTimeout(connectTimer);clearTimeout(countdownTimer);clearTimeout(recoveryTimer);clearTimeout(connectWatchdog);reconnectAttempts=0;const pending=room.pending,oldConn=room.conn,oldPeer=room.peer;room.pending=null;room.conn=null;room.peer=null;pending?.close();oldConn?.close();oldPeer?.destroy();room.other='';room.otherPeer='';room.reconnecting=false;room.ready=false;room.remoteReady=false;room.host=false;room.practice=false;room.together=false;room.otherSpot='forward';room.remoteActive=true;room.phase='lobby';stopInput();syncUI();}
+  function cleanup(){clearTimeout(connectTimer);clearTimeout(countdownTimer);clearTimeout(recoveryTimer);clearTimeout(connectWatchdog);reconnectAttempts=0;const pending=room.pending,oldConn=room.conn,oldPeer=room.peer;room.pending=null;room.conn=null;room.peer=null;pending?.close();oldConn?.close();oldPeer?.destroy();room.other='';room.otherPeer='';room.reconnecting=false;room.ready=false;room.remoteReady=false;room.host=false;room.practice=false;room.together=false;room.otherSpot='forward';room.remoteActive=true;room.phase='lobby';cameraYReady=false;cameraPhase='';stopInput();syncUI();}
   function fail(message){cleanup();say(message);}
   function freshMatch(){state.matchId=crypto.randomUUID?.()||Array.from(crypto.getRandomValues(new Uint8Array(16)),v=>v.toString(16).padStart(2,'0')).join('');state.kick='';state.score={dad:0,jozef:0};state.matchLeft=room.practice?practiceSeconds:120;state.call='Kickoff';kickLock=0;lastBotKick=-100;savedMatch=false;resultRecorded=false;state.overtime=false;state.star={x:360,y:120,on:true};state.super='';nextLocalSprint=0;dekeReady.Dad=dekeReady.Jozef=0;sprintUntil.Dad=sprintUntil.Jozef=0;sprintReady.Dad=sprintReady.Jozef=0;reset(0);
     const length=Math.ceil(state.matchLeft);$('versus-clock').textContent=Math.floor(length/60)+':'+String(length%60).padStart(2,'0');
@@ -746,7 +783,7 @@
     const r=canvas.getBoundingClientRect();
     const cx=(e.clientX-r.left)*cameraW/r.width,cy=(e.clientY-r.top)*cameraH/r.height;
     const px=(cx-screenX)/screenScale,py=(cy-screenY)/screenScale;
-    aim(portrait?py:px,portrait?H-px:py);
+    aim(portrait?(cameraFlipped?W-py:py):px,portrait?(cameraFlipped?px:H-px):py);
   }
   canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);aimFrom(e);});canvas.addEventListener('pointermove',e=>{if(e.buttons)aimFrom(e);});canvas.addEventListener('pointercancel',stopInput);
   const stick=$('versus-stick'),nub=$('versus-nub');
@@ -816,7 +853,16 @@
   window.addEventListener('keydown',e=>{if(!$('versus').classList.contains('active')||room.phase!=='playing'||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;const key=e.key.toLowerCase();if(key===' '&&e.target.tagName==='BUTTON')return;
     if(['1','2','3'].includes(key)&&!e.repeat){pickAim(Number(key)-1);return;}if(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d',' '].includes(key)){e.preventDefault();keys.add(key);if(key===' '&&!e.repeat)shoot();}});
   window.addEventListener('keyup',e=>{keys.delete(e.key.toLowerCase());if(!keys.size)stopInput();});
-  function activity(){const active=!document.hidden&&$('versus').classList.contains('active');if(active!==localActive){localActive=active;stopInput();send({type:'active',active});syncUI();}document.body.classList.toggle('versus-focused',active&&room.phase!=='lobby');}
+  function activity(){
+    const section=$('versus');
+    const playing=['countdown','playing','finished'].includes(room.phase);
+    // SPA navigation may reapply section classes while a live match continues.
+    // Keep the immersive layout bound to the authoritative game phase.
+    if(section.classList.contains('is-playing')!==playing)section.classList.toggle('is-playing',playing);
+    const active=!document.hidden&&section.classList.contains('active');
+    if(active!==localActive){localActive=active;stopInput();send({type:'active',active});syncUI();}
+    document.body.classList.toggle('versus-focused',active&&room.phase!=='lobby');
+  }
   document.addEventListener('visibilitychange',activity);window.addEventListener('blur',stopInput);
   new MutationObserver(activity).observe($('versus'),{attributes:true,attributeFilter:['class']});
   const invite=new URLSearchParams(location.search).get('room');if(invite&&/^[A-Z]{6}$/.test(invite))$('versus-code').value=invite;
@@ -833,7 +879,11 @@
       const vector=stickVector||(x||y?{x,y}:null);
       const inRange=Math.hypot(me.x-state.ball.x,me.y-state.ball.y)<92;
       $('versus-kick')?.classList.toggle('in-range', inRange && room.phase==='playing');
-      if(vector&&now-lastSent>40){aim(me.x+(portrait?vector.y:vector.x)*90,me.y+(portrait?-vector.x:vector.y)*90);lastSent=now;}
+      if(vector&&now-lastSent>40){
+        const worldDx=portrait?(cameraFlipped?-vector.y:vector.y):vector.x;
+        const worldDy=portrait?(cameraFlipped?vector.x:-vector.x):vector.y;
+        aim(me.x+worldDx*90,me.y+worldDy*90);lastSent=now;
+      }
       // Releasing movement stops the player rather than auto-chasing the ball.
       // Skip idle physics and lower render frequency in the lobby or after full time.
       // Live matches retain their deterministic 60 Hz simulation and animation.

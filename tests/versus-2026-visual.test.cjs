@@ -33,7 +33,7 @@ test('stadium, actors, glowing star and ball render offline without external ass
 test('both published pages use the new renderer before gameplay and retain all match actions',()=>{
  const html=read('index.html');
  assert.equal(html,read('world.html'),'published homepage and world must be identical');
- const a=html.indexOf('src="versus-visual-2026.js?v=1"'),b=html.indexOf('src="versus.js?v=86"');
+ const a=html.indexOf('src="versus-visual-2026.js?v=2"'),b=html.indexOf('src="versus.js?v=87"');
  assert.ok(a>=0&&b>a,'art renderer precedes match controller');
  for(const id of ['versus-score-jozef','versus-score-dad','versus-clock','versus-stick','versus-aim','versus-deke','versus-pass','versus-sprint','versus-kick','versus-again','versus-leave']){
   assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,id+' id must be unique');
@@ -41,4 +41,30 @@ test('both published pages use the new renderer before gameplay and retain all m
  assert.match(read('versus.js'),/screenScale=Math.max\(width\/vw,height\/vh\)/,'uniform cover camera, not stretch');
  assert.match(read('site-experience.css'),/2026 SOCCER SHOWDOWN/);
  assert.match(read('sw.js'),/versus-visual-2026\.js/);
+});
+
+test('portrait cameras are relative to the local attacking team and buttons preserve their icon',()=>{
+ const src=read('versus.js');
+ assert.match(src,/cameraFlipped=next&&\(room\.together\|\|room\.who==='Jozef'\)/);
+ assert.match(src,/cameraFlipped\?-vector\.y:vector\.y/);
+ assert.match(src,/querySelector\('\.vs-action-label'\)/);
+ assert.match(src,/is-coop/);
+ assert.match(read('versus-visual-2026.js'),/cameraFlipped\?Math\.PI\/2:-Math\.PI\/2/);
+});
+
+test('both player names and kit numbers stay readable when sprites face left',()=>{
+ const {c,g,events}=render();
+ const scaleCalls=[];
+ c.scale=(x,y)=>scaleCalls.push([x,y]);
+ g.player(c,{x:340,y:230,vx:0,vy:0,face:-1},'#d7ff4a','Dad',true,true,50,false);
+ assert.equal(scaleCalls.filter(([x,y])=>x===-1&&y===1).length,3,
+   'sprite mirroring is inverted for jersey and nameplate text');
+ assert.ok(events.some(([kind,label])=>kind==='text'&&label==='Dad'));
+});
+test('mobile portrait camera uses full screen width with camera-follow, not a shrunken pitch',()=>{
+ const js=read('versus.js');
+ assert.match(js,/screenScale=width\/vw/);
+ assert.match(js,/const focus=Math\.max\(distance\(state\.ball\.x\),distance\(me\.x\)\)/);
+ assert.match(js,/cameraYReady/);
+ assert.match(js,/room\.practice&&room\.who==='Dad'\?'ROVERS'/);
 });

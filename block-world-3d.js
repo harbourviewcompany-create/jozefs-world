@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),canvas=$('view'),gl=canvas.getContext('w
 if(!gl){$('fallback').hidden=false;$('mission').textContent='WebGL is unavailable on this device.';return;}
 const CH=12,MAX_Y=27,R=2,KEY='jozefs-block-3d-v1';
 const types=['Air','Grass','Dirt','Stone','Wood','Leaves','Sand','Snow','Crystal','Planks','Brick','Glass'];
-const col=[[0,0,0],[.34,.72,.36],[.53,.38,.26],[.53,.60,.68],[.53,.32,.16],[.20,.51,.32],[.87,.74,.47],[.86,.92,.96],[.38,.80,.95],[.73,.51,.30],[.60,.36,.29],[.70,.85,.93], /* render-only hero palette */[.96,.71,.51],[.23,.14,.11],[.09,.56,.89],[.17,.74,.47],[.09,.17,.22],[.19,.32,.52],[.26,.19,.16],[.84,.95,.96],[.97,.72,.30],[.32,.19,.11],[.11,.39,.22]];
+const col=[[0,0,0],[.34,.72,.36],[.53,.38,.26],[.53,.60,.68],[.53,.32,.16],[.20,.51,.32],[.87,.74,.47],[.86,.92,.96],[.38,.80,.95],[.73,.51,.30],[.60,.36,.29],[.70,.85,.93], /* render-only hero palette */[.96,.71,.51],[.23,.14,.11],[.09,.56,.89],[.17,.74,.47],[.09,.17,.22],[.19,.32,.52],[.26,.19,.16],[.84,.95,.96],[.97,.72,.30],[.32,.19,.11],[.11,.39,.22],[.05,.14,.12],[.30,.57,.37],[.50,.62,.57]];
 const faces=[[[0,1,0],[[0,1,0],[0,1,1],[1,1,1],[1,1,0]]],[[0,0,1],[[0,0,1],[1,0,1],[1,1,1],[0,1,1]]],[[1,0,0],[[1,0,1],[1,0,0],[1,1,0],[1,1,1]]],[[0,-1,0],[[0,0,0],[1,0,0],[1,0,1],[0,0,1]]],[[-1,0,0],[[0,0,0],[0,0,1],[0,1,1],[0,1,0]]],[[0,0,-1],[[1,0,0],[0,0,0],[0,1,0],[1,1,0]]]];
 const missions=[['Gather wood','Mine eight wood blocks','wood',8,25],['Build our base','Place twelve blocks together','placed',12,30],['Explore a biome','Discover the far desert or snow ridge','explore',1,35],['Mine a crystal','Find a rare glowing crystal','crystal',1,40],['Defeat the Crystal Golem','Find the guardian at 32, 32','boss',1,60],['Activate the portal','Bring both heroes to 40, 40','portal',1,80]];
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
@@ -89,10 +89,23 @@ function cube(v,x,y,z,id,size=1,mask=null){
   if(mask&&!mask[j])continue;
   const f=faces[j][1];
   let shade=[1,.79,.83,.48,.67,.68][j]*grain;
+  // Vertex ambient occlusion, baked when a chunk changes. No runtime shadow pass.
+  // AUTO shades upward faces; QUALITY also shades vertical edges; ECO skips it.
+  const aoEnabled=size===1&&id!==5&&id!==11&&quality!=='ECO'&&(j===0||(quality==='QUALITY'&&j!==3));
+  const tangent=(j===0||j===3)?[0,2]:(j===1||j===5)?[0,1]:[1,2];
+  const qAO=aoEnabled?f.map(q=>{
+   const [u,v]=tangent,normal=faces[j][0],s1=[0,0,0],s2=[0,0,0];
+   s1[u]=q[u]===0?-1:1;s2[v]=q[v]===0?-1:1;
+   const solid=o=>{const b=block(x+normal[0]+o[0],y+normal[1]+o[1],z+normal[2]+o[2]);return b&&b!==5&&b!==11?1:0;};
+   const a=solid(s1),b=solid(s2),corner=solid(s1.map((t,k)=>t+s2[k]));
+   return a&&b ? .66 : 1-(a+b+corner)*.085;
+  }):null;
   // Cheap baked canopy shade on actual grass blocks, no full shadow-map pass.
   if(id===1&&j===0&&Number.isInteger(x)&&Number.isInteger(z)){
-   const nearby=tree(x+1,z)||tree(x-1,z)||tree(x,z+1)||tree(x,z-1);
-   if(nearby)shade*=.89;
+   const near=tree(x+1,z)||tree(x-1,z)||tree(x,z+1)||tree(x,z-1);
+   const under=tree(x,z)||tree(x+2,z)||tree(x-2,z)||tree(x,z+2)||tree(x,z-2);
+   if(near)shade*=.79;
+   else if(under)shade*=.88;
   }
   let c=col[id]||col[3];
   // Grassy/snowy surfaces have soil and rock sidewalls, not solid colour cubes.
@@ -100,9 +113,9 @@ function cube(v,x,y,z,id,size=1,mask=null){
   if(id===7&&j!==0)c=[.55,.63,.69];
   if(id===4&&j===0)c=[.72,.54,.32];
   for(const i of [0,1,2,0,2,3]){
-   const q=f[i];
+   const q=f[i],light=shade*(qAO?qAO[i]:1);
    v.push(x+q[0]*size,y+q[1]*size,z+q[2]*size,
-    Math.min(1,c[0]*shade),Math.min(1,c[1]*shade),Math.min(1,c[2]*shade),id,...faces[j][0]);
+    Math.min(1,c[0]*light),Math.min(1,c[1]*light),Math.min(1,c[2]*light),id,...faces[j][0]);
   }
  }
 }
@@ -135,6 +148,20 @@ function chunkMesh(cx,cz){
   if(block(x,top+1,z)===0&&quality!=='ECO'){
    const ox=x+.5,oz=z+.5,stemY=top+1;
    if(zone==='Evergreen Forest'){
+    // Understory follows soil contours without creating collision tiles.
+    if(chance>.910&&chance<.945){
+     const spread=(chance-.910)/.035;
+     voxelBox(v,ox,stemY+.01,oz,.11,.21+spread*.24,.11,22);
+     voxelBox(v,ox-.12,stemY+.12,oz,.32,.055,.12,24);
+     voxelBox(v,ox+.11,stemY+.20,oz,.29,.06,.14,5);
+    }else if(chance>.947&&chance<.959){
+     voxelBox(v,ox,stemY+.01,oz,.05,.21,.05,22);
+     voxelBox(v,ox,stemY+.21,oz,.22,.13,.22,chance>.954?20:25);
+     voxelBox(v,ox+.10,stemY+.22,oz,.11,.08,.11,19);
+    }else if(chance>.960&&chance<.965){
+     voxelBox(v,ox,stemY+.018,oz,.42,.15,.35,3);
+     voxelBox(v,ox+.08,stemY+.17,oz,.17,.09,.17,24);
+    }
     if(chance>.966&&chance<.986){
      const fern=chance<.980;
      if(fern){
@@ -170,9 +197,28 @@ function chunkMesh(cx,cz){
   // leaving their real destructible voxel structure unchanged.
   if(quality!=='ECO'&&tree(x,z)&&zone==='Evergreen Forest'){
    const th=height(x,z);
-   voxelBox(v,x+.5,th+5.30,z+.5,2.0,.21,2.0,5);
-   voxelBox(v,x+.5,th+6.12,z+.5,1.4,.27,1.5,5);
-   voxelBox(v,x+.5,th+6.6,z+.5,.72,.41,.78,22);
+   // Decor grows only while the underlying trunk is intact. Mined trees don't
+   // leave non-interactive floating crowns behind.
+   if(block(x,th+3,z)===4){
+    const variation=rnd(x,z,seed+808),dense=quality==='QUALITY';
+    voxelBox(v,x+.5,th+4.6,z+.5,.20,.80,.22,4);
+    voxelBox(v,x+.5,th+5.30,z+.5,1.85,.20,1.88,variation>.48?24:5);
+    voxelBox(v,x+.5,th+6.12,z+.5,1.4,.30,1.45,5);
+    voxelBox(v,x+.5,th+6.6,z+.5,.72,.37,.72,variation>.60?22:5);
+    if(dense){
+     for(const dx of [-1,1]){
+      voxelBox(v,x+.5+dx*1.0,th+5.25,z+.5,.92,.41,1.08,variation>.66?24:5);
+      voxelBox(v,x+.5+dx*.8,th+4.85,z+.5,.83,.13,.18,4);
+     }
+     voxelBox(v,x+.5,th+5.44,z-.52,1.11,.36,.78,24);
+     voxelBox(v,x+.5,th+5.44,z+1.02,1.11,.36,.78,5);
+    }
+    // Moss-covered trunk roots visually anchor the canopy to its terrain.
+    for(const dx of [-.35,.35]){
+     voxelBox(v,x+.5+dx,th+.98,z+.5,.26,.32,.33,4);
+     voxelBox(v,x+.5+dx,th+1.1,z+.26,.28,.14,.20,22);
+    }
+   }
   }
  }
  const k=cx+':'+cz,old=chunks.get(k);if(old)gl.deleteBuffer(old.buffer);
@@ -190,8 +236,8 @@ function stream(){
 function shader(type,src){const o=gl.createShader(type);gl.shaderSource(o,src);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(o));return o;}
 // Low-cost WebGL 1 atmospheric rendering: animated sky, sunset and night haze.
 // World normals stay in the geometry so lighting is consistent as the sun moves.
-const vertex='attribute vec3 p;attribute vec3 c;attribute float matId;attribute vec3 normal;uniform float tick;uniform mat4 proj;uniform mat4 view;uniform vec3 eye;varying vec3 color;varying vec3 worldPos;varying vec3 surfaceNormal;varying float material;varying float fog;void main(){vec3 pos=p; if(matId>21.5&&matId<23.5){pos.x+=sin(tick*1.6+p.x*2.7+p.z*2.3)*.05;}gl_Position=proj*view*vec4(pos,1.);color=c;worldPos=p;surfaceNormal=normal;material=matId;fog=clamp((distance(p,eye)-22.)/84.,0.,1.);}';
-const frag='precision mediump float;varying vec3 color;varying vec3 worldPos;varying vec3 surfaceNormal;varying float material;varying float fog;uniform vec3 sky;uniform vec3 eye;uniform vec3 sunDir;uniform float daylight;uniform float tick;float hash(vec3 p){return fract(sin(dot(p,vec3(17.13,41.17,79.19)))*43758.5453);}void main(){vec3 p=worldPos;float m=material;if(abs(m-5.)<.5&&distance(p,eye)<2.35)discard;vec3 base=color;vec3 grid=floor(p*17.0+vec3(.05));float grain=hash(grid);float coarse=hash(floor(p*3.0+vec3(.07)));float detail=.92+(grain-.5)*.19+(coarse-.5)*.14;vec3 norm=normalize(surfaceNormal);float sunny=max(0.,dot(norm,normalize(sunDir)));float diffuse=.54+sunny*.39;float skylight=.80+.2*max(norm.y,0.);if(m<.5)detail=1.0;else if(m<1.5){detail*=.93+.13*grain;float blades=step(.90,hash(floor(p*31.0)));base+=vec3(.10,.12,.015)*blades*max(norm.y,0.);}else if(m<3.5||abs(m-10.)<.5){float vein=sin(p.y*14.0+p.x*7.0+p.z*5.0);detail*=.93+.10*smoothstep(.64,.98,vein);}else if(abs(m-4.)<.5||abs(m-9.)<.5){detail*=.9+.12*sin(p.y*27.+coarse*6.);}else if(abs(m-5.)<.5){detail*=.82+.23*coarse;}else if(abs(m-8.)<.5||abs(m-19.)<.5){float pulse=.60+.40*sin(tick*2.0+p.x*2.0+p.z*3.0);base+=vec3(.04,.17,.23)*pulse;detail*=.98+.10*grain;diffuse+=.10*pulse;}else if(m>11.5){detail=.96+.06*grain;diffuse=max(diffuse,.72);}float day=.57+.43*daylight;vec3 lit=base*detail*(diffuse*day+(.10+.12*max(norm.y,0.))*skylight);lit+=vec3(.035,.040,.062)*(1.-daylight);vec3 graded=pow(max(lit,vec3(.003)),vec3(.89));float haze=smoothstep(.15,1.,fog);gl_FragColor=vec4(mix(graded,sky,haze*.86),1.);}';
+const vertex='attribute vec3 p;attribute vec3 c;attribute float matId;attribute vec3 normal;uniform float tick;uniform mat4 proj;uniform mat4 view;uniform vec3 eye;varying vec3 color;varying vec3 worldPos;varying vec3 surfaceNormal;varying float material;varying float fog;void main(){vec3 pos=p; if(matId>21.5&&matId<22.5){pos.x+=sin(tick*1.6+p.x*2.7+p.z*2.3)*.05;}gl_Position=proj*view*vec4(pos,1.);color=c;worldPos=p;surfaceNormal=normal;material=matId;fog=clamp((distance(p,eye)-22.)/84.,0.,1.);}';
+const frag='precision mediump float;varying vec3 color;varying vec3 worldPos;varying vec3 surfaceNormal;varying float material;varying float fog;uniform vec3 sky;uniform vec3 eye;uniform vec3 sunDir;uniform float daylight;uniform float tick;float hash(vec3 p){return fract(sin(dot(p,vec3(17.13,41.17,79.19)))*43758.5453);}void main(){vec3 p=worldPos;float m=material;if(abs(m-5.)<.5){ float dist=distance(p,eye); if(dist<2.0)discard; float alpha=smoothstep(2.0,5.8,dist); float dither=fract(sin(dot(floor(gl_FragCoord.xy),vec2(12.9898,78.233)))*43758.5453); if(dither>alpha)discard;}vec3 base=color;vec3 grid=floor(p*17.0+vec3(.05));float grain=hash(grid);float coarse=hash(floor(p*3.0+vec3(.07)));float detail=.92+(grain-.5)*.19+(coarse-.5)*.14;vec3 norm=normalize(surfaceNormal);float sunny=max(0.,dot(norm,normalize(sunDir)));float diffuse=.54+sunny*.39;float skylight=.80+.2*max(norm.y,0.);if(m<.5)detail=1.0;else if(m<1.5){detail*=.93+.13*grain;float blades=step(.90,hash(floor(p*31.0)));base+=vec3(.10,.12,.015)*blades*max(norm.y,0.);}else if(m<3.5||abs(m-10.)<.5){float vein=sin(p.y*14.0+p.x*7.0+p.z*5.0);detail*=.93+.10*smoothstep(.64,.98,vein);}else if(abs(m-4.)<.5||abs(m-9.)<.5){detail*=.9+.12*sin(p.y*27.+coarse*6.);}else if(abs(m-5.)<.5){detail*=.82+.23*coarse;}else if(abs(m-8.)<.5||abs(m-19.)<.5){float pulse=.60+.40*sin(tick*2.0+p.x*2.0+p.z*3.0);base+=vec3(.04,.17,.23)*pulse;detail*=.98+.10*grain;diffuse+=.10*pulse;}else if(m>11.5){detail=.96+.06*grain;diffuse=max(diffuse,.72);}float day=.57+.43*daylight;vec3 lit=base*detail*(diffuse*day+(.10+.12*max(norm.y,0.))*skylight);lit+=vec3(.035,.040,.062)*(1.-daylight);vec3 graded=pow(max(lit,vec3(.003)),vec3(.89));float haze=smoothstep(.15,1.,fog);gl_FragColor=vec4(mix(graded,sky,haze*.86),1.);}';
 const skyVertex='attribute vec2 xy;varying vec2 uv;void main(){uv=xy*.5+.5;gl_Position=vec4(xy,1.,1.);}';
 const skyFragment='precision mediump float;varying vec2 uv;uniform float t;uniform float daylight;void main(){float y=clamp(uv.y,0.,1.);vec3 zenith=mix(vec3(.016,.034,.112),vec3(.14,.44,.68),daylight);vec3 horizon=mix(vec3(.22,.12,.30),vec3(.65,.82,.86),daylight);vec3 sky=mix(horizon,zenith,smoothstep(.03,.9,y));float r=distance(uv,vec2(.73,.76));float halo=1.-smoothstep(.03,.30,r);float disc=1.-smoothstep(.023,.037,r);sky+=mix(vec3(.24,.16,.34),vec3(.96,.65,.30),daylight)*halo*.38;sky+=mix(vec3(.62,.77,.96),vec3(1.,.96,.72),daylight)*disc*.8;float wave=sin(uv.x*19.+t*.009+sin(uv.y*13.))*sin(uv.x*8.-uv.y*7.+t*.005);float clouds=smoothstep(.40,.83,wave)*smoothstep(.32,.66,y)*daylight;sky+=vec3(.27,.38,.38)*clouds*.25;float stars=step(.996,fract(sin(dot(floor(uv*vec2(330.,160.)),vec2(12.9898,78.233)))*43758.5453));sky+=vec3(.35,.46,.65)*stars*(1.-daylight)*smoothstep(.38,.70,y);gl_FragColor=vec4(sky,1.);}';
 // If a budget WebGL 1 GPU rejects the advanced material shader, keep the
@@ -304,6 +350,8 @@ function render(){
   const dad=role===0,skin=12,hair=dad?13:21,shirt=dad?14:15,accent=dad?20:19;
   const yaw=Number.isFinite(p.yaw)?p.yaw:hero.yaw;
   const cs=Math.cos(yaw),sn=Math.sin(yaw);
+  // Grounded contact shadow follows the player independently of their height.
+  if(quality!=='ECO')voxelBox(v,p.x,ground(p.x,p.z)-.028,p.z,.65,.016,.45,23);
   const gait=Math.sin(clock*10.5+(role?1.5:0))*.12*Math.min(1,p.walkPower||0);
   const arm=-gait*.85;
   const jump=isActive&&!p.ground?.045:0;
@@ -477,7 +525,7 @@ function hud(){
  $('level').textContent='LVL '+(Math.floor((Number(s.xp)||0)/100)+1);
  $('quality').textContent='GRAPHICS '+quality;
  $('qualityState').textContent=quality==='AUTO'?'AUTO · '+Math.round(renderCap*100)+'%':quality;
- $('compass').textContent='X '+Math.floor(hero.x)+' · Z '+Math.floor(hero.z)+' · '+(stage<4?'GOLEM 32,32':stage===5?'PORTAL 40,40':'EXPLORE YOUR WORLD');
+ $('compass').textContent=(biome(hero.x,hero.z)==='Evergreen Forest'?'FOREST':biome(hero.x,hero.z).toUpperCase())+' · X '+Math.floor(hero.x)+' Z '+Math.floor(hero.z);
  const done=stage>=missions.length,m=missions[Math.min(stage,missions.length-1)],ratio=done?1:clamp((stats[m[2]]||0)/m[3],0,1);
  $('mission').innerHTML='<strong>'+(done?'EXPEDITION COMPLETE':'MISSION '+(stage+1)+'/6 · '+m[0])+'</strong><small>'+m[1]+'</small><div class="progress"><i style="width:'+(ratio*100)+'%"></i></div><small>'+biome(hero.x,hero.z)+' · Realm '+(realm+1)+'</small>';
 }
@@ -564,6 +612,36 @@ function step(dt){
  if(conn?.open){lastNet+=dt;if(lastNet>.13){lastNet=0;send({t:'move',x:hero.x,y:hero.y,z:hero.z,hp:hero.hp});}}
  if(saveClock>15){saveClock=0;if(dirty)save();}
  stream();if(frames%15===0)hud();
+}
+/* Optional, non-destructive scenic forest shortcut. It only moves the local
+   two-character party, never regenerates the saved world or changes edits. */
+function visitForest(){
+ if(conn?.open){announce('Finish the shared session before scenic travel');return false;}
+ const hx=Math.floor(hero.x),hz=Math.floor(hero.z),step=8;
+ let goal=null;
+ for(let ring=1;ring<=23&&!goal;ring++){
+  for(let dx=-ring;dx<=ring&&!goal;dx++)for(let dz=-ring;dz<=ring;dz++){
+   if(Math.max(Math.abs(dx),Math.abs(dz))!==ring)continue;
+   const x=hx+dx*step,z=hz+dz*step;
+   if(biome(x,z)!=='Evergreen Forest')continue;
+   const px=x+.5,pz=z+.5,py=ground(px,pz);
+   if(tree(x,z)||visible(px,py,pz)||!Number.isFinite(py))continue;
+   const cx=px+1.4,cz=pz+1.4,cy=ground(cx,cz);
+   if(tree(Math.floor(cx),Math.floor(cz))||visible(cx,cy,cz))continue;
+   goal={px,pz,py,cx,cz,cy};break;
+  }
+ }
+ if(!goal){announce('No safe forest clearing nearby. Keep exploring!');return false;}
+ hero.x=goal.px;hero.y=goal.py;hero.z=goal.pz;
+ hero.vy=0;hero.ground=false;hero.double=false;
+ companion.x=goal.cx;companion.y=goal.cy;companion.z=goal.cz;
+ hero.walkPower=companion.walkPower=0;chaseCam=null;
+ chunks.forEach(c=>gl.deleteBuffer(c.buffer));chunks.clear();lastCX=Infinity;lastCZ=Infinity;
+ dirty=true;stream();save();hud();
+ // Travelling from the menu must return control immediately to the game.
+ menuPaused=false;$('drawer').hidden=true;$('options').setAttribute('aria-expanded','false');
+ announce('FOREST VISTA · Welcome to the Evergreen Forest',3400);
+ return true;
 }
 function portal(){
  if(!defeated&&!portalOpened){announce('Defeat the Crystal Golem first');return;}
@@ -748,6 +826,9 @@ function initUi(){
  });
  canvas.addEventListener('webglcontextrestored',()=>{webglLost=false;location.reload();});
 
+ const forestButton=document.createElement('button');
+ forestButton.id='forestVista';forestButton.textContent='VISIT FOREST';forestButton.onclick=visitForest;
+ $('drawer').querySelector('.buttons').appendChild(forestButton);
  const portalButton=document.createElement('button');portalButton.textContent='TEAM PORTAL';portalButton.onclick=portal;$('drawer').querySelector('.buttons').appendChild(portalButton);
  hotbar();hud();
 }

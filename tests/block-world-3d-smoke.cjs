@@ -29,6 +29,13 @@ assert.match(script,/function chunkMesh\(/,'chunk mesher preserved');
 assert.match(script,/const skyFragment=/,'procedural GPU sky present');
 assert.match(script,/function drawRadar\(/,'radar rendering present');
 assert.match(script,/adaptiveCap/,'adaptive FPS scaling present');
+
+assert.match(script,/qAO=aoEnabled/,'terrain computes baked vertex ambient occlusion');
+assert.match(script,/gl_FragCoord/,'leaves dither out near the third-person camera');
+assert.match(script,/function visitForest\(/,'non-destructive forest viewpoint is reachable from the menu');
+assert.match(script,/voxelBox\(v,p.x,ground\(p.x,p.z\)/,'voxel heroes have local ground contact shadows');
+assert.match(script,/if\(quality!=='ECO'/,'expensive environmental decoration honours ECO mode');
+
 new vm.Script(script,{filename:'block-world-3d.js'});
 function boot(shared=new Map(),options={}){
  const elements=new Map(),events=new Map(),clock={raf:null,now:0},errors=[];
@@ -68,7 +75,7 @@ function boot(shared=new Map(),options={}){
   Blob:class{},URL:{createObjectURL:()=>'/blob',revokeObjectURL(){}},confirm:()=>false,
   crypto:{getRandomValues:a=>a.fill(37)}
  };
- const instrumented=script.replace('window.BlockWorld3D=Object.freeze','window.__block3dTests={award,modify,portal};window.BlockWorld3D=Object.freeze');
+ const instrumented=script.replace('window.BlockWorld3D=Object.freeze','window.__block3dTests={award,modify,portal,visitForest};window.BlockWorld3D=Object.freeze');
   assert.notEqual(instrumented,script,'test instrumentation inserted');
   vm.runInNewContext(instrumented,sandbox,{timeout:15000});
  const status=()=>window.BlockWorld3D?.status();
@@ -105,6 +112,20 @@ assert.equal(test.status().quality,'QUALITY');
 test.click('quality');
 assert.equal(test.status().quality,'AUTO');
 assert.ok(test.readyCalls()>0,'successful first frame signals the HTML startup watchdog');
+
+const scenic=boot();
+scenic.tick(2);
+const scenicSeed=scenic.status().seed;
+assert.equal(scenic.testHooks.modify(1,3,1,4),true,'scenic visit preserves editable world state');
+assert.equal(scenic.testHooks.visitForest(),true,'visit-forest action finds a safe evergreen clearing');
+assert.equal(scenic.status().seed,scenicSeed,'forest travel preserves world generation seed');
+assert.ok(Math.hypot(scenic.status().hero.x-2.5,scenic.status().hero.z-2.5)>5,'forest viewpoint visibly relocates the hero');
+assert.match(scenic.document.getElementById('compass').textContent,/FOREST/,'destination HUD identifies the Evergreen Forest biome');
+const scenicSave=JSON.parse(scenic.shared.get('jozefs-block-3d-v1')||'{}');
+assert.ok(scenicSave.edits.some(([key,value])=>key==='1,3,1'&&value===4),'forest travel preserves player-placed blocks and saves');
+const restored=boot(scenic.shared);restored.tick(2);
+assert.equal(restored.status().seed,scenicSeed,'saved forest world still loads normally');
+
 assert.ok(test.status().loadedChunks>0,'terrain chunks streamed');
 const start=test.status().hero.z;
 for(const fn of test.events.get('keydown')||[])fn({code:'KeyW',repeat:false,preventDefault(){}});

@@ -19,7 +19,7 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
     other.evaluate(msg=>window.__versusBusReceive?.(msg),message).catch(()=>{}))));
   await context.route(url=>url.pathname.endsWith('/peerjs.min.js'),r=>r.fulfill({contentType:'text/javascript',body:transport}));
  }
- await context.route(url=>url.pathname.endsWith('/versus.js'),r=>r.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(root,'versus.js'),'utf8').replace('syncUI();draw();requestAnimationFrame(frame);','window.__versusTest={state,room,step,targets,onData};syncUI();draw();requestAnimationFrame(frame);')}));
+ await context.route(url=>url.pathname.endsWith('/versus.js'),r=>r.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(root,'versus.js'),'utf8').replace('syncUI();draw();requestAnimationFrame(frame);','window.__versusTest={state,room,step,targets,onData,camera:()=>({portrait,cameraFlipped,screenScale,screenY})};syncUI();draw();requestAnimationFrame(frame);')}));
  const host=await context.newPage(),guest=await context.newPage();clients.add(host);clients.add(guest);const errors=[];for(const p of [host,guest])p.on('pageerror',e=>errors.push(e.message));
  await host.goto(url+'#versus');await guest.goto(url+'#versus');
  await host.locator('#versus-open').click();await host.waitForFunction(()=>document.querySelector('#versus-room-code').textContent.length===6);
@@ -30,14 +30,78 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  await guest.waitForFunction(()=>!document.querySelector('#versus-ready').disabled,undefined,{timeout:20000}).catch(async err=>{throw Error('Versus join timeout: host='+await host.locator('#versus-status').textContent()+' guest='+await guest.locator('#versus-status').textContent()+'; '+err.message);});
  assert.match(await guest.locator('#versus-status').textContent(),/Connected as Jozef|You are Jozef/);
  assert.equal(await guest.inputValue('#versus-who'),'Jozef','joining guest retains the assigned opposite player');
+ // Joining updates the local camera on the next animation frame, not synchronously.
+ await host.waitForFunction(()=>window.__versusTest.camera().portrait=== (innerHeight>innerWidth));
+ await guest.waitForFunction(expected=>window.__versusTest.camera().cameraFlipped===expected,
+   viewport.height>viewport.width,{timeout:3500});
+ const hostCamera=await host.evaluate(()=>window.__versusTest.camera());
+ const guestCamera=await guest.evaluate(()=>window.__versusTest.camera());
+ assert.equal(hostCamera.cameraFlipped,false,'Dad sees his attacking side from the lower pitch');
+ assert.equal(guestCamera.cameraFlipped,viewport.height>viewport.width,'Jozef camera places Jozef at the lower attacking end');
+
  await host.locator('#versus-ready').click();assert.equal(await host.locator('#versus-clock').textContent(),'2:00');
  await guest.locator('#versus-ready').click();await host.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);await guest.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
+
+ if(viewport.height>viewport.width){
+   for(const page of [host,guest]){
+     const framing=()=> {
+       const camera=window.__versusTest.camera();
+       const state=window.__versusTest.state;
+       const who=window.__versusTest.room.who;
+       const canvas=document.querySelector('#versus-canvas').getBoundingClientRect();
+       const board=document.querySelector('.versus-scoreboard').getBoundingClientRect();
+       const controls=document.querySelector('.versus-play').getBoundingClientRect();
+       const worldX=x=>camera.cameraFlipped?720-x:x;
+       const actor=who==='Dad'?state.dad:state.jozef;
+       return {pitchWidth:420*camera.screenScale,screenWidth:canvas.width,
+         playerY:canvas.top+camera.screenY+worldX(actor.x)*camera.screenScale,
+         ballY:canvas.top+camera.screenY+worldX(state.ball.x)*camera.screenScale,
+         boardBottom:board.bottom,controlsTop:controls.top,phase:window.__versusTest.room.phase};
+     };
+     // Capture the visible pitch before assertions, including on a failing run.
+     if(process.env.VERSUS_SCREENSHOTS)await page.screenshot({path:path.join(process.env.VERSUS_SCREENSHOTS,
+       engine+'-'+viewport.width+'-'+(page===host?'dad':'jozef')+'-framing.png')});
+     await page.waitForFunction(()=>{
+       const camera=window.__versusTest.camera(),state=window.__versusTest.state;
+       const me=window.__versusTest.room.who==='Dad'?state.dad:state.jozef;
+       const actorX=camera.cameraFlipped?720-me.x:me.x;
+       const canvas=document.querySelector('#versus-canvas').getBoundingClientRect();
+       const controls=document.querySelector('.versus-play').getBoundingClientRect();
+       return window.__versusTest.room.phase==='playing'&&
+         Math.abs(420*camera.screenScale-canvas.width)<2&&
+         canvas.top+camera.screenY+actorX*camera.screenScale<controls.top-16;
+     },undefined,{timeout:5000}).catch(async err=>{
+       const frame=await page.evaluate(()=>{
+         const camera=window.__versusTest.camera(),state=window.__versusTest.state;
+         const me=window.__versusTest.room.who==='Dad'?state.dad:state.jozef;
+         const rect=el=>{const r=document.querySelector(el).getBoundingClientRect();return {top:r.top,bottom:r.bottom,width:r.width,height:r.height};};
+         return {camera,phase:window.__versusTest.room.phase,player:me,ball:state.ball,
+           canvas:rect('#versus-canvas'),controls:rect('.versus-play'),scoreboard:rect('.versus-scoreboard'),
+           viewport:{width:innerWidth,height:innerHeight}};
+       });
+       throw Error('Versus camera could not maintain visible player: '+JSON.stringify(frame)+'; '+err.message);
+     });
+     const frame=await page.evaluate(framing);
+     assert.ok(Math.abs(frame.pitchWidth-frame.screenWidth)<2,
+       'pitch should fill mobile width without stretching: '+JSON.stringify(frame));
+     assert.ok(frame.playerY>frame.boardBottom+4,
+       'active player must not hide under match HUD: '+JSON.stringify(frame));
+     assert.ok(frame.playerY<frame.controlsTop-16,
+       'active player must stay above thumb controls: '+JSON.stringify(frame));
+     assert.ok(frame.ballY>frame.boardBottom-28&&frame.ballY<frame.controlsTop+16,
+       'ball stays near the unobstructed play area: '+JSON.stringify(frame));
+   }
+ }
+
  for(const p of [host,guest]){
  const box=await p.locator('#versus-kick').boundingBox();assert.ok(box.y>=0&&box.y+box.height<=viewport.height,'shoot within viewport');const stick=await p.locator('#versus-stick').boundingBox();assert.ok(stick.y>=0&&stick.y+stick.height<=viewport.height,'stick within viewport');assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'no overflow');
  const dims=await p.locator('#versus-canvas').evaluate(c=>({width:c.width,height:c.height}));assert.equal(dims.width>dims.height,viewport.width>viewport.height,'stadium camera follows orientation rather than viewport width');
  }
  await host.locator('#versus-canvas').focus();await host.keyboard.down('ArrowLeft');await host.waitForTimeout(200);await host.keyboard.up('ArrowLeft');await host.keyboard.press('Space');
- if(process.env.VERSUS_SCREENSHOTS)await host.screenshot({path:path.join(process.env.VERSUS_SCREENSHOTS,engine+'-'+viewport.width+'.png')});
+ if(process.env.VERSUS_SCREENSHOTS){
+   await host.screenshot({path:path.join(process.env.VERSUS_SCREENSHOTS,engine+'-'+viewport.width+'-dad.png')});
+   await guest.screenshot({path:path.join(process.env.VERSUS_SCREENSHOTS,engine+'-'+viewport.width+'-jozef.png')});
+ }
  await host.evaluate(()=>{const t=window.__versusTest;t.onData({type:'active',active:false});const before=t.state.matchLeft;t.step();if(t.state.matchLeft!==before)throw Error('paused clock advanced');t.onData({type:'active',active:true});});
  // Simulate a broken real-time data channel. Both players must resume the same match.
  const matchBefore=await host.evaluate(()=>window.__versusTest.state.matchId);
@@ -65,12 +129,16 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  await host.waitForFunction(()=>!document.querySelector('#versus-again').hidden);await guest.waitForFunction(()=>!document.querySelector('#versus-again').hidden);
  await host.waitForFunction(()=>document.querySelector('#versus-clock').textContent==='0:00',undefined,{timeout:5000});
  const finalState=await host.evaluate(()=>JSON.parse(JSON.stringify(window.__versusTest.state)));
+ // Result saving may wait for another same-origin tab's Web Lock.
+ await host.waitForFunction(id=>{
+   try{return JSON.parse(localStorage.getItem('jozefs-world-season-match-ids')||'[]').includes(id)}
+   catch{return false}
+ },finalState.matchId,{timeout:5000});
  await guest.evaluate(state=>{
    const t=window.__versusTest;
    for(let i=0;i<4;i++)t.onData({type:'state',state,phase:'finished',active:true});
  },finalState);
  for(const p of [host,guest]){
-   await p.waitForFunction(()=>JSON.parse(localStorage.getItem('jozefs-world-season-match-ids')||'[]').length===1,undefined,{timeout:5000});
    const scores=await p.evaluate(()=>JSON.parse(localStorage.getItem('jozefs-world-season')||'[]'));
    assert.equal(scores.length,1,'one match only counts once despite repeated finished packets');
     const ids=await p.evaluate(()=>JSON.parse(localStorage.getItem('jozefs-world-season-match-ids')||'[]'));
@@ -79,11 +147,14 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  await guest.locator('#versus-again').click();await host.waitForFunction(()=>!document.querySelector('#versus-ready').disabled);
  await host.locator('#versus-ready').click();await guest.locator('#versus-ready').click();await host.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
  await host.locator('#versus-leave').click({timeout:7000});await guest.waitForFunction(()=>document.querySelector('#versus-status').textContent.includes('disconnected'));
- await guest.locator('#versus-leave').click(); // The player can cancel reconnect and play offline.
+ await guest.locator('#versus-leave').click();
  await guest.locator('#versus-cpu-difficulty').selectOption('legend');
  await guest.locator('#versus-practice-length').selectOption('60');
  await guest.locator('#versus-practice').click();await guest.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
  assert.ok(await guest.evaluate(()=>window.__versusTest.state.matchLeft<=60&&window.__versusTest.state.matchLeft>55),'Quick practice starts with a one-minute clock');
+ assert.ok((await guest.locator('.vs-team-dad .vs-team-name').innerText()).includes('ROVERS'),
+   'solo challenger scoreboard identifies the rival');
+
  await guest.evaluate(()=>{window.__versusTest.state.score.dad=1;window.__versusTest.state.matchLeft=.02;});
  await guest.waitForFunction(()=>!document.querySelector('#versus-again').hidden);
  const solo=await guest.evaluate(()=>JSON.parse(localStorage.getItem('jozefs-world-versus-v1')));
@@ -99,10 +170,17 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  await host.locator('#versus-approve').click();
  await guest.waitForFunction(()=>!document.querySelector('#versus-ready').disabled,undefined,{timeout:20000});
  assert.equal(await guest.evaluate(()=>window.__versusTest.room.together),true,'joined mode is cooperative');
+ assert.equal(await guest.locator('.vs-team-jozef .vs-team-name').innerText().then(s=>s.includes('DAD + JO')),true,'co-op scoreboard names the team');
+ if(viewport.height>viewport.width){
+   await host.waitForFunction(()=>window.__versusTest.camera().cameraFlipped,{},{timeout:3500});
+   await guest.waitForFunction(()=>window.__versusTest.camera().cameraFlipped,{},{timeout:3500});
+ }
+
  await host.locator('#versus-ready').click();await guest.locator('#versus-ready').click();
  await host.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
  await guest.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
- assert.equal(await host.locator('#versus-pass').textContent(),'PASS','co-op uses real passing');
+ assert.equal(await host.locator('#versus-pass .vs-action-label').textContent(),'PASS','co-op uses real passing');
+ assert.equal(await host.locator('#versus-pass .vs-action-icon').count(),1,'co-op keeps the PASS icon');
  await host.evaluate(()=>{
    const t=window.__versusTest;
    t.targets.Dad=t.targets.Jozef=null;

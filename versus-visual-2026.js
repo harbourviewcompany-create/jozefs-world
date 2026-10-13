@@ -68,12 +68,13 @@
   }
   for(const corner of [[30,30],[30,H-30],[W-30,30],[W-30,H-30]]) glow(c,corner[0],corner[1],86,'rgba(193,232,255,.22)');
  }
- function player(c,p,color,name,isLocal,portrait,tick){
+ function player(c,p,color,name,isLocal,portrait,tick,cameraFlipped=false){
   const adult=name==='Dad'||name==='Keeper'||name==='Rovers'&&color==='#d7ff4a';
   const pace=Math.hypot(p.vx||0,p.vy||0),moving=pace>.3;
   const stride=moving?Math.sin(tick*.19+pace*.1)*5.2:0;
-  c.save();c.translate(p.x,p.y);if(portrait)c.rotate(-Math.PI/2);
-  if(p.face<0)c.scale(-1,1);
+  c.save();c.translate(p.x,p.y);if(portrait)c.rotate(cameraFlipped?Math.PI/2:-Math.PI/2);
+  const faceLeft=p.face<0;
+  if(faceLeft)c.scale(-1,1);
   const shadow=c.createRadialGradient(0,23,2,0,23,28);shadow.addColorStop(0,'rgba(2,9,17,.5)');shadow.addColorStop(1,'transparent');
   ellipse(c,0,23,28,12,shadow);
   if(isLocal){
@@ -95,7 +96,8 @@
   c.fillStyle=adult?'#d6fa52':'#20b6ef';c.fillRect(-10,-2,3,12);c.fillRect(7,-2,3,12);
   round(c,-9,11,18,5,2,adult?'#101825':'#132b4b');
   c.textAlign='center';c.textBaseline='middle';c.fillStyle=adult?'#d8ff8f':'#12325d';c.font='900 10px system-ui';
-  c.fillText(adult?'01':'10',0,3);
+  c.save();if(faceLeft)c.scale(-1,1);
+  c.fillText(adult?'01':'10',0,3);c.restore();
   // Limbs with directional animation.
   c.strokeStyle=adult?'#d8a782':'#edb98d';c.lineWidth=5;
   for(const d of [-1,1]){c.beginPath();c.moveTo(d*9,-5);c.lineTo(d*16,-1+d*stride*.5);c.stroke();
@@ -113,6 +115,8 @@
   if(adult){ellipse(c,0,-11.4,7.4,4,'#554038');ellipse(c,0,-12,4.6,1.5,'#b77b58');}
   for(const d of [-1,1]){ellipse(c,d*4,-19.3,2.1,2.4,'#fff');ellipse(c,d*4.1,-19.2,1,1.4,'#18293e');ellipse(c,d*4-.3,-19.7,.35,.45,'#fff');}
   c.strokeStyle=adult?'#82553e':'#b7735d';c.lineWidth=1.2;c.beginPath();c.arc(0,-14,3.4,.13,Math.PI-.13);c.stroke();
+  // Restore the horizontal axis for text; sprites may face left, lettering never mirrors.
+  if(faceLeft)c.scale(-1,1);
   // Floating readable label, stable regardless of orientation.
   round(c,-29,-50,58,14,5,'rgba(4,18,37,.91)');
   c.strokeStyle=adult?'#c2fa56':'#61d5ff';c.lineWidth=.6;c.strokeRect(-26,-49,52,12);

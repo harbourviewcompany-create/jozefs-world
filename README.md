@@ -11,6 +11,17 @@ An interactive family game universe with a spatial 3D headquarters and a shared 
 
 Block World 3D is a **native WebGL voxel game**, not a CSS imitation. The original 2D edition and its device saves remain independently playable.
 
+### Forest Vista environmental polish (13 October 2026)
+
+The Forest Vista update improves the **real playable 3D forest**, with no static background images. Chunk meshes bake vertex corner ambient occlusion and approximate canopy contact shadows (AUTO focuses on top faces; QUALITY shades more surfaces; ECO skips the expensive shading). Leaves near the third-person camera gradually dither away instead of fully obscuring the player. This is a low-cost approximation, not shadow-map-based real-time shadows.
+
+The forest contains additional terrain-following ferns, mushrooms, stones, layered canopies, exposed roots and secondary leaf forms. Daddy and Jozef have ground-contact shadow decals. The world remains editable; decorative foliage attached to mined tree trunks is removed when the chunk remeshes. The visuals are backed by existing WebGL 1 code; moving shadows, true water reflections and a full physically based materials pipeline are not yet implemented.
+
+**MENU → VISIT FOREST** searches for a safe Evergreen Forest clearing and travels there without deleting any world blocks, changing the seed, or altering the inventory. It closes the menu automatically. Scenic travel is disabled during a connected co-op session to avoid unsynchronized teleportation. The compass now identifies the current biome.
+
+**Verification:** existing solo 2D, 2D co-op, and 3D smoke tests pass, including a new non-destructive forest-travel and save/reload test. These are simulated interfaces; real iPhone visual quality, long-duration frame rate, and live two-device 3D sessions still require testing.
+
+
 ### Cinematic Forest Expedition (13 October 2026)
 
 The real interactive 3D game has received a deeper graphical overhaul. It now renders ten-float voxels with true face normals, directional day/night sunlight, procedural terrain detail, material shading for bark/soil/crystal, smooth distance fog, and a WebGL 1 compatibility shader when enhanced fragment compilation fails.
