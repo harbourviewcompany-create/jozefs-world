@@ -34,15 +34,16 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  await host.waitForFunction(()=>window.__versusTest.camera().portrait=== (innerHeight>innerWidth));
  await guest.waitForFunction(expected=>window.__versusTest.camera().cameraFlipped===expected,
    viewport.height>viewport.width,{timeout:3500});
- if(process.env.VERSUS_SCREENSHOTS){
-   await host.screenshot({path:path.join(process.env.VERSUS_SCREENSHOTS,engine+'-'+viewport.width+'-dad.png')});
-   await guest.screenshot({path:path.join(process.env.VERSUS_SCREENSHOTS,engine+'-'+viewport.width+'-jozef.png')});
- }
  const hostCamera=await host.evaluate(()=>window.__versusTest.camera());
  const guestCamera=await guest.evaluate(()=>window.__versusTest.camera());
+ assert.equal(hostCamera.cameraFlipped,false,'Dad sees his attacking side from the lower pitch');
+ assert.equal(guestCamera.cameraFlipped,viewport.height>viewport.width,'Jozef camera places Jozef at the lower attacking end');
+
+ await host.locator('#versus-ready').click();assert.equal(await host.locator('#versus-clock').textContent(),'2:00');
+ await guest.locator('#versus-ready').click();await host.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);await guest.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
  if(viewport.height>viewport.width){
    for(const page of [host,guest]){
-     // The canvas camera is recomputed in the next animation frame after match state changes.
+     // The canvas camera is recomputed after both players enter live play.
      const calculate=()=>{
        const camera=window.__versusTest.camera();
        const canvas=document.querySelector('#versus-canvas').getBoundingClientRect();
@@ -75,11 +76,7 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
      assert.ok(frame.playerY<frame.controlsTop-32,'attacker above controls: '+JSON.stringify(frame));
    }
  }
- assert.equal(hostCamera.cameraFlipped,false,'Dad sees his attacking side from the lower pitch');
- assert.equal(guestCamera.cameraFlipped,viewport.height>viewport.width,'Jozef camera places Jozef at the lower attacking end');
 
- await host.locator('#versus-ready').click();assert.equal(await host.locator('#versus-clock').textContent(),'2:00');
- await guest.locator('#versus-ready').click();await host.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);await guest.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
  for(const p of [host,guest]){
  const box=await p.locator('#versus-kick').boundingBox();assert.ok(box.y>=0&&box.y+box.height<=viewport.height,'shoot within viewport');const stick=await p.locator('#versus-stick').boundingBox();assert.ok(stick.y>=0&&stick.y+stick.height<=viewport.height,'stick within viewport');assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'no overflow');
  const dims=await p.locator('#versus-canvas').evaluate(c=>({width:c.width,height:c.height}));assert.equal(dims.width>dims.height,viewport.width>viewport.height,'stadium camera follows orientation rather than viewport width');
