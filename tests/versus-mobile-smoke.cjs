@@ -23,7 +23,11 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  const host=await context.newPage(),guest=await context.newPage();clients.add(host);clients.add(guest);const errors=[];for(const p of [host,guest])p.on('pageerror',e=>errors.push(e.message));
  await host.goto(url+'#versus');await guest.goto(url+'#versus');
  await host.locator('#versus-open').click();await host.waitForFunction(()=>document.querySelector('#versus-room-code').textContent.length===6);
- const code=await host.locator('#versus-room-code').textContent();await guest.locator('#versus-code').fill(code);await guest.locator('#versus-join').click();await guest.waitForFunction(()=>!document.querySelector('#versus-ready').disabled,undefined,{timeout:20000}).catch(async err=>{throw Error('Versus join timeout: host='+await host.locator('#versus-status').textContent()+' guest='+await guest.locator('#versus-status').textContent()+'; '+err.message);});
+ const code=await host.locator('#versus-room-code').textContent();await guest.locator('#versus-code').fill(code);await guest.locator('#versus-join').click();
+ await host.waitForFunction(()=>!document.querySelector('#versus-approval').hidden,{},{timeout:7000});
+ assert.equal(await host.locator('#versus-ready').isDisabled(),true,'unauthorized guest cannot ready the match');
+ await host.locator('#versus-approve').click();
+ await guest.waitForFunction(()=>!document.querySelector('#versus-ready').disabled,undefined,{timeout:20000}).catch(async err=>{throw Error('Versus join timeout: host='+await host.locator('#versus-status').textContent()+' guest='+await guest.locator('#versus-status').textContent()+'; '+err.message);});
  assert.match(await guest.locator('#versus-status').textContent(),/Connected as Jozef|You are Jozef/);
  assert.equal(await guest.inputValue('#versus-who'),'Jozef','joining guest retains the assigned opposite player');
  await host.locator('#versus-ready').click();assert.equal(await host.locator('#versus-clock').textContent(),'2:00');
@@ -78,6 +82,8 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  await host.waitForFunction(()=>document.querySelector('#versus-room-code').textContent.length===6);
  const teamCode=await host.locator('#versus-room-code').textContent();
  await guest.locator('#versus-code').fill(teamCode);await guest.locator('#versus-join').click();
+ await host.waitForFunction(()=>!document.querySelector('#versus-approval').hidden,undefined,{timeout:7000});
+ await host.locator('#versus-approve').click();
  await guest.waitForFunction(()=>!document.querySelector('#versus-ready').disabled,undefined,{timeout:20000});
  assert.equal(await guest.evaluate(()=>window.__versusTest.room.together),true,'joined mode is cooperative');
  await host.locator('#versus-ready').click();await guest.locator('#versus-ready').click();
