@@ -302,8 +302,9 @@
     }
   }
   function save(side) {
-    if (keeperState[side].commit < 10) return false;
-    return Math.abs(state.ball.y - (state.keepers?.[side] || 210)) < 12;
+    const manual=[room.who,room.other].some(who=>['Dad','Jozef'].includes(who)&&isKeeper(who)&&keeperSide(who)===side);
+    if(!manual&&keeperState[side].commit<10)return false;
+    return Math.abs(state.ball.y-(state.keepers?.[side]||210))<(manual?20:12);
   }
   function burst(x, y, color, n) {
     if(reduced.matches)return;
