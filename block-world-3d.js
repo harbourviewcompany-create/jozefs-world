@@ -89,10 +89,23 @@ function cube(v,x,y,z,id,size=1,mask=null){
   if(mask&&!mask[j])continue;
   const f=faces[j][1];
   let shade=[1,.79,.83,.48,.67,.68][j]*grain;
+  // Vertex ambient occlusion, baked when a chunk changes. No runtime shadow pass.
+  // AUTO shades upward faces; QUALITY also shades vertical edges; ECO skips it.
+  const aoEnabled=size===1&&id!==5&&id!==11&&quality!=='ECO'&&(j===0||(quality==='QUALITY'&&j!==3));
+  const tangent=(j===0||j===3)?[0,2]:(j===1||j===5)?[0,1]:[1,2];
+  const qAO=aoEnabled?f.map(q=>{
+   const [u,v]=tangent,normal=faces[j][0],s1=[0,0,0],s2=[0,0,0];
+   s1[u]=q[u]===0?-1:1;s2[v]=q[v]===0?-1:1;
+   const solid=o=>{const b=block(x+normal[0]+o[0],y+normal[1]+o[1],z+normal[2]+o[2]);return b&&b!==5&&b!==11?1:0;};
+   const a=solid(s1),b=solid(s2),corner=solid(s1.map((t,k)=>t+s2[k]));
+   return a&&b?.66:1-(a+b+corner)*.085;
+  }):null;
   // Cheap baked canopy shade on actual grass blocks, no full shadow-map pass.
   if(id===1&&j===0&&Number.isInteger(x)&&Number.isInteger(z)){
-   const nearby=tree(x+1,z)||tree(x-1,z)||tree(x,z+1)||tree(x,z-1);
-   if(nearby)shade*=.89;
+   const near=tree(x+1,z)||tree(x-1,z)||tree(x,z+1)||tree(x,z-1);
+   const under=tree(x,z)||tree(x+2,z)||tree(x-2,z)||tree(x,z+2)||tree(x,z-2);
+   if(near)shade*=.79;
+   else if(under)shade*=.88;
   }
   let c=col[id]||col[3];
   // Grassy/snowy surfaces have soil and rock sidewalls, not solid colour cubes.
@@ -100,9 +113,9 @@ function cube(v,x,y,z,id,size=1,mask=null){
   if(id===7&&j!==0)c=[.55,.63,.69];
   if(id===4&&j===0)c=[.72,.54,.32];
   for(const i of [0,1,2,0,2,3]){
-   const q=f[i];
+   const q=f[i],light=shade*(qAO?qAO[i]:1);
    v.push(x+q[0]*size,y+q[1]*size,z+q[2]*size,
-    Math.min(1,c[0]*shade),Math.min(1,c[1]*shade),Math.min(1,c[2]*shade),id,...faces[j][0]);
+    Math.min(1,c[0]*light),Math.min(1,c[1]*light),Math.min(1,c[2]*light),id,...faces[j][0]);
   }
  }
 }
@@ -191,7 +204,7 @@ function shader(type,src){const o=gl.createShader(type);gl.shaderSource(o,src);g
 // Low-cost WebGL 1 atmospheric rendering: animated sky, sunset and night haze.
 // World normals stay in the geometry so lighting is consistent as the sun moves.
 const vertex='attribute vec3 p;attribute vec3 c;attribute float matId;attribute vec3 normal;uniform float tick;uniform mat4 proj;uniform mat4 view;uniform vec3 eye;varying vec3 color;varying vec3 worldPos;varying vec3 surfaceNormal;varying float material;varying float fog;void main(){vec3 pos=p; if(matId>21.5&&matId<23.5){pos.x+=sin(tick*1.6+p.x*2.7+p.z*2.3)*.05;}gl_Position=proj*view*vec4(pos,1.);color=c;worldPos=p;surfaceNormal=normal;material=matId;fog=clamp((distance(p,eye)-22.)/84.,0.,1.);}';
-const frag='precision mediump float;varying vec3 color;varying vec3 worldPos;varying vec3 surfaceNormal;varying float material;varying float fog;uniform vec3 sky;uniform vec3 eye;uniform vec3 sunDir;uniform float daylight;uniform float tick;float hash(vec3 p){return fract(sin(dot(p,vec3(17.13,41.17,79.19)))*43758.5453);}void main(){vec3 p=worldPos;float m=material;if(abs(m-5.)<.5&&distance(p,eye)<2.35)discard;vec3 base=color;vec3 grid=floor(p*17.0+vec3(.05));float grain=hash(grid);float coarse=hash(floor(p*3.0+vec3(.07)));float detail=.92+(grain-.5)*.19+(coarse-.5)*.14;vec3 norm=normalize(surfaceNormal);float sunny=max(0.,dot(norm,normalize(sunDir)));float diffuse=.54+sunny*.39;float skylight=.80+.2*max(norm.y,0.);if(m<.5)detail=1.0;else if(m<1.5){detail*=.93+.13*grain;float blades=step(.90,hash(floor(p*31.0)));base+=vec3(.10,.12,.015)*blades*max(norm.y,0.);}else if(m<3.5||abs(m-10.)<.5){float vein=sin(p.y*14.0+p.x*7.0+p.z*5.0);detail*=.93+.10*smoothstep(.64,.98,vein);}else if(abs(m-4.)<.5||abs(m-9.)<.5){detail*=.9+.12*sin(p.y*27.+coarse*6.);}else if(abs(m-5.)<.5){detail*=.82+.23*coarse;}else if(abs(m-8.)<.5||abs(m-19.)<.5){float pulse=.60+.40*sin(tick*2.0+p.x*2.0+p.z*3.0);base+=vec3(.04,.17,.23)*pulse;detail*=.98+.10*grain;diffuse+=.10*pulse;}else if(m>11.5){detail=.96+.06*grain;diffuse=max(diffuse,.72);}float day=.57+.43*daylight;vec3 lit=base*detail*(diffuse*day+(.10+.12*max(norm.y,0.))*skylight);lit+=vec3(.035,.040,.062)*(1.-daylight);vec3 graded=pow(max(lit,vec3(.003)),vec3(.89));float haze=smoothstep(.15,1.,fog);gl_FragColor=vec4(mix(graded,sky,haze*.86),1.);}';
+const frag='precision mediump float;varying vec3 color;varying vec3 worldPos;varying vec3 surfaceNormal;varying float material;varying float fog;uniform vec3 sky;uniform vec3 eye;uniform vec3 sunDir;uniform float daylight;uniform float tick;float hash(vec3 p){return fract(sin(dot(p,vec3(17.13,41.17,79.19)))*43758.5453);}void main(){vec3 p=worldPos;float m=material;if(abs(m-5.)<.5){ float dist=distance(p,eye); if(dist<2.0)discard; float alpha=smoothstep(2.0,5.8,dist); float dither=fract(sin(dot(floor(gl_FragCoord.xy),vec2(12.9898,78.233)))*43758.5453); if(dither>alpha)discard;}vec3 base=color;vec3 grid=floor(p*17.0+vec3(.05));float grain=hash(grid);float coarse=hash(floor(p*3.0+vec3(.07)));float detail=.92+(grain-.5)*.19+(coarse-.5)*.14;vec3 norm=normalize(surfaceNormal);float sunny=max(0.,dot(norm,normalize(sunDir)));float diffuse=.54+sunny*.39;float skylight=.80+.2*max(norm.y,0.);if(m<.5)detail=1.0;else if(m<1.5){detail*=.93+.13*grain;float blades=step(.90,hash(floor(p*31.0)));base+=vec3(.10,.12,.015)*blades*max(norm.y,0.);}else if(m<3.5||abs(m-10.)<.5){float vein=sin(p.y*14.0+p.x*7.0+p.z*5.0);detail*=.93+.10*smoothstep(.64,.98,vein);}else if(abs(m-4.)<.5||abs(m-9.)<.5){detail*=.9+.12*sin(p.y*27.+coarse*6.);}else if(abs(m-5.)<.5){detail*=.82+.23*coarse;}else if(abs(m-8.)<.5||abs(m-19.)<.5){float pulse=.60+.40*sin(tick*2.0+p.x*2.0+p.z*3.0);base+=vec3(.04,.17,.23)*pulse;detail*=.98+.10*grain;diffuse+=.10*pulse;}else if(m>11.5){detail=.96+.06*grain;diffuse=max(diffuse,.72);}float day=.57+.43*daylight;vec3 lit=base*detail*(diffuse*day+(.10+.12*max(norm.y,0.))*skylight);lit+=vec3(.035,.040,.062)*(1.-daylight);vec3 graded=pow(max(lit,vec3(.003)),vec3(.89));float haze=smoothstep(.15,1.,fog);gl_FragColor=vec4(mix(graded,sky,haze*.86),1.);}';
 const skyVertex='attribute vec2 xy;varying vec2 uv;void main(){uv=xy*.5+.5;gl_Position=vec4(xy,1.,1.);}';
 const skyFragment='precision mediump float;varying vec2 uv;uniform float t;uniform float daylight;void main(){float y=clamp(uv.y,0.,1.);vec3 zenith=mix(vec3(.016,.034,.112),vec3(.14,.44,.68),daylight);vec3 horizon=mix(vec3(.22,.12,.30),vec3(.65,.82,.86),daylight);vec3 sky=mix(horizon,zenith,smoothstep(.03,.9,y));float r=distance(uv,vec2(.73,.76));float halo=1.-smoothstep(.03,.30,r);float disc=1.-smoothstep(.023,.037,r);sky+=mix(vec3(.24,.16,.34),vec3(.96,.65,.30),daylight)*halo*.38;sky+=mix(vec3(.62,.77,.96),vec3(1.,.96,.72),daylight)*disc*.8;float wave=sin(uv.x*19.+t*.009+sin(uv.y*13.))*sin(uv.x*8.-uv.y*7.+t*.005);float clouds=smoothstep(.40,.83,wave)*smoothstep(.32,.66,y)*daylight;sky+=vec3(.27,.38,.38)*clouds*.25;float stars=step(.996,fract(sin(dot(floor(uv*vec2(330.,160.)),vec2(12.9898,78.233)))*43758.5453));sky+=vec3(.35,.46,.65)*stars*(1.-daylight)*smoothstep(.38,.70,y);gl_FragColor=vec4(sky,1.);}';
 // If a budget WebGL 1 GPU rejects the advanced material shader, keep the
