@@ -187,6 +187,19 @@ guest.click('coop-give');
 for(let i=0;i<12;i++){guest.advance(1);host.advance(1);}
 assert.equal(host.game().getState().players[1].inventory[2],dirt0-1,'Jo can give one selected block to Daddy');
 assert.equal(guest.game().getState().players[1].inventory[2],dirt0-1,'gift reflected in Jo inventory');
+// Jo's airborne second jump is calculated by the authoritative host engine.
+guest.key('ArrowUp',true);
+for(let i=0;i<8;i++){guest.advance(1);host.advance(1);}
+guest.key('ArrowUp',false);
+for(let i=0;i<8;i++){guest.advance(1);host.advance(1);}
+const beforeSecond=host.game().getState().players[1].vy;
+guest.key('ArrowUp',true);
+for(let i=0;i<8;i++){guest.advance(1);host.advance(1);}
+guest.key('ArrowUp',false);
+const afterSecond=host.game().getState().players[1].vy;
+assert.ok(afterSecond<beforeSecond-25,'Jozef can double-jump in host physics: '+beforeSecond+' -> '+afterSecond);
+// Reject invalid recipe requests without changing either player's materials.
+assert.equal(host.game().craftFor(1,999),false,'invalid multiplayer recipe rejected');
 // A network drop must keep Daddy hosting and Jo in guest mode until reconnected.
 FakePeer.links.at(-1).guest.close();
 assert.equal(host.session().role(),'host','host room survives disconnection');
