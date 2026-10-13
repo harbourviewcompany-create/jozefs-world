@@ -57,6 +57,7 @@
     jozef: { x: 160, y: 210, vx: 0, vy: 0, face: 1 },
     rival: { x: 530, y: 210, vx: 0, vy: 0, face: -1, stun: 0 },
     overtime: false,
+    matchId: '',
     score: { dad: 0, jozef: 0 },
     matchLeft: 120,
     call: 'Kickoff',
@@ -186,14 +187,25 @@
     if(stats)stats.textContent=(state.shots||0)+' shots · '+(state.saves||0)+' saves';
     const result=$('today-versus-result');
     if(!result||room.phase!=='finished'||room.practice||resultRecorded||!/wins|draw/i.test(text))return;
-    resultRecorded=true; // A repeated state packet must not count as another match.
+    resultRecorded=true; // Duplicate network packets are never counted twice in this tab.
     result.textContent=text;
-    if(room.together){try{localStorage.setItem('jozefs-world-coop-result',text);}catch(_){}return;}
-    try{
-      localStorage.setItem('jozefs-world-versus-result',text);
+    const matchId=typeof state.matchId==='string'&&/^[A-Za-z0-9-]{10,80}$/.test(state.matchId)?state.matchId:'';
+    if(room.together){
+      try{localStorage.setItem('jozefs-world-coop-result',text);}catch(_){}
+      return;
+    }
+    try {
+      // Every completed match has one host-generated ID. Both browser tabs may
+      // share localStorage; on separate devices each retains its own local record.
+      const idKey='jozefs-world-season-match-ids';
+      const old=JSON.parse(localStorage.getItem(idKey)||'[]');
+      const ids=Array.isArray(old)?old.filter(x=>typeof x==='string').slice(0,19):[];
+      if(matchId&&ids.includes(matchId)){paintSeason();return;}
       const season=readSeason();
       season.unshift(state.score.jozef+'-'+state.score.dad);
       localStorage.setItem('jozefs-world-season',JSON.stringify(season.slice(0,5)));
+      if(matchId)localStorage.setItem(idKey,JSON.stringify([matchId,...ids].slice(0,20)));
+      localStorage.setItem('jozefs-world-versus-result',text);
     }catch(_){/* Device storage can be disabled or full. */}
     paintSeason();
   }
@@ -635,7 +647,7 @@
   function stopInput(){keys.clear();stickVector=null;targets[room.who]=null;send({type:'aim',x:null,y:null});const nub=$('versus-nub'),stick=$('versus-stick');nub.style.left=(stick.clientWidth-nub.offsetWidth)/2+'px';nub.style.top=(stick.clientHeight-nub.offsetHeight)/2+'px';}
   function cleanup(){clearTimeout(connectTimer);clearTimeout(countdownTimer);const oldConn=room.conn,oldPeer=room.peer;room.conn=null;room.peer=null;oldConn?.close();oldPeer?.destroy();room.other='';room.ready=false;room.remoteReady=false;room.host=false;room.practice=false;room.together=false;room.otherSpot='forward';room.remoteActive=true;room.phase='lobby';stopInput();syncUI();}
   function fail(message){cleanup();say(message);}
-  function freshMatch(){state.kick='';state.score={dad:0,jozef:0};state.matchLeft=room.practice?practiceSeconds:120;state.call='Kickoff';kickLock=0;lastBotKick=-100;savedMatch=false;resultRecorded=false;state.overtime=false;state.star={x:360,y:120,on:true};state.super='';nextLocalSprint=0;dekeReady.Dad=dekeReady.Jozef=0;sprintUntil.Dad=sprintUntil.Jozef=0;sprintReady.Dad=sprintReady.Jozef=0;reset(0);
+  function freshMatch(){state.matchId=crypto.randomUUID?.()||Array.from(crypto.getRandomValues(new Uint8Array(16)),v=>v.toString(16).padStart(2,'0')).join('');state.kick='';state.score={dad:0,jozef:0};state.matchLeft=room.practice?practiceSeconds:120;state.call='Kickoff';kickLock=0;lastBotKick=-100;savedMatch=false;resultRecorded=false;state.overtime=false;state.star={x:360,y:120,on:true};state.super='';nextLocalSprint=0;dekeReady.Dad=dekeReady.Jozef=0;sprintUntil.Dad=sprintUntil.Jozef=0;sprintReady.Dad=sprintReady.Jozef=0;reset(0);
     const length=Math.ceil(state.matchLeft);$('versus-clock').textContent=Math.floor(length/60)+':'+String(length%60).padStart(2,'0');
   }
   function startMatch(){
@@ -645,7 +657,7 @@
     countdownTimer=setTimeout(next,1000);
   }
   function ready(){if(!room.other||room.ready)return;room.ready=true;syncUI();send({type:'ready'});startMatch();}
-  function validState(v){return v&&['dad','jozef','ball'].every(k=>v[k]&&['x','y','vx','vy'].every(n=>Number.isFinite(v[k][n])&&Math.abs(v[k][n])<2000))&&v.score&&['dad','jozef'].every(k=>Number.isInteger(v.score[k])&&v.score[k]>=0&&v.score[k]<10000)&&Number.isFinite(v.matchLeft)&&v.matchLeft>=0&&v.matchLeft<=120&&typeof v.call==='string'&&v.call.length<80&&(!v.rival||['x','y','vx','vy'].every(n=>Number.isFinite(v.rival[n])&&Math.abs(v.rival[n])<2000));}
+  function validState(v){return v&&['dad','jozef','ball'].every(k=>v[k]&&['x','y','vx','vy'].every(n=>Number.isFinite(v[k][n])&&Math.abs(v[k][n])<2000))&&v.score&&['dad','jozef'].every(k=>Number.isInteger(v.score[k])&&v.score[k]>=0&&v.score[k]<10000)&&Number.isFinite(v.matchLeft)&&v.matchLeft>=0&&v.matchLeft<=120&&typeof v.call==='string'&&v.call.length<80&&typeof v.matchId==='string'&&/^[A-Za-z0-9-]{10,80}$/.test(v.matchId)&&(!v.rival||['x','y','vx','vy'].every(n=>Number.isFinite(v.rival[n])&&Math.abs(v.rival[n])<2000));}
   function onData(msg){
     if(!msg||typeof msg!=='object')return;lastPacket=performance.now();
     if(msg.type==='hello'&&!room.host&&['Dad','Jozef'].includes(msg.hostWho)){
