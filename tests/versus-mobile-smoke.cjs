@@ -10,14 +10,14 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  const browser=await ({chromium,webkit})[engine].launch();
  try{
  for(const viewport of [{width:320,height:568},{width:390,height:844},{width:844,height:390}]){
- const context=await browser.newContext({viewport,reducedMotion:'reduce'});
+ const context=await browser.newContext({viewport,reducedMotion:'reduce',serviceWorkers:'block'});
  const clients=new Set();
  if(!process.env.VERSUS_LIVE){
   // Relay events across actual browser pages, not WebKit's occasionally delayed BroadcastChannel.
   await context.exposeBinding('__versusBus',({page},message)=>
    Promise.all([...clients].filter(other=>other!==page&&!other.isClosed()).map(other=>
     other.evaluate(msg=>window.__versusBusReceive?.(msg),message).catch(()=>{}))));
-  await context.route('**/peerjs*',r=>r.fulfill({contentType:'text/javascript',body:transport}));
+  await context.route(url=>url.pathname.endsWith('/peerjs.min.js'),r=>r.fulfill({contentType:'text/javascript',body:transport}));
  }
  await context.route(url=>url.pathname.endsWith('/versus.js'),r=>r.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(root,'versus.js'),'utf8').replace('syncUI();draw();requestAnimationFrame(frame);','window.__versusTest={state,room,step,targets,onData};syncUI();draw();requestAnimationFrame(frame);')}));
  const host=await context.newPage(),guest=await context.newPage();clients.add(host);clients.add(guest);const errors=[];for(const p of [host,guest])p.on('pageerror',e=>errors.push(e.message));
