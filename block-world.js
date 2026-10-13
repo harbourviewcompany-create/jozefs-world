@@ -229,6 +229,22 @@ function drawBackground(){
  }
 }
 let cameraZoom=(window.innerWidth||800)<650?1.25:1.08;
+/* Preserve deliberate zoom settings while upgrading the old 100% mobile
+   default once. Existing world terrain and progress remain untouched. */
+function restoreCameraZoom(v){
+ const n=Number(v);
+ if(!Number.isFinite(n)||n<=0)return cameraZoom;
+ if(n<=1.001&&(window.innerWidth||800)<650){
+  try{
+   if(!localStorage.getItem('jozef-block-camera-upgrade-v1')){
+    localStorage.setItem('jozef-block-camera-upgrade-v1','1');
+    return 1.25;
+   }
+  }catch(_){}
+ }
+ return Math.max(1,Math.min(2,n));
+}
+
 function draw(){
  ctx.setTransform(dpr*cameraZoom,0,0,dpr*cameraZoom,0,0);ctx.imageSmoothingEnabled=false;
  const viewW=cssW/cameraZoom,viewH=cssH/cameraZoom;
@@ -465,7 +481,7 @@ generate=function(){
 const baseRead=readSave;
 readSave=function(){
  const wasLoaded=baseRead();
- try{const s=JSON.parse(localStorage.getItem(advSaveKey)||'null');if(s){adventureSeed=s.adventureSeed||adventureSeed;questStage=Math.max(0,Math.min(Q.length,s.questStage||0));goals=Object.assign(goals,s.goals||{});explored=s.explored||{};achievements=s.achievements||[];portalUnlocked=!!s.portalUnlocked;teamFollow=s.teamFollow!==false;cameraZoom=Math.max(1,Math.min(2,Number(s.cameraZoom)||cameraZoom));}}catch(_){}
+ try{const s=JSON.parse(localStorage.getItem(advSaveKey)||'null');if(s){adventureSeed=s.adventureSeed||adventureSeed;questStage=Math.max(0,Math.min(Q.length,s.questStage||0));goals=Object.assign(goals,s.goals||{});explored=s.explored||{};achievements=s.achievements||[];portalUnlocked=!!s.portalUnlocked;teamFollow=s.teamFollow!==false;cameraZoom=restoreCameraZoom(s.cameraZoom);}}catch(_){}
  return wasLoaded;
 };
 const baseSave=save;
@@ -688,7 +704,7 @@ createAdventureUi();
       });
       const e=data.extra||{};questStage=Math.max(0,Math.min(Q.length,Number(e.questStage)||0));goals=Object.assign(goals,e.goals||{});
       explored=e.explored||{};achievements=Array.isArray(e.achievements)?e.achievements:[];portalUnlocked=!!e.portalUnlocked;
-      teamFollow=e.teamFollow!==false;cameraZoom=Math.max(1,Math.min(2,Number(e.cameraZoom)||cameraZoom));
+      teamFollow=e.teamFollow!==false;cameraZoom=restoreCameraZoom(e.cameraZoom);
       dirty=true;save();renderHotbar();questHud();say('Recovered your world from offline storage',3600);
      };
     }catch(err){console.warn('Offline recovery unavailable',err);}
