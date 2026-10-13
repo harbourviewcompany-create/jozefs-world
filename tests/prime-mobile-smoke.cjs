@@ -86,9 +86,14 @@ const poll=async(page,fn)=>page.waitForFunction(fn,null,{timeout:20000});
     await page.locator('[data-mode="hockey"]').click();
     await poll(page,()=>document.getElementById('event-name').textContent==='HOCKEY SHOOTOUT');
     console.log('Prime offline-check engine: '+name);
-    // Drop the actual transport. WebKit's setOffline can bypass service workers.
+    // Chromium: disconnect the test transport. WebKit's ephemeral browser
+    // context can discard CacheStorage when all sockets are forcibly destroyed,
+    // so use its browser-level offline switch instead and verify the cached app.
+    let browserOffline=false;
     try{
-      networkDown=true;await page.reload({waitUntil:'load'});
+      if(name==='webkit'){await context.setOffline(true);browserOffline=true;}
+      else networkDown=true;
+      await page.reload({waitUntil:'load'});
       await poll(page,()=>!!document.querySelector('canvas')).catch(async error=>{
        const details=await page.evaluate(async()=>{
         const assets=[...document.querySelectorAll('script[src],link[href]')].map(el=>el.src||el.href);
@@ -101,7 +106,10 @@ const poll=async(page,fn)=>page.waitForFunction(fn,null,{timeout:20000});
        throw Error('Prime offline reload failed in '+name+': '+JSON.stringify(details)+
          '; runtime errors: '+JSON.stringify(errors)+'; '+error.message);
       });
-    }finally{networkDown=false;}
+    }finally{
+      networkDown=false;
+      if(browserOffline)await context.setOffline(false);
+    }
     assert.equal(await page.locator('#event-name').textContent(),'HOCKEY SHOOTOUT','offline relaunch works after changing the event URL');
     assert.deepEqual(errors,[]);cases++;await context.close();networkDown=false;
    }finally{await browser.close();}
