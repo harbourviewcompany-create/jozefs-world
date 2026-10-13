@@ -56,7 +56,7 @@ function boot(storage=new Map()){
   };
   const addEventListener=(t,fn)=>(events.get(t)||events.set(t,[]).get(t)).push(fn);
   const testScript=js.replace(/requestAnimationFrame\(frame\);\s*\}\)\(\);/,
-    'window.__inspect={players,world:()=>world,surface:()=>surface,quest:()=>({questStage,goals}),blueprint:buildBlueprint,visitPortal:()=>{questStage=4;players.forEach(p=>{p.x=portalX*TILE;p.y=surface[portalX]*TILE-p.h;});activateTeamPortal();}};requestAnimationFrame(frame);})();');
+    'window.__inspect={players,world:()=>world,surface:()=>surface,cameraZoom:()=>cameraZoom,quest:()=>({questStage,goals}),blueprint:buildBlueprint,visitPortal:()=>{questStage=4;players.forEach(p=>{p.x=portalX*TILE;p.y=surface[portalX]*TILE-p.h;});activateTeamPortal();}};requestAnimationFrame(frame);})();');
   const sandbox={
     window,document,localStorage,
     performance:{now:()=>clock.now},
@@ -134,6 +134,17 @@ assert.equal(game.world().length,72);
 assert.equal(game.world()[0].length,180);
 assert.equal(game.surface().length,180);
 assert.ok(game.players.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)&&p.y>=0),'finite player coordinates');
+
+assert.ok(game.cameraZoom()>=1.2,'new mobile worlds use a closer readable hero camera');
+assert.ok(game.players.every(p=>{const cell=Math.floor(p.x/40);return cell>=36&&cell<72;}),'new characters spawn in Forest biome');
+const forestAction=first.document.getElementById('bw-actions').children.find(e=>e.textContent==='FOREST CAMP');
+assert.ok(forestAction,'existing worlds include an accessible Forest Camp travel action');
+const startWorld=game.world();
+const originalDirt=startWorld[game.surface()[58]+2][58];
+forestAction.events.click[0]();
+assert.ok(game.players.every(p=>p.x/40>=55&&p.x/40<=66),'Forest Camp returns both heroes to the safe forest clearing');
+assert.equal(game.world()[game.surface()[58]+2][58],originalDirt,'Forest Camp travel does not replace the existing world grid');
+
 assert.equal(first.document.getElementById('health').textContent.includes('DADDY'),true);
 assert.match(first.document.getElementById('bw-mission').innerHTML,/MISSION 1\/5/);
 first.click('btn-switch','pointerdown');
