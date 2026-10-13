@@ -85,6 +85,7 @@ const game=first.window.__inspect;
 assert.ok(first.window.BlockWorldArt,'procedural art engine registered');
 assert.ok(first.window.BlockWorldArt.tile(1),'grass texture generated');
 assert.ok(first.window.BlockWorldArt.tile(18),'diamond ore texture generated');
+assert.equal(typeof first.window.BlockWorldArt.caveBackdrop,'function','caves render with a dark background instead of blue sky');
 assert.ok(first.window.BlockWorldVisuals,'mobile controls initialized');
 assert.ok(first.document.getElementById('toolbar-extra').children.includes(first.document.getElementById('bw-actions')),'world actions consolidated inside primary menu');
 const compactMission=first.document.getElementById('bw-mission');
