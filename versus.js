@@ -20,7 +20,11 @@
     canvas.style.width='100%';canvas.style.height='100%';canvas.style.maxHeight='none';canvas.style.aspectRatio='auto';canvas.style.objectFit='fill';
     const vw=portrait?H:W,vh=portrait?W:H;
     screenScale=Math.max(width/vw,height/vh);
-    screenX=(width-vw*screenScale)/2;screenY=(height-vh*screenScale)/2;
+    screenX=(width-vw*screenScale)/2;
+    // Preserve the tracked position across frames. Re-centering here made the
+    // camera restart every 60 Hz draw and left the local player under controls.
+    if(!portrait||!['playing','countdown','finished'].includes(room.phase))
+      screenY=(height-vh*screenScale)/2;
     // Broadcast portrait camera: fill the phone width instead of shrinking the
     // stadium. Follow active play vertically rather than stretching the world.
     if(portrait && ['playing','countdown','finished'].includes(room.phase)){
