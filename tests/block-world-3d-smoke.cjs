@@ -32,6 +32,14 @@ assert.match(script,/adaptiveCap/,'adaptive FPS scaling present');
 
 assert.match(script,/qAO=aoEnabled/,'terrain computes baked vertex ambient occlusion');
 assert.match(script,/gl_FragCoord/,'leaves dither out near the third-person camera');
+
+assert.match(script,/uniform vec3 heroPos/,'leaf fading uses camera-to-character sightline');
+assert.match(script,/along>\\.05&&along<\\.99/,'nearby leaf canopy occlusion has a bounded ray');
+assert.match(script,/biome\\(X,Z\\)==='Evergreen Forest'/,'forest trees have distinctive canopy profiles');
+assert.match(script,/b==='Meadows'\\?r>\\.992/,'meadow trees are intentionally spaced');
+assert.match(script,/const desired=third\\?\\[eye\\[0\\]-forward\\[0\\]\\*5\\.8/,'camera frames heroes more closely');
+assert.match(script,/companion\\.yaw=Math\\.atan2/,'companion looks toward travel direction');
+
 assert.match(script,/function visitForest\(/,'non-destructive forest viewpoint is reachable from the menu');
 assert.match(script,/voxelBox\(v,p.x,ground\(p.x,p.z\)/,'voxel heroes have local ground contact shadows');
 assert.match(script,/if\(quality!=='ECO'/,'expensive environmental decoration honours ECO mode');
@@ -89,6 +97,7 @@ test.tick(3);
 assert.ok(test.status().renderOk,'frame rendered');
 assert.equal(test.status().quality,'AUTO');
 assert.equal(test.status().camera,'THIRD_PERSON','modern default 3D camera shows the player');
+assert.ok(test.document.getElementById('options'),'single top menu remains available');
 
 assert.equal(test.status().shaderMode,'CINEMATIC','premium GPU shader is used when available');
 const safeGPU=boot(new Map(),{rejectPremium:true});
