@@ -71,7 +71,7 @@
   const room = { code: '', who: 'Dad', spot: 'forward', otherSpot: 'forward', pending: null, otherPeer: '', reconnecting: false, together: false, peer: null, conn: null, host: false, other: '', ready: false, remoteReady: false, practice: false, mode:'classic', phase: 'lobby', remoteActive: true };
   const keeperTargets={left:null,right:null},dekeReady={Dad:0,Jozef:0};
   const keeperSide=who=>room.together?'left':who==='Dad'?'right':'left';
-  const isKeeper=who=>who===room.who?room.spot==='keeper':room.otherSpot==='keeper';
+  const isKeeper=who=>room.mode==='penalties'?false:(who===room.who?room.spot==='keeper':room.otherSpot==='keeper');
   let connectTimer, countdownTimer, recoveryTimer, connectWatchdog, reconnectAttempts = 0, lastPacket = 0, lastSent = 0, lastHello = 0, localActive = true;
   let stickVector=null;
   const SHOT_LANES=[160,210,260],shotOptions={Dad:{aim:1,power:1},Jozef:{aim:1,power:1},Rovers:{aim:1,power:1,mode:'shot'}};
@@ -263,7 +263,11 @@
     const streak=Number(localStorage.getItem('jozefs-world-versus-streak')||0);
     const trophy=$('hq-trophy'), cup=$('versus-trophy');
     if(trophy) trophy.hidden=streak<3;
-    if(cup) cup.hidden=streak<3;
+    if(cup){
+      let champion=false;
+      try{champion=localStorage.getItem('jozefs-world-versus-cup')==='won';}catch(_){}
+      cup.hidden=streak<3&&!champion;
+    }
   }
   function say(text){
     const node=$('versus-status');
