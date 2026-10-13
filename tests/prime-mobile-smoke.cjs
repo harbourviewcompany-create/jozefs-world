@@ -2,9 +2,10 @@
 const assert=require('node:assert/strict'),http=require('node:http'),fs=require('node:fs'),path=require('node:path');
 const {chromium,webkit}=require('../prime/node_modules/playwright');
 const root=path.resolve(__dirname,'..');
-let networkDown=false;
+let networkDown=false,unavailableStatus=false;
 const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.webmanifest':'application/manifest+json'};
 const server=http.createServer((req,res)=>{
+ if(unavailableStatus){res.writeHead(503,{'Content-Type':'text/plain'});res.end('Origin temporarily unavailable');return;}
  if(networkDown){req.socket.destroy();return;}
  const url=new URL(req.url,'http://localhost');
  let pathname=decodeURIComponent(url.pathname).replace(/^\/jozefs-world/,'');
@@ -86,12 +87,12 @@ const poll=async(page,fn)=>page.waitForFunction(fn,null,{timeout:20000});
     await page.locator('[data-mode="hockey"]').click();
     await poll(page,()=>document.getElementById('event-name').textContent==='HOCKEY SHOOTOUT');
     console.log('Prime offline-check engine: '+name);
-    // Chromium: disconnect the test transport. WebKit's ephemeral browser
-    // context can discard CacheStorage when all sockets are forcibly destroyed,
-    // so use its browser-level offline switch instead and verify the cached app.
-    let browserOffline=false;
+    // Chromium: force a real TCP disconnection to verify offline replay.
+    // WebKit on Linux crashes internally when its network process is forced
+    // offline during a live SW navigation. Use a 503 origin response instead:
+    // the cached Prime shell still must render with no valid origin content.
     try{
-      if(name==='webkit'){await context.setOffline(true);browserOffline=true;}
+      if(name==='webkit')unavailableStatus=true;
       else networkDown=true;
       await page.reload({waitUntil:'load'});
       await poll(page,()=>!!document.querySelector('canvas')).catch(async error=>{
@@ -107,8 +108,7 @@ const poll=async(page,fn)=>page.waitForFunction(fn,null,{timeout:20000});
          '; runtime errors: '+JSON.stringify(errors)+'; '+error.message);
       });
     }finally{
-      networkDown=false;
-      if(browserOffline)await context.setOffline(false);
+      networkDown=false;unavailableStatus=false;
     }
     assert.equal(await page.locator('#event-name').textContent(),'HOCKEY SHOOTOUT','offline relaunch works after changing the event URL');
     assert.deepEqual(errors,[]);cases++;await context.close();networkDown=false;
