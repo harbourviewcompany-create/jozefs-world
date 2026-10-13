@@ -55,7 +55,7 @@ const surfaceCache=new Map(),biomeCache=new Map(),treeCache=new Map();
 function memo(cache,key,fn){if(cache.has(key))return cache.get(key);if(cache.size>50000)cache.clear();const v=fn();cache.set(key,v);return v;}
 function height(x,z){x=Math.floor(x);z=Math.floor(z);return memo(surfaceCache,seed+':'+x+':'+z,()=>clamp(Math.floor(4+noise(x,z,26)*8+noise(x,z,9)*4),3,19));}
 function biome(x,z){x=Math.floor(x);z=Math.floor(z);return memo(biomeCache,seed+':'+x+':'+z,()=>{const n=noise(x+132,z-45,75);return n>.68?'Snow Ridge':n<.34?'Desert':n>.51?'Evergreen Forest':'Meadows';});}
-function tree(x,z){return memo(treeCache,seed+':'+x+':'+z,()=>rnd(x,z,seed+42)>.982&&biome(x,z)!=='Desert');}
+function tree(x,z){return memo(treeCache,seed+':'+x+':'+z,()=>{if(x>=-4&&x<=8&&z>=-7&&z<=10)return false;return rnd(x,z,seed+42)>.982&&biome(x,z)!=='Desert';});}
 const tag=(x,y,z)=>x+','+y+','+z;
 function natural(x,y,z){
  if(y<0)return 3;if(y>=MAX_Y)return 0;
