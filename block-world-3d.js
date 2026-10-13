@@ -87,7 +87,13 @@ function cube(v,x,y,z,id,size=1,mask=null){
  const grain=.96+rnd(Math.floor(x*3),Math.floor(z*3),Math.floor(y*5)+id)*.09;
  for(let j=0;j<6;j++){
   if(mask&&!mask[j])continue;
-  const f=faces[j][1],shade=[1,.79,.83,.48,.67,.68][j]*grain;
+  const f=faces[j][1];
+  let shade=[1,.79,.83,.48,.67,.68][j]*grain;
+  // Cheap baked canopy shade on actual grass blocks, no full shadow-map pass.
+  if(id===1&&j===0&&Number.isInteger(x)&&Number.isInteger(z)){
+   const nearby=tree(x+1,z)||tree(x-1,z)||tree(x,z+1)||tree(x,z-1);
+   if(nearby)shade*=.89;
+  }
   let c=col[id]||col[3];
   // Grassy/snowy surfaces have soil and rock sidewalls, not solid colour cubes.
   if(id===1&&j!==0)c=j===3?[.38,.29,.20]:[.48,.34,.22];
@@ -162,7 +168,7 @@ function chunkMesh(cx,cz){
   }
   // Leaf clusters and branching silhouettes soften rigid generated trees while
   // leaving their real destructible voxel structure unchanged.
-  if(quality==='QUALITY'&&tree(x,z)&&zone==='Evergreen Forest'){
+  if(quality!=='ECO'&&tree(x,z)&&zone==='Evergreen Forest'){
    const th=height(x,z);
    voxelBox(v,x+.5,th+5.30,z+.5,2.0,.21,2.0,5);
    voxelBox(v,x+.5,th+6.12,z+.5,1.4,.27,1.5,5);
