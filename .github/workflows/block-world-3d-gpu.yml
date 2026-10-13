@@ -8,6 +8,15 @@ on:
       - 'block-world-3d.css'
       - 'tests/block-world-3d-browser.cjs'
       - '.github/workflows/block-world-3d-gpu.yml'
+  pull_request:
+    paths:
+      - 'block-world-3d.html'
+      - 'block-world-3d.js'
+      - 'block-world-3d.css'
+      - 'block-world-3d-next.css'
+      - 'block-world-3d-premium.css'
+      - 'tests/block-world-3d-browser.cjs'
+      - '.github/workflows/block-world-3d-gpu.yml'
   workflow_dispatch:
 permissions:
   contents: read

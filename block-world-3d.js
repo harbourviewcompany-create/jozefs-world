@@ -46,6 +46,7 @@ let lastGuestAttackAt=-100,netWorldClock=0,forestBeacon=null,guestInventory={};
 let menuPaused=false;
 let savedPose=null;
 let guestActive=false;
+let joiningRoom='',approvedGuestPeer='',recoveryTimer=0,recoveryWatchdog=0,recoveryAttempts=0,recovering=false;
 let keys={},joy={x:0,y:0},gamepadHeld={mine:false,place:false,attack:false},jumpWasDown=false,look=null,peer=null,conn=null,host=false,invite='',lastNet=0,remote=false,noticeTo=0,renderOk=false;
 const rnd=(x,z,s)=>{let n=Math.imul(x,374761393)+Math.imul(z,668265263)+Math.imul(s|0,2246822519);n=Math.imul(n^(n>>>13),1274126177);return((n^(n>>>16))>>>0)/4294967296;};
 function noise(x,z,s){let X=Math.floor(x/s),Z=Math.floor(z/s),u=x/s-X,v=z/s-Z;
@@ -978,7 +979,16 @@ async function importFile(file){
 }
 function send(v){try{if(conn?.open)conn.send(v);}catch(_){}}
 function status(s){$('pairStatus').textContent=s;}
-function detach(){const wasGuest=guestActive;guestActive=false;try{conn?.close();peer?.destroy();}catch(_){}peer=conn=null;host=false;invite='';$('share').disabled=true;status('Offline · local play');if(wasGuest){dirty=false;location.reload();}}
+function detach(){
+ const wasGuest=guestActive;
+ clearTimeout(recoveryTimer);clearTimeout(recoveryWatchdog);
+ recoveryTimer=recoveryWatchdog=0;recoveryAttempts=0;recovering=false;joiningRoom='';approvedGuestPeer='';
+ guestActive=false;
+ const previous=conn,oldPeer=peer;conn=null;peer=null;host=false;invite='';
+ try{previous?.close();oldPeer?.destroy();}catch(_){}
+ $('share').disabled=true;status('Offline · local play');
+ if(wasGuest){dirty=false;location.reload();}
+}
 function receive(m){
  if(!m||typeof m!=='object')return;
  if(JSON.stringify(m).length>550000)return;
@@ -992,7 +1002,12 @@ function receive(m){
    edits=new Map(m.edits.filter(a=>Array.isArray(a)&&typeof a[0]==='string'&&Number.isInteger(a[1])&&a[1]>=0&&a[1]<types.length));
    dimensions[realm]={seed,edits:[...edits],bossHp:clamp(Number(m.bossHp)||0,0,120)};
   hero.role=1;companion.role=0;stage=clamp(Number(m.stage)||0,0,6);stats=Object.assign(stats,m.stats||{});defeated=!!m.defeated;portalOpened=!!m.portalOpened;companion.x=m.x;companion.y=m.y;companion.z=m.z;
-  hero.x=companion.x+2;hero.z=companion.z+2;hero.y=ground(hero.x,hero.z);
+  const guestPose=m.guest;
+  if(guestPose&&[guestPose.x,guestPose.y,guestPose.z].every(Number.isFinite)&&
+     Math.abs(guestPose.x)<100000&&Math.abs(guestPose.z)<100000){
+    hero.x=guestPose.x;hero.z=guestPose.z;hero.y=guestPose.y;
+  }else{hero.x=companion.x+2;hero.z=companion.z+2;hero.y=ground(hero.x,hero.z);}
+  guestActive=true;recovering=false;recoveryAttempts=0;clearTimeout(recoveryTimer);clearTimeout(recoveryWatchdog);
   spawn();chunks.forEach(c=>gl.deleteBuffer(c.buffer));chunks.clear();lastCX=Infinity;lastCZ=Infinity;hotbar();hud();announce('Connected · Jozef is ready');
  }else if(m.t==='realm'&&!host){applyRealm(m);}
   else if(m.t==='forestTravel'&&!host){
@@ -1041,28 +1056,85 @@ function receive(m){
    }
  }
 }
+// Temporary channel failures retain the live shared world. Only the same
+// PeerJS identity may resume a room once Jozef has initially connected.
+function scheduleRecovery(){
+ if(host||!peer||!joiningRoom||conn?.open)return;
+ clearTimeout(recoveryTimer);clearTimeout(recoveryWatchdog);
+ if(recoveryAttempts>=5){
+  recovering=false;status('Could not reconnect. Tap JOIN GAME again or DISCONNECT to restore solo play.');return;
+ }
+ const delay=[600,1400,2500,4200,6500][recoveryAttempts++];
+ recovering=true;status('Reconnecting Jozef ('+recoveryAttempts+'/5)… shared progress is safe.');
+ recoveryTimer=setTimeout(()=>{
+  if(host||!peer||!joiningRoom||conn?.open)return;
+  try{
+   if(peer.disconnected&&typeof peer.reconnect==='function')peer.reconnect();
+   const candidate=peer.connect('jw-block-'+joiningRoom,{reliable:true});
+   attach(candidate);
+   recoveryWatchdog=setTimeout(()=>{if(conn===candidate&&!candidate.open)candidate.close();},4500);
+  }catch(_){scheduleRecovery();}
+ },delay);
+}
+function connectionLost(c){
+ if(conn!==c)return;
+ conn=null;clearTimeout(recoveryWatchdog);
+ if(host)status('Jozef disconnected · waiting for the same player to reconnect.');
+ else if(joiningRoom)scheduleRecovery();
+}
 function attach(c){
- if(conn?.open){c.close();return;}conn=c;
- c.on('open',()=>{if(!host)guestActive=true;status('Connected · private encrypted session');if(host)send({t:'hello',...worldSnapshot(),x:hero.x,y:hero.y,z:hero.z});
-  else{hero.role=1;companion.role=0;}announce('Two-device co-op connected');});
- c.on('data',receive);c.on('close',()=>{conn=null;status('Disconnected · local play');if(guestActive){guestActive=false;dirty=false;location.reload();}});
- c.on('error',()=>status('Connection error · try a fresh invite'));
+ if(conn&&conn!==c){c.close();return;}
+ conn=c;
+ c.on('open',()=>{
+  if(conn!==c)return;
+  clearTimeout(recoveryTimer);clearTimeout(recoveryWatchdog);
+  if(host){
+   if(approvedGuestPeer&&c.peer!==approvedGuestPeer){c.close();return;}
+   approvedGuestPeer=c.peer;
+   send({t:'hello',...worldSnapshot(),x:hero.x,y:hero.y,z:hero.z,
+     guest:{x:companion.x,y:companion.y,z:companion.z}});
+  }else{guestActive=true;recovering=false;recoveryAttempts=0;hero.role=1;companion.role=0;}
+  status('Connected · private encrypted session');announce('Two-device co-op connected');
+ });
+ c.on('data',m=>{if(conn===c)receive(m);});
+ c.on('close',()=>connectionLost(c));
+ c.on('error',()=>connectionLost(c));
 }
 function createRoom(){
  if(!window.Peer){status('PeerJS signalling unavailable. Offline mode works.');return;}
  if(!crypto?.getRandomValues){status('Secure invite generation unavailable');return;}
- detach();host=true;hero.role=0;companion.role=1;
+ detach();host=true;hero.role=0;companion.role=1;approvedGuestPeer='';
  const bytes=new Uint8Array(16);crypto.getRandomValues(bytes);invite=[...bytes].map(n=>n.toString(16).padStart(2,'0')).join('');
  peer=new window.Peer('jw-block-'+invite);
  peer.on('open',()=>{status('Private invitation ready');$('invite').value=invite;$('share').disabled=false;});
- peer.on('connection',attach);peer.on('error',()=>status('Signalling server unreachable'));
+ peer.on('connection',c=>{
+  if(conn||(approvedGuestPeer&&c.peer!==approvedGuestPeer)){c.close();return;}
+  attach(c);
+ });
+ peer.on('error',()=>status(conn?.open?'Connected · signalling interrupted':'Signalling server unreachable'));
 }
 function joinRoom(code){
- dirty=true;save();
- const token=String(code||'').trim().toLowerCase();if(!/^[0-9a-f]{32}$/.test(token)){status('Paste a valid 32-character invite');return;}
+ const token=String(code||'').trim().toLowerCase();
+ if(!/^[0-9a-f]{32}$/.test(token)){status('Paste a valid 32-character invite');return;}
  if(!window.Peer){status('PeerJS signalling unavailable');return;}
- detach();peer=new window.Peer();peer.on('open',()=>{status('Connecting privately…');attach(peer.connect('jw-block-'+token,{reliable:true}));});
- peer.on('error',()=>status('Cannot connect · host must be online'));
+ if(!host&&peer&&joiningRoom===token){
+  if(conn?.open){status('Already connected to Daddy.');return;}
+  recoveryAttempts=0;scheduleRecovery();return;
+ }
+ dirty=true;save(); // Persist the guest's solo world before joining the host.
+ detach();joiningRoom=token;
+ peer=new window.Peer();
+ peer.on('open',()=>{
+  if(!peer||!joiningRoom)return;
+  status('Connecting privately…');
+  try{attach(peer.connect('jw-block-'+joiningRoom,{reliable:true}));}
+  catch(_){scheduleRecovery();}
+ });
+ peer.on('error',()=>{if(!conn?.open&&joiningRoom)scheduleRecovery();});
+ peer.on('disconnected',()=>{
+  if(peer?.disconnected&&typeof peer.reconnect==='function')try{peer.reconnect();}catch(_){}
+  if(!conn?.open&&joiningRoom)scheduleRecovery();
+ });
 }
 function initUi(){
  const mission=$('mission');
