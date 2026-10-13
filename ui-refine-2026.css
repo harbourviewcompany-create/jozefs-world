@@ -1644,3 +1644,16 @@ body.versus-focused #versus.is-playing .vs-finish:not([hidden]){display:block!im
  body.versus-focused #versus.is-playing:has(#versus-finish:not([hidden])) #versus-again{display:none!important}
 }
 
+/* Dad + Jozef private family presence pairing (unpaired by default). */
+#family-pair-panel[hidden]{display:none!important}
+#family-pair-panel{max-width:540px;padding:16px;margin:10px 0 16px;border:1px solid #8bd7ff77;border-radius:17px;background:linear-gradient(140deg,#0c273a,#123348);color:#e9f9ff;box-shadow:0 12px 30px #0003}
+#family-pair-panel strong{font-size:15px;color:#dcff94}
+#family-pair-panel p{font:600 12px/1.5 system-ui;margin:8px 0;color:#d6edff}
+#family-pair-panel label{display:block;margin:10px 0 5px;font:800 11px/1.4 system-ui;letter-spacing:.08em;text-transform:uppercase}
+#family-pair-panel input{display:block;box-sizing:border-box;width:100%;min-height:44px;padding:10px;border:1px solid #9adef1;border-radius:10px;background:#071922;color:#f0ffff;font:600 12px/1.4 ui-monospace,monospace;letter-spacing:.015em}
+#family-pair-panel .family-pair-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}
+#family-pair-panel button{min-height:44px;padding:8px 12px;border-radius:10px;border:1px solid #6bcff2;background:#134767;color:#effcff;font:800 12px/1.2 system-ui}
+#family-pair-panel #family-pair-create,#family-pair-panel #family-pair-join{color:#10281c;background:#cefb89;border-color:#e4ffaa}
+#family-pair-panel small{display:block;color:#bed4df;font:500 11px/1.5 system-ui}
+#hq-versus #family-pair-open{min-height:42px;border-radius:9px;padding:7px 11px;font-weight:800}
+@media(max-width:380px){#family-pair-panel .family-pair-actions{grid-template-columns:1fr}#family-pair-panel{padding:12px}}
