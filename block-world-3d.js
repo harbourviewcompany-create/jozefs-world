@@ -15,7 +15,7 @@ let selected=4,creative=true,third=true,sound=false,stage=0,stats={wood:0,placed
 const hero={x:2.5,y:12,z:2.5,vy:0,yaw:0,pitch:-.24,role:0,hp:100,ground:false,double:false,inventory:{}};
 const companion={x:4.5,y:12,z:4.5,role:1,hp:100};
 let boss={x:32.5,y:12,z:32.5,hp:120,alive:true},mobs=[],clock=0,last=0,frames=0,dirty=false,saveClock=0,skyPhase=0;
-let quality='AUTO',adaptiveCap=1.5,renderCap=1.5,averageFrame=.0167,lastChunksDrawn=0;
+let quality='AUTO',adaptiveCap=1.5,renderCap=1.5,averageFrame=.0167,lastChunksDrawn=0,webglLost=false,chaseCam=null;
 let effects=[],audioCtx=null;
 function tone(kind){
  if(!sound)return;
@@ -207,6 +207,11 @@ function render(){
   }
   cam=eye.map((n,i)=>n+diff[i]*t);
  }
+ if(third){
+  if(!chaseCam||Math.hypot(...cam.map((n,i)=>n-chaseCam[i]))>12)chaseCam=cam.slice();
+  else for(let i=0;i<3;i++)chaseCam[i]+=(cam[i]-chaseCam[i])*.22;
+  cam=block(chaseCam[0],chaseCam[1],chaseCam[2])?cam:chaseCam.slice();
+ }else chaseCam=null;
  const at=eye.map((n,i)=>n+forward[i]*5);
  const day=.50+.50*Math.sin(clock*.018),sky=[.16+.37*day,.18+.47*day,.32+.45*day];
  gl.clearColor(...sky,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
@@ -624,16 +629,17 @@ function initUi(){
  window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)save();});
  canvas.addEventListener('contextmenu',e=>e.preventDefault());
  canvas.addEventListener('webglcontextlost',e=>{
-  e.preventDefault();dirty=true;save();const panel=$('fallback');
+  e.preventDefault();webglLost=true;dirty=true;save();const panel=$('fallback');
   $('fallback-reason').textContent='3D graphics paused. Your saved world is safe. Tap Retry 3D to restart rendering.';
   if(panel)panel.hidden=false;
  });
- canvas.addEventListener('webglcontextrestored',()=>location.reload());
+ canvas.addEventListener('webglcontextrestored',()=>{webglLost=false;location.reload();});
 
  const portalButton=document.createElement('button');portalButton.textContent='TEAM PORTAL';portalButton.onclick=portal;$('drawer').querySelector('.buttons').appendChild(portalButton);
  hotbar();hud();
 }
 function loop(now){
+ if(webglLost){requestAnimationFrame(loop);return;}
  const rawDt=last?clamp((now-last)/1000,0,.14):.0167,dt=clamp(rawDt,0,.045);last=now;frames++;
  averageFrame=averageFrame*.97+rawDt*.03;
  if(quality==='AUTO'&&frames%120===0){
