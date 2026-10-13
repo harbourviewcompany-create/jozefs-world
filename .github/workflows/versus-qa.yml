@@ -1,0 +1,45 @@
+name: Versus multiplayer and mobile QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'versus.js'
+      - 'versus-physics.js'
+      - 'versus-2026.css'
+      - 'index.html'
+      - 'world.html'
+      - 'tests/versus-mobile-smoke.cjs'
+      - '.github/workflows/versus-qa.yml'
+  pull_request:
+    paths:
+      - 'versus.js'
+      - 'versus-physics.js'
+      - 'versus-2026.css'
+      - 'index.html'
+      - 'world.html'
+      - 'tests/versus-mobile-smoke.cjs'
+      - '.github/workflows/versus-qa.yml'
+  workflow_dispatch:
+concurrency:
+  group: versus-qa-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser-multiplayer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax and site consistency
+        run: |
+          node --check versus.js
+          node --check tests/versus-mobile-smoke.cjs
+          cmp -s index.html world.html
+      - name: Install browsers
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium webkit
+      - name: Dad and Jozef multiplayer, co-op and phone layouts
+        run: node tests/versus-mobile-smoke.cjs
