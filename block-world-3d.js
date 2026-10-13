@@ -98,7 +98,7 @@ function cube(v,x,y,z,id,size=1,mask=null){
    s1[u]=q[u]===0?-1:1;s2[v]=q[v]===0?-1:1;
    const solid=o=>{const b=block(x+normal[0]+o[0],y+normal[1]+o[1],z+normal[2]+o[2]);return b&&b!==5&&b!==11?1:0;};
    const a=solid(s1),b=solid(s2),corner=solid(s1.map((t,k)=>t+s2[k]));
-   return a&&b?.66:1-(a+b+corner)*.085;
+   return a&&b ? .66 : 1-(a+b+corner)*.085;
   }):null;
   // Cheap baked canopy shade on actual grass blocks, no full shadow-map pass.
   if(id===1&&j===0&&Number.isInteger(x)&&Number.isInteger(z)){
@@ -638,6 +638,8 @@ function visitForest(){
  hero.walkPower=companion.walkPower=0;chaseCam=null;
  chunks.forEach(c=>gl.deleteBuffer(c.buffer));chunks.clear();lastCX=Infinity;lastCZ=Infinity;
  dirty=true;stream();save();hud();
+ // Travelling from the menu must return control immediately to the game.
+ menuPaused=false;$('drawer').hidden=true;$('options').setAttribute('aria-expanded','false');
  announce('FOREST VISTA · Welcome to the Evergreen Forest',3400);
  return true;
 }
