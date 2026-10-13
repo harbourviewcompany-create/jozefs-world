@@ -1,0 +1,48 @@
+/* BLOCK WORLD · premium playable HUD. Matches scenic voxel reference while keeping mobile access. */
+:root{--ice:#8ff4ff;--sky:#126bd0;--midnight:#031f41;--gold:#ffd76f;color-scheme:dark}
+html,body{overscroll-behavior:none;background:#087cde!important;touch-action:none}
+#game{image-rendering:pixelated;position:fixed;inset:0}
+#ui{position:fixed;top:calc(env(safe-area-inset-top) + 12px)!important;left:max(12px,env(safe-area-inset-left))!important;max-width:57vw!important;padding:0!important;background:none!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;pointer-events:none}
+#ui h2{color:white;font-family:system-ui,Arial,sans-serif;font-weight:1000;letter-spacing:.055em;font-size:clamp(19px,4.7vw,33px)!important;line-height:1.02;margin:0 0 6px;text-shadow:0 3px 0 #3b5276,0 6px 0 #103f79,2px 8px 12px #09234e99;-webkit-text-stroke:.3px #fff}
+#ui h2 span{color:var(--gold);text-shadow:0 3px 0 #ac681e,0 6px 0 #6e4a13,0 9px 14px #1520389c}
+#ui p.subtitle{font-size:clamp(8px,2.15vw,12px)!important;letter-spacing:.18em;font-weight:900;opacity:1!important;text-shadow:0 2px 5px #05264daa;color:#e9f7ff;line-height:1.3}
+.health{top:calc(env(safe-area-inset-top) + 12px)!important;right:max(9px,env(safe-area-inset-right))!important;border:1.5px solid #a4eafaad!important;background:linear-gradient(150deg,#092d58e6,#051735ea)!important;color:#ebfbff;box-shadow:inset 0 1px 5px #b7eeff42,0 5px 15px #00112d99,0 0 17px #28baff55;border-radius:22px!important;padding:10px 13px!important;white-space:nowrap;font:900 clamp(9px,2.2vw,12px)/1.2 system-ui!important;max-width:48vw!important}
+#toolbar{left:auto!important;right:max(9px,env(safe-area-inset-right))!important;top:calc(env(safe-area-inset-top) + 63px)!important;max-width:55vw!important;display:flex!important;align-items:flex-start;justify-content:flex-end;flex-wrap:nowrap!important;gap:7px!important}
+#toolbar .bw-hq-link,#toolbar>button{display:inline-flex;align-items:center;justify-content:center;min-height:39px;border:2px solid #89dfff!important;border-radius:14px!important;background:linear-gradient(155deg,#1373cde9,#052f65ed)!important;color:#f4ffff!important;font:900 11px system-ui!important;letter-spacing:.025em!important;white-space:nowrap;box-shadow:inset 0 2px 3px #cdf7ff44,0 3px 8px #072b62ac,0 0 9px #119cff8c!important;padding:7px 12px!important;text-shadow:0 2px 3px #032143}
+#toolbar-extra{display:flex;position:fixed;top:calc(env(safe-area-inset-top) + 111px);right:max(9px,env(safe-area-inset-right));z-index:40;max-width:min(235px,79vw);max-height:64dvh;overflow:auto;flex-wrap:wrap;justify-content:flex-end;gap:6px;padding:10px;border:1px solid #a8e8ff9a;border-radius:14px;background:#072b52f2;box-shadow:0 10px 26px #01152bbc;backdrop-filter:blur(12px)}
+#toolbar-extra[hidden]{display:none!important}
+#toolbar-extra button,#toolbar-extra a{margin:0!important;flex:1 1 82px;font:800 10px system-ui!important;padding:10px 7px!important;text-align:center;min-height:38px}
+#toolbar-extra button:focus-visible{outline:3px solid #fff4ab;outline-offset:2px}
+#toolbar-extra .bw-hq-link{font-size:10px!important}
+#bw-mission{top:calc(env(safe-area-inset-top) + 110px)!important;left:9px!important;right:auto!important;max-width:min(44vw,220px)!important;border:1.5px solid #b2f9ffc0!important;background:linear-gradient(130deg,#08365cdd,#092649cb)!important;color:#f2feff;font:700 10px/1.35 system-ui!important;border-radius:13px;box-shadow:0 3px 12px #003e65a0;pointer-events:none;backdrop-filter:blur(8px);padding:8px!important}
+#bw-mission strong{color:#fff7b3!important}
+#bw-actions{left:9px!important;top:calc(env(safe-area-inset-top) + 210px)!important;max-width:50vw!important}
+#bw-actions.closed{max-width:47vw}
+#bw-menu-toggle{border:1px solid #9feeff!important;background:#0a3768e5!important;color:#e4faff;border-radius:12px!important;box-shadow:0 2px 12px #034968!important}
+#bw-character-skill{display:none!important}
+#controls{position:fixed;z-index:14;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 81px)!important;padding:0 max(12px,env(safe-area-inset-left)) 0 max(12px,env(safe-area-inset-right))!important;align-items:flex-end;justify-content:space-between;pointer-events:none}
+.movement-pad{position:relative;width:clamp(105px,29vw,154px);height:clamp(105px,29vw,154px);flex:none;border:2px solid #a5e8ffed;border-radius:50%;background:linear-gradient(135deg,#0b3867ab,#041f42b0);box-shadow:inset 0 0 24px #021b3b,0 0 15px #1da9ffe0,0 6px 28px #001829;pointer-events:auto;touch-action:none}
+.pad-rim{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.pad-knob{display:block;width:45%;aspect-ratio:1;border:3px solid #cfebff;border-radius:50%;background:linear-gradient(135deg,#7cc3e0e8,#406b97dc);box-shadow:inset 0 2px 10px #cceeff88,0 0 6px #00152a,0 5px 14px #002554;transition:transform .07s linear}
+.pad-buttons{position:absolute;inset:0;display:flex;border-radius:50%;overflow:hidden}
+.pad-buttons .ctrl-btn{width:50%!important;height:100%!important;border:0!important;background:transparent!important;box-shadow:none!important;color:transparent!important;opacity:.01;pointer-events:auto;margin:0!important}
+.pad-buttons .ctrl-btn:focus-visible{outline:3px solid #fff1a6}
+.action-controls{display:grid!important;grid-template-columns:repeat(2,minmax(52px,76px));grid-template-rows:repeat(2,60px);gap:8px!important;pointer-events:auto}
+.action-controls .ctrl-btn{width:100%!important;height:100%!important;margin:0;display:flex;align-items:center;justify-content:center;padding:5px;font:1000 clamp(10px,2.6vw,13px) system-ui!important;color:#fff;border:2px solid #88f0ff!important;border-radius:17px!important;background:linear-gradient(155deg,#117fdceb,#054993ed)!important;box-shadow:inset 0 2px 5px #ffffff6b,0 4px 12px #001638c7,0 0 10px #20bfffbd!important;text-shadow:0 2px 5px #082655}
+.action-controls #btn-attack{border-color:#ffadb5!important;background:linear-gradient(155deg,#d45568,#7b173e)!important;box-shadow:inset 0 2px 5px #ffdedb8a,0 4px 12px #240013,0 0 10px #ff6589bf!important}
+.action-controls .ctrl-btn:active,.action-controls .ctrl-btn.pressed{filter:brightness(1.4);transform:scale(.96)}
+.hotbar{position:fixed;bottom:calc(env(safe-area-inset-bottom) + 11px)!important;left:50%;transform:translateX(-50%);max-width:min(96vw,620px);width:max-content;display:flex;gap:4px!important;align-items:center;justify-content:flex-start;background:linear-gradient(180deg,#043365ea,#021c40f2)!important;padding:6px!important;border:2px solid #71d7ffcc!important;border-radius:20px!important;box-shadow:0 0 18px #129dfb99,inset 0 3px 10px #369aff66,0 8px 22px #001533bd!important;overflow-x:auto;scrollbar-width:none;touch-action:pan-x}
+.hotbar::-webkit-scrollbar{display:none}
+.hotbar .slot{position:relative;flex:none;width:clamp(34px,10.2vw,53px)!important;height:clamp(41px,11.4vw,57px)!important;border:2px solid #5c90be!important;border-radius:12px!important;background:linear-gradient(160deg,#144b79,#0b294a)!important;box-shadow:inset 0 2px 6px #83c5ee35;padding:4px!important}
+.hotbar .slot.selected{border:2px solid #5cfbff!important;box-shadow:0 0 15px #10deffe9,inset 0 0 10px #47edffa8!important;background:linear-gradient(145deg,#157ec7,#094671)!important}
+.hotbar .slot canvas{display:block;height:100%;width:100%;image-rendering:pixelated;filter:drop-shadow(1px 3px 2px #001d37)}
+.hotbar .slot .count{font:900 10px system-ui!important;right:3px;bottom:1px;text-shadow:0 2px 4px black}
+#notice{top:40%!important;border:1px solid #a9f3ff!important;box-shadow:0 0 20px #1ca4f8aa;font-weight:900;background:#0b2855ed!important;z-index:22}
+.coop-live{right:9px;top:calc(env(safe-area-inset-top) + 116px)!important;background:#063d61ed!important;border-color:#8ceeff8b!important;color:#c9fcff!important;font-size:9px}
+.partner-tools{top:calc(env(safe-area-inset-top) + 148px)!important;right:9px;background:#052a54e8!important;border-color:#74dfff!important}
+#crafting,#bw-panel,#coop-card{background:linear-gradient(130deg,#073662f6,#04162ff7)!important;border:2px solid #7de7ffca!important;color:#eefaff;box-shadow:0 9px 35px #00152ce3!important}
+#crafting button,#bw-panel button,#coop-card button{border-radius:10px;border:1px solid #78dcff;background:linear-gradient(130deg,#1472bb,#073b77);color:white}
+@media(min-width:680px){#controls{bottom:calc(env(safe-area-inset-bottom) + 88px)!important}.action-controls{grid-template-rows:repeat(2,68px)}}
+@media(max-width:390px){#toolbar{top:calc(env(safe-area-inset-top) + 60px)!important}#bw-mission{top:calc(env(safe-area-inset-top) + 114px)!important;max-width:45vw!important}#bw-actions{top:calc(env(safe-area-inset-top) + 208px)!important}#controls{bottom:calc(env(safe-area-inset-bottom) + 71px)!important}.action-controls{grid-template-columns:repeat(2,56px);grid-template-rows:repeat(2,52px);gap:5px!important}.hotbar{padding:4px!important}.hotbar .slot{width:36px!important;height:43px!important}.movement-pad{width:102px;height:102px}#ui h2{font-size:18px!important}}
+@media(max-height:540px){#ui h2{font-size:15px!important}#ui p{display:none}#toolbar{top:calc(env(safe-area-inset-top) + 8px)!important;right:34vw!important}#bw-mission{top:50px!important;font-size:8px!important;max-width:25vw!important}#bw-actions{top:90px!important}#controls{bottom:calc(env(safe-area-inset-bottom) + 51px)!important}.action-controls{grid-template-rows:repeat(2,40px)}.movement-pad{width:86px;height:86px}.hotbar{bottom:calc(env(safe-area-inset-bottom) + 2px)!important}.hotbar .slot{height:37px!important}}
+@media(prefers-reduced-motion:reduce){.pad-knob{transition:none}.ctrl-btn{transition:none!important}}
