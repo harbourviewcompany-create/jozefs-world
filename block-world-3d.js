@@ -642,6 +642,7 @@ function drawRadar(){
  };
  pin(32,32,boss.alive?'#ff9cc3':'#d6ff89',5);
  pin(40,40,'#d8a9ff',5);
+ if(forestBeacon?.realm===realm)pin(forestBeacon.x,forestBeacon.z,forestBeacon.lit?'#9dffbb':'#5aeefc',6);
  pin(companion.x,companion.z,'#9cfcff',5);
  pin(hero.x,hero.z,'#e9ff91',7);
  ctx.fillStyle='#ffffff';ctx.font='bold 9px sans-serif';ctx.fillText('N',62,9);
@@ -652,7 +653,9 @@ function hud(){
  $('level').textContent='LVL '+(Math.floor((Number(s.xp)||0)/100)+1);
  $('quality').textContent='GRAPHICS '+quality;
  $('qualityState').textContent=quality==='AUTO'?'AUTO · '+Math.round(renderCap*100)+'%':quality;
- $('compass').textContent=(biome(hero.x,hero.z)==='Evergreen Forest'?'FOREST':biome(hero.x,hero.z).toUpperCase())+' · X '+Math.floor(hero.x)+' Z '+Math.floor(hero.z);
+ const beaconNear=forestBeacon?.realm===realm&&Math.hypot(forestBeacon.x-hero.x,forestBeacon.z-hero.z)<18;
+  $('compass').textContent=beaconNear?(forestBeacon.lit?'BEACON LIT ✓':'TEAM BEACON · 2 PADS'):
+   (biome(hero.x,hero.z)==='Evergreen Forest'?'FOREST':biome(hero.x,hero.z).toUpperCase())+' · X '+Math.floor(hero.x)+' Z '+Math.floor(hero.z);
  const done=stage>=missions.length,m=missions[Math.min(stage,missions.length-1)],ratio=done?1:clamp((stats[m[2]]||0)/m[3],0,1);
  $('mission').innerHTML='<strong>'+(done?'EXPEDITION COMPLETE':'MISSION '+(stage+1)+'/6 · '+m[0])+'</strong><small>'+m[1]+'</small><div class="progress"><i style="width:'+(ratio*100)+'%"></i></div><small>'+biome(hero.x,hero.z)+' · Realm '+(realm+1)+'</small>';
 }
@@ -939,6 +942,7 @@ function receive(m){
  if(JSON.stringify(m).length>550000)return;
  if(m.t==='hello'&&!host){
   if(!Number.isInteger(m.seed)||!Array.isArray(m.edits)||m.edits.length>14000)return;
+   if(validBeacon(m.forestBeacon))forestBeacon={...m.forestBeacon};
   seed=m.seed;realm=Number.isInteger(m.realm)&&m.realm>=0&&m.realm<3?m.realm:0;
    forestBeacon=validBeacon(m.forestBeacon)?{...m.forestBeacon}:null;
    baseSeed=Number.isFinite(m.baseSeed)?m.baseSeed:seed;
@@ -948,12 +952,27 @@ function receive(m){
   hero.x=companion.x+2;hero.z=companion.z+2;hero.y=ground(hero.x,hero.z);
   spawn();chunks.forEach(c=>gl.deleteBuffer(c.buffer));chunks.clear();lastCX=Infinity;lastCZ=Infinity;hotbar();hud();announce('Connected · Jozef is ready');
  }else if(m.t==='realm'&&!host){applyRealm(m);}
+  else if(m.t==='forestTravel'&&!host){
+   if(!validBeacon(m.beacon)||m.beacon.realm!==realm||!m.host||!m.guest||
+    ![m.host.x,m.host.y,m.host.z,m.guest.x,m.guest.y,m.guest.z].every(Number.isFinite))return;
+   forestBeacon={...m.beacon};
+   companion.x=m.host.x;companion.y=m.host.y;companion.z=m.host.z;
+   hero.x=m.guest.x;hero.y=m.guest.y;hero.z=m.guest.z;hero.vy=0;
+   chunks.forEach(c=>gl.deleteBuffer(c.buffer));chunks.clear();lastCX=lastCZ=Infinity;
+   chaseCam=null;stream();hud();menuPaused=false;$('drawer').hidden=true;
+   $('pairPanel').hidden=true;announce('Forest Camp ready · Find your rune pad',3100);
+  }
+  else if(m.t==='beacon'&&!host){
+   if(validBeacon(m.beacon)&&m.realm===realm){
+    forestBeacon={...m.beacon};if(forestBeacon.lit){award('block3d-forest-beacon',55);celebrateBeacon();announce('TEAM BEACON LIT!',3500);}
+   }
+  }
   else if(m.t==='combat'&&!host){applyCombat(m);}
   else if(m.t==='move'){
   if(!Number.isFinite(m.x+m.y+m.z)||Math.abs(m.x)>1e6||Math.abs(m.z)>1e6)return;
   companion.x=m.x;companion.y=m.y;companion.z=m.z;companion.hp=m.hp;
    if(Number.isFinite(m.yaw))companion.yaw=m.yaw;
-   if(['mine','build','attack'].includes(m.action)){companion.action=m.action;companion.actionUntil=clock+.28;}
+   if(['mine','build','attack','celebrate'].includes(m.action)){companion.action=m.action;companion.actionUntil=clock+.28;}
  }else if(m.t==='edit'&&!host){modify(m.x,m.y,m.z,m.id,false);}
  else if(m.t==='boss'&&!host){boss.hp=clamp(Number(m.hp)||0,0,120);boss.alive=boss.hp>0;if(!boss.alive)defeated=true;}
  else if(m.t==='progress'&&!host){const previous=stage;stage=clamp(Number(m.stage)||0,0,6);stats=Object.assign(stats,m.stats||{});defeated=!!m.defeated;portalOpened=!!m.portalOpened;
@@ -962,6 +981,7 @@ function receive(m){
   if(!Number.isFinite(m.x+m.z))return;
   if(m.op==='attack'){guestAttack(m);return;}
    if(m.op==='portal'){portal();return;}
+   if(m.op==='forest'){visitForest();return;}
   if(![m.x,m.y,m.z].every(Number.isInteger)||Math.hypot(companion.x-m.x,companion.z-m.z)>6.5)return;
   if(m.op==='mine'){const id=block(m.x,m.y,m.z);if(id&&modify(m.x,m.y,m.z,0)){if(id===4)gain('wood');if(id===8)gain('crystal');}}
   if(m.op==='place'&&Number.isInteger(m.id)&&m.id>0&&m.id<types.length&&!block(m.x,m.y,m.z)){modify(m.x,m.y,m.z,m.id);gain('placed');}
