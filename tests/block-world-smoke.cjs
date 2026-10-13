@@ -6,7 +6,7 @@ const vm=require('node:vm');
 const assert=require('node:assert/strict');
 const html=fs.readFileSync(require('node:path').join(__dirname,'..','block-world.html'),'utf8');
 const js=fs.readFileSync(require('node:path').join(__dirname,'..','block-world.js'),'utf8');
-const art=fs.readFileSync(require('node:path').join(__dirname,'..','block-world-art.js'),'utf8');
+const art=fs.readFileSync(require('node:path').join(__dirname,'..','block-world-art-forest.js'),'utf8');
 const mobileUi=fs.readFileSync(require('node:path').join(__dirname,'..','block-world-ui.js'),'utf8');
 assert.match(html,/src="\.\/block-world\.js(?:\?v=[A-Za-z0-9._-]+)?"/,'HTML loads the extracted gameplay module');
 assert.match(html,/src="\.\/block-world-coop\.js(?:\?v=[A-Za-z0-9._-]+)?"/,'HTML loads the real co-op runtime');
@@ -14,8 +14,9 @@ assert.ok(js,'Block World script must exist');
 new vm.Script(js,{filename:'block-world.html'});
 new vm.Script(art,{filename:'block-world-art.js'});
 new vm.Script(mobileUi,{filename:'block-world-ui.js'});
-assert.match(html,/block-world-art\.js/,'live game loads procedural art');
+assert.match(html,/block-world-art-forest\.js/,'live game loads updated forest art');
 assert.match(html,/block-world-ui\.js/,'live game loads functional HUD controls');
+assert.match(html,/block-world-premium-forest\.css/,'live game loads final forest mobile styling');
 function boot(storage=new Map()){
   const nodes=new Map(),events=new Map(),clock={now:0,frame:null};
   const context=new Proxy({},{
