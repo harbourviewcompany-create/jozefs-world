@@ -561,7 +561,7 @@
     const stage=document.querySelector('.versus-stage'), play=document.querySelector('.versus-play'), board=document.querySelector('.versus-scoreboard'), card=document.querySelector('.versus-card');
     // Styles are owned by CSS and return to lobby without lingering inline sizing.
     for(const el of [card,stage,canvas,board,play])if(el)el.removeAttribute('style');
-    const pass=$('versus-pass');if(pass)pass.textContent=room.together?'PASS':'PUSH';
+    const pass=$('versus-pass');if(pass){const label=pass.querySelector('.vs-action-label');if(label)label.textContent=room.together?'PASS':'PUSH';else pass.textContent=room.together?'PASS':'PUSH';}
     const blue=document.querySelector('.versus-blue'),lime=document.querySelector('.versus-lime');
     if(blue)blue.firstChild.textContent=room.together?'DAD + JO ':'Jozef ';
     if(lime)lime.lastChild.textContent=room.together?' Rovers':' Dad';
