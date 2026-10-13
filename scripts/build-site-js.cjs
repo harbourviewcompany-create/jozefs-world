@@ -1,7 +1,7 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..');
-const groups=[{"output":"site-core.js","sources":["notes.js","app.js","extras.js"]},{"output":"site-features.js","sources":["stadium.js","playmode.js","broadcast.js","album.js","sports.js","watch.js","locker.js","sports-stage.js","multisport.js"]}];
+const groups=[{"output":"site-core.js","sources":["notes.js","app.js","extras.js"]},{"output":"site-features.js","sources":["stadium.js","playmode.js","broadcast.js","album.js","sports.js","watch.js","locker.js","sports-stage.js","multisport.js","club-designer.js"]}];
 for(const group of groups){
  const content='/* Generated browser scripts. Preserve order; do not edit directly. */\n'+
   group.sources.map(name=>'\n/* BEGIN '+name+' */\n'+
