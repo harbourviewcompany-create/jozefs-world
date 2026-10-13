@@ -932,7 +932,7 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
    if(Number.isInteger(s.questStage))questStage=s.questStage;
    if(s.goals&&typeof s.goals==='object')goals={...s.goals};
    portalUnlocked=!!s.portalUnlocked;
-   if(oldInventory!==JSON.stringify(players[1].inventory)||oldCreative!==creative)renderHotbar();
+   if(oldInventory!==JSON.stringify(players[1].inventory)||oldCreative!==creative){renderHotbar();if(craftingOpen)renderCrafting();}
    questHud();
   },
   useEdit:(x,y,id)=>{if(Number.isInteger(x)&&Number.isInteger(y)&&x>=0&&x<W&&y>=0&&y<H&&get(x,y)!==14&&Number.isInteger(id)&&id>=0&&id<=31)world[y][x]=id;},
