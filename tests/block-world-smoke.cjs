@@ -86,6 +86,12 @@ assert.ok(first.window.BlockWorldArt,'procedural art engine registered');
 assert.ok(first.window.BlockWorldArt.tile(1),'grass texture generated');
 assert.ok(first.window.BlockWorldArt.tile(18),'diamond ore texture generated');
 assert.ok(first.window.BlockWorldVisuals,'mobile controls initialized');
+assert.ok(first.document.getElementById('toolbar-extra').children.includes(first.document.getElementById('bw-actions')),'world actions consolidated inside primary menu');
+const compactMission=first.document.getElementById('bw-mission');
+assert.equal(compactMission.getAttribute('aria-expanded'),'false','mission starts compact');
+first.click('bw-mission');
+assert.ok(['true','false'].includes(compactMission.getAttribute('aria-expanded')),'mission toggle is wired');
+
 assert.equal(first.window.BlockWorldVisuals.menuOpen(),false,'menu starts closed');
 first.click('menu-toggle');
 assert.equal(first.window.BlockWorldVisuals.menuOpen(),true,'menu opens');
