@@ -1,9 +1,9 @@
 /* Jozef FC offline shell: only same-origin public game assets. Never caches personal progress. */
-const CACHE='jozef-fc-app-shell-v124';
+const CACHE='jozef-fc-app-shell-v125';
 const CORE=[
  './','./index.html','./world.html','./block-world.html','./block-world.js','./block-world-coop.js','./block-world-art.js','./block-world-art-forest.js','./block-world-ui.js','./block-world-premium.css','./block-world-premium-forest.css','./block-world-art-forest.js?v=20261013-forest3','./block-world.js?v=20261013-forest3','./block-world-coop.js?v=20261013-forest3','./block-world-ui.js?v=20261013-forest3','./block-world-premium-forest.css?v=20261013-forest3','./block-world.css','./block-world-3d.html','./block-world-3d.js','./block-world-3d.css','./block-world-3d-next.css','./block-world-3d-premium.css','./block-world-3d-premium.css?v=20261013-mobile-forest2','./block-world-3d.js?v=20261013-mobile-forest2','./block-world-3d-next.css?v=20261013-mobile-forest2','./block-quest.html','./site-foundation.css','./site-experience.css',
  './favicon.svg','./manifest.webmanifest','./matchday.css','./training.css','./jersey-bingo.css',
- './tournament.js','./career.js','./clubhouse.js','./club-designer.js','./scramble-positions.js','./celebrate.js',
+ './tournament.js','./career.js','./clubhouse.js','./scramble-positions.js','./celebrate.js',
  './training.js','./jersey-bingo.js','./matchday.js','./street.js','./adventure.js','./together-renderer.js','./together.js','./versus-physics.js','./versus-visual-2026.js','./versus.js','./presence.js','./peerjs.min.js','./street-phaser.js','./phaser.min.js','./arcade.js',
  './roblox.js','./squad.js','./site-core.js','./site-features.js','./arena-bundle.js',
  './visual-2026.js','./campaign-2026.js','./club-hq.js','./chronicle.js','./playbook.js',
