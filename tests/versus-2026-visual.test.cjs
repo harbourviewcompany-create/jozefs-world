@@ -33,7 +33,7 @@ test('stadium, actors, glowing star and ball render offline without external ass
 test('both published pages use the new renderer before gameplay and retain all match actions',()=>{
  const html=read('index.html');
  assert.equal(html,read('world.html'),'published homepage and world must be identical');
- const a=html.indexOf('src="versus-visual-2026.js?v=1"'),b=html.indexOf('src="versus.js?v=86"');
+ const a=html.indexOf('src="versus-visual-2026.js?v=2"'),b=html.indexOf('src="versus.js?v=87"');
  assert.ok(a>=0&&b>a,'art renderer precedes match controller');
  for(const id of ['versus-score-jozef','versus-score-dad','versus-clock','versus-stick','versus-aim','versus-deke','versus-pass','versus-sprint','versus-kick','versus-again','versus-leave']){
   assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,id+' id must be unique');
