@@ -18,6 +18,7 @@ g.isGuest=()=>role==='guest';
 g.connected=()=>role!=='solo'&&connected()&&ready;
 g.remoteInput=lastInput;
 g.requestCraft=recipe=>{if(role==='guest'&&ready&&Number.isInteger(recipe))send({t:'craft',recipe});};
+g.requestAttack=()=>{if(role==='guest'&&ready)send({t:'attack'});};
 g.requestAction=(kind,a,tile)=>{
  if(role!=='guest'||!connected()||!ready)return;
  if(!['mine','place'].includes(kind)||!a||!Number.isInteger(a.x)||!Number.isInteger(a.y))return;
@@ -94,6 +95,9 @@ function onMessage(m){
   // Reach and resource checks are performed by the actual game engine on the host.
   if(m.kind==='place'&&(!Number.isInteger(m.tile)||m.tile<1||m.tile>31))return;
   g.action(1,m.kind,{x,y},m.tile);
+ }else if(m.t==='attack'&&g.isHost()){
+  const now=performance.now();if(now-lastActionAt<350)return;lastActionAt=now;
+  g.attack(1);
  }else if(m.t==='craft'&&g.isHost()){
   const now=performance.now();if(now-lastActionAt<90)return;lastActionAt=now;
   if(!Number.isInteger(m.recipe)||m.recipe<0||m.recipe>30)return;
