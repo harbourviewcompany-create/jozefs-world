@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),canvas=$('view'),gl=canvas.getContext('w
 if(!gl){$('fallback').hidden=false;$('mission').textContent='WebGL is unavailable on this device.';return;}
 const CH=12,MAX_Y=27,R=2,KEY='jozefs-block-3d-v1';
 const types=['Air','Grass','Dirt','Stone','Wood','Leaves','Sand','Snow','Crystal','Planks','Brick','Glass'];
-const col=[[0,0,0],[.34,.72,.36],[.53,.38,.26],[.53,.60,.68],[.53,.32,.16],[.20,.51,.32],[.87,.74,.47],[.86,.92,.96],[.38,.80,.95],[.73,.51,.30],[.60,.36,.29],[.70,.85,.93]];
+const col=[[0,0,0],[.34,.72,.36],[.53,.38,.26],[.53,.60,.68],[.53,.32,.16],[.20,.51,.32],[.87,.74,.47],[.86,.92,.96],[.38,.80,.95],[.73,.51,.30],[.60,.36,.29],[.70,.85,.93], /* render-only hero palette */[.96,.71,.51],[.23,.14,.11],[.09,.56,.89],[.17,.74,.47],[.09,.17,.22],[.19,.32,.52],[.26,.19,.16],[.84,.95,.96],[.97,.72,.30],[.32,.19,.11],[.11,.39,.22]];
 const faces=[[[0,1,0],[[0,1,0],[0,1,1],[1,1,1],[1,1,0]]],[[0,0,1],[[0,0,1],[1,0,1],[1,1,1],[0,1,1]]],[[1,0,0],[[1,0,1],[1,0,0],[1,1,0],[1,1,1]]],[[0,-1,0],[[0,0,0],[1,0,0],[1,0,1],[0,0,1]]],[[-1,0,0],[[0,0,0],[0,0,1],[0,1,1],[0,1,0]]],[[0,0,-1],[[1,0,0],[0,0,0],[0,1,0],[1,1,0]]]];
 const missions=[['Gather wood','Mine eight wood blocks','wood',8,25],['Build our base','Place twelve blocks together','placed',12,30],['Explore a biome','Discover the far desert or snow ridge','explore',1,35],['Mine a crystal','Find a rare glowing crystal','crystal',1,40],['Defeat the Crystal Golem','Find the guardian at 32, 32','boss',1,60],['Activate the portal','Bring both heroes to 40, 40','portal',1,80]];
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
@@ -96,7 +96,7 @@ function cube(v,x,y,z,id,size=1,mask=null){
   for(const i of [0,1,2,0,2,3]){
    const q=f[i];
    v.push(x+q[0]*size,y+q[1]*size,z+q[2]*size,
-    Math.min(1,c[0]*shade),Math.min(1,c[1]*shade),Math.min(1,c[2]*shade),id);
+    Math.min(1,c[0]*shade),Math.min(1,c[1]*shade),Math.min(1,c[2]*shade),id,...faces[j][0]);
   }
  }
 }
@@ -130,7 +130,7 @@ function chunkMesh(cx,cz){
  }
  const k=cx+':'+cz,old=chunks.get(k);if(old)gl.deleteBuffer(old.buffer);
  const buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(v),gl.STATIC_DRAW);
- chunks.set(k,{buffer,count:v.length/7,dirty:false,cx,cz});
+ chunks.set(k,{buffer,count:v.length/10,dirty:false,cx,cz});
 }
 function stream(){
  const cx=Math.floor(hero.x/CH),cz=Math.floor(hero.z/CH);
@@ -142,15 +142,16 @@ function stream(){
 }
 function shader(type,src){const o=gl.createShader(type);gl.shaderSource(o,src);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(o));return o;}
 // Low-cost WebGL 1 atmospheric rendering: animated sky, sunset and night haze.
-const vertex='attribute vec3 p;attribute vec3 c;attribute float matId;uniform mat4 proj;uniform mat4 view;uniform vec3 eye;varying vec3 color;varying vec3 worldPos;varying float material;varying float fog;void main(){gl_Position=proj*view*vec4(p,1.);color=c;worldPos=p;material=matId;fog=clamp((distance(p,eye)-18.)/81.,0.,1.);}';
-const frag='precision mediump float;varying vec3 color;varying vec3 worldPos;varying float material;varying float fog;uniform vec3 sky;uniform float daylight;uniform float tick;float hash(vec3 p){return fract(sin(dot(p,vec3(17.13,41.17,79.19)))*43758.5453);}void main(){float m=material;vec3 p=worldPos;float grain=hash(floor(p*11.0+vec3(.015)));float coarse=hash(floor(p*3.2+vec3(.01)));float detail=.89+grain*.19+(coarse-.5)*.15;vec3 base=color;if(m<.5)detail=1.0;else if(m<1.5){detail*=.94+hash(floor(p*29.0))*.12;}else if(m<3.5||abs(m-10.0)<.5){float vein=sin(p.y*14.0+p.x*7.0+p.z*5.0);detail*=.94+.10*smoothstep(.77,.97,vein);}else if(abs(m-4.0)<.5||abs(m-9.0)<.5){detail*=.87+.13*sin(p.y*27.0+coarse*4.0);}else if(abs(m-5.0)<.5){detail*=.82+.22*coarse;}else if(abs(m-6.0)<.5){detail*=.96+.12*grain;}else if(abs(m-8.0)<.5){float gleam=.12+.12*sin(tick*2.5+p.x*4.0+p.z*3.0);base+=vec3(.02,.15,.24)*gleam;detail*=.95+.13*grain;}else if(abs(m-11.0)<.5){detail*=.95+.1*coarse;}float ambient=.60+.37*daylight;float heightLight=clamp((p.y-1.0)/28.0,0.0,1.0);vec3 shaded=base*detail*(ambient+heightLight*.08);vec3 graded=pow(max(shaded,vec3(.008)),vec3(.88));float haze=smoothstep(.10,1.0,fog);gl_FragColor=vec4(mix(graded,sky,haze*.90),1.);}';
+// World normals stay in the geometry so lighting is consistent as the sun moves.
+const vertex='attribute vec3 p;attribute vec3 c;attribute float matId;attribute vec3 normal;uniform mat4 proj;uniform mat4 view;uniform vec3 eye;varying vec3 color;varying vec3 worldPos;varying vec3 surfaceNormal;varying float material;varying float fog;void main(){gl_Position=proj*view*vec4(p,1.);color=c;worldPos=p;surfaceNormal=normal;material=matId;fog=clamp((distance(p,eye)-22.)/84.,0.,1.);}';
+const frag='precision mediump float;varying vec3 color;varying vec3 worldPos;varying vec3 surfaceNormal;varying float material;varying float fog;uniform vec3 sky;uniform float daylight;uniform float tick;float hash(vec3 p){return fract(sin(dot(p,vec3(17.13,41.17,79.19)))*43758.5453);}void main(){vec3 p=worldPos;float m=material;vec3 base=color;vec3 grid=floor(p*17.0+vec3(.05));float grain=hash(grid);float coarse=hash(floor(p*3.0+vec3(.07)));float detail=.92+(grain-.5)*.19+(coarse-.5)*.14;vec3 norm=normalize(surfaceNormal);float sunny=max(0.,dot(norm,normalize(vec3(.46,.80,.30))));float diffuse=.54+sunny*.39;float skylight=.80+.2*max(norm.y,0.);if(m<.5)detail=1.0;else if(m<1.5){detail*=.93+.13*grain;float blades=step(.90,hash(floor(p*31.0)));base+=vec3(.10,.12,.015)*blades*max(norm.y,0.);}else if(m<3.5||abs(m-10.)<.5){float vein=sin(p.y*14.0+p.x*7.0+p.z*5.0);detail*=.93+.10*smoothstep(.64,.98,vein);}else if(abs(m-4.)<.5||abs(m-9.)<.5){detail*=.9+.12*sin(p.y*27.+coarse*6.);}else if(abs(m-5.)<.5){detail*=.82+.23*coarse;}else if(abs(m-8.)<.5||abs(m-19.)<.5){float pulse=.60+.40*sin(tick*2.0+p.x*2.0+p.z*3.0);base+=vec3(.04,.17,.23)*pulse;detail*=.98+.10*grain;diffuse+=.10*pulse;}else if(m>11.5){detail=.96+.06*grain;diffuse=max(diffuse,.72);}float day=.57+.43*daylight;vec3 lit=base*detail*(diffuse*day+(.10+.12*max(norm.y,0.))*skylight);lit+=vec3(.035,.040,.062)*(1.-daylight);vec3 graded=pow(max(lit,vec3(.003)),vec3(.89));float haze=smoothstep(.15,1.,fog);gl_FragColor=vec4(mix(graded,sky,haze*.86),1.);}';
 const skyVertex='attribute vec2 xy;varying vec2 uv;void main(){uv=xy*.5+.5;gl_Position=vec4(xy,1.,1.);}';
 const skyFragment='precision mediump float;varying vec2 uv;uniform float t;uniform float daylight;void main(){float y=clamp(uv.y,0.,1.);vec3 zenith=mix(vec3(.016,.034,.112),vec3(.14,.44,.68),daylight);vec3 horizon=mix(vec3(.22,.12,.30),vec3(.65,.82,.86),daylight);vec3 sky=mix(horizon,zenith,smoothstep(.03,.9,y));float r=distance(uv,vec2(.73,.76));float halo=1.-smoothstep(.03,.30,r);float disc=1.-smoothstep(.023,.037,r);sky+=mix(vec3(.24,.16,.34),vec3(.96,.65,.30),daylight)*halo*.38;sky+=mix(vec3(.62,.77,.96),vec3(1.,.96,.72),daylight)*disc*.8;float wave=sin(uv.x*19.+t*.009+sin(uv.y*13.))*sin(uv.x*8.-uv.y*7.+t*.005);float clouds=smoothstep(.40,.83,wave)*smoothstep(.32,.66,y)*daylight;sky+=vec3(.27,.38,.38)*clouds*.25;float stars=step(.996,fract(sin(dot(floor(uv*vec2(330.,160.)),vec2(12.9898,78.233)))*43758.5453));sky+=vec3(.35,.46,.65)*stars*(1.-daylight)*smoothstep(.38,.70,y);gl_FragColor=vec4(sky,1.);}';
 let pg;
 try{pg=gl.createProgram();gl.attachShader(pg,shader(gl.VERTEX_SHADER,vertex));gl.attachShader(pg,shader(gl.FRAGMENT_SHADER,frag));gl.linkProgram(pg);if(!gl.getProgramParameter(pg,gl.LINK_STATUS))throw Error('Shader linking failed');}
 catch(e){$('fallback').hidden=false;console.error(e);return;}
 gl.useProgram(pg);gl.enable(gl.DEPTH_TEST);
-const ap=gl.getAttribLocation(pg,'p'),ac=gl.getAttribLocation(pg,'c'),am=gl.getAttribLocation(pg,'matId'),up=gl.getUniformLocation(pg,'proj'),uv=gl.getUniformLocation(pg,'view'),ue=gl.getUniformLocation(pg,'eye'),us=gl.getUniformLocation(pg,'sky'),ud=gl.getUniformLocation(pg,'daylight'),ut=gl.getUniformLocation(pg,'tick'),dynamic=gl.createBuffer();
+const ap=gl.getAttribLocation(pg,'p'),ac=gl.getAttribLocation(pg,'c'),am=gl.getAttribLocation(pg,'matId'),an=gl.getAttribLocation(pg,'normal'),up=gl.getUniformLocation(pg,'proj'),uv=gl.getUniformLocation(pg,'view'),ue=gl.getUniformLocation(pg,'eye'),us=gl.getUniformLocation(pg,'sky'),ud=gl.getUniformLocation(pg,'daylight'),ut=gl.getUniformLocation(pg,'tick'),dynamic=gl.createBuffer();
 let skyPg=null,skyBuf=null,skyAttr=-1,skyTime=null,skyDay=null;
 try{
  skyPg=gl.createProgram();gl.attachShader(skyPg,shader(gl.VERTEX_SHADER,skyVertex));
@@ -168,7 +169,7 @@ function camera(eye,target){
  const z=norm(sub(eye,target)),x=norm(cross([0,1,0],z)),y=cross(z,x);
  return new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-dot(x,eye),-dot(y,eye),-dot(z,eye),1]);
 }
-function renderBuffer(buf,n){if(!n)return;gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.enableVertexAttribArray(ap);gl.enableVertexAttribArray(ac);if(am>=0)gl.enableVertexAttribArray(am);gl.vertexAttribPointer(ap,3,gl.FLOAT,false,28,0);gl.vertexAttribPointer(ac,3,gl.FLOAT,false,28,12);if(am>=0)gl.vertexAttribPointer(am,1,gl.FLOAT,false,28,24);gl.drawArrays(gl.TRIANGLES,0,n);}
+function renderBuffer(buf,n){if(!n)return;gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.enableVertexAttribArray(ap);gl.enableVertexAttribArray(ac);if(am>=0)gl.enableVertexAttribArray(am);if(an>=0)gl.enableVertexAttribArray(an);gl.vertexAttribPointer(ap,3,gl.FLOAT,false,40,0);gl.vertexAttribPointer(ac,3,gl.FLOAT,false,40,12);if(am>=0)gl.vertexAttribPointer(am,1,gl.FLOAT,false,40,24);if(an>=0)gl.vertexAttribPointer(an,3,gl.FLOAT,false,40,28);gl.drawArrays(gl.TRIANGLES,0,n);}
 // Aim highlight shares the terrain shader but uses GPU line geometry.
 // No raycast on the main world buffer and no re-mesh when the cursor moves.
 const aimBuffer=gl.createBuffer();
@@ -182,15 +183,16 @@ function drawAimOutline(){
  const p=[[a,a,a],[b,a,a],[b,b,a],[a,b,a],[a,a,b],[b,a,b],[b,b,b],[a,b,b]];
  const edges=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
  const v=[];for(const [i,j] of edges){
-  for(const k of [i,j])v.push(x+p[k][0],y+p[k][1],z+p[k][2],.85,1.,.44,0);
+  for(const k of [i,j])v.push(x+p[k][0],y+p[k][1],z+p[k][2],.85,1.,.44,0,0,1,0);
  }
  gl.bindBuffer(gl.ARRAY_BUFFER,aimBuffer);
  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(v),gl.DYNAMIC_DRAW);
  gl.enableVertexAttribArray(ap);gl.enableVertexAttribArray(ac);
- gl.vertexAttribPointer(ap,3,gl.FLOAT,false,28,0);
- gl.vertexAttribPointer(ac,3,gl.FLOAT,false,28,12);
- if(am>=0){gl.enableVertexAttribArray(am);gl.vertexAttribPointer(am,1,gl.FLOAT,false,28,24);}
- gl.drawArrays(gl.LINES,0,v.length/7);
+ gl.vertexAttribPointer(ap,3,gl.FLOAT,false,40,0);
+ gl.vertexAttribPointer(ac,3,gl.FLOAT,false,40,12);
+ if(am>=0){gl.enableVertexAttribArray(am);gl.vertexAttribPointer(am,1,gl.FLOAT,false,40,24);}
+ if(an>=0){gl.enableVertexAttribArray(an);gl.vertexAttribPointer(an,3,gl.FLOAT,false,40,28);}
+ gl.drawArrays(gl.LINES,0,v.length/10);
 }
 function render(){
  const dpr=Math.min(devicePixelRatio||1,renderCap),w=Math.max(1,Math.floor(innerWidth*dpr)),h=Math.max(1,Math.floor(innerHeight*dpr));
@@ -312,7 +314,7 @@ function render(){
  for(const particle of effects)if(Math.hypot(particle.x-hero.x,particle.z-hero.z)<40)
    cube(v,particle.x,particle.y,particle.z,particle.id,.10);
  gl.bindBuffer(gl.ARRAY_BUFFER,dynamic);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(v),gl.DYNAMIC_DRAW);
- renderBuffer(dynamic,v.length/7);drawAimOutline();renderOk=true;
+ renderBuffer(dynamic,v.length/10);drawAimOutline();renderOk=true;
 }
 function ground(x,z){return height(Math.floor(x),Math.floor(z))+1.02;}
 function resetPose(){hero.x=2.5;hero.z=2.5;hero.y=ground(hero.x,hero.z);hero.vy=0;hero.hp=100;companion.x=4.5;companion.z=4.5;companion.y=ground(4.5,4.5);}
