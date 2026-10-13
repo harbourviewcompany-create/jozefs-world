@@ -15,7 +15,7 @@ let selected=4,creative=true,third=true,sound=false,stage=0,stats={wood:0,placed
 const hero={x:2.5,y:12,z:2.5,vy:0,yaw:0,pitch:-.24,role:0,hp:100,ground:false,double:false,inventory:{}};
 const companion={x:4.5,y:12,z:4.5,role:1,hp:100};
 let boss={x:32.5,y:12,z:32.5,hp:120,alive:true},mobs=[],clock=0,last=0,frames=0,dirty=false,saveClock=0,skyPhase=0;
-let quality='AUTO',adaptiveCap=1.5,renderCap=1.5,averageFrame=.0167;
+let quality='AUTO',adaptiveCap=1.5,renderCap=1.5,averageFrame=.0167,lastChunksDrawn=0;
 let effects=[],audioCtx=null;
 function tone(kind){
  if(!sound)return;
@@ -220,10 +220,11 @@ function render(){
  }
  gl.uniformMatrix4fv(up,false,projection(third?1.03:1.15,w/h,.06,120));gl.uniformMatrix4fv(uv,false,camera(cam,at));
  gl.uniform3fv(ue,new Float32Array(cam));gl.uniform3fv(us,new Float32Array(sky));gl.uniform1f(ud,day);gl.uniform1f(ut,clock);
+ lastChunksDrawn=0;
  for(const chunk of chunks.values()){
   const x=(chunk.cx+.5)*CH-hero.x,z=(chunk.cz+.5)*CH-hero.z;
   if(Math.hypot(x,z)>CH*1.8&&x*forward[0]+z*forward[2]<-CH*1.4)continue;
-  renderBuffer(chunk.buffer,chunk.count);
+  renderBuffer(chunk.buffer,chunk.count);lastChunksDrawn++;
  }
  const v=[];
  // Layered voxel character rigs with skins, sleeves, hair, shoes and
@@ -420,7 +421,7 @@ function captureDimension(){dimensions[realm]={seed,edits:[...edits].slice(-1400
 function save(){if(!dirty||guestActive)return;try{
  captureDimension();
  localStorage.setItem(DIMKEY,JSON.stringify({version:1,baseSeed,dimensions}));
- localStorage.setItem(KEY,JSON.stringify({version:1,seed,realm,edits:[...edits].slice(-14000),hero:{x:hero.x,y:hero.y,z:hero.z,role:hero.role,inventory:hero.inventory},stage,stats,rewards,discovered,defeated,portalOpened,creative}));
+ localStorage.setItem(KEY,JSON.stringify({version:1,seed,realm,edits:[...edits].slice(-14000),hero:{x:hero.x,y:hero.y,z:hero.z,role:hero.role,yaw:hero.yaw,pitch:hero.pitch,inventory:hero.inventory},viewThird:third,stage,stats,rewards,discovered,defeated,portalOpened,creative}));
  dirty=false;}catch(e){announce('Save storage full · export a backup');}}
 function load(){try{const data=JSON.parse(localStorage.getItem(KEY)||'null');if(!data||data.version!==1)return false;
  seed=data.seed;realm=data.realm||0;
@@ -430,6 +431,9 @@ function load(){try{const data=JSON.parse(localStorage.getItem(KEY)||'null');if(
  edits=new Map(data.edits.filter(row=>Array.isArray(row)&&/^[-0-9]+,[-0-9]+,[-0-9]+$/.test(row[0])&&Number.isInteger(row[1])&&row[1]>=0&&row[1]<types.length));
  if(data.hero){Object.assign(hero,{x:data.hero.x,y:data.hero.y,z:data.hero.z,role:data.hero.role===1?1:0,inventory:data.hero.inventory||{}});}
  if(!Number.isFinite(hero.x+hero.y+hero.z))return false;
+  hero.yaw=Number.isFinite(data.hero?.yaw)?data.hero.yaw:hero.yaw;
+  hero.pitch=Number.isFinite(data.hero?.pitch)?clamp(data.hero.pitch,-1.38,1.38):hero.pitch;
+  if(typeof data.viewThird==='boolean')third=data.viewThird;
  stage=clamp(data.stage||0,0,6);stats=Object.assign(stats,data.stats||{});rewards=Array.isArray(data.rewards)?data.rewards:[];
  discovered=data.discovered||{};defeated=!!data.defeated;portalOpened=!!data.portalOpened;creative=data.creative!==false;return true;
  }catch(e){console.warn('Save could not load',e);return false;}}
@@ -544,7 +548,7 @@ function initUi(){
  $('options').onclick=()=>show($('drawer').hidden?'drawer':null);$('close').onclick=()=>show(null);$('pair').onclick=()=>show('pairPanel');$('pairClose').onclick=()=>show(null);
  $('swap').onclick=()=>{if(conn?.open){announce('Heroes stay assigned during co-op');return;}hero.role=1-hero.role;companion.role=1-hero.role;hud();};
  $('perspective').textContent=third?'1ST PERSON':'3RD PERSON';
- $('perspective').onclick=()=>{third=!third;$('perspective').textContent=third?'1ST PERSON':'3RD PERSON';};
+ $('perspective').onclick=()=>{third=!third;$('perspective').textContent=third?'1ST PERSON':'3RD PERSON';dirty=true;};
  $('creative').onclick=()=>{creative=!creative;$('creative').textContent='CREATIVE '+(creative?'ON':'OFF');dirty=true;hotbar();};
  $('save').onclick=()=>{dirty=true;save();announce('World saved');};
  $('sound').onclick=()=>{sound=!sound;$('sound').textContent='SOUND '+(sound?'ON':'OFF');};
@@ -603,5 +607,5 @@ function loop(now){
 }
 try{if(!load())resetPose();spawn();initUi();stream();requestAnimationFrame(loop);announce('3D WORLD READY · Explore and build!',3400);}
 catch(e){console.error('3D startup failure',e);window.__bw3dFail?.('Could not initialize the 3D engine. Retry or play Classic 2D.');$('fallback').hidden=false;}
-window.BlockWorld3D=Object.freeze({status:()=>({renderOk,seed,loadedChunks:chunks.size,realm,stage,quality,renderScale:renderCap,connected:!!conn?.open,hero:{x:hero.x,y:hero.y,z:hero.z,hp:hero.hp,role:hero.role},bossHp:boss.hp}),height,block});
+window.BlockWorld3D=Object.freeze({status:()=>({renderOk,seed,loadedChunks:chunks.size,realm,stage,quality,renderScale:renderCap,connected:!!conn?.open,hero:{x:hero.x,y:hero.y,z:hero.z,hp:hero.hp,role:hero.role},camera:third?'THIRD_PERSON':'FIRST_PERSON',drawnChunks:lastChunksDrawn,bossHp:boss.hp}),height,block});
 })();
