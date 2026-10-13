@@ -428,40 +428,49 @@
   }
 
   function touch(p, forced) {
-    if (!forced && kickLock > 0) return;
-    const dx = state.ball.x - p.x, dy = state.ball.y - p.y;
-    const dist = Math.hypot(dx, dy) || 1;
-    if (dist > (forced ? 92 : 30)) return;
-    if (forced) {
-      if (kickLock > 0) return;
-      const who=p===state.dad?'Dad':'Jozef',shot=shotOptions[who];
-      const goalX = p === state.dad ? 18 : W-18;
-      const goalY=Math.max(GOAL.y+14,Math.min(GOAL.y+GOAL.h-14,SHOT_LANES[shot.aim]));
-      const sx=goalX-state.ball.x, sy=goalY-state.ball.y, length=Math.hypot(sx,sy)||1;
-      const bouncing = Math.hypot(state.ball.vx, state.ball.vy) > 3.2;
-      const wobble = bouncing ? 1.4 : Math.min(0.35, length / 900);
-      const speed=(state.super===who?15:(shot.power > 1.15 ? 12.4 : 8.6))*shot.power; if(state.super===who){state.super='';state.call='SUPER';}
-      state.ball.vx=sx/length*speed; state.ball.vy=sy/length*speed + (Math.random()-0.5)*wobble*8;
-      if (bouncing) state.call = 'Off balance';
-      shot.power=1; kickLock=16; state.shots = (state.shots||0)+1;
-      burst(state.ball.x, state.ball.y, '#fff', 10);
+    if(!forced&&kickLock>0)return;
+    const dx=state.ball.x-p.x,dy=state.ball.y-p.y,dist=Math.hypot(dx,dy)||1;
+    if(dist>(forced?92:30))return;
+    if(forced){
+      if(kickLock>0)return;
+      const who=p===state.dad?'Dad':p===state.jozef?'Jozef':'Rovers';
+      const shot=shotOptions[who]||{aim:1,power:1,mode:'shot'},mode=shot.mode||'shot';
+      let targetX,targetY;
+      if(mode==='pass'&&room.together&&who!=='Rovers'){
+        const teammate=who==='Dad'?state.jozef:state.dad;
+        targetX=Math.max(46,Math.min(W-46,teammate.x+(teammate.vx||0)*8));
+        targetY=Math.max(40,Math.min(H-40,teammate.y+(teammate.vy||0)*8));
+      }else{
+        targetX=(room.together?who==='Rovers':who==='Dad')?18:W-18;
+        targetY=mode==='push'?state.ball.y:SHOT_LANES[shot.aim];
+        targetY=Math.max(GOAL.y+14,Math.min(GOAL.y+GOAL.h-14,targetY));
+      }
+      const sx=targetX-state.ball.x,sy=targetY-state.ball.y,length=Math.hypot(sx,sy)||1;
+      const bouncing=Math.hypot(state.ball.vx,state.ball.vy)>3.2;
+      const power=Math.max(.9,Math.min(1.6,shot.power||1));
+      const base=mode==='pass'?6.6:mode==='push'?5.2:state.super===who?15:power>1.15?12.4:8.6;
+      const speed=base*power;
+      if(mode==='shot'&&state.super===who){state.super='';state.call='SUPER';}
+      state.ball.vx=sx/length*speed;
+      state.ball.vy=sy/length*speed+(Math.random()-.5)*(bouncing?1.4:.35)*(mode==='shot'?8:2);
+      if(bouncing)state.call='Off balance';
+      shot.power=1;kickLock=16;
+      if(mode==='shot')state.shots=(state.shots||0)+1;
+      burst(state.ball.x,state.ball.y,mode==='pass'?'#9affef':'#fff',10);
       return;
     }
-    const speed = Math.hypot(p.vx, p.vy);
-    if (speed < 0.4) return;
-    const pace = Math.hypot(p.vx, p.vy);
-    const incoming = Math.hypot(state.ball.vx, state.ball.vy);
-    if (incoming > pace + 4 && Math.random() < 0.45) {
-      state.ball.vx *= 0.4; state.ball.vy += (Math.random() - 0.5) * 3;
-      state.call = 'Heavy touch';
-      return;
+    const speed=Math.hypot(p.vx,p.vy);
+    if(speed<.4)return;
+    const incoming=Math.hypot(state.ball.vx,state.ball.vy);
+    if(incoming>speed+4&&Math.random()<.45){
+      state.ball.vx*=.4;state.ball.vy+=(Math.random()-.5)*3;state.call='Heavy touch';return;
     }
-    const ahead = 14 + Math.min(8, pace * 2);
-    const leadX = p.x + (p.face || 1) * ahead;
-    state.ball.x += (leadX - state.ball.x) * 0.18;
-    state.ball.y += (p.y - state.ball.y) * 0.18;
-    state.ball.vx += (p.vx * 0.85 - state.ball.vx) * 0.16;
-    state.ball.vy += (p.vy * 0.85 - state.ball.vy) * 0.16;
+    const ahead=14+Math.min(8,speed*2);
+    const leadX=p.x+(p.face||1)*ahead;
+    state.ball.x+=(leadX-state.ball.x)*.18;
+    state.ball.y+=(p.y-state.ball.y)*.18;
+    state.ball.vx+=(p.vx*.85-state.ball.vx)*.16;
+    state.ball.vy+=(p.vy*.85-state.ball.vy)*.16;
   }
 
   function inGoal(y) { return y > GOAL.y && y < GOAL.y + GOAL.h; }
@@ -478,11 +487,6 @@
 
   function practiceRival(){
     if(!room.practice)return 4.4;
-    if(room.together){
-      const mate=room.who==='Dad'?'Jozef':'Dad', bot=mate==='Dad'?state.dad:state.jozef, ball=state.ball;
-      targets[mate]={x:Math.max(80,Math.min(640,ball.x-40)), y:ball.y};
-      return 4.0;
-    }
     const who=room.who==='Dad'?'Jozef':'Dad',bot=who==='Dad'?state.dad:state.jozef,ball=state.ball;
     const distance=Math.hypot(bot.x-ball.x,bot.y-ball.y);
     const homeX = who==='Dad' ? W-150 : 150;
@@ -505,24 +509,49 @@
     }
     return cpuDifficulty==='legend'?4.6:cpuDifficulty==='rookie'?3.2:4.0;
   }
-  function step() {
-    if (!room.host || room.phase !== 'playing' || !localActive || !room.remoteActive) return;
-    if (state.freeze > 0) { state.freeze -= 1; state.ball.vx = 0; state.ball.vy = 0; if (state.freeze === 1) reset(state.score.dad >= state.score.jozef ? 1 : -1); broadcast(); return; }
-    // Freeze the simulation briefly after a goal: players can read the score,
-    // the clock stays fair, and the fresh kickoff does not instantly deflect.
+  function cooperativeRival(){
+    if(!room.together)return;
+    const bot=state.rival,ball=state.ball;
+    if(bot.stun>0){bot.stun--;move(bot,null,3.3);return;}
+    const distance=Math.hypot(bot.x-ball.x,bot.y-ball.y);
+    const defend=ball.x>370||distance<150;
+    move(bot,{x:Math.max(65,Math.min(W-65,defend?ball.x+25:500)),
+      y:Math.max(50,Math.min(H-50,defend?ball.y:210))},3.6);
+    if(distance<34)bot.carry=(bot.carry||0)+1;else bot.carry=0;
+    if(bot.carry>17&&kickLock===0&&tick-lastBotKick>46){
+      shotOptions.Rovers={aim:Math.floor(Math.random()*3),power:1.05,mode:'shot'};
+      state.kick='Rovers';lastBotKick=tick;bot.carry=0;
+    }
+  }
+  function endMatch(){
+    room.phase='finished';state.call='Full time';finishPractice();syncUI();
+    const winner=state.score.dad===state.score.jozef?'A draw':
+      room.together?(state.score.jozef>state.score.dad?'Dad & Jozef':'Rovers'):
+      (state.score.dad>state.score.jozef?'Dad':'Jozef');
+    say(winner==='A draw'?'Full time — a draw. Rematch?':winner+' wins! Ready for a rematch?');
+  }
+  function step(){
+    if(!room.host||room.phase!=='playing'||!localActive||!room.remoteActive)return;
+    if(state.freeze>0){state.freeze--;state.ball.vx=0;state.ball.vy=0;
+      if(state.freeze===1)reset(state.score.dad>=state.score.jozef?1:-1);
+      broadcast();return;}
     if(kickoffHold>0){kickoffHold--;broadcast();return;}
-    const cpuPace=practiceRival();
-    const now=performance.now();
-    move(state.dad,targets.Dad,room.practice&&room.who!=='Dad'?cpuPace:(now<sprintUntil.Dad?6.2:4.4));
-    move(state.jozef,targets.Jozef,room.practice&&room.who!=='Jozef'?cpuPace:(now<sprintUntil.Jozef?6.2:4.4));
-    touch(state.dad, state.kick === "Dad"); touch(state.jozef, state.kick === "Jozef"); state.kick = "";
-    if (kickLock) kickLock -= 1;
+    const cpuPace=practiceRival(),now=performance.now();
+    if(!isKeeper('Dad'))move(state.dad,targets.Dad,room.practice&&room.who!=='Dad'?cpuPace:(now<sprintUntil.Dad?6.2:4.4));
+    if(!isKeeper('Jozef'))move(state.jozef,targets.Jozef,room.practice&&room.who!=='Jozef'?cpuPace:(now<sprintUntil.Jozef?6.2:4.4));
+    cooperativeRival();
+    if(!isKeeper('Dad'))touch(state.dad,state.kick==='Dad');
+    if(!isKeeper('Jozef'))touch(state.jozef,state.kick==='Jozef');
+    if(room.together)touch(state.rival,state.kick==='Rovers');
+    state.kick='';
+    if(kickLock)kickLock--;
     const physics = window.JozefPhysics;
     physics.integrate(state.ball, physics.BALL);
     if (!kickLock) {
-      physics.collide(state.dad, state.ball, physics.PLAYER, physics.BALL);
-      physics.collide(state.jozef, state.ball, physics.PLAYER, physics.BALL);
-      physics.collide(state.dad, state.jozef, physics.PLAYER, physics.PLAYER);
+      if(!isKeeper('Dad'))physics.collide(state.dad,state.ball,physics.PLAYER,physics.BALL);
+      if(!isKeeper('Jozef'))physics.collide(state.jozef,state.ball,physics.PLAYER,physics.BALL);
+      if(!isKeeper('Dad')&&!isKeeper('Jozef'))physics.collide(state.dad,state.jozef,physics.PLAYER,physics.PLAYER);
+      if(room.together)physics.collide(state.rival,state.ball,physics.PLAYER,physics.BALL);
     }
     if (state.score.dad || state.score.jozef) state.star.on = false;
     if (state.star?.on) {
@@ -532,21 +561,26 @@
     }
     mindKeepers();
     physics.walls(state.ball, W, H, inGoal);
-    state.matchLeft = Math.max(0, state.matchLeft - 1/60);
-    if ((state.score.dad>=3||state.score.jozef>=3) && state.call!=='Full time') { state.call='Full time'; room.phase='finished'; finishPractice(); syncUI(); say((state.score.dad>state.score.jozef?'Dad':'Jozef')+' wins, first to 3.'); }
-    else if (state.matchLeft <= 0 && state.call !== 'Full time') {
-      if (state.score.dad===state.score.jozef) { state.call='Penalties'; state.ball={x:room.who==='Dad'?180:540,y:210,vx:0,vy:0}; say('Level. Penalties. Shoot.'); }
-      else { state.call='Full time'; room.phase='finished'; finishPractice(); syncUI(); say((state.score.dad>state.score.jozef?'Dad':'Jozef')+' wins! Ready for a rematch?'); }
+    state.matchLeft=Math.max(0,state.matchLeft-1/60);
+    if(state.matchLeft<=0){
+      if(state.score.dad===state.score.jozef&&!state.overtime){
+        state.overtime=true;state.matchLeft=30;state.call='GOLDEN GOAL';reset(0);
+        kickoffHold=40;broadcast();return;
+      }
+      endMatch();broadcast();return;
     }
-    if (state.call === 'Full time') { broadcast(); return; }
+    if((state.score.dad>=3||state.score.jozef>=3)||
+      (state.overtime&&state.score.dad!==state.score.jozef)){
+      endMatch();broadcast();return;
+    }
     const post = state.ball.y < GOAL.y + 4 || state.ball.y > GOAL.y + GOAL.h - 4;
     if (state.ball.x < 40 && inGoal(state.ball.y) && !post) {
       if (save('left') && state.call!=='SUPER') { state.saves += 1; state.ball.x = 56; state.ball.vx = 5.5; state.ball.vy *= 0.4; state.call = 'Saved'; kickLock = 20; }
-      else { state.score.dad += 1; state.call = 'GOAL Dad'; state.freeze = 70; burst(state.ball.x, state.ball.y, '#ffe14a', 40); }
+      else { state.score.dad += 1; state.call = room.together ? 'Rovers scores' : 'GOAL Dad'; state.freeze = 70; burst(state.ball.x, state.ball.y, '#ffe14a', 40); }
     }
     else if (state.ball.x > W - 40 && inGoal(state.ball.y) && !post) {
       if (save('right') && state.call!=='SUPER') { state.saves += 1; state.ball.x = W - 56; state.ball.vx = -5.5; state.ball.vy *= 0.4; state.call = 'Saved'; kickLock = 20; }
-      else { state.score.jozef += 1; state.call = 'GOAL Jozef'; state.freeze = 70; burst(state.ball.x, state.ball.y, '#7ee0ff', 40); }
+      else { state.score.jozef += 1; state.call = room.together ? 'TEAM GOAL' : 'GOAL Jozef'; state.freeze = 70; burst(state.ball.x, state.ball.y, '#7ee0ff', 40); }
     }
     else if ((state.ball.x < 40 || state.ball.x > W - 40) && post && inGoal(state.ball.y)) { state.ball.x = state.ball.x < W/2 ? 46 : W-46; state.ball.y = 48; state.ball.vx = 0; state.ball.vy = 0; state.call = 'Corner'; }
     else if (!inGoal(state.ball.y) && state.ball.x < 34) { state.ball.x = 34; state.ball.vx = Math.abs(state.ball.vx) + 0.6; }
@@ -560,12 +594,14 @@
   function reset(dir) {
     state.ball = { x: 360, y: 210, vx: dir * 1.4, vy: 0 };
     kickoffHold=dir?36:0;
-    state.dad.x = room.together?220:560; state.dad.y = 210;
-    state.jozef.x = room.together?160:160; state.jozef.y = room.together?250:210;
+    state.dad.x=room.together?220:560;state.dad.y=210;
+    state.jozef.x=160;state.jozef.y=room.together?250:210;
+    Object.assign(state.rival,{x:540,y:210,vx:0,vy:0,face:-1,stun:0,carry:0});
     targets.Dad = null; targets.Jozef = null;
     for(const p of [state.dad,state.jozef]){p.vx=0;p.vy=0;}
     state.dad.face=-1;state.jozef.face=1;
     state.keepers={left:210,right:210};keeperState.left.commit=0;keeperState.right.commit=0;
+    keeperTargets.left=null;keeperTargets.right=null;
     setTimeout(() => { if (room.phase === 'playing' && state.call !== 'Full time') state.call = ''; }, 1400);
   }
   function send(msg){if(room.conn?.open)room.conn.send(msg);}
@@ -582,16 +618,12 @@
     $('versus-room-code').textContent=room.code;
     $('versus').classList.toggle('is-playing',playing);
     const stage=document.querySelector('.versus-stage'), play=document.querySelector('.versus-play'), board=document.querySelector('.versus-scoreboard'), card=document.querySelector('.versus-card');
-    if(playing){
-      if(card){card.style.cssText='position:relative;height:100dvh;padding:0;overflow:hidden;background:#061018';}
-      if(stage){stage.style.cssText='position:absolute;inset:0;z-index:0';}
-      if(canvas){canvas.style.cssText='width:100%;height:100%;object-fit:cover;display:block';}
-      if(board){board.style.cssText='position:absolute;top:6px;left:8px;right:8px;z-index:4;margin:0;padding:4px 10px;background:rgba(6,16,24,.4);border-radius:12px';}
-      if(play){play.style.cssText='position:absolute;left:0;right:0;bottom:0;z-index:4;background:transparent;padding:8px 10px 16px';}
-      ['versus-aim','versus-deke','versus-pass'].forEach(id=>{const b=$(id);if(b)b.style.cssText='background:rgba(8,22,32,.4);color:#fff;border:1px solid rgba(255,255,255,.3)';});
-      const kick=$('versus-kick'); if(kick) kick.style.background='rgba(208,255,105,.55)';
-      const tip=$('versus-tip'); if(tip) tip.style.display='none';
-    }
+    // Styles are owned by CSS and return to lobby without lingering inline sizing.
+    for(const el of [card,stage,canvas,board,play])if(el)el.removeAttribute('style');
+    const pass=$('versus-pass');if(pass)pass.textContent=room.together?'PASS':'PUSH';
+    const blue=document.querySelector('.versus-blue'),lime=document.querySelector('.versus-lime');
+    if(blue)blue.firstChild.textContent=room.together?'DAD + JO ':'Jozef ';
+    if(lime)lime.lastChild.textContent=room.together?' Rovers':' Dad';
     document.body.classList.toggle('versus-focused',connected&&$('versus').classList.contains('active'));
     document.querySelectorAll('.versus-role').forEach(b=>{b.classList.toggle('is-on',b.dataset.who===room.who);b.setAttribute('aria-pressed',String(b.dataset.who===room.who));});
     $('versus-who').value=room.who; try{localStorage.setItem('jozefs-world-who', room.who);}catch(_){ }
@@ -599,9 +631,9 @@
     renderPracticeRecord();
   }
   function stopInput(){keys.clear();stickVector=null;targets[room.who]=null;send({type:'aim',x:null,y:null});const nub=$('versus-nub'),stick=$('versus-stick');nub.style.left=(stick.clientWidth-nub.offsetWidth)/2+'px';nub.style.top=(stick.clientHeight-nub.offsetHeight)/2+'px';}
-  function cleanup(){clearTimeout(connectTimer);clearTimeout(countdownTimer);const oldConn=room.conn,oldPeer=room.peer;room.conn=null;room.peer=null;oldConn?.close();oldPeer?.destroy();room.other='';room.ready=false;room.remoteReady=false;room.host=false;room.practice=false;room.remoteActive=true;room.phase='lobby';stopInput();syncUI();}
+  function cleanup(){clearTimeout(connectTimer);clearTimeout(countdownTimer);const oldConn=room.conn,oldPeer=room.peer;room.conn=null;room.peer=null;oldConn?.close();oldPeer?.destroy();room.other='';room.ready=false;room.remoteReady=false;room.host=false;room.practice=false;room.together=false;room.otherSpot='forward';room.remoteActive=true;room.phase='lobby';stopInput();syncUI();}
   function fail(message){cleanup();say(message);}
-  function freshMatch(){state.kick='';state.score={dad:0,jozef:0};state.matchLeft=room.practice?practiceSeconds:120;state.call='Kickoff';kickLock=0;lastBotKick=-100;savedMatch=false;resultRecorded=false;nextLocalSprint=0;sprintUntil.Dad=sprintUntil.Jozef=0;sprintReady.Dad=sprintReady.Jozef=0;reset(0);
+  function freshMatch(){state.kick='';state.score={dad:0,jozef:0};state.matchLeft=room.practice?practiceSeconds:120;state.call='Kickoff';kickLock=0;lastBotKick=-100;savedMatch=false;resultRecorded=false;state.overtime=false;state.star={x:360,y:120,on:true};state.super='';nextLocalSprint=0;dekeReady.Dad=dekeReady.Jozef=0;sprintUntil.Dad=sprintUntil.Jozef=0;sprintReady.Dad=sprintReady.Jozef=0;reset(0);
     const length=Math.ceil(state.matchLeft);$('versus-clock').textContent=Math.floor(length/60)+':'+String(length%60).padStart(2,'0');
   }
   function startMatch(){
@@ -611,7 +643,7 @@
     countdownTimer=setTimeout(next,1000);
   }
   function ready(){if(!room.other||room.ready)return;room.ready=true;syncUI();send({type:'ready'});startMatch();}
-  function validState(v){return v&&['dad','jozef','ball'].every(k=>v[k]&&['x','y','vx','vy'].every(n=>Number.isFinite(v[k][n])&&Math.abs(v[k][n])<2000))&&v.score&&['dad','jozef'].every(k=>Number.isInteger(v.score[k])&&v.score[k]>=0&&v.score[k]<10000)&&Number.isFinite(v.matchLeft)&&v.matchLeft>=0&&v.matchLeft<=120&&typeof v.call==='string'&&v.call.length<80;}
+  function validState(v){return v&&['dad','jozef','ball'].every(k=>v[k]&&['x','y','vx','vy'].every(n=>Number.isFinite(v[k][n])&&Math.abs(v[k][n])<2000))&&v.score&&['dad','jozef'].every(k=>Number.isInteger(v.score[k])&&v.score[k]>=0&&v.score[k]<10000)&&Number.isFinite(v.matchLeft)&&v.matchLeft>=0&&v.matchLeft<=120&&typeof v.call==='string'&&v.call.length<80&&(!v.rival||['x','y','vx','vy'].every(n=>Number.isFinite(v.rival[n])&&Math.abs(v.rival[n])<2000));}
   function onData(msg){
     if(!msg||typeof msg!=='object')return;lastPacket=performance.now();
     if(msg.type==='hello'&&!room.host&&['Dad','Jozef'].includes(msg.hostWho)){
