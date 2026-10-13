@@ -95,7 +95,7 @@
   if(id===4)return face===0||face===3?5:4;
   if(id===5)return 6;if(id===6)return 7;if(id===7)return 8;
   if(id===8)return 9;if(id===9)return 10;if(id===10)return 11;if(id===11)return 12;
-  const table={12:13,13:14,14:15,15:16,16:23,17:17,18:20,19:19,20:18,21:21,22:22,23:23,24:24,25:25};
+  const table={12:13,13:14,14:15,15:16,16:23,17:17,18:20,19:19,20:18,21:21,22:22,23:23,24:24,25:25,26:24};
   return table[id]===undefined?3:table[id];
  }
  function uv(tile,u,v){
