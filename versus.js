@@ -25,11 +25,11 @@
     else{ctx.translate(screenX,screenY);ctx.scale(screenScale,screenScale);}
   }
   const GOAL = { x: 36, y: 150, w: 18, h: 120 };
-  const room = { code: '', who: 'Dad', spot: 'forward', otherSpot: 'forward', pending: null, together: false, peer: null, conn: null, host: false, other: '', ready: false, remoteReady: false, practice: false, phase: 'lobby', remoteActive: true };
+  const room = { code: '', who: 'Dad', spot: 'forward', otherSpot: 'forward', pending: null, otherPeer: '', reconnecting: false, together: false, peer: null, conn: null, host: false, other: '', ready: false, remoteReady: false, practice: false, phase: 'lobby', remoteActive: true };
   const keeperTargets={left:null,right:null},dekeReady={Dad:0,Jozef:0};
   const keeperSide=who=>room.together?'left':who==='Dad'?'right':'left';
   const isKeeper=who=>who===room.who?room.spot==='keeper':room.otherSpot==='keeper';
-  let connectTimer, countdownTimer, lastPacket = 0, lastSent = 0, lastHello = 0, localActive = true;
+  let connectTimer, countdownTimer, recoveryTimer, connectWatchdog, reconnectAttempts = 0, lastPacket = 0, lastSent = 0, lastHello = 0, localActive = true;
   let stickVector=null;
   const SHOT_LANES=[160,210,260],shotOptions={Dad:{aim:1,power:1},Jozef:{aim:1,power:1},Rovers:{aim:1,power:1,mode:'shot'}};
   let selectedAim=1,chargingSince=0,chargeFill=0;
@@ -573,7 +573,7 @@
     renderPracticeRecord();
   }
   function stopInput(){keys.clear();stickVector=null;targets[room.who]=null;send({type:'aim',x:null,y:null});const nub=$('versus-nub'),stick=$('versus-stick');nub.style.left=(stick.clientWidth-nub.offsetWidth)/2+'px';nub.style.top=(stick.clientHeight-nub.offsetHeight)/2+'px';}
-  function cleanup(){clearTimeout(connectTimer);clearTimeout(countdownTimer);const pending=room.pending,oldConn=room.conn,oldPeer=room.peer;room.pending=null;room.conn=null;room.peer=null;pending?.close();oldConn?.close();oldPeer?.destroy();room.other='';room.ready=false;room.remoteReady=false;room.host=false;room.practice=false;room.together=false;room.otherSpot='forward';room.remoteActive=true;room.phase='lobby';stopInput();syncUI();}
+  function cleanup(){clearTimeout(connectTimer);clearTimeout(countdownTimer);clearTimeout(recoveryTimer);clearTimeout(connectWatchdog);reconnectAttempts=0;const pending=room.pending,oldConn=room.conn,oldPeer=room.peer;room.pending=null;room.conn=null;room.peer=null;pending?.close();oldConn?.close();oldPeer?.destroy();room.other='';room.otherPeer='';room.reconnecting=false;room.ready=false;room.remoteReady=false;room.host=false;room.practice=false;room.together=false;room.otherSpot='forward';room.remoteActive=true;room.phase='lobby';stopInput();syncUI();}
   function fail(message){cleanup();say(message);}
   function freshMatch(){state.matchId=crypto.randomUUID?.()||Array.from(crypto.getRandomValues(new Uint8Array(16)),v=>v.toString(16).padStart(2,'0')).join('');state.kick='';state.score={dad:0,jozef:0};state.matchLeft=room.practice?practiceSeconds:120;state.call='Kickoff';kickLock=0;lastBotKick=-100;savedMatch=false;resultRecorded=false;state.overtime=false;state.star={x:360,y:120,on:true};state.super='';nextLocalSprint=0;dekeReady.Dad=dekeReady.Jozef=0;sprintUntil.Dad=sprintUntil.Jozef=0;sprintReady.Dad=sprintReady.Jozef=0;reset(0);
     const length=Math.ceil(state.matchLeft);$('versus-clock').textContent=Math.floor(length/60)+':'+String(length%60).padStart(2,'0');
@@ -611,21 +611,71 @@
       if(room.together&&!msg.state.rival)return;
       Object.assign(state,msg.state);const changed=room.phase!==msg.phase||room.remoteActive!==(msg.active!==false);room.phase=msg.phase;room.remoteActive=msg.active!==false;if(changed){syncUI();if(!room.remoteActive)say('Paused — opponent switched away.');}
       if(room.phase==='finished')say(state.score.dad===state.score.jozef?'Full time — a draw. Rematch?':(room.together?(state.score.jozef>state.score.dad?'Dad & Jozef':'Rovers'):(state.score.dad>state.score.jozef?'Dad':'Jozef'))+' wins! Ready for a rematch?');
+    }else if(msg.type==='resume'&&room.host&&room.conn&&room.otherPeer===room.conn.peer){
+      room.remoteActive=true;room.reconnecting=false;clearTimeout(recoveryTimer);
+      send({type:'resume-ok'});broadcast();syncUI();say('Reconnected — match continues.');
+    }else if(msg.type==='resume-ok'&&!room.host&&room.reconnecting){
+      clearTimeout(connectWatchdog);clearTimeout(recoveryTimer);room.reconnecting=false;
+      room.remoteActive=true;reconnectAttempts=0;syncUI();say('Reconnected — match continues.');
     }else if(msg.type==='active'){room.remoteActive=msg.active===true;if(!room.remoteActive)targets[room.other]=null;syncUI();say(room.remoteActive?'Opponent is back.':'Paused — opponent switched away.');}
     else if(msg.type==='rematch'&&room.host&&room.phase==='finished'){prepareRematch();}
     else if(msg.type==='lobby'&&!room.host){room.phase='waiting';room.ready=false;room.remoteReady=false;resultRecorded=false;syncUI();say('Rematch — both players tap Ready.');}
     else if(msg.type==='ping')send({type:'pong'});
   }
   function prepareRematch(){if(room.practice){room.ready=room.remoteReady=true;startMatch();return;}room.phase='waiting';room.ready=false;room.remoteReady=false;syncUI();send({type:'lobby'});say('Rematch — both players tap Ready.');}
-  function wire(conn){
-    if(room.conn){conn.close();return;}room.conn=conn;conn.on('data',onData);
+  // A dropped data channel must not discard an active match immediately.
+  // The peer ID remains constant for a single approved player throughout one room.
+  function attemptResume(){
+    if(room.host||room.practice||!room.peer||room.phase==='lobby')return;
+    if(reconnectAttempts>=3){fail('Opponent disconnected. Could not reconnect. Join again to play.');return;}
+    const attempt=++reconnectAttempts;room.reconnecting=true;syncUI();
+    say('Opponent disconnected — reconnecting ('+attempt+'/3).');
+    clearTimeout(recoveryTimer);
+    recoveryTimer=setTimeout(()=>{
+      if(room.host||!room.peer||room.phase==='lobby'||room.conn)return;
+      try{
+        if(room.peer.disconnected&&typeof room.peer.reconnect==='function')room.peer.reconnect();
+        const conn=room.peer.connect('jw-rival-'+room.code,{reliable:true});
+        wire(conn,true);
+        clearTimeout(connectWatchdog);
+        connectWatchdog=setTimeout(()=>{
+          if(room.conn===conn&&room.reconnecting)conn.close();
+        },5000);
+      }catch(_){attemptResume();}
+    },attempt===1?450:950);
+  }
+  function wire(conn,resuming=false){
+    if(room.conn){conn.close();return;}
+    room.conn=conn;room.otherPeer=conn.peer;
+    conn.on('data',onData);
     let opened=false;
-    const onOpen=()=>{if(opened||room.conn!==conn)return;opened=true;clearTimeout(connectTimer);lastPacket=performance.now();room.phase='waiting';if(room.host)send({type:'hello',hostWho:room.who,hostSpot:room.spot,together:room.together});else if(room.other)send({type:'joined',spot:room.spot});syncUI();};
+    const onOpen=()=>{
+      if(opened||room.conn!==conn)return;opened=true;clearTimeout(connectTimer);
+      lastPacket=performance.now();
+      if(resuming){
+        if(!room.host)send({type:'resume'});
+        else say('Opponent reconnected — restoring match.');
+        syncUI();return;
+      }
+      room.phase='waiting';
+      if(room.host)send({type:'hello',hostWho:room.who,hostSpot:room.spot,together:room.together});
+      else if(room.other)send({type:'joined',spot:room.spot});
+      syncUI();
+    };
     conn.on('open',onOpen);
-    // WebKit can open a data channel before an event handler attaches.
     if(conn.open)queueMicrotask(onOpen);
-    conn.on('close',()=>{if(room.conn!==conn)return;room.conn=null;fail('Opponent disconnected. Create or join a room to play again.');});
-    conn.on('error',()=>fail('Connection lost. Create or join a room to retry.'));
+    const lost=()=>{
+      if(room.conn!==conn)return;
+      room.conn=null;room.remoteActive=false;targets[room.other]=null;
+      clearTimeout(connectWatchdog);syncUI();
+      if(room.host){
+        say('Opponent disconnected — waiting for approved player to reconnect.');
+        clearTimeout(recoveryTimer);
+        recoveryTimer=setTimeout(()=>{if(!room.conn)fail('Opponent disconnected. Room closed after reconnect timeout.');},30000);
+      }else attemptResume();
+    };
+    conn.on('close',lost);
+    conn.on('error',lost);
   }
   function connect(host,together=false){
     if(!window.Peer){say('Online play is unavailable. Try Practice solo or reload when connected.');return;}
@@ -636,7 +686,10 @@
     connectTimer=setTimeout(()=>{if(room.phase==='connecting')fail('Could not connect. Check the code and connection, then retry.');},15000);
     peer.on('open',()=>{if(room.peer!==peer)return;if(host){clearTimeout(connectTimer);room.phase='waiting';syncUI();say('Share the code. Your opponent joins automatically as the other player.');}else wire(peer.connect('jw-rival-'+code,{reliable:true}));});
     peer.on('connection',conn=>{
-      if(!room.host||room.conn||room.pending||room.phase!=='waiting'){conn.on('open',()=>conn.close());if(conn.open)conn.close();return;}
+      if(room.host&&!room.conn&&!room.pending&&room.otherPeer&&conn.peer===room.otherPeer&&room.other&&room.phase!=='lobby'){
+        wire(conn,true);return;
+      }
+      if(!room.host||room.conn||room.pending||room.phase!=='waiting'||room.otherPeer){conn.on('open',()=>conn.close());if(conn.open)conn.close();return;}
       room.pending=conn;
       conn.on('close',()=>{if(room.pending===conn){room.pending=null;syncUI();say('Player cancelled the join request.');}});
       syncUI();say('Someone wants to join. Approve only if you shared the room code.');
@@ -793,7 +846,7 @@
     if(room.host&&room.conn?.open&&room.phase==='waiting'&&!room.other&&now-lastHello>900){send({type:'hello',hostWho:room.who,hostSpot:room.spot,together:room.together});lastHello=now;}
     if(room.conn?.open&&now-heartbeat>2000){
       heartbeat=now;
-      if(localActive&&room.remoteActive){send({type:'ping'});if(now-lastPacket>16000)fail('Connection interrupted. Rejoin to start a fresh match.');}
+      if(localActive&&room.remoteActive){send({type:'ping'});if(now-lastPacket>16000)room.conn?.close();}
       else lastPacket=now; // Background tabs must not be treated as a dead connection.
     }
     requestAnimationFrame(frame);
