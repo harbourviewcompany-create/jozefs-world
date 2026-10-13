@@ -12,7 +12,7 @@
   ctx.scale(dpr, dpr);
   let portrait=false,screenScale=1,screenX=0,screenY=0,cameraW=0,cameraH=0;
   function fitCamera(){
-    const next=window.innerWidth<900;
+    const next=window.innerHeight>window.innerWidth;
     const width=Math.max(1,Math.round(canvas.clientWidth||canvas.parentElement?.clientWidth||(next?420:720)));
     const height=Math.max(1,Math.round(canvas.clientHeight||canvas.parentElement?.clientHeight||(next?720:420)));
     if(next!==portrait||width!==cameraW||height!==cameraH){portrait=next;cameraW=width;cameraH=height;canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);}
