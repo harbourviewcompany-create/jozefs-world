@@ -68,11 +68,11 @@
   }
   for(const corner of [[30,30],[30,H-30],[W-30,30],[W-30,H-30]]) glow(c,corner[0],corner[1],86,'rgba(193,232,255,.22)');
  }
- function player(c,p,color,name,isLocal,portrait,tick){
+ function player(c,p,color,name,isLocal,portrait,tick,cameraFlipped=false){
   const adult=name==='Dad'||name==='Keeper'||name==='Rovers'&&color==='#d7ff4a';
   const pace=Math.hypot(p.vx||0,p.vy||0),moving=pace>.3;
   const stride=moving?Math.sin(tick*.19+pace*.1)*5.2:0;
-  c.save();c.translate(p.x,p.y);if(portrait)c.rotate(-Math.PI/2);
+  c.save();c.translate(p.x,p.y);if(portrait)c.rotate(cameraFlipped?Math.PI/2:-Math.PI/2);
   if(p.face<0)c.scale(-1,1);
   const shadow=c.createRadialGradient(0,23,2,0,23,28);shadow.addColorStop(0,'rgba(2,9,17,.5)');shadow.addColorStop(1,'transparent');
   ellipse(c,0,23,28,12,shadow);

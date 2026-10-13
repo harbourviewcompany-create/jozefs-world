@@ -42,3 +42,12 @@ test('both published pages use the new renderer before gameplay and retain all m
  assert.match(read('site-experience.css'),/2026 SOCCER SHOWDOWN/);
  assert.match(read('sw.js'),/versus-visual-2026\.js/);
 });
+
+test('portrait cameras are relative to the local attacking team and buttons preserve their icon',()=>{
+ const src=read('versus.js');
+ assert.match(src,/cameraFlipped=next&&\(room\.together\|\|room\.who==='Jozef'\)/);
+ assert.match(src,/cameraFlipped\?-vector\.y:vector\.y/);
+ assert.match(src,/querySelector\('\.vs-action-label'\)/);
+ assert.match(src,/is-coop/);
+ assert.match(read('versus-visual-2026.js'),/cameraFlipped\?Math\.PI\/2:-Math\.PI\/2/);
+});

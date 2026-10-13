@@ -10,9 +10,10 @@
   const dpr = Math.min(devicePixelRatio || 1, 2);
   canvas.width = W * dpr; canvas.height = H * dpr;
   ctx.scale(dpr, dpr);
-  let portrait=false,screenScale=1,screenX=0,screenY=0,cameraW=0,cameraH=0;
+  let portrait=false,cameraFlipped=false,screenScale=1,screenX=0,screenY=0,cameraW=0,cameraH=0;
   function fitCamera(){
     const next=window.innerHeight>window.innerWidth;
+    cameraFlipped=next&&(room.together||room.who==='Jozef');
     const width=Math.max(1,Math.round(canvas.clientWidth||canvas.parentElement?.clientWidth||(next?420:720)));
     const height=Math.max(1,Math.round(canvas.clientHeight||canvas.parentElement?.clientHeight||(next?720:420)));
     if(next!==portrait||width!==cameraW||height!==cameraH){portrait=next;cameraW=width;cameraH=height;canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);}
@@ -21,8 +22,10 @@
     screenScale=Math.max(width/vw,height/vh);
     screenX=(width-vw*screenScale)/2;screenY=(height-vh*screenScale)/2;
     ctx.setTransform(dpr,0,0,dpr,0,0);
-    if(portrait){ctx.translate(screenX+H*screenScale,screenY);ctx.scale(screenScale,screenScale);ctx.rotate(Math.PI/2);}
-    else{ctx.translate(screenX,screenY);ctx.scale(screenScale,screenScale);}
+    if(portrait){
+      if(cameraFlipped){ctx.translate(screenX,screenY+W*screenScale);ctx.scale(screenScale,screenScale);ctx.rotate(-Math.PI/2);}
+      else {ctx.translate(screenX+H*screenScale,screenY);ctx.scale(screenScale,screenScale);ctx.rotate(Math.PI/2);}
+    }else{ctx.translate(screenX,screenY);ctx.scale(screenScale,screenScale);}
   }
   const GOAL = { x: 36, y: 150, w: 18, h: 120 };
   const room = { code: '', who: 'Dad', spot: 'forward', otherSpot: 'forward', pending: null, together: false, peer: null, conn: null, host: false, other: '', ready: false, remoteReady: false, practice: false, phase: 'lobby', remoteActive: true };
@@ -226,7 +229,7 @@
       return colors[team] || '#60c5ff';
     } catch { return '#60c5ff'; }
   }
-  function player(p,color,name){window.JozefVersusVisual.player(ctx,p,color,name,name===room.who,portrait,tick);}
+  function player(p,color,name){window.JozefVersusVisual.player(ctx,p,color,name,name===room.who,portrait,tick,cameraFlipped);}
 
     function keeper(side, color, name) {
     const body = { x: side === 'left' ? 52 : 668, y: state.keepers?.[side] || 210, vx: 0, vy: 0, face: side === 'left' ? 1 : -1 };
@@ -337,7 +340,7 @@
       const pop = /scores|Full time/.test(state.call) ? 1.15 : 1;
       ctx.save();
       ctx.translate(W / 2, H / 2);
-      if(portrait)ctx.rotate(-Math.PI/2);
+      if(portrait)ctx.rotate(cameraFlipped?Math.PI/2:-Math.PI/2);
       ctx.scale(pop, pop);
       ctx.fillStyle = /scores/.test(state.call) ? 'rgba(202,250,96,.92)' : 'rgba(8,20,15,.82)';
       ctx.fillRect(-120, -22, 240, 44);
@@ -562,10 +565,18 @@
     const stage=document.querySelector('.versus-stage'), play=document.querySelector('.versus-play'), board=document.querySelector('.versus-scoreboard'), card=document.querySelector('.versus-card');
     // Styles are owned by CSS and return to lobby without lingering inline sizing.
     for(const el of [card,stage,canvas,board,play])if(el)el.removeAttribute('style');
-    const pass=$('versus-pass');if(pass)pass.textContent=room.together?'PASS':'PUSH';
-    const blue=document.querySelector('.versus-blue'),lime=document.querySelector('.versus-lime');
-    if(blue)blue.firstChild.textContent=room.together?'DAD + JO ':'Jozef ';
-    if(lime)lime.lastChild.textContent=room.together?' Rovers':' Dad';
+    const pass=$('versus-pass');
+    if(pass){
+      const label=pass.querySelector('.vs-action-label');
+      const name=room.together?'PASS':'PUSH';
+      if(label)label.textContent=name;else pass.textContent=name;
+      pass.setAttribute('aria-label',room.together?'Pass to teammate':'Push ball forward');
+    }
+    const team=$('versus').querySelector('.vs-team-jozef .vs-team-name');
+    const opposition=$('versus').querySelector('.vs-team-dad .vs-team-name');
+    if(team){team.firstChild.textContent=room.together?'DAD + JO':'JOZEF';const small=team.querySelector('small');if(small)small.textContent=room.together?'TEAM':'HOME';}
+    if(opposition){opposition.firstChild.textContent=room.together?'ROVERS':'DAD';const small=opposition.querySelector('small');if(small)small.textContent=room.together?'RIVAL':'AWAY';}
+    $('versus').classList.toggle('is-coop',room.together);
     document.body.classList.toggle('versus-focused',connected&&$('versus').classList.contains('active'));
     document.querySelectorAll('.versus-role').forEach(b=>{b.classList.toggle('is-on',b.dataset.who===room.who);b.setAttribute('aria-pressed',String(b.dataset.who===room.who));});
     $('versus-who').value=room.who; try{localStorage.setItem('jozefs-world-who', room.who);}catch(_){ }
@@ -679,7 +690,7 @@
     const r=canvas.getBoundingClientRect();
     const cx=(e.clientX-r.left)*cameraW/r.width,cy=(e.clientY-r.top)*cameraH/r.height;
     const px=(cx-screenX)/screenScale,py=(cy-screenY)/screenScale;
-    aim(portrait?py:px,portrait?H-px:py);
+    aim(portrait?(cameraFlipped?W-py:py):px,portrait?(cameraFlipped?px:H-px):py);
   }
   canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);aimFrom(e);});canvas.addEventListener('pointermove',e=>{if(e.buttons)aimFrom(e);});canvas.addEventListener('pointercancel',stopInput);
   const stick=$('versus-stick'),nub=$('versus-nub');
@@ -766,7 +777,11 @@
       const vector=stickVector||(x||y?{x,y}:null);
       const inRange=Math.hypot(me.x-state.ball.x,me.y-state.ball.y)<92;
       $('versus-kick')?.classList.toggle('in-range', inRange && room.phase==='playing');
-      if(vector&&now-lastSent>40){aim(me.x+(portrait?vector.y:vector.x)*90,me.y+(portrait?-vector.x:vector.y)*90);lastSent=now;}
+      if(vector&&now-lastSent>40){
+        const worldDx=portrait?(cameraFlipped?-vector.y:vector.y):vector.x;
+        const worldDy=portrait?(cameraFlipped?vector.x:-vector.x):vector.y;
+        aim(me.x+worldDx*90,me.y+worldDy*90);lastSent=now;
+      }
       // Releasing movement stops the player rather than auto-chasing the ball.
       // Skip idle physics and lower render frequency in the lobby or after full time.
       // Live matches retain their deterministic 60 Hz simulation and animation.

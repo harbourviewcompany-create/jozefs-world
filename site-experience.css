@@ -4448,3 +4448,7 @@ body.versus-focused #versus.is-playing #versus-leave:not([hidden]){
 #versus #versus-approval button{min-height:44px;padding:9px 15px;border:1px solid #a8e1ff;
  border-radius:10px;background:#155a79;color:#fff;font:800 12px/1 system-ui,sans-serif}
 #versus #versus-approval #versus-approve{background:#d0ff69;color:#11271d;border-color:#e7ffaa}
+/* Cooperative scoreboard labels remain legible on smaller phones. */
+#versus.is-coop .vs-team-name{font-size:clamp(9px,2.6vw,16px)!important;letter-spacing:-.015em!important}
+#versus.is-coop .vs-team-jozef .vs-avatar{border-color:#66d5ff}
+#versus.is-coop .vs-team-dad .vs-avatar{border-color:#ef846b}
