@@ -124,12 +124,15 @@ function update(dt){
   const dir=remote?Number(right)-Number(left):Number(right||(i===active&&touch.right))-Number(left||(i===active&&touch.left));
   p.vx=dir*205;
   if(dir){p.facing=dir;p.walk+=dt*12;}
-  if((remote?!!remote.jump:(i===0?down.has('KeyW'):down.has('ArrowUp')))||(i===active&&!remote&&touch.jump)){
-   if(p.ground){p.vy=-430;p.ground=false;}
+  const wantsJump=(remote?!!remote.jump:(i===0?down.has('KeyW'):down.has('ArrowUp')))||(i===active&&!remote&&touch.jump);
+  if(wantsJump){
+   if(p.ground){p.vy=-430;p.ground=false;if(remote)p.doubleUsed=false;}
+   else if(remote&&i===1&&!p.remoteJumpPrev&&!p.doubleUsed&&p.vy> -290){p.vy=-370;p.doubleUsed=true;spark(p.x+p.w/2,p.y+p.h,9);}
   }
+  if(remote)p.remoteJumpPrev=!!remote.jump;
   p.ground=false;p.vy=Math.min(760,p.vy+1100*dt);
   moveAxis(p,p.vx*dt,'x');moveAxis(p,p.vy*dt,'y');
-  if(!p.ground&&collision(p,p.x,p.y+1)){p.ground=true;p.vy=0;}
+  if(!p.ground&&collision(p,p.x,p.y+1)){p.ground=true;p.vy=0;if(remote)p.doubleUsed=false;}
  });
  ticks++;
  if(ticks%150===0&&players.some(p=>Math.abs(p.vx)>1||Math.abs(p.vy)>1))queueSave();
