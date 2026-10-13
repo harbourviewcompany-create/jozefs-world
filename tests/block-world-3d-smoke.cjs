@@ -269,6 +269,13 @@ assert.equal(beaconGame.testHooks.beacon().lit,true,'both heroes activate the tw
 beaconGame.testHooks.save(true);
 const beaconReload=boot(beaconGame.shared);beaconReload.tick(2);
 assert.equal(beaconReload.testHooks.beacon().lit,true,'beacon completion persists across save/reload');
+
+const previousBeacon={...beaconReload.testHooks.beacon()};
+for(let n=0;n<3;n++){beaconReload.testHooks.unlockPortal();beaconReload.testHooks.portal();}
+assert.equal(beaconReload.status().realm,0,'realm traversal returns to original forest');
+assert.equal(beaconReload.testHooks.beacon().lit,true,'forest beacon survives travelling through every realm');
+assert.equal(beaconReload.testHooks.beacon().x,previousBeacon.x,'saved Forest Camp location is unchanged after realm cycle');
+
 const xpOnce=JSON.parse(beaconGame.shared.get('jozefs-world-player-v1')||'{}').xp;
 beaconGame.testHooks.updateBeacon();
 assert.equal(JSON.parse(beaconGame.shared.get('jozefs-world-player-v1')||'{}').xp,xpOnce,'beacon award cannot be farmed repeatedly');
