@@ -164,6 +164,38 @@ function distantTrees(g,w,h,cam,t){
   for(let l=0;l<3;l++){const width=19+hash(world,l,5)*18;path(g,[[x-width*.6,y-hei+l*12+16],[x+3,y-hei-l*10],[x+width*.7,y-hei+l*12+16]],l%2?'#3c886c':'#2d795b');}
  }
 }
+/* Forest backdrop is biome-aware. Every silhouette is fixed to world
+   coordinates so it scrolls naturally instead of sliding across the screen. */
+function forestBackdrop(g,w,h,cam,t){
+ const spacing=106,scroll=cam*.12,offset=((scroll%spacing)+spacing)%spacing;
+ for(let i=-2;i<Math.ceil(w/spacing)+3;i++){
+  const ix=Math.floor(scroll/spacing)+i,x=i*spacing-offset;
+  const y=h*.80+hash(ix,4,1)*23,ht=50+hash(ix,7,2)*40;
+  const thick=9+Math.floor(hash(ix,3,7)*5);
+  rect(g,x,y-ht,thick,h-y+ht,'#376a6a');
+  // Conifer silhouettes in three tiers create near/mid/far depth.
+  for(let tier=0;tier<3;tier++){
+   const yy=y-ht+12+tier*17,ww=24+tier*10+hash(ix,tier,11)*15;
+   path(g,[[x+thick/2,yy-23],[x-ww/2,yy+16],
+    [x+thick/2,yy+7],[x+thick/2+ww/2,yy+16]],
+    tier%2?'#307968':'#399a75');
+   rect(g,x-2,yy+11,thick+4,3,'#35775a');
+  }
+  if(hash(ix,9,4)>.72){
+   const cy=y-ht+13;
+   rect(g,x-14,cy,5,18,'#557b67');rect(g,x-22,cy-2,21,5,'#54a77b');
+  }
+ }
+ // Slender animated sunbeams between the trees.
+ if(quality==='cinematic'){
+  g.save();g.globalAlpha=.11;g.fillStyle='#fff8c3';
+  for(let i=0;i<3;i++){
+   const x=(i*237-scroll*.4+900)%Math.max(1,w);
+   path(g,[[x-6,h*.27],[x+9,h*.25],[x+58,h*.87],[x+11,h*.87]],'#fff3ba');
+  }
+  g.restore();
+ }
+}
 function cliff(g,w,h,cam,t){
  // Distant waterfall tucked to the right of the valley, behind the editable terrain.
  const offset=cam*.11,cliffX=w*.90+Math.sin(offset/400)*25,cliffY=h*.71;
@@ -188,8 +220,11 @@ function background(g,o){
  g.save();g.setTransform(o.dpr*o.zoom,0,0,o.dpr*o.zoom,0,0);
  const sky=g.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#0678dd');sky.addColorStop(.42,'#5cc7f8');sky.addColorStop(.78,'#c2f4fe');sky.addColorStop(1,'#f4e6b8');g.fillStyle=sky;g.fillRect(0,0,w,h);
  sun(g,w*.59,h*.19,18,t);
- for(let i=0;i<9;i++){const x=((i*151-pan*.09+t*(i%3+1)*.28)%(w+320)+(w+320))%(w+320)-150,y=h*(.14+.29*hash(i,0,9));cloud(g,x,y,21+hash(i,2,15)*28,.55+.38*hash(i,6,3));}
- mountains(g,w,h,pan,t);distantTrees(g,w,h,pan,t);cliff(g,w,h,pan,t);
+ for(let i=0;i<(quality==='balanced'?5:9);i++){const x=((i*151-pan*.09+t*(i%3+1)*.28)%(w+320)+(w+320))%(w+320)-150,y=h*(.14+.29*hash(i,0,9));cloud(g,x,y,21+hash(i,2,15)*28,.55+.38*hash(i,6,3));}
+ mountains(g,w,h,pan,t);
+ if(o.biome===1){forestBackdrop(g,w,h,pan,t);distantTrees(g,w,h,pan,t);}
+ else distantTrees(g,w,h,pan,t);
+ cliff(g,w,h,pan,t);
  const haze=g.createLinearGradient(0,h*.56,0,h);haze.addColorStop(0,'#daebff00');haze.addColorStop(1,'#9fd3e550');g.fillStyle=haze;g.fillRect(0,h*.55,w,h*.45);
  g.restore();
 }
@@ -242,10 +277,44 @@ function embellish(g,o){
    light.addColorStop(0,'#ffec9a65');light.addColorStop(1,'#ffac3e00');g.fillStyle=light;g.fillRect(wx-20,wy-70,84,84);
   }
  }
+ // Forest-only detail layer: fallen leaves, mushrooms, ferns and a trail sign.
+ // These sit on the real surface but don't introduce invisible collision geometry.
+ for(let x=start;x<=stop;x++){
+  const zone=Math.floor(x/36);
+  if(zone!==1||world[surface[x]]?.[x]!==1)continue;
+  const wx=x*T-camX,wy=surface[x]*T-camY,seed=hash(x,83,9);
+  if(wy<0||wy>h+30)continue;
+  if(seed>.38&&seed<.72){
+   const fx=wx+12,fy=wy;
+   rect(g,fx,fy-9,3,9,'#2a784c');
+   rect(g,fx-8,fy-12,10,4,'#4aa86a');
+   rect(g,fx+1,fy-17,8,4,'#82d98b');
+   rect(g,fx-5,fy-23,3,6,'#5abb70');
+  }
+  if(seed>.79&&seed<.94){
+   const mx=wx+20,my=wy-2;
+   rect(g,mx,my-11,4,10,'#f6dfae');
+   rect(g,mx-6,my-12,16,5,'#e45955');
+   rect(g,mx-3,my-15,11,4,'#f27e58');
+   rect(g,mx+2,my-13,3,2,'#fff7db');
+  }
+  if(quality==='cinematic'&&hash(x,9,31)>.82){
+   const px=wx+8+hash(x,4,6)*17,py=wy-14+Math.sin(time*1.2+x)*6;
+   rect(g,px,py,3,3,'#f6d85e');rect(g,px-3,py-2,3,3,'#b0f0e7');
+  }
+ }
+ if(start<=68&&stop>=68&&world[surface[68]]?.[68]===1){
+  const sx=68*T-camX,sy=surface[68]*T-camY;
+  rect(g,sx+15,sy-57,5,58,'#80542d');rect(g,sx-17,sy-60,65,28,'#704628');
+  rect(g,sx-14,sy-57,59,22,'#bd8551');rect(g,sx-11,sy-55,53,2,'#f4c781');
+  g.font='bold 8px system-ui';g.textAlign='center';g.fillStyle='#fef3bc';
+  g.fillText('OUR FOREST',sx+15,sy-43);
+  rect(g,sx-11,sy-38,18,2,'#ecd397');
+ }
  // Real, mineable ore deposits emit soft coloured light in deep cave layers.
  const firstY=clamp(Math.floor(camY/T)-1,0,world.length-1),lastY=clamp(Math.ceil((camY+h)/T)+1,0,world.length-1);
  for(let y=firstY;y<=lastY;y++)for(let x=start;x<=stop;x++){
-  const id=world[y]?.[x];if(![17,18,22,23].includes(id))continue;
+  const id=world[y]?.[x];if(quality==='balanced'||![17,18,22,23].includes(id))continue;
   const cx=x*T-camX+T*.5,cy=y*T-camY+T*.5;
   const tint=id===18?'#4cf0ff':id===17?'#ffe18f':id===22?'#53ffad':'#5c92ff';
   g.save();g.globalCompositeOperation='screen';
@@ -376,7 +445,7 @@ function foreground(g,o){
  g.save();
  // Tiny moving fireflies and atmospheric sunlight particles, reduced at low quality.
  g.globalCompositeOperation='screen';
- for(let i=0;i<17;i++){
+ for(let i=0;i<(quality==='balanced'?5:17);i++){
   const x=(hash(i,5,3)*w+Math.sin(time*(.3+hash(i,1,8)) + i)*22+w)%w;
   const y=(hash(i,6,4)*h+Math.cos(time*.4+i)*18+h)%h;
   g.globalAlpha=.16+.20*(.5+.5*Math.sin(time*2+i));
