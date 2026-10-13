@@ -46,7 +46,10 @@
       // Snap on kickoff/phase transitions so the first playable frame is safe,
       // then ease tracking during an active match. Hidden browser tabs can
       // throttle requestAnimationFrame, so a delayed camera is not acceptable.
-      if(cameraYReady&&cameraPhase===room.phase&&room.phase==='playing'&&Math.abs(target-screenY)<400)
+      // Even if the browser throttles animation frames, never show the local
+      // attacker underneath the buttons while the camera is catching up.
+      const unsafe=screenY+focus*screenScale>lower-2;
+      if(cameraYReady&&cameraPhase===room.phase&&room.phase==='playing'&&!unsafe&&Math.abs(target-screenY)<400)
         screenY+=(target-screenY)*.24;
       else screenY=target;
       cameraPhase=room.phase;
