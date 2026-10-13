@@ -60,7 +60,14 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  }
  await guest.locator('#versus-again').click();await host.waitForFunction(()=>!document.querySelector('#versus-ready').disabled);
  await host.locator('#versus-ready').click();await guest.locator('#versus-ready').click();await host.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
- await host.locator('#versus-leave').click();await guest.waitForFunction(()=>document.querySelector('#versus-status').textContent.includes('disconnected'));
+ const beforeLeave=await host.evaluate(()=>{
+   const t=window.__versusTest,b=document.querySelector('#versus-leave');
+   return {phase:t.room.phase,other:t.room.other,code:t.room.code,active:document.querySelector('#versus').className,
+     focused:document.body.classList.contains('versus-focused'),hidden:b.hidden,css:getComputedStyle(b).display,
+     remoteActive:t.room.remoteActive,status:document.querySelector('#versus-status').textContent};
+ });
+ console.log('Versus rematch leave diagnostic',engine,beforeLeave);
+ await host.locator('#versus-leave').click({timeout:7000});await guest.waitForFunction(()=>document.querySelector('#versus-status').textContent.includes('disconnected'));
  await guest.locator('#versus-cpu-difficulty').selectOption('legend');
  await guest.locator('#versus-practice-length').selectOption('60');
  await guest.locator('#versus-practice').click();await guest.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
