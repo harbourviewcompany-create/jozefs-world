@@ -11,8 +11,8 @@ const missions=[['Gather wood','Mine eight wood blocks','wood',8,25],['Build our
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 let seed=Math.floor(Math.random()*1e9),realm=0,baseSeed=seed,dimensions={},edits=new Map(),chunks=new Map(),queue=[],lastCX=Infinity,lastCZ=Infinity;
 const DIMKEY='jozefs-block-3d-dimensions-v1';
-let selected=4,creative=true,third=false,sound=false,stage=0,stats={wood:0,placed:0,explore:0,crystal:0,boss:0,portal:0},rewards=[],discovered={},defeated=false,portalOpened=false;
-const hero={x:2.5,y:12,z:2.5,vy:0,yaw:0,pitch:-.07,role:0,hp:100,ground:false,double:false,inventory:{}};
+let selected=4,creative=true,third=true,sound=false,stage=0,stats={wood:0,placed:0,explore:0,crystal:0,boss:0,portal:0},rewards=[],discovered={},defeated=false,portalOpened=false;
+const hero={x:2.5,y:12,z:2.5,vy:0,yaw:0,pitch:-.24,role:0,hp:100,ground:false,double:false,inventory:{}};
 const companion={x:4.5,y:12,z:4.5,role:1,hp:100};
 let boss={x:32.5,y:12,z:32.5,hp:120,alive:true},mobs=[],clock=0,last=0,frames=0,dirty=false,saveClock=0,skyPhase=0;
 let quality='AUTO',adaptiveCap=1.5,renderCap=1.5,averageFrame=.0167;
@@ -115,6 +115,17 @@ function chunkMesh(cx,cz){
    cube(v,x+.39,top+1.12,z+.39,chance>.987?8:7,.23);
   }
   if(zone==='Snow Ridge'&&chance>.991&&block(x,top+1,z)===0)cube(v,x+.27,top+1,z+.27,8,.19);
+  if(block(x,top+1,z)===0&&chance>.86&&chance<.973){
+   if(zone==='Evergreen Forest'){
+    cube(v,x+.42,top+1,z+.43,5,.16);
+    cube(v,x+.35,top+1.14,z+.35,chance>.942?10:1,.28);
+   }else if(zone==='Meadows'){
+    cube(v,x+.46,top+1,z+.42,5,.10);
+    cube(v,x+.37,top+1.12,z+.37,chance>.93?8:7,.23);
+   }else if(zone==='Desert'&&chance>.951){
+    cube(v,x+.28,top+1,z+.32,6,.42);cube(v,x+.33,top+1.42,z+.37,6,.32);
+   }else if(zone==='Snow Ridge')cube(v,x+.37,top+1,z+.37,8,.22);
+  }
  }
  const k=cx+':'+cz,old=chunks.get(k);if(old)gl.deleteBuffer(old.buffer);
  const buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(v),gl.STATIC_DRAW);
@@ -185,7 +196,16 @@ function render(){
  if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}gl.viewport(0,0,w,h);
  const forward=[Math.sin(hero.yaw)*Math.cos(hero.pitch),Math.sin(hero.pitch),-Math.cos(hero.yaw)*Math.cos(hero.pitch)];
  const eye=[hero.x,hero.y+1.55,hero.z];
- const cam=third?[eye[0]-forward[0]*5,eye[1]+2.2,eye[2]-forward[2]*5]:eye;
+ const desired=third?[eye[0]-forward[0]*5,eye[1]+2.05,eye[2]-forward[2]*5]:eye;
+ let cam=eye;
+ if(third){
+  const diff=desired.map((n,i)=>n-eye[i]);let t=1;
+  for(let f=.08;f<=1.001;f+=.08){
+   const p=eye.map((n,i)=>n+diff[i]*f);
+   if(block(p[0],p[1],p[2])){t=Math.max(.08,f-.10);break;}
+  }
+  cam=eye.map((n,i)=>n+diff[i]*t);
+ }
  const at=eye.map((n,i)=>n+forward[i]*5);
  const day=.50+.50*Math.sin(clock*.018),sky=[.16+.37*day,.18+.47*day,.32+.45*day];
  gl.clearColor(...sky,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
@@ -197,9 +217,13 @@ function render(){
   gl.drawArrays(gl.TRIANGLES,0,3);
   gl.disableVertexAttribArray(skyAttr);gl.enable(gl.DEPTH_TEST);gl.useProgram(pg);
  }
- gl.uniformMatrix4fv(up,false,projection(1.16,w/h,.06,120));gl.uniformMatrix4fv(uv,false,camera(cam,at));
+ gl.uniformMatrix4fv(up,false,projection(third?1.03:1.15,w/h,.06,120));gl.uniformMatrix4fv(uv,false,camera(cam,at));
  gl.uniform3fv(ue,new Float32Array(cam));gl.uniform3fv(us,new Float32Array(sky));gl.uniform1f(ud,day);gl.uniform1f(ut,clock);
- for(const chunk of chunks.values())renderBuffer(chunk.buffer,chunk.count);
+ for(const chunk of chunks.values()){
+  const x=(chunk.cx+.5)*CH-hero.x,z=(chunk.cz+.5)*CH-hero.z;
+  if(Math.hypot(x,z)>CH*1.8&&x*forward[0]+z*forward[2]<-CH*1.4)continue;
+  renderBuffer(chunk.buffer,chunk.count);
+ }
  const v=[];
  // Layered voxel character rigs with skins, sleeves, hair, shoes and
  // subtle leg animation. Shared GPU batch; no external models or CDN.
@@ -498,6 +522,7 @@ function initUi(){
  function show(id){$('drawer').hidden=id!=='drawer';$('pairPanel').hidden=id!=='pairPanel';$('options').setAttribute('aria-expanded',String(id==='drawer'));}
  $('options').onclick=()=>show($('drawer').hidden?'drawer':null);$('close').onclick=()=>show(null);$('pair').onclick=()=>show('pairPanel');$('pairClose').onclick=()=>show(null);
  $('swap').onclick=()=>{if(conn?.open){announce('Heroes stay assigned during co-op');return;}hero.role=1-hero.role;companion.role=1-hero.role;hud();};
+ $('perspective').textContent=third?'1ST PERSON':'3RD PERSON';
  $('perspective').onclick=()=>{third=!third;$('perspective').textContent=third?'1ST PERSON':'3RD PERSON';};
  $('creative').onclick=()=>{creative=!creative;$('creative').textContent='CREATIVE '+(creative?'ON':'OFF');dirty=true;hotbar();};
  $('save').onclick=()=>{dirty=true;save();announce('World saved');};
