@@ -523,7 +523,7 @@ function joinRoom(code){
 function initUi(){
  const mission=$('mission');
  if(mission){
-  const toggle=()=>{const expanded=mission.classList.toggle('expanded');mission.setAttribute('aria-expanded',String(expanded));mission.setAttribute('aria-label',expanded?'Collapse mission details':'Expand mission details');};
+  const toggle=()=>{const expanded=mission.getAttribute('aria-expanded')!=='true';mission.classList[expanded?'add':'remove']('expanded');mission.setAttribute('aria-expanded',String(expanded));mission.setAttribute('aria-label',expanded?'Collapse mission details':'Expand mission details');};
   mission.addEventListener('click',toggle);
   mission.addEventListener('keydown',e=>{if(e.code==='Enter'||e.code==='Space'){e.preventDefault();toggle();}});
  }
@@ -531,7 +531,7 @@ function initUi(){
  if(radar&&radarToggle){
   let expanded=(innerWidth||900)>700;
   const setRadar=(show)=>{
-   expanded=show;radar.classList.toggle('collapsed',!expanded);
+   expanded=show;radar.classList[expanded?'remove':'add']('collapsed');
    radarToggle.setAttribute('aria-expanded',String(expanded));
    radarToggle.setAttribute('aria-label',expanded?'Collapse terrain radar':'Expand terrain radar');
    radarToggle.textContent=expanded?'−':'MAP';
