@@ -391,6 +391,30 @@ function spark(x,y,count=8){
  for(let i=0;i<count;i++)particles.push({x,y,vx:(Math.random()-.5)*170,vy:-50-Math.random()*130,ttl:.6+Math.random()*.6});
  if(particles.length>280)particles.splice(0,particles.length-280);
 }
+/* Actual in-world short-range combat for the premium ATTACK control. */
+let nextAttackAt=-10000;
+function attackEnemy(){
+ if(window.BlockWorld2D?.isGuest?.()){window.BlockWorld2D.requestAttack?.();return false;}
+ const now=performance.now();
+ if(now<nextAttackAt)return false;
+ const p=players[active],px=p.x+p.w/2,py=p.y+p.h/2;
+ let victim=null,best=72;
+ for(const c of friends){
+  const dx=c.x+9-px,dy=c.y+8-py,d=Math.hypot(dx,dy);
+  if(d<best){best=d;victim=c;}
+ }
+ if(!victim){say('Move closer to a creature to attack',1150);return false;}
+ nextAttackAt=now+360;
+ victim.hp=(Number.isFinite(victim.hp)?victim.hp:active===0?40:35)-(active===0?20:16);
+ spark(victim.x+8,victim.y+7,15);chime();
+ if(victim.hp<=0){
+  friends.splice(friends.indexOf(victim),1);
+  say(players[active].name+' defeated a creature!',1000);
+ }else{
+  victim.vx=(p.facing===1?1:-1)*Math.max(20,Math.abs(victim.vx||20));
+ }
+ dirty=true;queueSave();return true;
+}
 const baseGenerate=generate;
 generate=function(){
  world=Array.from({length:H},()=>Array(W).fill(0));surface=new Array(W);
@@ -825,6 +849,8 @@ createAdventureUi();
 
 bindButton('left','left');bindButton('right','right');bindButton('jump','jump');
 bindButton('mine',null,mine);bindButton('place',null,place);bindButton('switch',null,playerSwitch);
+bindButton('attack',null,attackEnemy);
+addEventListener('keydown',e=>{if(e.code==='KeyF'&&!e.repeat&&!craftingOpen)attackEnemy();});
 const canvasTouches=new Map();let tapTimer=0,pinchGap=0;
 function doWorldTap(clientX,clientY){
  if(craftingOpen)return;
@@ -957,6 +983,12 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
    active=previous;focus=previousFocus;selected=oldSelected;
    return true;
   },
+  setStick:value=>{touch.left=value<-.22;touch.right=value>.22;},
+  attack:id=>{
+   if(id!==0&&id!==1)return false;
+   const previous=active;active=id;
+   const hit=attackEnemy();active=previous;return hit;
+  },
   input:()=>({
    left:touch.left||down.has('ArrowLeft')||down.has('KeyA'),
    right:touch.right||down.has('ArrowRight')||down.has('KeyD'),
@@ -1003,6 +1035,8 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
   return normalCraft();
  };
  window.craftItem=()=>craftItem();
+ const normalAttack=attackEnemy;
+ attackEnemy=function(){if(API.isGuest()){API.requestAttack?.();return false;}return normalAttack();};
  mine=function(){if(API.isGuest()){API.requestAction?.('mine',aim(),selected);return;}return normalMine();};
  place=function(){if(API.isGuest()){API.requestAction?.('place',aim(),selected);return;}return normalPlace();};
  save=function(){if(API.isGuest())return;return normalSave();};
