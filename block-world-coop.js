@@ -8,7 +8,7 @@ const g=window.BlockWorld2D,$=id=>document.getElementById(id);
 if(!g||!$('coop-panel'))return;
 let peer=null,conn=null,role='solo',invite='',ready=false,closed=false;
 let stateAt=0,inputAt=0,snapshotAt=0,lastRealm=-1,lastInput={left:false,right:false,jump:false};
-let lastPacketAt=0,editCount=0,lastActionAt=0,joinTimeout=0;
+let lastPacketAt=0,editCount=0,lastActionAt=0,joinTimeout=0,lastGiveAt=0,lastRegroupAt=[0,0],lastLocatorAt=0;
 const COOP_RE=/^[0-9a-f]{32}$/i;
 const copyInput=s=>({left:!!s?.left,right:!!s?.right,jump:!!s?.jump});
 const connected=()=>!!conn?.open;
@@ -16,6 +16,7 @@ g.isHost=()=>role==='host'&&connected()&&ready;
 g.isGuest=()=>role==='guest';
 g.connected=()=>role!=='solo'&&connected()&&ready;
 g.remoteInput=lastInput;
+g.requestCraft=recipe=>{if(role==='guest'&&ready&&Number.isInteger(recipe))send({t:'craft',recipe});};
 g.requestAction=(kind,a,tile)=>{
  if(role!=='guest'||!connected()||!ready)return;
  if(!['mine','place'].includes(kind)||!a||!Number.isInteger(a.x)||!Number.isInteger(a.y))return;
@@ -74,11 +75,13 @@ function onMessage(m){
   send({t:'ready'});setStatus('Connected! You are Jozef. Both of you can play.');
   $('btn-switch').style.display='none';
   $('reset').disabled=true;$('mode').disabled=true;
-  $('inventory').disabled=true;$('bw-actions')?.querySelectorAll?.('button').forEach(b=>b.disabled=true);
+  $('save').disabled=true;
+   $('bw-actions')?.querySelectorAll?.('button').forEach(b=>{if(/BUILD KIT|UNDO|REALMS|TEAM PORTAL|IMPORT/.test(b.textContent))b.disabled=true;});
+   $('partner-tools').hidden=false;
   hide();
  }else if(m.t==='ready'&&role==='host'){
   ready=true;g.role(0);setStatus('Connected! You control Daddy; Jo controls Jozef.');
-  $('btn-switch').style.display='none';hide();
+  $('btn-switch').style.display='none';$('partner-tools').hidden=false;hide();
  }else if(m.t==='input'&&g.isHost()){
   g.remoteInput=copyInput(m.input);
   lastPacketAt=performance.now();
@@ -90,6 +93,19 @@ function onMessage(m){
   // Reach and resource checks are performed by the actual game engine on the host.
   if(m.kind==='place'&&(!Number.isInteger(m.tile)||m.tile<1||m.tile>31))return;
   g.action(1,m.kind,{x,y},m.tile);
+ }else if(m.t==='craft'&&g.isHost()){
+  const now=performance.now();if(now-lastActionAt<90)return;lastActionAt=now;
+  if(!Number.isInteger(m.recipe)||m.recipe<0||m.recipe>30)return;
+  const ok=g.craftFor(1,m.recipe);send({t:'feedback',msg:ok?'Crafted item in the shared world':'Not enough materials to craft'});
+ }else if(m.t==='give'&&g.isHost()){
+  const now=performance.now();if(now-lastGiveAt<220)return;lastGiveAt=now;
+  const ok=g.giveTo(1,m.tile);send({t:'feedback',msg:ok?'Gave one block to Daddy':'Move closer or collect this block first'});
+ }else if(m.t==='regroup'&&g.isHost()){
+  const now=performance.now();if(now-lastRegroupAt[1]<15000)return;
+  if(g.regroup(1)){lastRegroupAt[1]=now;send({t:'feedback',msg:'You regrouped with Daddy'});}
+  else send({t:'feedback',msg:'Already nearby or no safe spot'});
+ }else if(m.t==='feedback'&&role==='guest'){
+  g.setStatus(String(m.msg||'').slice(0,100));
  }else if(m.t==='state'&&role==='guest'&&ready){
   if(!validState(m.s))return;
   if(m.s.realmIndex!==lastRealm){send({t:'resync'});return;}
@@ -119,7 +135,8 @@ function leave(options={}){
  conn=null;peer=null;ready=false;role='solo';invite='';lastRealm=-1;
  g.remoteInput={left:false,right:false,jump:false};
  $('coop-share').disabled=true;$('coop-disconnect').disabled=true;
- $('btn-switch').style.display='';$('reset').disabled=false;$('mode').disabled=false;$('inventory').disabled=false;
+ $('btn-switch').style.display='';$('reset').disabled=false;$('mode').disabled=false;$('inventory').disabled=false;$('save').disabled=false;
+ $('partner-tools').hidden=true;
  $('bw-actions')?.querySelectorAll?.('button').forEach(b=>b.disabled=false);
  if(c){try{c.close();}catch(_){}}
  if(p){try{p.destroy();}catch(_){}}
@@ -171,6 +188,7 @@ function join(){
 }
 g.onFrame=now=>{
  if(!connected()||!ready)return;
+ if(now-lastLocatorAt>220){lastLocatorAt=now;partnerTools(now);}
  if(role==='host'){
   if(now-stateAt>100){stateAt=now;send({t:'state',s:g.getState()});}
   const r=g.getState().realmIndex;
@@ -180,6 +198,32 @@ g.onFrame=now=>{
   inputAt=now;send({t:'input',input:g.input()});
  }
 };
+
+function partnerTools(now){
+ if(!g.connected())return;
+ const p=g.getState().players,own=role==='guest'?1:0;
+ const dx=p[1-own].x-p[own].x,dy=p[1-own].y-p[own].y;
+ const distance=Math.round(Math.hypot(dx,dy)/40);
+ const direction=dx>30?'→':dx< -30?'←':'↕';
+ $('partner-location').textContent=(own===0?'JO':'DADDY')+' '+direction+' '+distance+' blocks';
+ $('coop-give').disabled=distance>4;
+ $('coop-regroup').disabled=distance<5;
+}
+$('coop-give').addEventListener('click',()=>{
+ if(!g.connected())return;
+ const item=g.selected();
+ if(role==='guest'){send({t:'give',tile:item});return;}
+ const ok=g.giveTo(0,item);
+ g.setStatus(ok?'Shared one block with Jozef':'Stand within 4 blocks and hold a collected item');
+});
+$('coop-regroup').addEventListener('click',()=>{
+ if(!g.connected())return;
+ const now=performance.now(),who=role==='guest'?1:0;
+ if(now-lastRegroupAt[who]<15000){g.setStatus('Regroup is cooling down');return;}
+ if(role==='guest'){send({t:'regroup'});lastRegroupAt[who]=now;return;}
+ if(g.regroup(0)){lastRegroupAt[0]=now;g.setStatus('Regrouped with Jozef');}
+ else g.setStatus('Already nearby or no safe space');
+});
 $('open-coop').addEventListener('click',show);
 $('coop-close').addEventListener('click',hide);
 $('coop-host').addEventListener('click',startHost);
