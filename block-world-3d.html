@@ -7,6 +7,7 @@
 <meta name="description" content="Daddy and Jozef's real 3D voxel adventure: explore infinite streamed terrain, mine, build, and face the Crystal Golem together.">
 <title>Block World 3D | Daddy + Jozef</title>
 <link rel="stylesheet" href="./block-world-3d.css?v=20261012-cinematic1">
+<link rel="stylesheet" href="./block-world-3d-next.css?v=20261013-next1">
 </head>
 <body>
 <canvas id="view" aria-label="Interactive 3D voxel sandbox"></canvas>
@@ -15,10 +16,10 @@
   <div class="brand"><span>BLOCK WORLD <b>3D</b></span><small>DADDY + JOZEF · EXPEDITION</small></div>
   <div class="stats"><strong id="hero">DADDY</strong><span id="hearts">♥ 100</span><span id="level">LVL 1</span></div>
  </header>
- <section id="mission" class="mission" aria-live="polite">Generating your adventure…</section>
+ <section id="mission" class="mission" aria-live="polite" role="button" tabindex="0" aria-expanded="false" aria-label="Expand mission details">Generating your adventure…</section>
  <aside id="compass" class="compass" aria-live="off">X 2 · Z 2 · Explore</aside>
- <section class="radar" aria-label="Terrain radar and landmarks">
-  <div class="radar-header"><strong>EXPEDITION RADAR</strong><span id="qualityState">AUTO</span></div>
+ <section id="radar" class="radar" aria-label="Terrain radar and landmarks">
+  <div class="radar-header"><strong>EXPEDITION RADAR</strong><span id="qualityState">AUTO</span><button id="radar-toggle" type="button" aria-expanded="false" aria-label="Expand terrain radar">MAP</button></div>
   <canvas id="minimap" width="132" height="132" aria-label="Local biome map with players, Golem and portal"></canvas>
   <div class="radar-legend"><span>■ US</span><span>■ GOLEM</span><span>■ PORTAL</span></div>
  </section>
