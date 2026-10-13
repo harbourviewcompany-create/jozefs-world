@@ -499,8 +499,10 @@ generate=function(){
   }
  }
  for(const [start,end] of [[56,63],[68,77]])for(let x=start;x<=end;x++){
-   let y=0;while(y<H&&get(x,y)===0)y++;
-   for(let k=1;k<7;k++)if(y-k>0)world[y-k][x]=0;
+   // Anchor the landing clearance to actual terrain, not the topmost leaves.
+   // Otherwise trees can leave solid trunks inside the player's spawn.
+   const ground=surface[x];
+   for(let y=Math.max(0,ground-9);y<ground;y++)world[y][x]=0;
   }
  const px=portalX;let sy=0;while(sy<H&&get(px,sy)===0)sy++;
  for(let j=1;j<=5;j++){world[sy-j][px-2]=18;world[sy-j][px+2]=18;}for(let x=px-2;x<=px+2;x++)world[sy-5][x]=18;
