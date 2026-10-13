@@ -95,7 +95,16 @@ const close=()=>new Promise(resolve=>server.close(resolve));
         if(stage===0&&who===0)
          await page.waitForFunction(()=>window.JozefTogether.progress().clues[0],null,{timeout:6500});
         else if(who===1){
-         if(stage===1)await page.evaluate(()=>window.JozefTogether.teamPulse(1));
+         if(stage===1){
+          // Guided walking is asynchronous; the second console cannot be charged
+          // until Dad reaches his own pad at [9,2].
+          await page.waitForFunction(()=>{
+           const p=window.JozefTogether.progress().positions[1];
+           return p.x===9&&p.y===2;
+          },null,{timeout:6500});
+          assert.equal(await page.evaluate(()=>window.JozefTogether.teamPulse(1)),true,
+           'Dad charges the console only after arriving on its pad');
+         }
          await page.waitForFunction(s=>window.JozefTogether.progress().stage>s,stage,{timeout:6500});
         }
         else {
