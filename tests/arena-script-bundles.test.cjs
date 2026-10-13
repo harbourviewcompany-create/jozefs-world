@@ -5,7 +5,7 @@ const root=path.resolve(__dirname,'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const groups=[
  {name:'site-core.js',files:['notes.js','app.js','extras.js']},
- {name:'site-features.js',files:['stadium.js','playmode.js','broadcast.js','album.js','sports.js','watch.js','locker.js','sports-stage.js','multisport.js']}
+ {name:'site-features.js',files:['stadium.js','playmode.js','broadcast.js','album.js','sports.js','watch.js','locker.js','sports-stage.js','multisport.js','club-designer.js']}
 ];
 test('site JavaScript bundles exactly match original sources and order',()=>{
  for(const g of groups){
