@@ -6,10 +6,14 @@ const vm=require('node:vm');
 const assert=require('node:assert/strict');
 const html=fs.readFileSync(require('node:path').join(__dirname,'..','block-world.html'),'utf8');
 const js=fs.readFileSync(require('node:path').join(__dirname,'..','block-world.js'),'utf8');
+const art=fs.readFileSync(require('node:path').join(__dirname,'..','block-world-art.js'),'utf8');
 assert.match(html,/src="\.\/block-world\.js(?:\?v=[A-Za-z0-9._-]+)?"/,'HTML loads the extracted gameplay module');
 assert.match(html,/src="\.\/block-world-coop\.js(?:\?v=[A-Za-z0-9._-]+)?"/,'HTML loads the real co-op runtime');
 assert.ok(js,'Block World script must exist');
 new vm.Script(js,{filename:'block-world.html'});
+new vm.Script(art,{filename:'block-world-art.js'});
+assert.match(html,/block-world-art\.js/,'live game loads procedural art');
+assert.match(html,/block-world-ui\.js/,'live game loads functional HUD controls');
 function boot(storage=new Map()){
   const nodes=new Map(),events=new Map(),clock={now:0,frame:null};
   const context=new Proxy({},{
@@ -61,6 +65,7 @@ function boot(storage=new Map()){
     URL:{createObjectURL:()=>'/test',revokeObjectURL(){}},
     console:{warn(){}}
   };
+  vm.runInNewContext(art,sandbox,{filename:'block-world-art.js',timeout:10000});
   vm.runInNewContext(testScript,sandbox,{filename:'block-world.html',timeout:10000});
   const advance=(count=1)=>{for(let i=0;i<count;i++){clock.now+=17;assert.ok(clock.frame);clock.frame(clock.now);}};
   const click=(id,type='click')=>{
@@ -73,14 +78,17 @@ function boot(storage=new Map()){
 const first=boot();
 first.advance(16);
 const game=first.window.__inspect;
+assert.ok(first.window.BlockWorldArt,'procedural art engine registered');
+assert.ok(first.window.BlockWorldArt.tile(1),'grass texture generated');
+assert.ok(first.window.BlockWorldArt.tile(18),'diamond ore texture generated');
 assert.equal(game.world().length,72);
 assert.equal(game.world()[0].length,180);
 assert.equal(game.surface().length,180);
 assert.ok(game.players.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)&&p.y>=0),'finite player coordinates');
-assert.equal(first.document.getElementById('health').textContent.includes('Daddy'),true);
+assert.equal(first.document.getElementById('health').textContent.includes('DADDY'),true);
 assert.match(first.document.getElementById('bw-mission').innerHTML,/MISSION 1\/5/);
 first.click('btn-switch','pointerdown');
-assert.match(first.document.getElementById('health').textContent,/Jozef/);
+assert.match(first.document.getElementById('health').textContent,/JOZEF/);
 first.click('btn-switch','pointerup');
 const p=game.players[1],cx=Math.floor(p.x/40)+p.facing*3,base=Math.floor((p.y+p.h)/40);
 for(let y=Math.max(0,base-8);y<=base;y++)for(let x=cx;x<cx+9;x++)if(game.world()[y])game.world()[y][x]=0;
