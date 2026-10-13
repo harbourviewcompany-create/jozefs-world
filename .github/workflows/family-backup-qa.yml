@@ -1,0 +1,39 @@
+name: Family backups and recovery QA
+on:
+  pull_request:
+    paths:
+      - 'family-backup.js'
+      - 'clubhouse.js'
+      - 'index.html'
+      - 'world.html'
+      - 'sw.js'
+      - 'tests/family-backup.test.cjs'
+      - 'tests/clubhouse.test.cjs'
+      - '.github/workflows/family-backup-qa.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'family-backup.js'
+      - 'clubhouse.js'
+      - 'index.html'
+      - 'world.html'
+      - 'sw.js'
+      - 'tests/family-backup.test.cjs'
+      - '.github/workflows/family-backup-qa.yml'
+jobs:
+  backup-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate safe backup module and entrypoints
+        run: |
+          node --check family-backup.js
+          node --check clubhouse.js
+          cmp -s index.html world.html
+          node scripts/build-site-js.cjs --check
+          node scripts/build-site-css.cjs --check
+      - name: Test all family progress exports, restores and rollback
+        run: node --test tests/family-backup.test.cjs tests/clubhouse.test.cjs
