@@ -48,7 +48,7 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  assert.match(await host.locator('#versus-clock').textContent(),/0:3[0-9]/,'draw enters bounded golden-goal overtime');
  await host.evaluate(()=>{window.__versusTest.state.matchLeft=.02;});
  await host.waitForFunction(()=>!document.querySelector('#versus-again').hidden);await guest.waitForFunction(()=>!document.querySelector('#versus-again').hidden);
- await host.waitForTimeout(150);assert.equal(await host.locator('#versus-clock').textContent(),'0:00');
+ await host.waitForFunction(()=>document.querySelector('#versus-clock').textContent==='0:00',undefined,{timeout:5000});
  const finalState=await host.evaluate(()=>JSON.parse(JSON.stringify(window.__versusTest.state)));
  await guest.evaluate(state=>{
    const t=window.__versusTest;
