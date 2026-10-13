@@ -100,6 +100,20 @@ function cube(v,x,y,z,id,size=1,mask=null){
   }
  }
 }
+/* Lightweight oriented rectangular prisms make our characters and tools
+   legible from every camera angle, without downloading character assets. */
+function voxelBox(v,x,y,z,w,h,d,id,yaw=0){
+ const c=col[id]||col[3],cs=Math.cos(yaw),sn=Math.sin(yaw);
+ for(let j=0;j<6;j++){
+  const normal=faces[j][0],shade=[1,.80,.87,.52,.72,.73][j];
+  const nx=normal[0]*cs+normal[2]*sn,nz=normal[2]*cs-normal[0]*sn;
+  for(const i of [0,1,2,0,2,3]){
+   const q=faces[j][1][i],lx=(q[0]-.5)*w,lz=(q[2]-.5)*d;
+   v.push(x+lx*cs+lz*sn,y+q[1]*h,z+lz*cs-lx*sn,
+    c[0]*shade,c[1]*shade,c[2]*shade,id,nx,normal[1],nz);
+  }
+ }
+}
 function chunkMesh(cx,cz){
  const v=[];
  for(let x=cx*CH;x<(cx+1)*CH;x++)for(let z=cz*CH;z<(cz+1)*CH;z++){
@@ -234,23 +248,54 @@ function render(){
   renderBuffer(chunk.buffer,chunk.count);lastChunksDrawn++;
  }
  const v=[];
- // Layered voxel character rigs with skins, sleeves, hair, shoes and
- // subtle leg animation. Shared GPU batch; no external models or CDN.
- const figure=(p,role)=>{
-  const stride=Math.sin(clock*8+(role?1.5:0))*.075;
-  cube(v,p.x-.25,p.y+.68,p.z-.25,role?8:1,.51); // jersey
-  cube(v,p.x-.25,p.y+1.18,p.z-.25,6,.50);       // face
-  cube(v,p.x-.29,p.y+1.57,p.z-.27,role?3:4,.57);// hair
-  cube(v,p.x-.35,p.y+.82,p.z-.22,6,.13);       // hands
-  cube(v,p.x+.22,p.y+.82,p.z-.22,6,.13);
-  cube(v,p.x-.19,p.y+.19,p.z-.15+stride,3,.20); // stride
-  cube(v,p.x+.06,p.y+.19,p.z-.15-stride,3,.20);
-  cube(v,p.x-.21,p.y+.04,p.z-.20+stride,7,.23); // shoes
-  cube(v,p.x+.06,p.y+.04,p.z-.20-stride,7,.23);
-  cube(v,p.x-.12,p.y+1.35,p.z-.30,11,.10);    // eyes
-  cube(v,p.x+.10,p.y+1.35,p.z-.30,11,.10);
+ // Expressive, orientable voxel characters. Both players use the same skeleton
+ // but have recognizable hair, outfit colours, backpack and animation.
+ const figure=(p,role,isActive=false)=>{
+  const dad=role===0,skin=12,hair=dad?13:21,shirt=dad?14:15,accent=dad?20:19;
+  const yaw=Number.isFinite(p.yaw)?p.yaw:hero.yaw;
+  const cs=Math.cos(yaw),sn=Math.sin(yaw);
+  const gait=Math.sin(clock*10.5+(role?1.5:0))*.12*Math.min(1,p.walkPower||0);
+  const arm=-gait*.85;
+  const jump=isActive&&!p.ground?.045:0;
+  const part=(ox,y,oz,w,h,d,id)=>{
+   voxelBox(v,p.x+ox*cs+oz*sn,p.y+y+jump,p.z+oz*cs-ox*sn,w,h,d,id,yaw);
+  };
+  for(const side of [-1,1]){
+   const off=side*.135,swing=side*gait;
+   part(off,.035,swing,.23,.20,.28,18);
+   part(off,.235,swing*.6,.215,.41,.215,17);
+   part(side*.29,.81,-side*arm,.16,.38,.18,shirt);
+   part(side*.29,.69,-side*arm,.17,.19,.19,skin);
+  }
+  part(0,.60,0,.52,.52,.37,shirt);
+  part(0,.63,-.20,.32,.12,.06,accent);
+  part(0,.58,-.20,.37,.07,.07,18);
+  part(0,1.08,0,.32,.12,.30,skin);
+  // Visible from behind while exploring; small compass/rucksack equipment.
+  part(0,.83,.27,.39,.49,.19,13);
+  part(0,.80,.39,.28,.15,.06,accent);
+  for(const side of [-1,1])part(side*.18,.96,-.20,.055,.40,.06,accent);
+  part(0,1.17,0,.49,.42,.45,skin);
+  part(0,1.55,0,.52,.12,.48,hair);
+  if(dad){
+   part(-.14,1.49,-.18,.20,.11,.15,hair);
+   part(.15,1.49,.0,.18,.10,.24,hair);
+   part(0,1.25,-.242,.18,.07,.07,13); // Dad's beard and moustache
+   part(0,1.19,-.23,.13,.07,.08,13);
+  }else{
+   part(-.13,1.50,-.20,.22,.13,.12,hair);
+   part(.16,1.49,-.17,.15,.10,.12,hair);
+  }
+  for(const side of [-1,1]){
+   part(side*.12,1.36,-.237,.075,.083,.047,16);
+   part(side*.118-.013,1.40,-.266,.026,.025,.020,19);
+   part(side*.12,1.46,-.240,.09,.036,.03,hair);
+  }
+  part(0,1.26,-.243,.14,.035,.045,21);
+  part(dad?.23:-.23,.94,-.19,.10,.10,.04,accent);
+  if(isActive&&(keys.KeyE||keys.KeyF))part(.39,.53,-.18,.10,.48,.10,9);
  };
- figure(companion,companion.role);if(third)figure(hero,hero.role);
+ figure(companion,companion.role);if(third)figure(hero,hero.role,true);
  // Living voxel creatures with distinguishable silhouettes and animated movement.
  for(const m of mobs)if(m.hp>0&&Math.hypot(m.x-hero.x,m.z-hero.z)<52){
   const bob=Math.sin(clock*2.4+m.x)*.075;
