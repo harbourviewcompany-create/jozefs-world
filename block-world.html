@@ -34,27 +34,26 @@
 @media(max-width:530px){.partner-tools{top:calc(139px + env(safe-area-inset-top));right:5px;max-width:55vw;font-size:9px}.partner-tools button{font-size:9px;padding:6px}}
 @media(max-height:470px){.partner-tools{top:37px;right:5px;font-size:9px}}
 </style>
+<link rel="stylesheet" href="./block-world-premium.css?v=20261013-art1">
 </head>
 <body>
 <canvas id="game"></canvas>
 <div id="ui">
-  <h2>Daddy & Jozef</h2>
-  <p>◀▶ Move &nbsp; ▲ Jump</p>
-  <p>⛏ Mine &nbsp; 🧱 Place</p>
-  <p>👥 Switch (solo) · Together: each player has their own device</p>
+  <h2>BLOCK WORLD <span>2D</span></h2>
+  <p class="subtitle">DADDY + JOZEF · EXPEDITION</p>
 </div>
 <div class="health" id="health">Loading...</div>
 <div class="hotbar" id="hotbar"></div>
 <div id="controls">
-  <div class="ctrl-group">
-    <div class="ctrl-btn" id="btn-left">◀</div>
-    <div class="ctrl-btn" id="btn-right">▶</div>
+  <div id="movement-pad" role="group" aria-label="Move left or right" class="movement-pad">
+   <div class="pad-rim"><span class="pad-knob" id="pad-knob"></span></div>
+   <div class="pad-buttons"><div class="ctrl-btn" id="btn-left" aria-label="Move left">◀</div><div class="ctrl-btn" id="btn-right" aria-label="Move right">▶</div></div>
   </div>
-  <div class="ctrl-group">
-    <div class="ctrl-btn" id="btn-jump">▲</div>
-    <div class="ctrl-btn" id="btn-mine">⛏</div>
-    <div class="ctrl-btn" id="btn-place">🧱</div>
-    <div class="ctrl-btn" id="btn-switch">👥</div>
+  <div class="ctrl-group action-controls">
+   <div class="ctrl-btn" id="btn-jump">JUMP</div>
+   <div class="ctrl-btn" id="btn-mine">MINE</div>
+   <div class="ctrl-btn" id="btn-place">BUILD</div>
+   <div class="ctrl-btn" id="btn-attack">ATTACK</div>
   </div>
 </div>
 <div id="crafting">
@@ -70,6 +69,8 @@
 
 <div id="toolbar" role="toolbar" aria-label="Block World actions">
  <a class="bw-hq-link" href="./" aria-label="Return to Jozef World headquarters">← HQ</a>
+ <button id="menu-toggle" type="button" aria-expanded="false" aria-controls="toolbar-extra" class="bw-hq-link">☰ MENU</button>
+ <div id="toolbar-extra" hidden>
  <a class="bw-hq-link" href="./block-world-select.html" aria-label="Choose 2D or 3D mode">MODE</a>
  <button type="button" class="bw-hq-link" id="open-coop" aria-label="Play with Jozef on another phone">PLAY TOGETHER</button>
  <a class="bw-hq-link" href="./block-world-3d.html" aria-label="Play Block World in full 3D">▣ PLAY 3D</a>
@@ -77,6 +78,8 @@
  <button id="inventory" type="button">🎒 Inventory</button>
  <button id="save" type="button">Save</button>
  <button id="reset" type="button">New World</button>
+ <button id="btn-switch" class="bw-hq-link" type="button">SWITCH HERO</button>
+</div>
 </div>
 <div id="notice" role="status" aria-live="polite"></div>
 <div id="coop-live" class="coop-live" aria-live="polite">● 2D SOLO</div>
@@ -105,8 +108,10 @@
 </div>
 
 <script src="./peerjs.min.js" defer></script>
-<script src="./block-world.js?v=20261013-coop4" defer></script>
-<script src="./block-world-coop.js?v=20261013-coop4" defer></script>
+<script src="./block-world-art.js?v=20261013-art1" defer></script>
+<script src="./block-world.js?v=20261013-art1" defer></script>
+<script src="./block-world-coop.js?v=20261013-art1" defer></script>
+<script src="./block-world-ui.js?v=20261013-art1" defer></script>
 
 </body>
 </html>
