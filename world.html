@@ -995,11 +995,11 @@ body.nav-open .nav-extra{display:inline-flex}
       <div class="jw-section-head"><div><span class="jw-eyebrow">KEEP YOUR CLUB SAFE</span><h3>💾 Save club progress</h3></div></div>
       <p>Save this season. The file includes XP, badges, Street best, the squad, club notes, stickers, and Sports Room calls. It stays on this device until you move the file. Nothing is uploaded.</p>
       <div class="clubhouse-backup-actions">
-        <button class="jw-profile-open" type="button" id="clubhouse-export">Save this season</button>
-        <button class="jw-sound" type="button" id="clubhouse-import-button">Restore from backup</button>
+        <button class="jw-profile-open" type="button" id="clubhouse-export">Save family progress + worlds</button>
+        <button class="jw-sound" type="button" id="clubhouse-import-button">Restore family backup</button>
         <input id="clubhouse-import" type="file" accept=".json,application/json" hidden aria-label="Choose a Jozef's World backup file" />
       </div>
-      <p class="jw-privacy-note" id="clubhouse-backup-status" role="status" aria-live="polite">Keep the file private. Restoring a backup replaces saved progress on this device after confirmation.</p>
+      <p class="jw-privacy-note" id="clubhouse-backup-status" role="status" aria-live="polite">Save and transfer one private file between Dad’s and Jozef’s devices. Includes both Block World saves and achievements; never includes the private family pairing code. Restore replaces included progress after confirmation.</p>
     </div>
     <div class="jw-card jw-trophy-card">
       <div class="jw-section-head"><div><span class="jw-eyebrow">YOUR TROPHY CABINET</span><h3>🏆 Unlock awesome badges!</h3></div></div>
@@ -1767,6 +1767,7 @@ body.nav-open .nav-extra{display:inline-flex}
   <script src="site-core.js"></script>
   <script src="tournament.js" defer></script>
   <script src="career.js" defer></script>
+  <script src="family-backup.js"></script>
   <script src="clubhouse.js"></script>
   <script src="squad.js"></script>
 
