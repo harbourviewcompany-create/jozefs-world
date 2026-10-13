@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),canvas=$('view'),gl=canvas.getContext('w
 if(!gl){$('fallback').hidden=false;$('mission').textContent='WebGL is unavailable on this device.';return;}
 const CH=12,MAX_Y=27,R=2,KEY='jozefs-block-3d-v1';
 const types=['Air','Grass','Dirt','Stone','Wood','Leaves','Sand','Snow','Crystal','Planks','Brick','Glass'];
-const col=[[0,0,0],[.34,.72,.36],[.53,.38,.26],[.53,.60,.68],[.53,.32,.16],[.20,.51,.32],[.87,.74,.47],[.86,.92,.96],[.38,.80,.95],[.73,.51,.30],[.60,.36,.29],[.70,.85,.93], /* render-only hero palette */[.96,.71,.51],[.23,.14,.11],[.09,.56,.89],[.17,.74,.47],[.09,.17,.22],[.19,.32,.52],[.26,.19,.16],[.84,.95,.96],[.97,.72,.30],[.32,.19,.11],[.11,.39,.22]];
+const col=[[0,0,0],[.34,.72,.36],[.53,.38,.26],[.53,.60,.68],[.53,.32,.16],[.20,.51,.32],[.87,.74,.47],[.86,.92,.96],[.38,.80,.95],[.73,.51,.30],[.60,.36,.29],[.70,.85,.93], /* render-only hero palette */[.96,.71,.51],[.23,.14,.11],[.09,.56,.89],[.17,.74,.47],[.09,.17,.22],[.19,.32,.52],[.26,.19,.16],[.84,.95,.96],[.97,.72,.30],[.32,.19,.11],[.11,.39,.22],[.05,.14,.12],[.30,.57,.37],[.50,.62,.57]];
 const faces=[[[0,1,0],[[0,1,0],[0,1,1],[1,1,1],[1,1,0]]],[[0,0,1],[[0,0,1],[1,0,1],[1,1,1],[0,1,1]]],[[1,0,0],[[1,0,1],[1,0,0],[1,1,0],[1,1,1]]],[[0,-1,0],[[0,0,0],[1,0,0],[1,0,1],[0,0,1]]],[[-1,0,0],[[0,0,0],[0,0,1],[0,1,1],[0,1,0]]],[[0,0,-1],[[1,0,0],[0,0,0],[0,1,0],[1,1,0]]]];
 const missions=[['Gather wood','Mine eight wood blocks','wood',8,25],['Build our base','Place twelve blocks together','placed',12,30],['Explore a biome','Discover the far desert or snow ridge','explore',1,35],['Mine a crystal','Find a rare glowing crystal','crystal',1,40],['Defeat the Crystal Golem','Find the guardian at 32, 32','boss',1,60],['Activate the portal','Bring both heroes to 40, 40','portal',1,80]];
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
@@ -148,6 +148,20 @@ function chunkMesh(cx,cz){
   if(block(x,top+1,z)===0&&quality!=='ECO'){
    const ox=x+.5,oz=z+.5,stemY=top+1;
    if(zone==='Evergreen Forest'){
+    // Understory follows soil contours without creating collision tiles.
+    if(chance>.910&&chance<.945){
+     const spread=(chance-.910)/.035;
+     voxelBox(v,ox,stemY+.01,oz,.11,.21+spread*.24,.11,22);
+     voxelBox(v,ox-.12,stemY+.12,oz,.32,.055,.12,24);
+     voxelBox(v,ox+.11,stemY+.20,oz,.29,.06,.14,5);
+    }else if(chance>.947&&chance<.959){
+     voxelBox(v,ox,stemY+.01,oz,.05,.21,.05,22);
+     voxelBox(v,ox,stemY+.21,oz,.22,.13,.22,chance>.954?20:25);
+     voxelBox(v,ox+.10,stemY+.22,oz,.11,.08,.11,19);
+    }else if(chance>.960&&chance<.965){
+     voxelBox(v,ox,stemY+.018,oz,.42,.15,.35,3);
+     voxelBox(v,ox+.08,stemY+.17,oz,.17,.09,.17,24);
+    }
     if(chance>.966&&chance<.986){
      const fern=chance<.980;
      if(fern){
@@ -183,9 +197,28 @@ function chunkMesh(cx,cz){
   // leaving their real destructible voxel structure unchanged.
   if(quality!=='ECO'&&tree(x,z)&&zone==='Evergreen Forest'){
    const th=height(x,z);
-   voxelBox(v,x+.5,th+5.30,z+.5,2.0,.21,2.0,5);
-   voxelBox(v,x+.5,th+6.12,z+.5,1.4,.27,1.5,5);
-   voxelBox(v,x+.5,th+6.6,z+.5,.72,.41,.78,22);
+   // Decor grows only while the underlying trunk is intact. Mined trees don't
+   // leave non-interactive floating crowns behind.
+   if(block(x,th+3,z)===4){
+    const variation=rnd(x,z,seed+808),dense=quality==='QUALITY';
+    voxelBox(v,x+.5,th+4.6,z+.5,.20,.80,.22,4);
+    voxelBox(v,x+.5,th+5.30,z+.5,1.85,.20,1.88,variation>.48?24:5);
+    voxelBox(v,x+.5,th+6.12,z+.5,1.4,.30,1.45,5);
+    voxelBox(v,x+.5,th+6.6,z+.5,.72,.37,.72,variation>.60?22:5);
+    if(dense){
+     for(const dx of [-1,1]){
+      voxelBox(v,x+.5+dx*1.0,th+5.25,z+.5,.92,.41,1.08,variation>.66?24:5);
+      voxelBox(v,x+.5+dx*.8,th+4.85,z+.5,.83,.13,.18,4);
+     }
+     voxelBox(v,x+.5,th+5.44,z-.52,1.11,.36,.78,24);
+     voxelBox(v,x+.5,th+5.44,z+1.02,1.11,.36,.78,5);
+    }
+    // Moss-covered trunk roots visually anchor the canopy to its terrain.
+    for(const dx of [-.35,.35]){
+     voxelBox(v,x+.5+dx,th+.98,z+.5,.26,.32,.33,4);
+     voxelBox(v,x+.5+dx,th+1.1,z+.26,.28,.14,.20,22);
+    }
+   }
   }
  }
  const k=cx+':'+cz,old=chunks.get(k);if(old)gl.deleteBuffer(old.buffer);
@@ -317,6 +350,8 @@ function render(){
   const dad=role===0,skin=12,hair=dad?13:21,shirt=dad?14:15,accent=dad?20:19;
   const yaw=Number.isFinite(p.yaw)?p.yaw:hero.yaw;
   const cs=Math.cos(yaw),sn=Math.sin(yaw);
+  // Grounded contact shadow follows the player independently of their height.
+  if(quality!=='ECO')voxelBox(v,p.x,ground(p.x,p.z)-.028,p.z,.65,.016,.45,23);
   const gait=Math.sin(clock*10.5+(role?1.5:0))*.12*Math.min(1,p.walkPower||0);
   const arm=-gait*.85;
   const jump=isActive&&!p.ground?.045:0;
