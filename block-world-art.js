@@ -59,6 +59,57 @@ function tile(id){
  if(id===1)for(let x=0;x<32;x+=5)rect(g,x,0,2,2,'#c9fa79');
  textures[id]=c;return c;
 }
+/* Adjacent soil and rock form seamless autotiled surfaces. Decorative variations
+   are cached by material, exposed edges, and deterministic position variants. */
+const terrainCache=new Map();
+let quality='cinematic';
+const sameMaterial=(a,b)=>{
+ if(!a||!b)return false;
+ const group=n=>[1,2].includes(n)?1:([3,8,9,10,11,14,17,18,21,22,23,24].includes(n)?3:n);
+ return group(a)===group(b);
+};
+function terrain(world,id,x,y){
+ const up=world[y-1]?.[x]||0,down=world[y+1]?.[x]||0,left=world[y]?.[x-1]||0,right=world[y]?.[x+1]||0;
+ const joins=(sameMaterial(id,up)?1:0)|(sameMaterial(id,right)?2:0)|
+  (sameMaterial(id,down)?4:0)|(sameMaterial(id,left)?8:0);
+ const variant=Math.floor(hash(x,y,id+801)*3);
+ const k=id+':'+joins+':'+variant;
+ if(terrainCache.has(k))return terrainCache.get(k);
+ const c=document.createElement('canvas');c.width=c.height=32;
+ const g=c.getContext('2d');if(!g)return tile(id);
+ g.drawImage(tile(id),0,0);
+ // Remove repeated cube outlines only on joined sides.
+ const main=[1,2].includes(id)?['#81512f','#9e6a42','#7d4d31'][variant]:
+  [3,8,9,10,11,17,18,21,22,23,24].includes(id)?['#798793','#8996a1','#71808b'][variant]:null;
+ if(main){
+  if(joins&8)rect(g,0,2,2,28,main);
+  if(joins&2)rect(g,30,2,2,28,main);
+  if(joins&1&&id!==1)rect(g,2,0,28,2,main);
+  if(joins&4)rect(g,2,30,28,2,main);
+ }
+ if(id===1){
+  // Grass fringe follows open cliff edges but never changes block collision.
+  if(!(joins&8)){rect(g,0,3,3,8,'#48912d');rect(g,2,9,2,5,'#3e812d');}
+  if(!(joins&2)){rect(g,29,2,3,9,'#5aa637');rect(g,29,11,2,4,'#3a812c');}
+  if(up===0){
+   for(let i=0;i<5;i++){const px=3+i*6,hh=2+Math.floor(hash(x,y,i)*6);
+    rect(g,px,0,2,hh,i%2?'#c8ef69':'#82d94c');
+   }
+  }
+ }else if(id===3||id===8){
+  if(!(joins&1))rect(g,4,0,20,2,'#d0d9df55');
+  if(!(joins&4))rect(g,3,29,25,2,'#2137495a');
+  if(variant===2){rect(g,9,9,10,2,'#33495945');rect(g,17,11,2,7,'#33495945');}
+ }else if(id===2){
+  if(variant===1){rect(g,5,8,6,2,'#54382880');rect(g,11,9,2,7,'#54382860');}
+  if(variant===2){rect(g,20,18,7,2,'#c7986580');}
+ }
+ if(terrainCache.size>600)terrainCache.clear();
+ terrainCache.set(k,c);return c;
+}
+function setQuality(v){
+ quality=v==='balanced'?'balanced':'cinematic';
+}
 function sun(g,x,y,r,time){
  g.save();
  const glow=g.createRadialGradient(x,y,2,x,y,r*2.9);
@@ -273,5 +324,5 @@ function foreground(g,o){
  }
  g.globalAlpha=1;g.restore();
 }
-window.BlockWorldArt=Object.freeze({tile,background,caveBackdrop,embellish,character,creature,foreground});
+window.BlockWorldArt=Object.freeze({tile,terrain,setQuality,getQuality:()=>quality,background,caveBackdrop,embellish,character,creature,foreground});
 })();
