@@ -236,12 +236,14 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  for(const title of ['Rookie Cup','Pro Cup','Legends Final']){
    await guest.waitForFunction(()=>window.__versusTest.room.phase==='playing',{},{timeout:6000});
    assert.equal(await guest.locator('#versus-mode-label').textContent(),title);
-   await guest.evaluate(()=>{const t=window.__versusTest;t.state.score.jozef=3;t.state.freeze=0;});
+   await guest.evaluate(()=>{const t=window.__versusTest;t.state.score.jozef=3;t.state.freeze=0;t.state.highlights=[{type:'GOAL',team:'Jozef',clock:'15s',assist:''}];});
    await guest.waitForFunction(()=>window.__versusTest.room.phase==='finished',{},{timeout:2500});
    if(title!=='Legends Final')await guest.locator('#versus-finish-next').click();
  }
  assert.equal(await guest.evaluate(()=>localStorage.getItem('jozefs-world-versus-cup')),'won','winning three cup rounds awards a persistent trophy');
  assert.equal(await guest.locator('#versus-finish').isVisible(),true,'match report appears after final whistle');
+ assert.equal(await guest.locator('#versus-finish-moments li').count(),1,'host-provided match moment appears in report');
+ assert.match(await guest.locator('#versus-finish-moments').innerText(),/15s.*GOAL.*Jozef/);
  assert.match(await guest.locator('#versus-finish-title').textContent(),/WIN/);
  await guest.locator('#versus-leave').click();
  await guest.locator('.vs-progress-transfer summary').click();

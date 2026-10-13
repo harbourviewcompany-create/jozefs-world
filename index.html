@@ -1592,6 +1592,9 @@ body.nav-open .nav-extra{display:inline-flex}
       <h3 id="versus-finish-title">MATCH COMPLETE</h3>
       <strong id="versus-finish-score">0 — 0</strong>
       <p id="versus-finish-stats">0 SHOTS · 0 SAVES · 0 PASSES · 0 ASSISTS</p>
+      <section id="versus-finish-highlights" class="vs-highlight-report" aria-label="Match highlights" hidden>
+        <h4>KEY MOMENTS</h4><ol id="versus-finish-moments"></ol>
+      </section>
       <div class="vs-finish-actions"><button type="button" id="versus-finish-next">REMATCH</button><button type="button" id="versus-finish-exit">LEAVE MATCH</button></div>
     </section>
     <div class="versus-stage"><canvas id="versus-canvas" width="420" height="720" tabindex="0" aria-label="Football pitch. Drag to move. Arrow keys or WASD move; Space shoots."></canvas></div>
@@ -1781,9 +1784,9 @@ body.nav-open .nav-extra{display:inline-flex}
   <script src="peerjs.min.js"></script>
   <script src="versus-physics.js"></script>
   <script src="versus-modes-2026.js?v=2"></script>
-  <script src="versus-experience-2026.js?v=1"></script>
+  <script src="versus-experience-2026.js?v=2"></script>
   <script src="versus-visual-2026.js?v=4"></script>
-  <script src="versus.js?v=90"></script>
+  <script src="versus.js?v=91"></script>
   <script src="adventure.js"></script>
   <script src="together-renderer.js"></script>
   <script src="together.js"></script>

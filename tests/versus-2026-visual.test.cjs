@@ -33,7 +33,7 @@ test('stadium, actors, glowing star and ball render offline without external ass
 test('both published pages use the new renderer before gameplay and retain all match actions',()=>{
  const html=read('index.html');
  assert.equal(html,read('world.html'),'published homepage and world must be identical');
- const a=html.indexOf('src="versus-visual-2026.js?v=4"'),b=html.indexOf('src="versus.js?v=90"');
+ const a=html.indexOf('src="versus-visual-2026.js?v=4"'),b=html.indexOf('src="versus.js?v=91"');
  assert.ok(a>=0&&b>a,'art renderer precedes match controller');
  for(const id of ['versus-score-jozef','versus-score-dad','versus-clock','versus-stick','versus-aim','versus-deke','versus-pass','versus-sprint','versus-kick','versus-again','versus-leave']){
   assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,id+' id must be unique');
@@ -106,7 +106,7 @@ test('curved shots remain bounded and lose spin rather than gaining energy',()=>
 test('mode selector, rule engine and match detail HUD appear in both entrypoints',()=>{
  const html=read('index.html');
  assert.equal(html,read('world.html'));
- assert.ok(html.indexOf('versus-modes-2026.js?v=2')<html.indexOf('versus.js?v=90'),'rule module precedes controller');
+ assert.ok(html.indexOf('versus-modes-2026.js?v=2')<html.indexOf('versus.js?v=91'),'rule module precedes controller');
  for(const id of ['versus-match-mode','versus-mode-description','versus-match-detail','versus-mode-label']){
   assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,'unique '+id);
  }
@@ -121,8 +121,20 @@ test('tutorial and match-end reporting are present on both mobile entrypoints',(
  for(const id of ['versus-tutorial-open','versus-tutorial-next','versus-tutorial-close','versus-finish','versus-finish-next','versus-finish-exit','versus-progress-code','versus-progress-export','versus-progress-import']){
   assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,'single '+id);
  }
- assert.ok(html.indexOf('versus-experience-2026.js?v=1')<html.indexOf('versus.js?v=90'));
+ assert.ok(html.indexOf('versus-experience-2026.js?v=2')<html.indexOf('versus.js?v=91'));
  assert.match(read('sw.js'),/versus-experience-2026\.js/);
  assert.match(read('site-experience.css'),/\.vs-finish/);
  assert.match(read('versus-experience-2026.js'),/JozefVersusExperience/);
+});
+
+test('match report lists host-supplied goals and saves without inserting HTML',()=>{
+ const markup=read('index.html'),ux=read('versus-experience-2026.js'),game=read('versus.js');
+ for(const id of ['versus-finish-highlights','versus-finish-moments'])
+  assert.equal((markup.match(new RegExp('id="'+id+'"','g'))||[]).length,1);
+ assert.match(ux,/list\.replaceChildren\(\)/);
+ assert.match(ux,/line\.textContent=/);
+ assert.match(game,/recordMoment\('GOAL'/);
+ assert.match(game,/recordMoment\('SAVE'/);
+ assert.match(game,/state\.highlights=\[\]/);
+ assert.match(game,/state\.highlights\.length>8/);
 });
