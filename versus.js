@@ -192,20 +192,32 @@
       try{localStorage.setItem('jozefs-world-coop-result',text);}catch(_){}
       return;
     }
-    try {
-      // Every completed match has one host-generated ID. Both browser tabs may
-      // share localStorage; on separate devices each retains its own local record.
-      const idKey='jozefs-world-season-match-ids';
-      const old=JSON.parse(localStorage.getItem(idKey)||'[]');
-      const ids=Array.isArray(old)?old.filter(x=>typeof x==='string').slice(0,19):[];
-      if(matchId&&ids.includes(matchId)){paintSeason();return;}
-      const season=readSeason();
-      season.unshift(state.score.jozef+'-'+state.score.dad);
-      localStorage.setItem('jozefs-world-season',JSON.stringify(season.slice(0,5)));
-      if(matchId)localStorage.setItem(idKey,JSON.stringify([matchId,...ids].slice(0,20)));
-      localStorage.setItem('jozefs-world-versus-result',text);
-    }catch(_){/* Device storage can be disabled or full. */}
-    paintSeason();
+    const writeSeason=()=>{
+      try {
+        const idKey='jozefs-world-season-match-ids';
+        const old=JSON.parse(localStorage.getItem(idKey)||'[]');
+        const ids=Array.isArray(old)?old.filter(x=>typeof x==='string').slice(0,19):[];
+        if(matchId&&ids.includes(matchId)){paintSeason();return;}
+        const season=readSeason();
+        season.unshift(state.score.jozef+'-'+state.score.dad);
+        localStorage.setItem('jozefs-world-season',JSON.stringify(season.slice(0,5)));
+        if(matchId)localStorage.setItem(idKey,JSON.stringify([matchId,...ids].slice(0,20)));
+        localStorage.setItem('jozefs-world-versus-result',text);
+      }catch(_){/* Device storage can be disabled or full. */}
+      paintSeason();
+    };
+    // Two windows on one browser can share storage and finish at nearly the
+    // same time. Lock the read+write transaction; guests yield briefly to
+    // the host. Independent devices still store their own match result.
+    const record=async()=>{
+      if(!room.host)await new Promise(resolve=>setTimeout(resolve,180));
+      writeSeason();
+    };
+    if(navigator.locks?.request){
+      navigator.locks.request('jozefs-world-versus-season',{mode:'exclusive'},record)
+        .catch(()=>{if(room.host)writeSeason();else setTimeout(writeSeason,180);});
+    }else if(room.host)writeSeason();
+    else setTimeout(writeSeason,180);
   }
   function lights() {
     $('light-dad')?.classList.toggle('on', room.who === 'Dad' || room.other === 'Dad');
