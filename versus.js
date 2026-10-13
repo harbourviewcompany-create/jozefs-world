@@ -42,7 +42,7 @@
     $('versus-aim').setAttribute('aria-label','Aim '+label+'. Tap to change.');
   }
   function localKick(power=1){
-    if(room.phase!=='playing'||!localActive||!room.remoteActive)return;
+    if(room.phase!=='playing'||!localActive||!room.remoteActive||isKeeper(room.who))return;
     const p=room.who==='Dad'?state.dad:state.jozef;
     if(Math.hypot(p.x-state.ball.x,p.y-state.ball.y)>92){$('versus-tip').textContent='GET CLOSE TO THE BALL';return;}
     const shot={aim:selectedAim,power:Math.max(.9,Math.min(1.6,power)),mode:'shot'};
@@ -647,23 +647,28 @@
   function onData(msg){
     if(!msg||typeof msg!=='object')return;lastPacket=performance.now();
     if(msg.type==='hello'&&!room.host&&['Dad','Jozef'].includes(msg.hostWho)){
-      room.other=msg.hostWho;room.who=msg.hostWho==='Dad'?'Jozef':'Dad';room.phase='waiting';syncUI();send({type:'joined'});say('You are '+room.who+'. Both players tap Ready.');
-    }else if(msg.type==='joined'&&room.host&&room.phase==='waiting'){room.other=room.who==='Dad'?'Jozef':'Dad';send({type:'ack'});syncUI();say(room.other+' joined. Both players tap Ready.');}
+      room.other=msg.hostWho;room.who=msg.hostWho==='Dad'?'Jozef':'Dad';room.phase='waiting';room.together=msg.together===true;room.otherSpot=msg.hostSpot==='keeper'?'keeper':'forward';syncUI();send({type:'joined',spot:room.spot});say('You are '+room.who+'. Both players tap Ready.');
+    }else if(msg.type==='joined'&&room.host&&room.phase==='waiting'){room.other=room.who==='Dad'?'Jozef':'Dad';room.otherSpot=msg.spot==='keeper'?'keeper':'forward';send({type:'ack'});syncUI();say(room.other+' joined. Both players tap Ready.');}
     else if(msg.type==='ack'&&!room.host&&room.phase==='waiting'){say('Connected as '+room.who+'. Both players tap Ready.');}
     else if(msg.type==='ready'&&room.host&&room.phase==='waiting'){room.remoteReady=true;startMatch();}
     else if(msg.type==='aim'&&room.host&&room.phase==='playing'){
       if(msg.x===null&&msg.y===null)targets[room.other]=null;
       else if(Number.isFinite(msg.x)&&Number.isFinite(msg.y))targets[room.other]={x:Math.max(30,Math.min(690,msg.x)),y:Math.max(30,Math.min(390,msg.y))};
+    }else if(msg.type==='keeper'&&room.host&&room.phase==='playing'&&room.otherSpot==='keeper'){
+      if(Number.isFinite(msg.y))keeperTargets[keeperSide(room.other)]=Math.max(GOAL.y+12,Math.min(GOAL.y+GOAL.h-12,msg.y));
+    }else if(msg.type==='deke'&&room.host&&room.phase==='playing'){activateDeke(room.other);
     }else if(msg.type==='sprint'&&room.host&&room.phase==='playing'){activateSprint(room.other);
     }else if(msg.type==='kick'&&room.host&&room.phase==='playing'){
       shotOptions[room.other]={aim:Number.isInteger(msg.aim)&&msg.aim>=0&&msg.aim<=2?msg.aim:1,
-        power:Number.isFinite(msg.power)?Math.max(.9,Math.min(1.6,msg.power)):1};
+        power:Number.isFinite(msg.power)?Math.max(.9,Math.min(1.6,msg.power)):1,
+        mode:msg.mode==='pass'&&room.together?'pass':msg.mode==='push'?'push':'shot'};
       state.kick=room.other;
     }
     else if(msg.type==='state'&&!room.host&&validState(msg.state)&&['waiting','countdown','playing','finished'].includes(msg.phase)){
       if(msg.phase==='countdown'&&room.phase!=='countdown')resultRecorded=false;
+      if(room.together&&!msg.state.rival)return;
       Object.assign(state,msg.state);const changed=room.phase!==msg.phase||room.remoteActive!==(msg.active!==false);room.phase=msg.phase;room.remoteActive=msg.active!==false;if(changed){syncUI();if(!room.remoteActive)say('Paused — opponent switched away.');}
-      if(room.phase==='finished')say(state.score.dad===state.score.jozef?'Full time — a draw. Rematch?':(state.score.dad>state.score.jozef?'Dad':'Jozef')+' wins! Ready for a rematch?');
+      if(room.phase==='finished')say(state.score.dad===state.score.jozef?'Full time — a draw. Rematch?':(room.together?(state.score.jozef>state.score.dad?'Dad & Jozef':'Rovers'):(state.score.dad>state.score.jozef?'Dad':'Jozef'))+' wins! Ready for a rematch?');
     }else if(msg.type==='active'){room.remoteActive=msg.active===true;if(!room.remoteActive)targets[room.other]=null;syncUI();say(room.remoteActive?'Opponent is back.':'Paused — opponent switched away.');}
     else if(msg.type==='rematch'&&room.host&&room.phase==='finished'){prepareRematch();}
     else if(msg.type==='lobby'&&!room.host){room.phase='waiting';room.ready=false;room.remoteReady=false;resultRecorded=false;syncUI();say('Rematch — both players tap Ready.');}
@@ -673,18 +678,18 @@
   function wire(conn){
     if(room.conn){conn.close();return;}room.conn=conn;conn.on('data',onData);
     let opened=false;
-    const onOpen=()=>{if(opened||room.conn!==conn)return;opened=true;clearTimeout(connectTimer);lastPacket=performance.now();room.phase='waiting';if(room.host)send({type:'hello',hostWho:room.who});else if(room.other)send({type:'joined'});syncUI();};
+    const onOpen=()=>{if(opened||room.conn!==conn)return;opened=true;clearTimeout(connectTimer);lastPacket=performance.now();room.phase='waiting';if(room.host)send({type:'hello',hostWho:room.who,hostSpot:room.spot,together:room.together});else if(room.other)send({type:'joined',spot:room.spot});syncUI();};
     conn.on('open',onOpen);
     // WebKit can open a data channel before an event handler attaches.
     if(conn.open)queueMicrotask(onOpen);
     conn.on('close',()=>{if(room.conn!==conn)return;room.conn=null;fail('Opponent disconnected. Create or join a room to play again.');});
     conn.on('error',()=>fail('Connection lost. Create or join a room to retry.'));
   }
-  function connect(host){
+  function connect(host,together=false){
     if(!window.Peer){say('Online play is unavailable. Try Practice solo or reload when connected.');return;}
     const code=host?Array.from(crypto.getRandomValues(new Uint8Array(6)),n=>'ABCDEFGHJKLMNPQRSTUVWXYZ'[n%24]).join(''):$('versus-code').value.trim().toUpperCase();
     if(!/^[A-Z]{6}$/.test(code)){say('Enter the six-letter code from the other player.');$('versus-code').focus();return;}
-    cleanup();room.code=code;room.host=host;room.phase='connecting';syncUI();say(host?'Creating your room…':'Joining room…');
+    cleanup();room.code=code;room.host=host;room.together=together;room.phase='connecting';syncUI();say(host?'Creating your room…':'Joining room…');
     const peer=new Peer(host?'jw-rival-'+code:undefined);room.peer=peer;
     connectTimer=setTimeout(()=>{if(room.phase==='connecting')fail('Could not connect. Check the code and connection, then retry.');},15000);
     peer.on('open',()=>{if(room.peer!==peer)return;if(host){clearTimeout(connectTimer);room.phase='waiting';syncUI();say('Share the code. Your opponent joins automatically as the other player.');}else wire(peer.connect('jw-rival-'+code,{reliable:true}));});
@@ -697,13 +702,7 @@
   $('versus-ready').addEventListener('click',ready);
   $('versus-leave').addEventListener('click',()=>{cleanup();say('Create a room, join with a code, or warm up solo.');});
   document.querySelectorAll('.versus-spot').forEach(b=>b.addEventListener('click',()=>{if(room.phase!=='lobby')return;room.spot=b.dataset.spot;document.querySelectorAll('.versus-spot').forEach(n=>{n.classList.toggle('is-on',n===b);n.setAttribute('aria-pressed',String(n===b));});}));
-  $('versus-together')?.addEventListener('click',()=>{
-    const chosen=$('versus-cpu-difficulty').value;
-    cpuDifficulty=Object.hasOwn(cpuOptions,chosen)?chosen:'pro';
-    practiceSeconds=$('versus-practice-length').value==='60'?60:120;
-    cleanup();room.host=true;room.practice=true;room.together=true;room.ready=room.remoteReady=true;room.phase='waiting';startMatch();
-    say('Same team. You and '+ (room.who==='Dad'?'Jozef':'Dad') +' against Rovers.');
-  });
+  $('versus-together')?.addEventListener('click',()=>connect(true,true));
   $('versus-practice').addEventListener('click',()=>{
     const chosen=$('versus-cpu-difficulty').value;
     cpuDifficulty=Object.hasOwn(cpuOptions,chosen)?chosen:'pro';
@@ -715,9 +714,9 @@
   function aim(x,y){
     if(room.phase!=='playing')return;
     if(room.spot==='keeper'){
-      const side=room.together||room.who==='Jozef'?'left':'right';
-      state.keepers[side]=Math.max(GOAL.y+16,Math.min(GOAL.y+GOAL.h-16,y));
-      if(!room.host)send({type:'keeper',y:state.keepers[side]});
+      const side=keeperSide(room.who);
+      const next=Math.max(GOAL.y+12,Math.min(GOAL.y+GOAL.h-12,y));
+      if(room.host)keeperTargets[side]=next;else send({type:'keeper',y:next});
       return;
     }
     targets[room.who]={x,y};if(!room.host)send({type:'aim',x,y});
@@ -743,16 +742,32 @@
     lastStick=now;
   });stick.addEventListener('pointermove',e=>{if(stick.hasPointerCapture(e.pointerId))fromStick(e);});
   for(const event of ['pointerup','pointercancel','lostpointercapture'])stick.addEventListener(event,stopInput);
+  function activateDeke(who){
+    if(!room.host||room.phase!=='playing'||isKeeper(who))return false;
+    const now=performance.now();if(now<dekeReady[who])return false;
+    const me=who==='Dad'?state.dad:state.jozef;
+    if(Math.hypot(me.x-state.ball.x,me.y-state.ball.y)>42)return false;
+    dekeReady[who]=now+1600;
+    const other=room.together?state.rival:who==='Dad'?state.jozef:state.dad;
+    const gap=Math.hypot(me.x-other.x,me.y-other.y),direction=room.together?1:(me.face||1);
+    me.x=Math.max(46,Math.min(W-46,me.x+direction*28));
+    me.y=Math.max(40,Math.min(H-40,me.y+(other.y>me.y?-10:10)));
+    state.ball.x=me.x+direction*16;state.ball.y=me.y;state.ball.vx=me.vx;state.ball.vy=me.vy;
+    if(gap<68){other.stun=(room.practice||room.together)?24:8;
+      other.vy+=(other.y>me.y?2:-2);burst(other.x,other.y,'#ffe14a',12);navigator.vibrate?.(20);}
+    state.call='DEKE';return true;
+  }
   function deke(){
-    if(room.phase!=='playing')return;
+    if(room.phase!=='playing'||!localActive||!room.remoteActive)return;
+    if(room.host)activateDeke(room.who);else send({type:'deke'});
+  }
+  function passBall(){
+    if(room.phase!=='playing'||!localActive||!room.remoteActive||isKeeper(room.who))return;
     const me=room.who==='Dad'?state.dad:state.jozef;
-    const other=room.who==='Dad'?state.jozef:state.dad;
-    const gap=Math.hypot(me.x-other.x, me.y-other.y);
-    const step=(me.face||1)*46;
-    me.x+=step; me.y+= (other.y>me.y?-18:18);
-    state.ball.x=me.x+(me.face||1)*16; state.ball.y=me.y; state.ball.vx=me.vx; state.ball.vy=0;
-    if(gap<70){ const hasBall=Math.hypot(other.x-state.ball.x, other.y-state.ball.y)<30; other.stun=hasBall?(cpuDifficulty==='legend'?12:28):40; if(hasBall){state.ball.x=me.x+(me.face||1)*16;state.ball.y=me.y;state.call='Tackle';} else state.call='Ankles'; other.vy+=(other.y>me.y?3:-3); burst(other.x, other.y, '#ffe14a', 16); navigator.vibrate?.(25); }
-    else state.call='Deke';
+    if(Math.hypot(me.x-state.ball.x,me.y-state.ball.y)>92)return;
+    const mode=room.together?'pass':'push';
+    if(room.host){shotOptions[room.who]={aim:selectedAim,power:1,mode};state.kick=room.who;}
+    else send({type:'kick',aim:selectedAim,power:1,mode});
   }
   function shoot(){
     localKick(1+chargeFill*.6);chargeFill=0;chargingSince=0;
@@ -760,7 +775,7 @@
   }
   $('versus-aim').addEventListener('click',()=>pickAim((selectedAim+1)%3));
   $('versus-deke')?.addEventListener('click', deke);
-  $('versus-pass')?.addEventListener('click', () => localKick(0.7));
+  $('versus-pass')?.addEventListener('click',passBall);
   $('versus-sprint')?.addEventListener('click',sprint);
   const shootButton=$('versus-kick');
   shootButton.addEventListener('pointerdown',e=>{
@@ -793,7 +808,7 @@
       const inRange=Math.hypot(me.x-state.ball.x,me.y-state.ball.y)<92;
       $('versus-kick')?.classList.toggle('in-range', inRange && room.phase==='playing');
       if(vector&&now-lastSent>40){aim(me.x+(portrait?vector.y:vector.x)*90,me.y+(portrait?-vector.x:vector.y)*90);lastSent=now;}
-      else if(!vector && room.phase==='playing' && now-lastSent>80){aim(state.ball.x, state.ball.y);lastSent=now;}
+      // Releasing movement stops the player rather than auto-chasing the ball.
       // Skip idle physics and lower render frequency in the lobby or after full time.
       // Live matches retain their deterministic 60 Hz simulation and animation.
       if(room.phase==='playing'&&room.remoteActive){
@@ -816,7 +831,7 @@
         $('versus-score-dad').textContent=state.score.dad;$('versus-score-jozef').textContent=state.score.jozef;const seconds=Math.ceil(state.matchLeft);$('versus-clock').textContent=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');uiTime=now;}
     }else accumulator=0;
     // Retransmit an unacknowledged room invitation: initial WebRTC packets can be lost.
-    if(room.host&&room.conn?.open&&room.phase==='waiting'&&!room.other&&now-lastHello>900){send({type:'hello',hostWho:room.who});lastHello=now;}
+    if(room.host&&room.conn?.open&&room.phase==='waiting'&&!room.other&&now-lastHello>900){send({type:'hello',hostWho:room.who,hostSpot:room.spot,together:room.together});lastHello=now;}
     if(room.conn?.open&&now-heartbeat>2000){
       heartbeat=now;
       if(localActive&&room.remoteActive){send({type:'ping'});if(now-lastPacket>16000)fail('Connection interrupted. Rejoin to start a fresh match.');}
