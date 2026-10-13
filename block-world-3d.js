@@ -42,6 +42,7 @@ function effectBurst(x,y,z,id=8){
    life:.35+(i%3)*.12,id:id===4?4:id===3?7:8});
  }
 }
+let menuPaused=false;
 let guestActive=false;
 let keys={},joy={x:0,y:0},gamepadHeld={mine:false,place:false,attack:false},jumpWasDown=false,look=null,peer=null,conn=null,host=false,invite='',lastNet=0,remote=false,noticeTo=0,renderOk=false;
 const rnd=(x,z,s)=>{let n=Math.imul(x,374761393)+Math.imul(z,668265263)+Math.imul(s|0,2246822519);n=Math.imul(n^(n>>>13),1274126177);return((n^(n>>>16))>>>0)/4294967296;};
@@ -362,7 +363,7 @@ function spawn(){
  boss={x:32.5,z:32.5,y:ground(32.5,32.5),hp:bossHp,alive:bossHp>0};
 }
 function step(dt){
- const blocked=!$('drawer').hidden||!$('pairPanel').hidden;
+ const blocked=menuPaused;
  if(blocked&&!conn?.open){stream();return;}
  clock+=dt;saveClock+=dt;
  for(const p of effects){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;p.vy-=5*dt;}
@@ -539,7 +540,7 @@ function initUi(){
   radarToggle.addEventListener('click',()=>setRadar(!expanded));
   setRadar(expanded);
  }
- function show(id){$('drawer').hidden=id!=='drawer';$('pairPanel').hidden=id!=='pairPanel';$('options').setAttribute('aria-expanded',String(id==='drawer'));}
+ function show(id){menuPaused=!!id;$('drawer').hidden=id!=='drawer';$('pairPanel').hidden=id!=='pairPanel';$('options').setAttribute('aria-expanded',String(id==='drawer'));}
  $('options').onclick=()=>show($('drawer').hidden?'drawer':null);$('close').onclick=()=>show(null);$('pair').onclick=()=>show('pairPanel');$('pairClose').onclick=()=>show(null);
  $('swap').onclick=()=>{if(conn?.open){announce('Heroes stay assigned during co-op');return;}hero.role=1-hero.role;companion.role=1-hero.role;hud();};
  $('perspective').textContent=third?'1ST PERSON':'3RD PERSON';
