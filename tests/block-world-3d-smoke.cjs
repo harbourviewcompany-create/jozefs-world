@@ -32,6 +32,7 @@ assert.match(script,/gl\.vertexAttribPointer\(au,2,gl\.FLOAT,false,48,40\)/,'GPU
 assert.match(script,/uniform sampler2D tileAtlas/,'shader samples illustrated atlas');
 assert.match(script,/function foliageCross\(/,'atlas vegetation includes cross-card silhouette geometry');
 assert.match(script,/function chunkMesh\(/,'chunk mesher preserved');
+assert.match(script,/Math\.min\(MAX_Y,h\+11\)/,'tall conifer foliage is meshed through the top layers');
 assert.match(script,/const skyFragment=/,'procedural GPU sky present');
 assert.match(script,/function drawRadar\(/,'radar rendering present');
 assert.match(script,/function scheduleRecovery\(/,'3D co-op must attempt reconnection');
