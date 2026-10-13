@@ -525,7 +525,8 @@
     }
   }
   function endMatch(){
-    room.phase='finished';state.call='Full time';finishPractice();syncUI();
+    state.matchLeft=0;room.phase='finished';state.call='Full time';finishPractice();syncUI();
+    $('versus-clock').textContent='0:00';
     const winner=state.score.dad===state.score.jozef?'A draw':
       room.together?(state.score.jozef>state.score.dad?'Dad & Jozef':'Rovers'):
       (state.score.dad>state.score.jozef?'Dad':'Jozef');
