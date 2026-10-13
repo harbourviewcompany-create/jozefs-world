@@ -99,7 +99,7 @@ function boot(shared=new Map(),options={}){
  assert.equal(sample.width,256,'atlas width is WebGL1 power of two');
  assert.equal(sample.height,128,'atlas height is WebGL1 power of two');
  assert.notEqual(window.BlockWorld3DTextures.tileFor(1,0),window.BlockWorld3DTextures.tileFor(1,1),'grass top and dirt side use different artwork');
- const instrumented=script.replace('window.BlockWorld3D=Object.freeze',`window.__block3dTests={award,modify,portal,visitForest,receive,worldSnapshot,applyRealm,guestAttack,sendCombat,save,spawn,updateBeacon,mobs:()=>mobs,boss:()=>boss,beacon:()=>forestBeacon,inventory:()=>hero.inventory,guestInventory:()=>guestInventory,setCreative:(v)=>{creative=v;},makeHost:(sent)=>{host=true;conn={open:true,send:v=>sent.push(v)};},makeGuest:(sent)=>{host=false;guestActive=true;conn={open:true,send:v=>sent.push(v)};},moveCompanion:(x,z)=>{companion.x=x;companion.z=z;companion.y=ground(x,z);},setPlayer:(x,z)=>{hero.x=x;hero.z=z;hero.y=ground(x,z);}};window.BlockWorld3D=Object.freeze`);
+ const instrumented=script.replace('window.BlockWorld3D=Object.freeze',`window.__block3dTests={award,modify,portal,visitForest,receive,worldSnapshot,applyRealm,guestAttack,sendCombat,save,spawn,updateBeacon,mobs:()=>mobs,boss:()=>boss,beacon:()=>forestBeacon,inventory:()=>hero.inventory,guestInventory:()=>guestInventory,setCreative:(v)=>{creative=v;},unlockPortal:()=>{defeated=true;portalOpened=true;hero.x=40;hero.z=40;companion.x=40;companion.z=40;},makeHost:(sent)=>{host=true;conn={open:true,send:v=>sent.push(v)};},makeGuest:(sent)=>{host=false;guestActive=true;conn={open:true,send:v=>sent.push(v)};},moveCompanion:(x,z)=>{companion.x=x;companion.z=z;companion.y=ground(x,z);},setPlayer:(x,z)=>{hero.x=x;hero.z=z;hero.y=ground(x,z);}};window.BlockWorld3D=Object.freeze`);
   assert.notEqual(instrumented,script,'test instrumentation inserted');
   vm.runInNewContext(instrumented,sandbox,{timeout:15000});
  const status=()=>window.BlockWorld3D?.status();
@@ -279,9 +279,39 @@ assert.equal(itemsHost.window.BlockWorld3D.block(1,4,1),4,'guest spends earned m
 assert.equal(itemsHost.testHooks.guestInventory()[4],0,'guest placement consumes inventory');
 assert.ok(itemPackets.some(m=>m.t==='inventory'&&m.items[4]===0),'updated inventory is sent back to guest');
 itemsHost.testHooks.receive({t:'request',op:'place',x:1,y:4,z:2,id:4});
-assert.equal(itemsHost.window.BlockWorld3D.block(1,4,2),itemsHost.window.BlockWorld3D.block(1,4,2),'request safely ignored without inventory');
+const unavailable=itemsHost.window.BlockWorld3D.block(1,4,2);
+assert.equal(itemsHost.window.BlockWorld3D.block(1,4,2),unavailable,'request safely ignored without inventory');
+assert.equal(itemsHost.testHooks.guestInventory()[4],0,'unpaid build cannot spend negative inventory');
 const itemsGuest=boot();itemsGuest.tick(1);itemsGuest.testHooks.makeGuest([]);
 itemsGuest.testHooks.receive(itemPackets.filter(m=>m.t==='inventory').at(-1));
 assert.equal(itemsGuest.testHooks.inventory()[4],0,'guest receives host inventory snapshot');
+
+
+// End-to-end paired-session simulation: invite snapshot -> camp -> team quest -> portal.
+const sharedHost=boot(),sharedGuest=boot(),messages=[];
+sharedHost.tick(2);sharedGuest.tick(2);
+sharedHost.testHooks.makeHost(messages);
+sharedGuest.testHooks.makeGuest([]);
+sharedGuest.testHooks.receive({t:'hello',...sharedHost.testHooks.worldSnapshot(),x:2.5,y:12,z:2.5});
+assert.equal(sharedHost.testHooks.visitForest(),true,'host may launch forest camp while connected');
+const travel=messages.find(m=>m.t==='forestTravel');
+assert.ok(travel&&travel.beacon,'host broadcasts scene and camp for both devices');
+sharedGuest.testHooks.receive(travel);
+assert.equal(sharedGuest.testHooks.beacon().x,sharedHost.testHooks.beacon().x,'guest reaches same cooperative forest');
+const dual=sharedHost.testHooks.beacon();
+sharedHost.testHooks.setPlayer(dual.x-1.6,dual.z+1.4);
+sharedHost.testHooks.moveCompanion(dual.x+1.6,dual.z+1.4);
+sharedHost.testHooks.updateBeacon();
+const litPacket=messages.find(m=>m.t==='beacon');
+assert.ok(litPacket?.beacon?.lit,'host broadcasts solved two-player puzzle');
+sharedGuest.testHooks.receive(litPacket);
+assert.equal(sharedGuest.testHooks.beacon().lit,true,'guest celebrates same completed beacon');
+sharedHost.testHooks.unlockPortal();
+sharedHost.testHooks.portal();
+const realmPacket=messages.find(m=>m.t==='realm');
+assert.ok(realmPacket&&realmPacket.realm===1,'host portal switches into second realm');
+sharedGuest.testHooks.receive(realmPacket);
+assert.equal(sharedGuest.status().realm,1,'guest changes realm with host');
+assert.equal(sharedGuest.status().seed,sharedHost.status().seed,'both devices load the same new world seed');
 
 console.log('Block World 3D: WebGL, chunks, movement, save/reload, XP and private invite creation PASS');
