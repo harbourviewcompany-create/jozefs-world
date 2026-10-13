@@ -38,17 +38,28 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  const guestCamera=await guest.evaluate(()=>window.__versusTest.camera());
  if(viewport.height>viewport.width){
    for(const page of [host,guest]){
-     const frame=await page.evaluate(()=>{
+     // The canvas camera is recomputed in the next animation frame after match state changes.
+     const calculate=()=>{
        const camera=window.__versusTest.camera();
        const canvas=document.querySelector('#versus-canvas').getBoundingClientRect();
        const board=document.querySelector('.versus-scoreboard').getBoundingClientRect();
        const controls=document.querySelector('.versus-play').getBoundingClientRect();
        return {goalY:canvas.top+camera.screenY+52*camera.screenScale,
          playerY:canvas.top+camera.screenY+560*camera.screenScale,
-         boardBottom:board.bottom,controlsTop:controls.top};
+         boardBottom:board.bottom,controlsTop:controls.top,scale:camera.screenScale};
+     };
+     await page.waitForFunction(()=>{
+       const c=window.__versusTest.camera();
+       const board=document.querySelector('.versus-scoreboard').getBoundingClientRect();
+       const canvas=document.querySelector('#versus-canvas').getBoundingClientRect();
+       return c.screenY>board.bottom-canvas.top+5;
+     },undefined,{timeout:4500}).catch(async err=>{
+       const camera=await page.evaluate(()=>window.__versusTest.camera());
+       throw Error('Camera did not settle below score HUD: '+JSON.stringify(camera)+'; '+err.message);
      });
-     assert.ok(frame.goalY>frame.boardBottom,'goalkeeper must be visible below the scoreboard');
-     assert.ok(frame.playerY<frame.controlsTop-32,'attacker must stay visible above mobile controls');
+     const frame=await page.evaluate(calculate);
+     assert.ok(frame.goalY>frame.boardBottom,'goalkeeper below scoreboard: '+JSON.stringify(frame));
+     assert.ok(frame.playerY<frame.controlsTop-32,'attacker above controls: '+JSON.stringify(frame));
    }
  }
  assert.equal(hostCamera.cameraFlipped,false,'Dad sees his attacking side from the lower pitch');
