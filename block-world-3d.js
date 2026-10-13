@@ -125,6 +125,18 @@ function cube(v,x,y,z,id,size=1,mask=null){
    else if(under)shade*=.88;
   }
   let c=col[id]||col[3];
+  // Broad low-frequency colour patches eliminate the lime-green checkerboard.
+  // This is baked per voxel; there is no additional per-frame texture upload.
+  if(id===1&&j===0){
+   const n=noise(x+64,z-35,8),fleck=rnd(x,z,seed+73);
+   c=[.25+n*.17+fleck*.025,.53+n*.23+fleck*.018,.25+n*.17];
+  }else if(id===2){
+   const n=noise(x,z,9);
+   c=[.43+n*.12,.30+n*.085,.20+n*.06];
+  }else if(id===3){
+   const n=noise(x+14,z,12);
+   c=[.48+n*.13,.54+n*.14,.60+n*.13];
+  }
   // Grassy/snowy surfaces have soil and rock sidewalls, not solid colour cubes.
   if(id===1&&j!==0)c=j===3?[.38,.29,.20]:[.48,.34,.22];
   if(id===7&&j!==0)c=[.55,.63,.69];
@@ -202,6 +214,12 @@ function chunkMesh(cx,cz){
     }else if(chance>.993){
      voxelBox(v,ox,stemY-.025,oz,.36,.17,.35,3);
      voxelBox(v,ox+.10,stemY+.13,oz-.06,.22,.14,.24,3);
+    }
+   }else if(zone==='Meadows'&&chance>.914&&chance<.964){
+    const stature=.19+rnd(x,z,seed+519)*.30;
+    voxelBox(v,ox,stemY+.02,oz,.045,stature,.045,22);
+    for(const sign of [-1,1]){
+     voxelBox(v,ox+sign*.105,stemY+stature*.47,oz,.19,.048,.055,5);
     }
    }else if(zone==='Meadows'&&chance>.976){
     voxelBox(v,ox,stemY,oz,.055,.29,.055,22);
