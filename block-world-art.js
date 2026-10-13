@@ -142,6 +142,26 @@ function background(g,o){
  const haze=g.createLinearGradient(0,h*.56,0,h);haze.addColorStop(0,'#daebff00');haze.addColorStop(1,'#9fd3e550');g.fillStyle=haze;g.fillRect(0,h*.55,w,h*.45);
  g.restore();
 }
+function caveBackdrop(g,o){
+ const {surface,camX,camY,tileSize:T,w,h}=o;
+ const start=clamp(Math.floor(camX/T)-1,0,surface.length-1);
+ const stop=clamp(Math.ceil((camX+w)/T)+1,0,surface.length-1);
+ const dark=g.createLinearGradient(0,Math.min(h*.60,h),0,h);
+ dark.addColorStop(0,'#304f69');dark.addColorStop(.48,'#1c344e');dark.addColorStop(1,'#0a192c');
+ g.save();
+ for(let x=start;x<=stop;x++){
+  const sx=x*T-camX,y=surface[x]*T-camY;
+  if(y>=h)continue;
+  g.fillStyle=dark;g.fillRect(sx,Math.max(-1,y),T+1,h-Math.max(-1,y));
+  // Low-frequency mineral striations only appear through mined-out cave gaps.
+  if(hash(x,9,17)>.64){
+   g.globalAlpha=.16;
+   rect(g,sx+4,y+58,19,3,'#87b0be');
+   g.globalAlpha=1;
+  }
+ }
+ g.restore();
+}
 function embellish(g,o){
  const {world,surface,camX,camY,tileSize,w,h,time}=o,T=tileSize;
  const start=clamp(Math.floor(camX/T)-1,0,surface.length-1),stop=clamp(Math.ceil((camX+w)/T)+1,0,surface.length-1);
@@ -215,7 +235,7 @@ function character(g,p,i,o){
  if(i===0){rect(g,ex-1,y+14,6,3,'#623d30');rect(g,x+8,y+17,8,3,'#4a3125');}
  rect(g,x+w-3,y+18,5,8,'#e4a77b');
  pickaxe(g,x+w/2+fl*14,y+20,fl);
- g.font='900 12px system-ui';g.textAlign='center';g.lineWidth=3;g.strokeStyle='#08283c';g.strokeText(p.name,x+w/2,y-10);
+ g.font='800 10px system-ui';g.textAlign='center';g.lineWidth=2.5;g.strokeStyle='#08283c';g.strokeText(p.name,x+w/2,y-10);
  g.fillStyle='#fff';g.fillText(p.name,x+w/2,y-10);
  if(o.active===i){g.strokeStyle='#84f4ff';g.lineWidth=1.7;g.strokeRect(x-3,y-3,w+6,h+6);}
  g.restore();
@@ -253,5 +273,5 @@ function foreground(g,o){
  }
  g.globalAlpha=1;g.restore();
 }
-window.BlockWorldArt=Object.freeze({tile,background,embellish,character,creature,foreground});
+window.BlockWorldArt=Object.freeze({tile,background,caveBackdrop,embellish,character,creature,foreground});
 })();
