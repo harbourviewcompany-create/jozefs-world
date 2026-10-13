@@ -13,6 +13,10 @@ Block World 3D is a **native WebGL voxel game**, not a CSS imitation. The origin
 
 ### Forest Co-op Expedition — autosave, shared combat and beacon (13 October 2026)
 
+**Forest Co-op reliability hardening:** 3D save data now includes health (not just the movement-detection flag), and guest attack requests are dispatched through the actual host receive path without being incorrectly rejected for missing block coordinates. The two rune pads are further from the initial camp spawn, so the forest puzzle requires movement rather than activating automatically. The compact HUD shows each character's pad readiness. Water is a continuous, animated oval pond with sunlight highlights, separate from both rune pads, while health damage is clamped to zero. The updated regression suite verifies real guest-request dispatch, save/reload of health, both pad positions, multiplayer completion, repeated attack cooldowns, realm travel and old 2D flows.
+
+
+
 This release prioritizes reliability and an explorable **shared forest landmark**. It remains the existing offline-first WebGL 1 game, rather than resetting worlds or adopting an untested engine.
 
 - **Travel saves:** Player position, camera orientation and damage now make the game dirty; the 15-second autosave persists travel without mining or building. Pagehide and background events also force a save. Existing `jozefs-block-3d-v1` games remain valid.
