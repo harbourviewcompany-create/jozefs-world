@@ -185,7 +185,7 @@
     const stats=$('versus-stats');
     if(stats)stats.textContent=(state.shots||0)+' shots · '+(state.saves||0)+' saves';
     const result=$('today-versus-result');
-    if(!result||room.phase!=='finished'||resultRecorded||!/wins|draw/i.test(text))return;
+    if(!result||room.phase!=='finished'||room.practice||resultRecorded||!/wins|draw/i.test(text))return;
     resultRecorded=true; // A repeated state packet must not count as another match.
     result.textContent=text;
     if(room.together){try{localStorage.setItem('jozefs-world-coop-result',text);}catch(_){}return;}
@@ -529,7 +529,7 @@
     const winner=state.score.dad===state.score.jozef?'A draw':
       room.together?(state.score.jozef>state.score.dad?'Dad & Jozef':'Rovers'):
       (state.score.dad>state.score.jozef?'Dad':'Jozef');
-    say(winner==='A draw'?'Full time — a draw. Rematch?':winner+' wins! Ready for a rematch?');
+    say(winner==='A draw'?'Full time — a draw. Rematch?':winner+(winner==='Dad & Jozef'?' win!':' wins!')+' Ready for a rematch?');
   }
   function step(){
     if(!room.host||room.phase!=='playing'||!localActive||!room.remoteActive)return;
@@ -640,7 +640,7 @@
   function startMatch(){
     if(!room.host||!room.ready||!room.remoteReady||room.phase==='countdown')return;
     freshMatch();room.phase='countdown';let count=3;state.call='3';syncUI();broadcast();
-    const next=()=>{if(room.phase!=='countdown')return;if(!localActive||!room.remoteActive){countdownTimer=setTimeout(next,250);return;}count--;state.call=count?String(count):'KICKOFF';if(!count){room.phase='playing';syncUI();say(room.practice?'Solo challenge / '+cpuDifficulty.toUpperCase()+' computer rival.':room.who+' vs '+room.other+' — game on.');setTimeout(()=>{if(state.call==='KICKOFF')state.call='';},800);}else countdownTimer=setTimeout(next,1000);broadcast();};
+    const next=()=>{if(room.phase!=='countdown')return;if(!localActive||!room.remoteActive){countdownTimer=setTimeout(next,250);return;}count--;state.call=count?String(count):'KICKOFF';if(!count){room.phase='playing';syncUI();say(room.practice?'Solo challenge / '+cpuDifficulty.toUpperCase()+' computer rival.':room.together?'Dad and Jozef vs Rovers — game on.':room.who+' vs '+room.other+' — game on.');setTimeout(()=>{if(state.call==='KICKOFF')state.call='';},800);}else countdownTimer=setTimeout(next,1000);broadcast();};
     countdownTimer=setTimeout(next,1000);
   }
   function ready(){if(!room.other||room.ready)return;room.ready=true;syncUI();send({type:'ready'});startMatch();}
