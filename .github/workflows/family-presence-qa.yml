@@ -1,0 +1,31 @@
+name: Family presence QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'presence.js'
+      - 'tests/presence-family.test.cjs'
+      - '.github/workflows/family-presence-qa.yml'
+  pull_request:
+    paths:
+      - 'presence.js'
+      - 'tests/presence-family.test.cjs'
+      - '.github/workflows/family-presence-qa.yml'
+  workflow_dispatch:
+jobs:
+  family-pairing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Verify secure family pairing and no global peer names
+        run: |
+          node --check presence.js
+          node --test tests/presence-family.test.cjs
+      - name: Verify published CSS and identical entrypoints
+        run: |
+          node scripts/build-site-css.cjs --check
+          cmp -s index.html world.html

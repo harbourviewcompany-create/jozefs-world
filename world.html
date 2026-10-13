@@ -197,7 +197,20 @@ body.nav-open .nav-extra{display:inline-flex}
         <div>
           <p class="eyebrow-live">YOUR SHARED CLUB / TODAY</p>
           <h2 id="today-heading">TODAY.</h2>
-          <p class="today-intro">One match. One Street run. He picks his clubs.</p><p id="today-clubs">His clubs load here.</p><p id="today-last">No match yet.</p><p id="today-versus-result">No Versus yet.</p><p id="versus-season">Season: no matches yet.</p><p id="hq-trophy" hidden>Trophy cabinet: three wins in a row.</p><ol id="versus-season-list"></ol><p id="hq-versus" class="live-row"><span id="dot-dad" class="live-dot"></span> Dad <span id="dot-jozef" class="live-dot"></span> Jozef <span id="live-status">Waiting.</span> <button type="button" id="voice-alerts">Voice alerts</button> <button type="button" data-live-who="Dad">This phone is Dad</button> <button type="button" data-live-who="Jozef">This phone is Jozef</button></p>
+          <p class="today-intro">One match. One Street run. He picks his clubs.</p><p id="today-clubs">His clubs load here.</p><p id="today-last">No match yet.</p><p id="today-versus-result">No Versus yet.</p><p id="versus-season">Season: no matches yet.</p><p id="hq-trophy" hidden>Trophy cabinet: three wins in a row.</p><ol id="versus-season-list"></ol><p id="hq-versus" class="live-row"><span id="dot-dad" class="live-dot"></span> Dad <span id="dot-jozef" class="live-dot"></span> Jozef <span id="live-status">Waiting.</span> <button type="button" id="voice-alerts">Voice alerts</button> <button type="button" data-live-who="Dad">This phone is Dad</button> <button type="button" data-live-who="Jozef">This phone is Jozef</button> <button type="button" id="family-pair-open" aria-expanded="false" aria-controls="family-pair-panel">Pair family phones</button></p>
+          <div id="family-pair-panel" class="family-pair-panel" hidden>
+            <strong>Private family connection</strong>
+            <p id="family-pair-help">Dad creates a private code, then Jozef enters it on the other phone.</p>
+            <label for="family-pair-code">Family code</label>
+            <input type="text" id="family-pair-code" maxlength="32" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="32-character private code">
+            <div class="family-pair-actions">
+              <button type="button" id="family-pair-create">Create code as Dad</button>
+              <button type="button" id="family-pair-copy">Copy code</button>
+              <button type="button" id="family-pair-join">Join as Jozef</button>
+              <button type="button" id="family-pair-forget">Disconnect pairing</button>
+            </div>
+            <small>Keep this code private. Pairing enables only online presence; it does not share game saves or start a video call.</small>
+          </div>
         </div>
         <span class="today-counter" id="today-counter" aria-live="polite">0 / 2 PLAYED</span>
       </div>
