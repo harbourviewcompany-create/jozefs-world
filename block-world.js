@@ -227,7 +227,7 @@ function draw(){
  const viewW=cssW/cameraZoom,viewH=cssH/cameraZoom;
  const smooth=window.BlockWorld2D?.isGuest?.() ? .27 : 1;
   for(const q of players){q.renderX=Number.isFinite(q.renderX)?q.renderX+(q.x-q.renderX)*smooth:q.x;q.renderY=Number.isFinite(q.renderY)?q.renderY+(q.y-q.renderY)*smooth:q.y;}
-  const p=players[active],goalX=p.renderX+p.w/2-viewW*.5,goalY=p.renderY+p.h/2-viewH*.52;
+  const p=players[active],goalX=p.renderX+p.w/2-viewW*.5,goalY=p.renderY+p.h/2-viewH*.46;
  camX+=(Math.max(0,Math.min(W*TILE-viewW,goalX))-camX)*.14;
  camY+=(Math.max(0,Math.min(H*TILE-viewH,goalY))-camY)*.14;
  drawBackground();
