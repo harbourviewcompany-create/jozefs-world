@@ -55,15 +55,20 @@
   }
   async function exportBackup(){
     try {
-      const data={};
-      for(const key of KEYS){
-        const value=read(key);
-        if(value==null){data[key]=null;continue;}
-        data[key]=['jozefKeepyBest','jozefs-world-street-best-v1'].includes(key)?String(value):JSON.parse(value);
-      }
-      const backup={format:'jozefs-world-local-backup',version:1,createdAt:new Date().toISOString(),data};
       const kit=window.JozefFamilyBackup;
-      const full=kit?kit.create(localStorage,await kit.readIndexedDb()):backup;
+      let full;
+      if(kit)full=kit.create(localStorage,await kit.readIndexedDb());
+      else {
+        // Compatibility for a cached older shell: never fail a new-format
+        // backup because an unrelated old progress key contains bad JSON.
+        const data={};
+        for(const key of KEYS){
+          const value=read(key);
+          if(value==null){data[key]=null;continue;}
+          data[key]=['jozefKeepyBest','jozefs-world-street-best-v1'].includes(key)?String(value):JSON.parse(value);
+        }
+        full={format:'jozefs-world-local-backup',version:1,createdAt:new Date().toISOString(),data};
+      }
       const blob=new Blob([JSON.stringify(full,null,2)],{type:'application/json'});
       const url=URL.createObjectURL(blob);
       const link=document.createElement('a');
