@@ -30,14 +30,16 @@ assert.match(script,/const skyFragment=/,'procedural GPU sky present');
 assert.match(script,/function drawRadar\(/,'radar rendering present');
 assert.match(script,/adaptiveCap/,'adaptive FPS scaling present');
 new vm.Script(script,{filename:'block-world-3d.js'});
-function boot(shared=new Map()){
+function boot(shared=new Map(),options={}){
  const elements=new Map(),events=new Map(),clock={raf:null,now:0},errors=[];
  const gl=new Proxy({
   ARRAY_BUFFER:1,STATIC_DRAW:2,DYNAMIC_DRAW:3,TRIANGLES:4,
   VERTEX_SHADER:5,FRAGMENT_SHADER:6,COMPILE_STATUS:7,LINK_STATUS:8,
   DEPTH_TEST:9,COLOR_BUFFER_BIT:16,DEPTH_BUFFER_BIT:32,FLOAT:10,
-  createProgram(){return{};},createShader(){return{};},createBuffer(){return{};},
-  getProgramParameter(){return true;},getShaderParameter(){return true;},
+  createProgram(){return{};},createShader(type){return {type,source:''};},createBuffer(){return{};},
+  shaderSource(shader,src){shader.source=src;},
+  getProgramParameter(){return true;},
+  getShaderParameter(shader){return !(options.rejectPremium&&shader.type===6&&shader.source.includes('uniform vec3 sunDir'));},
   getAttribLocation(){return 1;},getUniformLocation(){return{};},
   bufferData(_target,data){if(data?.length!==6&&data?.length)assert.equal(data.length%10,0,'GPU cube vertex buffers use 10-float positions, material and normals');}
  },{get:(a,k)=>k in a?a[k]:()=>{}});
@@ -80,6 +82,13 @@ test.tick(3);
 assert.ok(test.status().renderOk,'frame rendered');
 assert.equal(test.status().quality,'AUTO');
 assert.equal(test.status().camera,'THIRD_PERSON','modern default 3D camera shows the player');
+
+assert.equal(test.status().shaderMode,'CINEMATIC','premium GPU shader is used when available');
+const safeGPU=boot(new Map(),{rejectPremium:true});
+safeGPU.tick(2);
+assert.ok(safeGPU.status().renderOk,'compatibility shader still renders on an older GPU');
+assert.equal(safeGPU.status().shaderMode,'COMPATIBILITY','premium shader failures degrade safely');
+
 assert.ok(test.document.getElementById('drawer').querySelector('.buttons'),'full accessible menu preserved');
 assert.ok(test.status().drawnChunks>0&&test.status().drawnChunks<=test.status().loadedChunks,'visible chunk frustum culling returns bounded drawn counts');
 assert.equal(test.document.getElementById('radar-toggle').getAttribute('aria-expanded'),'false','mobile radar initially compact');
