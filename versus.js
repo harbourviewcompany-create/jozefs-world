@@ -107,7 +107,7 @@
     star: { x: 360, y: 120, on: true }, super: '',
     keepers: { left: 210, right: 210 },
     shots: 0, saves: 0, lastShot: null,
-    combo:{passes:0,assists:0,boostUntil:0,passTo:'',passFrom:'',passAt:-999,lastShooter:''},
+    combo:{passes:0,assists:0,boostUntil:0,passTo:'',passFrom:'',passAt:-999,lastShooter:'',assistFrom:'',assistTo:'',receivedAt:-1},
     penalty:null, mode:'classic'
   };
   const keeperState = { left: { commit: 0, target: 210 }, right: { commit: 0, target: 210 } };
@@ -181,6 +181,12 @@
       detail.textContent=room.mode==='first5'?'FIRST TO 5 GOALS':room.mode==='golden'?'NEXT GOAL WINS':'FIRST TO 3';
     }
   }
+  window.addEventListener('jozef:versus-progress-updated',()=>{
+    renderPracticeRecord();
+    paintSeason();
+    const trophy=$('versus-trophy');
+    if(trophy)try{trophy.hidden=localStorage.getItem('jozefs-world-versus-cup')!=='won';}catch{}
+  });
   function renderPracticeRecord(){
     const r=readPractice(),node=$('versus-practice-record');
     if(node)node.textContent=r.played+' PLAYED / '+r.wins+' WON / BEST STREAK '+r.bestStreak;
@@ -499,6 +505,9 @@
         state.combo.passTo=who==='Dad'?'Jozef':'Dad';
         state.combo.passFrom=who;
         state.combo.passAt=tick;
+        state.combo.assistFrom='';
+        state.combo.assistTo='';
+        state.combo.receivedAt=-1;
         state.combo.boostUntil=0;
         targetX=Math.max(46,Math.min(W-46,teammate.x+(teammate.vx||0)*8));
         targetY=Math.max(40,Math.min(H-40,teammate.y+(teammate.vy||0)*8));
@@ -519,8 +528,12 @@
       state.ball.vy=sy/length*speed+(Math.random()-.5)*(bouncing?1.4:.35)*(mode==='shot'?8:2);
       // A deliberately small, host-simulated curve: aim above/below centre to bend.
       state.ball.spin=mode==='shot'?(shot.aim-1)*.016*Math.min(1.5,power):0;
-      state.lastShot={who,x:state.ball.x,y:state.ball.y,age:0};
-      if(mode==='shot')state.combo.lastShooter=who;
+      const assistedBy=mode==='shot'&&room.together?rules.assistCredit(state.combo,{who},tick):null;
+      state.lastShot={who,x:state.ball.x,y:state.ball.y,age:0,assistedBy};
+      if(mode==='shot'){
+        state.combo.lastShooter=who;
+        state.combo.assistFrom='';state.combo.assistTo='';state.combo.receivedAt=-1;
+      }
       if(bouncing)state.call='Off balance';
       shot.power=1;kickLock=16;
       if(mode==='shot')state.shots=(state.shots||0)+1;
@@ -531,8 +544,17 @@
       const who=p===state.dad?'Dad':'Jozef';
       if(who===state.combo.passTo&&tick-state.combo.passAt<190){
         state.combo.passes++;state.combo.boostUntil=tick+180;
+        state.combo.assistFrom=state.combo.passFrom;
+        state.combo.assistTo=who;
+        state.combo.receivedAt=tick;
         state.combo.passTo='';state.call='ONE-TWO COMBO';
       }
+    }
+    if(room.together&&(p===state.rival||p===state.rival2)){
+      // An opponent's touch breaks the passing chain, even before the next shot.
+      state.combo.passTo='';state.combo.assistFrom='';state.combo.assistTo='';
+      state.combo.receivedAt=-1;state.combo.boostUntil=0;
+      if(state.lastShot)state.lastShot.assistedBy=null;
     }
     const speed=Math.hypot(p.vx,p.vy);
     if(speed<.4)return;
@@ -587,13 +609,12 @@
     if(!room.together)return;
     const bots=room.mode==='duo'?[state.rival,state.rival2]:[state.rival];
     const ball=state.ball;
+    const roles=bots.length===2?rules.defensivePair(bots,ball,W,'pro'):null;
     for(const [i,bot] of bots.entries()){
       if(bot.stun>0){bot.stun--;move(bot,null,3.2);continue;}
       const partner=bots.length>1?bots[1-i]:null;
-      const plan=rules.tacticalTarget(bot,ball,W,'pro',partner);
-      const covered=partner&&Math.hypot(partner.x-ball.x,partner.y-ball.y)<55;
-      const target=i===1&&covered?{x:Math.max(360,ball.x+110),y:Math.max(60,Math.min(360,420-ball.y))}:plan;
-      move(bot,target,room.mode==='duo'?4.1:3.6);
+      const target=roles?roles[i]:rules.tacticalTarget(bot,ball,W,'pro',partner);
+      move(bot,target,room.mode==='duo'?Math.min(4.4,target.speed):3.6);
       const distance=Math.hypot(bot.x-ball.x,bot.y-ball.y);
       if(distance<34)bot.carry=(bot.carry||0)+1;else bot.carry=0;
       if(bot.carry>17&&kickLock===0&&tick-lastBotKick>46){
@@ -639,14 +660,8 @@
       burst(state.ball.x,state.ball.y,'#eaff91',28);
     }else state.call='PENALTY SAVED';
     pen.turn++;pen.frames=0;pen.shot=false;
-    const total=pen.turn,lead=Math.abs(state.score.dad-state.score.jozef);
-    const remainingEven=Math.max(0,5-Math.ceil(total/2)),remainingOdd=Math.max(0,5-Math.floor(total/2));
-    const leftDad=room.together?remainingOdd:remainingEven;
-    const leftJo=room.together?remainingEven:remainingOdd;
-    const early=total>=6&&lead>(state.score.dad>state.score.jozef?leftJo:leftDad);
-    if(early||(total>=10&&total%2===0&&state.score.dad!==state.score.jozef)||total>=20){
-      endMatch();return;
-    }
+    const victor=rules.penaltyResult(pen.turn,state.score.dad,state.score.jozef,room.together);
+    if(victor){endMatch();return;}
     pen.pause=35;
   }
   function stepPenalty(){
@@ -733,7 +748,12 @@
     physics.walls(state.ball, W, H, inGoal);
     state.matchLeft=Math.max(0,state.matchLeft-1/60);
     if(state.matchLeft<=0){
-      if(state.score.dad===state.score.jozef&&!state.overtime&&room.mode!=='golden'){
+      if(room.mode==='golden'&&state.score.dad===state.score.jozef){
+        state.overtime=true;state.matchLeft=30;
+        if(state.call!=='SUDDEN DEATH')state.call='SUDDEN DEATH';
+        broadcast();return;
+      }
+      if(state.score.dad===state.score.jozef&&!state.overtime){
         state.overtime=true;state.matchLeft=30;state.call='GOLDEN GOAL';reset(0);
         kickoffHold=40;broadcast();return;
       }
@@ -753,8 +773,8 @@
       if (save('right') && state.call!=='SUPER') { state.saves += 1; state.ball.x = W - 56; state.ball.vx = -5.5; state.ball.vy *= 0.4; state.call = 'Saved'; kickLock = 20; }
       else {
         state.score.jozef += 1;
-        const assist=room.together&&state.combo.passFrom&&state.combo.lastShooter&&
-          state.combo.passFrom!==state.combo.lastShooter&&tick-state.combo.passAt<240;
+        const assist=room.together&&['Dad','Jozef'].includes(state.lastShot?.assistedBy)&&
+          state.lastShot?.who!==state.lastShot?.assistedBy;
         if(assist)state.combo.assists++;
         state.combo.passFrom='';state.combo.passTo='';
         state.call=room.together?(assist?'ASSIST + GOAL':'TEAM GOAL'):'GOAL Jozef';
@@ -817,6 +837,7 @@
     $('versus').classList.toggle('is-coop',room.together);
     $('versus-match-mode').disabled=connected;
     renderModeHUD();
+    window.JozefVersusExperience?.finish(room,state,cupStage);
     const penaltyTurn=room.mode==='penalties'&&room.phase==='playing'&&state.penalty?.active!==room.who;
     $('versus-kick').disabled=$('versus-kick').disabled||penaltyTurn;
     $('versus-deke').disabled=room.mode==='penalties'&&playing;
@@ -834,7 +855,7 @@
   function cleanup(){clearTimeout(connectTimer);clearTimeout(countdownTimer);clearTimeout(recoveryTimer);clearTimeout(connectWatchdog);reconnectAttempts=0;const pending=room.pending,oldConn=room.conn,oldPeer=room.peer;room.pending=null;room.conn=null;room.peer=null;pending?.close();oldConn?.close();oldPeer?.destroy();room.other='';room.otherPeer='';room.reconnecting=false;room.ready=false;room.remoteReady=false;room.host=false;room.practice=false;room.together=false;room.mode='classic';room.otherSpot='forward';room.remoteActive=true;room.phase='lobby';cameraYReady=false;cameraPhase='';stopInput();syncUI();}
   function fail(message){cleanup();say(message);}
   function freshMatch(){state.mode=room.mode;state.matchId=crypto.randomUUID?.()||Array.from(crypto.getRandomValues(new Uint8Array(16)),v=>v.toString(16).padStart(2,'0')).join('');state.kick='';state.score={dad:0,jozef:0};state.matchLeft=room.mode==='classic'&&room.practice?practiceSeconds:rules.config(room.mode).seconds;state.call='Kickoff';kickLock=0;lastBotKick=-100;savedMatch=false;resultRecorded=false;state.overtime=false;state.star={x:360,y:120,on:room.mode!=='penalties'};state.super='';state.lastShot=null;
-    state.combo={passes:0,assists:0,boostUntil:0,passTo:'',passFrom:'',passAt:-999,lastShooter:''};
+    state.combo={passes:0,assists:0,boostUntil:0,passTo:'',passFrom:'',passAt:-999,lastShooter:'',assistFrom:'',assistTo:'',receivedAt:-1};
     state.penalty=null;penaltyFrames=0;
     if(room.mode==='cup')cpuDifficulty=rules.cupDifficulty(cupStage);goalFxFrames=0;nextLocalSprint=0;dekeReady.Dad=dekeReady.Jozef=0;sprintUntil.Dad=sprintUntil.Jozef=0;sprintReady.Dad=sprintReady.Jozef=0;reset(0);
     if(room.mode==='penalties'){
@@ -853,7 +874,7 @@
   function validState(v){return v&&['dad','jozef','ball'].every(k=>v[k]&&['x','y','vx','vy'].every(n=>Number.isFinite(v[k][n])&&Math.abs(v[k][n])<2000))&&v.score&&['dad','jozef'].every(k=>Number.isInteger(v.score[k])&&v.score[k]>=0&&v.score[k]<10000)&&Number.isFinite(v.matchLeft)&&v.matchLeft>=0&&v.matchLeft<=180&&typeof v.call==='string'&&v.call.length<80&&typeof v.matchId==='string'&&/^[A-Za-z0-9-]{10,80}$/.test(v.matchId)&&(!v.rival||['x','y','vx','vy'].every(n=>Number.isFinite(v.rival[n])&&Math.abs(v.rival[n])<2000))&&
     (!v.rival2||['x','y','vx','vy'].every(n=>Number.isFinite(v.rival2[n])&&Math.abs(v.rival2[n])<2000))&&
     (!v.mode||rules.safeMode(v.mode,true,true)===v.mode)&&
-    (!v.penalty||(Number.isInteger(v.penalty.turn)&&v.penalty.turn>=0&&v.penalty.turn<=20&&
+    (!v.penalty||(Number.isInteger(v.penalty.turn)&&v.penalty.turn>=0&&v.penalty.turn<=999&&
       ['Dad','Jozef','Rovers'].includes(v.penalty.active)));}
   function onData(msg){
     if(!msg||typeof msg!=='object')return;lastPacket=performance.now();

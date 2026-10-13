@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'versus-modes-2026.js'
+      - 'versus-experience-2026.js'
       - 'tests/versus-modes-2026.test.cjs'
       - 'versus.js'
       - 'versus-physics.js'
@@ -19,6 +20,7 @@ on:
   pull_request:
     paths:
       - 'versus-modes-2026.js'
+      - 'versus-experience-2026.js'
       - 'tests/versus-modes-2026.test.cjs'
       - 'versus.js'
       - 'versus-physics.js'
@@ -48,6 +50,7 @@ jobs:
         run: |
           node --check versus.js
           node --check versus-modes-2026.js
+          node --check versus-experience-2026.js
           node --test tests/versus-modes-2026.test.cjs
           node --check versus-visual-2026.js
           node --check tests/versus-mobile-smoke.cjs

@@ -47,3 +47,37 @@ test('authoritative match code guards penalty shootouts, sends room mode, and re
  assert.match(js,/room\.mode==='duo'/);
  assert.match(js,/jozefs-world-versus-cup-stage/);
 });
+
+test('penalty sudden death never declares a tied result after ten or twenty kicks',()=>{
+ for(const n of [10,12,20,22]){
+  assert.equal(rules.penaltyResult(n,n/2,n/2),null);
+ }
+ assert.equal(rules.penaltyResult(12,7,6),'dad');
+ assert.equal(rules.penaltyResult(12,6,7),'jozef');
+ assert.equal(rules.penaltyResult(11,6,5),null,'an unmatched extra kick cannot end sudden death');
+ assert.equal(rules.penaltyResult(7,3,0),'dad','clinched games end during regulation');
+ assert.equal(rules.penaltyResult(7,0,3),'jozef');
+});
+test('co-op passes grant assists only to the actual receiver and expire',()=>{
+ const c={assistFrom:'Dad',assistTo:'Jozef',receivedAt:100};
+ assert.equal(rules.assistCredit(c,{who:'Jozef'},150),'Dad');
+ assert.equal(rules.assistCredit(c,{who:'Dad'},150),null);
+ assert.equal(rules.assistCredit(c,{who:'Jozef'},341),null);
+ assert.equal(rules.assistCredit({...c,receivedAt:-1},{who:'Jozef'},150),null);
+ assert.equal(rules.assistCredit({...c,assistTo:'Dad'},{who:'Jozef'},150),null);
+});
+test('2v2 AI assigns different chase and cover roles deterministically',()=>{
+ const players=[{x:470,y:130},{x:580,y:330}],ball={x:490,y:150,vx:5,vy:0};
+ const [a,b]=rules.defensivePair(players,ball);
+ assert.ok(Math.hypot(a.x-ball.x,a.y-ball.y)<Math.hypot(b.x-ball.x,b.y-ball.y)+90);
+ assert.ok(Math.abs(a.y-b.y)>20,'both defenders do not crowd the same lane');
+ assert.deepEqual(rules.defensivePair(players,ball),rules.defensivePair(players,ball));
+});
+test('golden goal and completed match panels are wired into the controller',()=>{
+ const js=fs.readFileSync(path.join(root,'versus.js'),'utf8');
+ assert.match(js,/room\.mode==='golden'&&state\.score\.dad===state\.score\.jozef/);
+ assert.match(js,/rules\.penaltyResult\(/);
+ assert.match(js,/rules\.assistCredit\(/);
+ assert.match(js,/rules\.defensivePair\(/);
+ assert.match(js,/JozefVersusExperience\?\.finish/);
+});

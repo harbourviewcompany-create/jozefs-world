@@ -22,6 +22,12 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  await context.route(url=>url.pathname.endsWith('/versus.js'),r=>r.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(root,'versus.js'),'utf8').replace('syncUI();draw();requestAnimationFrame(frame);','window.__versusTest={state,room,step,targets,onData,camera:()=>({portrait,cameraFlipped,screenScale,screenY})};syncUI();draw();requestAnimationFrame(frame);')}));
  const host=await context.newPage(),guest=await context.newPage();clients.add(host);clients.add(guest);const errors=[];for(const p of [host,guest])p.on('pageerror',e=>errors.push(e.message));
  await host.goto(url+'#versus');await guest.goto(url+'#versus');
+ await guest.locator('#versus-tutorial-open').click();
+ assert.equal(await guest.locator('#versus-tutorial-title').textContent(),'MOVE');
+ await guest.locator('#versus-tutorial-next').click();
+ assert.equal(await guest.locator('#versus-tutorial-title').textContent(),'DEFEND');
+ await guest.locator('#versus-tutorial-close').click();
+ assert.equal(await guest.locator('#versus-tutorial-panel').isVisible(),false);
  await host.locator('#versus-open').click();await host.waitForFunction(()=>document.querySelector('#versus-room-code').textContent.length===6);
  const code=await host.locator('#versus-room-code').textContent();await guest.locator('#versus-code').fill(code);await guest.locator('#versus-join').click();
  await host.waitForFunction(()=>!document.querySelector('#versus-approval').hidden,{},{timeout:7000});
@@ -175,7 +181,12 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  await guest.locator('#versus-practice').click();
  await guest.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
  assert.equal(await guest.evaluate(()=>window.__versusTest.room.mode),'golden');
- await guest.evaluate(()=>{const t=window.__versusTest;t.state.score.jozef=1;t.state.freeze=0;});
+ await guest.evaluate(()=>{
+   const t=window.__versusTest;
+   t.state.score.jozef=0;t.state.score.dad=0;t.state.matchLeft=.005;t.state.freeze=0;t.step();
+   if(t.room.phase!=='playing'||t.state.matchLeft<29)throw Error('Golden Goal incorrectly ended scoreless');
+   t.state.score.jozef=1;
+ });
  await guest.waitForFunction(()=>window.__versusTest.room.phase==='finished',{},{timeout:3000});
  await guest.locator('#versus-leave').click();
 
@@ -195,6 +206,11 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
    Object.assign(t.state.ball,{x:688,y:210,vx:9,vy:0});
    t.step();
    if(t.state.score.jozef!==1)throw Error('Goal did not count in penalty shootout');
+   t.state.score.dad=10;t.state.score.jozef=10;
+   t.state.penalty.turn=20;t.state.penalty.pause=0;t.state.penalty.shot=false;
+   t.state.penalty.frames=539;t.step();
+   if(t.room.phase!=='playing'||t.state.penalty.turn!==21)throw Error('Sudden death ended a tied shootout');
+
  });
  await guest.locator('#versus-leave').click();
 
@@ -208,7 +224,15 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
    if(title!=='Legends Final')await guest.locator('#versus-again').click();
  }
  assert.equal(await guest.evaluate(()=>localStorage.getItem('jozefs-world-versus-cup')),'won','winning three cup rounds awards a persistent trophy');
+ assert.equal(await guest.locator('#versus-finish').isVisible(),true,'match report appears after final whistle');
+ assert.match(await guest.locator('#versus-finish-title').textContent(),/WIN/);
  await guest.locator('#versus-leave').click();
+ await guest.locator('#versus-progress-export').click();
+ const transferCode=await guest.inputValue('#versus-progress-code');
+ assert.match(transferCode,/"cup":true/);
+ await guest.locator('#versus-progress-code').fill(transferCode);
+ await guest.locator('#versus-progress-import').click();
+ assert.match(await guest.locator('#versus-progress-status').textContent(),/Progress imported/);
  // Real two-device Same Team now faces two host-authoritative Rovers defenders.
  await host.locator('#versus-match-mode').selectOption('duo');
  await host.locator('#versus-together').click();

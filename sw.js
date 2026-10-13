@@ -1,10 +1,10 @@
 /* Jozef FC offline shell: only same-origin public game assets. Never caches personal progress. */
-const CACHE='jozef-fc-app-shell-v129';
+const CACHE='jozef-fc-app-shell-v130';
 const CORE=[
  './','./index.html','./world.html','./block-world.html','./block-world.js','./block-world-coop.js','./block-world-art.js','./block-world-art-forest.js','./block-world-ui.js','./block-world-premium.css','./block-world-premium-forest.css','./block-world-art-forest.js?v=20261013-forest3','./block-world.js?v=20261013-forest3','./block-world-coop.js?v=20261013-forest3','./block-world-ui.js?v=20261013-forest3','./block-world-premium-forest.css?v=20261013-forest3','./block-world.css','./block-world-3d.html','./block-world-3d.js','./block-world-3d-textures.js','./block-world-3d-textures.js?v=20261013-forest-coop3','./block-world-3d.css','./block-world-3d-next.css','./block-world-3d-premium.css','./block-world-3d-premium.css?v=20261013-forest-coop3','./block-world-3d.js?v=20261013-forest-coop3','./block-world-3d-next.css?v=20261013-forest-coop3','./block-quest.html','./site-foundation.css','./site-experience.css',
  './favicon.svg','./manifest.webmanifest','./matchday.css','./training.css','./jersey-bingo.css',
  './tournament.js','./career.js','./clubhouse.js','./scramble-positions.js','./celebrate.js',
- './training.js','./jersey-bingo.js','./matchday.js','./street.js','./adventure.js','./together-renderer.js','./together.js','./versus-physics.js','./versus-modes-2026.js','./versus-visual-2026.js','./versus.js','./presence.js','./peerjs.min.js','./street-phaser.js','./phaser.min.js','./arcade.js',
+ './training.js','./jersey-bingo.js','./matchday.js','./street.js','./adventure.js','./together-renderer.js','./together.js','./versus-physics.js','./versus-experience-2026.js','./versus-modes-2026.js','./versus-visual-2026.js','./versus.js','./presence.js','./peerjs.min.js','./street-phaser.js','./phaser.min.js','./arcade.js',
  './roblox.js','./squad.js','./site-core.js','./site-features.js','./arena-bundle.js',
  './visual-2026.js','./campaign-2026.js','./club-hq.js','./chronicle.js','./playbook.js',
  './world-core.js','./world-core.css',
@@ -47,6 +47,34 @@ self.addEventListener('fetch',event=>{
  const url=new URL(request.url);
  const root=new URL(self.registration.scope);
  if(url.origin!==root.origin||!url.pathname.startsWith(root.pathname))return;
+ // Prime uses hashed, immutable bundles. Serve its most recent versioned shell
+ // immediately when already cached, even if WebKit is disconnecting the network.
+ // Revalidate online without delaying the playable first frame.
+ const isPrime=url.pathname.startsWith(new URL('./prime/',root.href).pathname);
+ if(isPrime){
+  event.respondWith((async()=>{
+   const shell=await caches.open(CACHE);
+   const cached=await shell.match(request,{ignoreSearch:true})||
+     await caches.match(request,{ignoreSearch:true});
+   if(cached){
+    event.waitUntil(fetch(request).then(response=>{
+     if(response.ok&&response.type!=='opaque')return shell.put(request,response.clone());
+    }).catch(()=>{}));
+    return cached;
+   }
+   try{
+    const response=await fetch(request);
+    if(response.ok&&response.type!=='opaque')
+     event.waitUntil(shell.put(request,response.clone()).catch(()=>{}));
+    return response;
+   }catch{
+    return request.mode==='navigate'
+      ?(await shell.match(new URL('./prime/',root.href))||Response.error())
+      :Response.error();
+   }
+  })());
+  return;
+ }
  // Online must always prefer up-to-date gameplay. Cached shell is an offline fallback.
  event.respondWith(
   fetch(request).then(response=>{

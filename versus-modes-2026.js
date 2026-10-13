@@ -40,6 +40,43 @@
      y:chase?coverY:clamp(210+(predictedY-210)*.28,70,350),
      speed:pace,challenge:Math.hypot(bot.x-ball.x,bot.y-ball.y)<38};
  }
+ // Shootouts remain unresolved until an equal number of sudden-death turns
+ // produces a winner. Early elimination is possible only during regulation.
+ function penaltyResult(turn,dad,jozef,coop=false){
+   const total=Math.max(0,Math.floor(Number(turn)||0));
+   const leftFirst=Math.max(0,5-Math.ceil(total/2));
+   const leftSecond=Math.max(0,5-Math.floor(total/2));
+   const remainingDad=coop?leftSecond:leftFirst;
+   const remainingJozef=coop?leftFirst:leftSecond;
+   if(dad>jozef+remainingJozef && total<10)return 'dad';
+   if(jozef>dad+remainingDad && total<10)return 'jozef';
+   if(total>=10 && total%2===0 && dad!==jozef)return dad>jozef?'dad':'jozef';
+   return null;
+ }
+ function assistCredit(combo,shot,now){
+   if(!combo||!shot||!['Dad','Jozef'].includes(shot.who))return null;
+   const helper=combo.assistFrom;
+   if(!['Dad','Jozef'].includes(helper)||helper===shot.who
+       ||combo.assistTo!==shot.who ||combo.receivedAt<0
+       ||now-combo.receivedAt>240||now-combo.receivedAt<0)return null;
+   return helper;
+ }
+ // Defensive roles shift with the ball; the second defender guards a pass lane,
+ // instead of blindly following the first one into the same position.
+ function defensivePair(bots,ball,goalX=720,difficulty='pro'){
+   const [a,b]=bots;
+   const first=Math.hypot(a.x-ball.x,a.y-ball.y)<=Math.hypot(b.x-ball.x,b.y-ball.y)?0:1;
+   const primary=first===0?a:b,cover=first===0?b:a;
+   const chase=tacticalTarget(primary,ball,goalX,difficulty,cover);
+   const forward=goalX>360?1:-1;
+   const shadow={
+     x:clamp((ball.x+goalX)*.5+forward*42,80,640),
+     y:clamp(210+(ball.y-210)*-.45,68,352),
+     speed:difficulty==='legend'?4.8:3.8,
+     challenge:false
+   };
+   return first===0?[chase,shadow]:[shadow,chase];
+ }
  const passAssist=(from,to,ball,frame)=>{
    if(!from||!to||!ball)return false;
    return Math.hypot(to.x-ball.x,to.y-ball.y)<50
@@ -47,6 +84,6 @@
      &&ball.lastPassTo===from;
  };
  window.JozefVersusRules=Object.freeze({
-   MODES,safeMode,config,CUP,cupDifficulty,penaltyShooter,tacticalTarget,passAssist
+   MODES,safeMode,config,CUP,cupDifficulty,penaltyShooter,tacticalTarget,defensivePair,penaltyResult,assistCredit,passAssist
  });
 })();

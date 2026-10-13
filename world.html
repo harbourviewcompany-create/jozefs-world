@@ -1517,6 +1517,19 @@ body.nav-open .nav-extra{display:inline-flex}
     <p id="versus-season-line">Season: no matches yet.</p>
     <p id="versus-trophy" hidden>Trophy: three in a row.</p>
     <div id="versus-lobby">
+      <button type="button" id="versus-tutorial-open" class="vs-help-open">HOW TO PLAY · 5 QUICK STEPS</button>
+      <section id="versus-tutorial-panel" class="vs-tutorial" aria-label="Versus quick tutorial" hidden>
+        <div class="vs-tutorial-top"><span id="versus-tutorial-count">1 / 5</span><button type="button" id="versus-tutorial-close" aria-label="Close tutorial">✕</button></div>
+        <h3 id="versus-tutorial-title">MOVE</h3><p id="versus-tutorial-body">Drag to move.</p>
+        <button type="button" id="versus-tutorial-next">NEXT</button>
+      </section>
+      <details class="vs-progress-transfer"><summary>TRANSFER CUP PROGRESS TO ANOTHER DEVICE</summary>
+        <p>Transfer your Versus scores and Cup rewards manually. This replaces those records on the receiving device.</p>
+        <label for="versus-progress-code">PROGRESS CODE</label>
+        <textarea id="versus-progress-code" rows="3" maxlength="1500" spellcheck="false" aria-label="Versus progress transfer code"></textarea>
+        <div class="vs-progress-actions"><button type="button" id="versus-progress-export">SHOW MY CODE</button><button type="button" id="versus-progress-import">LOAD CODE</button></div>
+        <output id="versus-progress-status" role="status" aria-live="polite"></output>
+      </details>
       <div class="versus-roles" role="group" aria-label="Your player name">
         <button type="button" class="versus-role is-on" data-who="Dad" id="light-dad" aria-pressed="true">Dad</button>
         <button type="button" class="versus-role" data-who="Jozef" id="light-jozef" aria-pressed="false">Jozef</button>
@@ -1561,6 +1574,13 @@ body.nav-open .nav-extra{display:inline-flex}
     </div>
     <button type="button" id="versus-leave" hidden aria-label="Leave match" title="Leave match" class="vs-exit">✕</button>
     <div id="versus-match-detail" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+    <section id="versus-finish" class="vs-finish" aria-labelledby="versus-finish-title" hidden>
+      <span class="vs-finish-eyebrow">FULL TIME · MATCH REPORT</span>
+      <h3 id="versus-finish-title">MATCH COMPLETE</h3>
+      <strong id="versus-finish-score">0 — 0</strong>
+      <p id="versus-finish-stats">0 SHOTS · 0 SAVES · 0 PASSES · 0 ASSISTS</p>
+      <div class="vs-finish-actions"><button type="button" id="versus-finish-next">REMATCH</button><button type="button" id="versus-finish-exit">LEAVE MATCH</button></div>
+    </section>
     <div class="versus-stage"><canvas id="versus-canvas" width="420" height="720" tabindex="0" aria-label="Football pitch. Drag to move. Arrow keys or WASD move; Space shoots."></canvas></div>
     <div class="versus-play">
       <div class="vs-movement">
@@ -1747,9 +1767,10 @@ body.nav-open .nav-extra{display:inline-flex}
   <script src="street.js"></script>
   <script src="peerjs.min.js"></script>
   <script src="versus-physics.js"></script>
-  <script src="versus-modes-2026.js?v=1"></script>
+  <script src="versus-modes-2026.js?v=2"></script>
+  <script src="versus-experience-2026.js?v=1"></script>
   <script src="versus-visual-2026.js?v=4"></script>
-  <script src="versus.js?v=89"></script>
+  <script src="versus.js?v=90"></script>
   <script src="adventure.js"></script>
   <script src="together-renderer.js"></script>
   <script src="together.js"></script>

@@ -1612,3 +1612,30 @@ body.versus-focused #versus.is-playing .versus-match-settings{display:none!impor
 #versus #versus-room:not([hidden]){position:relative!important;z-index:20!important}
 #versus #versus-lobby:not([hidden]){position:relative!important;z-index:10!important}
 
+/* New Versus intro, rewards transfer and cinematic match report. */
+#versus #versus-lobby .vs-help-open{display:block;width:100%;min-height:43px;margin:8px 0 12px;border:1px solid #5fd7f199;border-radius:14px;background:#0b4267;color:#ebfaff;font:850 12px/1.3 system-ui;letter-spacing:.07em}
+#versus .vs-tutorial,#versus .vs-progress-transfer{margin:10px 0 15px;padding:14px;border:1px solid #73ccff68;border-radius:18px;background:linear-gradient(140deg,#102a48,#07182e);color:#ebf8ff}
+#versus .vs-tutorial[hidden]{display:none!important}
+#versus .vs-tutorial-top{display:flex;align-items:center;justify-content:space-between;color:#a9e5ff;font-size:11px}
+#versus .vs-tutorial-top button{padding:4px 12px;min-height:32px;border-radius:9px}
+#versus .vs-tutorial h3{color:#dfff8c;font-size:21px;margin:10px 0}
+#versus .vs-tutorial p,#versus .vs-progress-transfer p{color:#dcecf5;font-size:13px;line-height:1.5}
+#versus .vs-tutorial #versus-tutorial-next{min-height:44px;background:#b9f768;color:#142a19;border-radius:12px;font-weight:900;padding:10px 23px}
+#versus .vs-progress-transfer summary{font:750 12px/1.4 system-ui;cursor:pointer;letter-spacing:.02em}
+#versus .vs-progress-transfer label{display:block;margin:7px 0;font-size:11px}
+#versus .vs-progress-transfer textarea{display:block;width:100%;min-height:75px;resize:vertical;background:#06182c;color:#e1faff;border:1px solid #78cdf29a;border-radius:9px;padding:9px;font:12px/1.35 monospace}
+#versus .vs-progress-actions{display:flex;flex-wrap:wrap;gap:7px;margin:9px 0}
+#versus .vs-progress-actions button{min-height:42px;border-radius:10px;padding:8px 12px;font-weight:800;background:#1c608e;color:#fff;border:1px solid #82d9ff}
+#versus #versus-progress-status{display:block;min-height:15px;margin-top:5px;font-size:12px;color:#d7f2ff}
+#versus .vs-finish[hidden]{display:none!important}
+#versus .vs-finish{position:absolute;left:50%;top:51%;transform:translate(-50%,-50%);z-index:12;width:min(92vw,380px);padding:clamp(17px,5vw,30px);text-align:center;background:linear-gradient(155deg,rgba(4,21,42,.96),rgba(18,63,72,.97));border:1.5px solid #a7e6ff;border-radius:26px;box-shadow:0 14px 60px #000c,0 0 35px #26d9ff55;color:#fff;backdrop-filter:blur(14px)}
+#versus .vs-finish-eyebrow{display:block;color:#bce9ff;font-size:10px;font-weight:900;letter-spacing:.16em}
+#versus .vs-finish h3{font:1000 clamp(25px,7vw,41px)/1.1 system-ui;color:#e4ff99;margin:11px 0 6px}
+#versus .vs-finish strong{display:block;font:1000 clamp(43px,11vw,62px)/1.1 system-ui;color:#fff;text-shadow:0 0 20px #49caff85}
+#versus .vs-finish p{margin:15px 0;color:#cdeaff;font:750 11px/1.5 system-ui}
+#versus .vs-finish-actions{display:flex;gap:8px;justify-content:center}
+#versus .vs-finish-actions button{flex:1;min-height:44px;background:#b4f866;color:#092317;font-weight:900;border-radius:13px;padding:6px}
+#versus .vs-finish-actions #versus-finish-exit{background:#27405b;color:#e8f6ff;border:1px solid #91daff}
+body.versus-focused #versus.is-playing .vs-finish:not([hidden]){display:block!important}
+@media(max-width:355px){#versus .vs-finish{top:48%;width:94vw}#versus .vs-finish h3{font-size:25px}}
+@media(prefers-reduced-motion:reduce){#versus .vs-finish{animation:none!important}}
