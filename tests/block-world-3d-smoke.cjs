@@ -99,7 +99,7 @@ function boot(shared=new Map(),options={}){
  assert.equal(sample.width,256,'atlas width is WebGL1 power of two');
  assert.equal(sample.height,128,'atlas height is WebGL1 power of two');
  assert.notEqual(window.BlockWorld3DTextures.tileFor(1,0),window.BlockWorld3DTextures.tileFor(1,1),'grass top and dirt side use different artwork');
- const instrumented=script.replace('window.BlockWorld3D=Object.freeze',`window.__block3dTests={award,modify,portal,visitForest,receive,worldSnapshot,applyRealm,guestAttack,sendCombat,save,spawn,updateBeacon,mobs:()=>mobs,boss:()=>boss,beacon:()=>forestBeacon,makeHost:(sent)=>{host=true;conn={open:true,send:v=>sent.push(v)};},makeGuest:(sent)=>{host=false;guestActive=true;conn={open:true,send:v=>sent.push(v)};},moveCompanion:(x,z)=>{companion.x=x;companion.z=z;companion.y=ground(x,z);},setPlayer:(x,z)=>{hero.x=x;hero.z=z;hero.y=ground(x,z);}};window.BlockWorld3D=Object.freeze`);
+ const instrumented=script.replace('window.BlockWorld3D=Object.freeze',`window.__block3dTests={award,modify,portal,visitForest,receive,worldSnapshot,applyRealm,guestAttack,sendCombat,save,spawn,updateBeacon,mobs:()=>mobs,boss:()=>boss,beacon:()=>forestBeacon,inventory:()=>hero.inventory,guestInventory:()=>guestInventory,setCreative:(v)=>{creative=v;},makeHost:(sent)=>{host=true;conn={open:true,send:v=>sent.push(v)};},makeGuest:(sent)=>{host=false;guestActive=true;conn={open:true,send:v=>sent.push(v)};},moveCompanion:(x,z)=>{companion.x=x;companion.z=z;companion.y=ground(x,z);},setPlayer:(x,z)=>{hero.x=x;hero.z=z;hero.y=ground(x,z);}};window.BlockWorld3D=Object.freeze`);
   assert.notEqual(instrumented,script,'test instrumentation inserted');
   vm.runInNewContext(instrumented,sandbox,{timeout:15000});
  const status=()=>window.BlockWorld3D?.status();
@@ -263,5 +263,25 @@ assert.equal(JSON.parse(beaconGame.shared.get('jozefs-world-player-v1')||'{}').x
 assert.match(script,/function waterTile\(/,'interactive world includes non-destructive animated water geometry');
 assert.match(script,/uniform vec3 beaconPoint/,'active beacon illuminates local terrain');
 assert.equal(boot().window.BlockWorld3DTextures.tileFor(27,0),29,'water renders using illustrated atlas tile');
+
+
+// Shared inventory is owned by the host. Guests cannot place unearned blocks.
+const itemsHost=boot(),itemPackets=[];
+itemsHost.tick(2);itemsHost.testHooks.makeHost(itemPackets);
+itemsHost.testHooks.setCreative(false);
+itemsHost.testHooks.moveCompanion(1.5,1.5);
+assert.equal(itemsHost.testHooks.modify(1,4,1,4),true);
+itemsHost.testHooks.receive({t:'request',op:'mine',x:1,y:4,z:1});
+assert.equal(itemsHost.testHooks.guestInventory()[4],1,'guest mining grants one host-tracked block');
+assert.equal(itemsHost.window.BlockWorld3D.block(1,4,1),0,'host confirms mined tile');
+itemsHost.testHooks.receive({t:'request',op:'place',x:1,y:4,z:1,id:4});
+assert.equal(itemsHost.window.BlockWorld3D.block(1,4,1),4,'guest spends earned material');
+assert.equal(itemsHost.testHooks.guestInventory()[4],0,'guest placement consumes inventory');
+assert.ok(itemPackets.some(m=>m.t==='inventory'&&m.items[4]===0),'updated inventory is sent back to guest');
+itemsHost.testHooks.receive({t:'request',op:'place',x:1,y:4,z:2,id:4});
+assert.equal(itemsHost.window.BlockWorld3D.block(1,4,2),itemsHost.window.BlockWorld3D.block(1,4,2),'request safely ignored without inventory');
+const itemsGuest=boot();itemsGuest.tick(1);itemsGuest.testHooks.makeGuest([]);
+itemsGuest.testHooks.receive(itemPackets.filter(m=>m.t==='inventory').at(-1));
+assert.equal(itemsGuest.testHooks.inventory()[4],0,'guest receives host inventory snapshot');
 
 console.log('Block World 3D: WebGL, chunks, movement, save/reload, XP and private invite creation PASS');
