@@ -227,6 +227,7 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  assert.equal(await guest.locator('#versus-finish').isVisible(),true,'match report appears after final whistle');
  assert.match(await guest.locator('#versus-finish-title').textContent(),/WIN/);
  await guest.locator('#versus-leave').click();
+ await guest.locator('.vs-progress-transfer summary').click();
  await guest.locator('#versus-progress-export').click();
  const transferCode=await guest.inputValue('#versus-progress-code');
  assert.match(transferCode,/"cup":true/);
