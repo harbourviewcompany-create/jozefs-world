@@ -215,7 +215,7 @@ function craftItem(){
 function smeltItem(){recipeIndex=4;renderCrafting();say('Select an ingot recipe and press Craft');}
 Object.assign(window,{craftItem,smeltItem,closeCrafting});
 function drawBackground(){
- if(window.BlockWorldArt){window.BlockWorldArt.background(ctx,{w:cssW/cameraZoom,h:cssH/cameraZoom,camX,camY,time:clock,dpr,zoom:cameraZoom});return;}
+ if(window.BlockWorldArt){window.BlockWorldArt.background(ctx,{w:cssW/cameraZoom,h:cssH/cameraZoom,camX,camY,time:clock,biome:biome(Math.max(0,Math.min(W-1,Math.floor((camX+cssW/cameraZoom*.5)/TILE)))),dpr,zoom:cameraZoom});return;}
  const grad=ctx.createLinearGradient(0,0,0,cssH);grad.addColorStop(0,'#4e83d6');grad.addColorStop(.6,'#a4d8ec');grad.addColorStop(1,'#e8dab5');
  ctx.fillStyle=grad;ctx.fillRect(0,0,cssW,cssH);
  const sunX=cssW*.75-Math.sin(clock*.03)*25,sunY=cssH*.22;
@@ -271,7 +271,7 @@ function frame(now){
  const dt=Math.min(.05,(now-lastTime)/1000);lastTime=now;acc+=dt;
  let n=0;while(acc>=1/60&&n<4){if(!window.BlockWorld2D?.isGuest?.())update(1/60);acc-=1/60;n++;}
  if(window.BlockWorld2D?.isGuest?.())for(const hero of players)hero.actionT=Math.max(0,(hero.actionT||0)-dt);
- draw();window.BlockWorld2D?.onFrame?.(now);requestAnimationFrame(frame);
+ draw();window.BlockWorld2D?.onFrame?.(now);window.BlockWorldVisuals?.onFrame?.(now);requestAnimationFrame(frame);
 }
 function bindButton(id,key,once){
  const el=$('btn-'+id);el.setAttribute('role','button');el.setAttribute('tabindex','0');el.setAttribute('aria-label',id==='switch'?'Switch active player':id);
