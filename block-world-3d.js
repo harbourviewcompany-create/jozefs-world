@@ -628,6 +628,7 @@ function step(dt){
  if(!conn?.open){companion.x+=(hero.x+2-companion.x)*Math.min(1,dt*1.4);companion.z+=(hero.z+1-companion.z)*Math.min(1,dt*1.4);companion.y=ground(companion.x,companion.z);}
  hero.walkPower=clamp(Math.hypot(hero.x-oldHeroX,hero.z-oldHeroZ)/Math.max(.0001,dt*4.8),0,1);
  companion.walkPower=clamp(Math.hypot(companion.x-oldCompX,companion.z-oldCompZ)/Math.max(.0001,dt*4.8),0,1);
+ if(companion.walkPower>.07&&!conn?.open)companion.yaw=Math.atan2(companion.x-oldCompX,-(companion.z-oldCompZ));
  companion.ground=true;
  for(const m of mobs){if(m.hp<=0)continue;const d=Math.hypot(m.x-hero.x,m.z-hero.z);if(d<11&&d>1){
   m.x+=(hero.x-m.x)/d*.7*dt;m.z+=(hero.z-m.z)/d*.7*dt;m.y=ground(m.x,m.z);}
@@ -637,7 +638,7 @@ function step(dt){
  if(boss.alive&&d<13){if(d>2){boss.x+=(hero.x-boss.x)/d*.45*dt;boss.z+=(hero.z-boss.z)/d*.45*dt;boss.y=ground(boss.x,boss.z);}
  else if(clock-(boss.last||0)>1.4&&!creative){hero.hp=Math.max(0,hero.hp-16);boss.last=clock;announce('The Crystal Golem attacks!');}}
  const zone=biome(hero.x,hero.z);if(!discovered[zone]&&Math.hypot(hero.x-2,hero.z-2)>24){discovered[zone]=true;gain('explore');}
- if(conn?.open){lastNet+=dt;if(lastNet>.13){lastNet=0;send({t:'move',x:hero.x,y:hero.y,z:hero.z,hp:hero.hp});}}
+ if(conn?.open){lastNet+=dt;if(lastNet>.13){lastNet=0;send({t:'move',x:hero.x,y:hero.y,z:hero.z,yaw:hero.yaw,hp:hero.hp});}}
  if(saveClock>15){saveClock=0;if(dirty)save();}
  stream();if(frames%15===0)hud();
 }
@@ -754,6 +755,7 @@ function receive(m){
  }else if(m.t==='move'){
   if(!Number.isFinite(m.x+m.y+m.z)||Math.abs(m.x)>1e6||Math.abs(m.z)>1e6)return;
   companion.x=m.x;companion.y=m.y;companion.z=m.z;companion.hp=m.hp;
+   if(Number.isFinite(m.yaw))companion.yaw=m.yaw;
  }else if(m.t==='edit'&&!host){modify(m.x,m.y,m.z,m.id,false);}
  else if(m.t==='boss'&&!host){boss.hp=clamp(Number(m.hp)||0,0,120);boss.alive=boss.hp>0;if(!boss.alive)defeated=true;}
  else if(m.t==='progress'&&!host){const previous=stage;stage=clamp(Number(m.stage)||0,0,6);stats=Object.assign(stats,m.stats||{});defeated=!!m.defeated;portalOpened=!!m.portalOpened;
