@@ -83,7 +83,7 @@ test('kinematic pose, shot halo and goalkeeper save animate in canvas without af
 test('host controlled tackle, spin and visual action state stay finite and available to both players',()=>{
  const code=read('versus.js');
  const physics=read('versus-physics.js');
- assert.match(code,/state\.lastShot=\{who,x:state\.ball\.x,y:state\.ball\.y,age:0\}/);
+ assert.match(code,/state\.lastShot=\{who,x:state\.ball\.x,y:state\.ball\.y,age:0,assistedBy\}/);
  assert.match(code,/state\.call='TAKEAWAY'/);
  assert.match(code,/dekeButton\.classList\.toggle\('can-tackle',canTackle\)/);
  assert.match(code,/shot\.aim-1\)\*\.016/);
@@ -106,7 +106,7 @@ test('curved shots remain bounded and lose spin rather than gaining energy',()=>
 test('mode selector, rule engine and match detail HUD appear in both entrypoints',()=>{
  const html=read('index.html');
  assert.equal(html,read('world.html'));
- assert.ok(html.indexOf('versus-modes-2026.js?v=2')<html.indexOf('versus.js?v=89'),'rule module precedes controller');
+ assert.ok(html.indexOf('versus-modes-2026.js?v=2')<html.indexOf('versus.js?v=90'),'rule module precedes controller');
  for(const id of ['versus-match-mode','versus-mode-description','versus-match-detail','versus-mode-label']){
   assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,'unique '+id);
  }
