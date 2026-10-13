@@ -94,3 +94,23 @@ button:focus-visible,a:focus-visible,.mission:focus-visible{outline:3px solid #f
  .actions button{height:40px}
 }
 @media(prefers-reduced-motion:reduce){.actions button,.joystick,.hotbar,.hotbar button{transition:none!important}}
+
+
+/* October 2026 screenshot-driven polish: minimal location HUD, larger playfield. */
+.radar.collapsed .radar-header strong{display:none!important}
+.radar.collapsed{width:51px!important;min-width:51px!important;padding:4px!important;border-radius:15px!important}
+.radar.collapsed .radar-header{height:39px;min-height:39px;justify-content:center}
+.radar.collapsed #radar-toggle{
+ width:100%;min-width:40px;height:39px;min-height:39px;border-radius:11px!important;
+ font-size:10px!important;
+}
+.compass{font-size:9px!important;letter-spacing:.035em;white-space:nowrap}
+.mission{overflow:hidden}
+.mission.expanded{overflow:visible}
+#view{touch-action:none}
+@media(max-width:450px){
+ .radar{top:calc(env(safe-area-inset-top) + 144px)}
+ .radar.collapsed{padding:3px!important;width:49px!important;min-width:49px!important}
+ .radar.collapsed .radar-header{height:38px;min-height:38px}
+ .radar.collapsed #radar-toggle{min-width:39px;height:38px;min-height:38px}
+}
