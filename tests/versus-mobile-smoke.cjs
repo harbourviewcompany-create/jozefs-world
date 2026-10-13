@@ -39,6 +39,17 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  await host.locator('#versus-canvas').focus();await host.keyboard.down('ArrowLeft');await host.waitForTimeout(200);await host.keyboard.up('ArrowLeft');await host.keyboard.press('Space');
  if(process.env.VERSUS_SCREENSHOTS)await host.screenshot({path:path.join(process.env.VERSUS_SCREENSHOTS,engine+'-'+viewport.width+'.png')});
  await host.evaluate(()=>{const t=window.__versusTest;t.onData({type:'active',active:false});const before=t.state.matchLeft;t.step();if(t.state.matchLeft!==before)throw Error('paused clock advanced');t.onData({type:'active',active:true});});
+ // Simulate a broken real-time data channel. Both players must resume the same match.
+ const matchBefore=await host.evaluate(()=>window.__versusTest.state.matchId);
+ await guest.evaluate(()=>window.__versusTest.room.conn.close());
+ await host.waitForFunction(()=>window.__versusTest.room.remoteActive===false,undefined,{timeout:4000});
+ const clockWhileOffline=await host.evaluate(()=>window.__versusTest.state.matchLeft);
+ await host.waitForTimeout(150);
+ assert.equal(await host.evaluate(()=>window.__versusTest.state.matchLeft),clockWhileOffline,'host pauses physics during disconnect');
+ await guest.waitForFunction(()=>window.__versusTest.room.remoteActive&&!window.__versusTest.room.reconnecting&&
+   window.__versusTest.room.phase==='playing',undefined,{timeout:15000});
+ await host.waitForFunction(()=>window.__versusTest.room.remoteActive,undefined,{timeout:5000});
+ assert.equal(await host.evaluate(()=>window.__versusTest.state.matchId),matchBefore,'reconnect resumes original match');
  // A guest cannot choose which player to move or inject the host's state.
  await host.evaluate(()=>{const t=window.__versusTest;t.onData({type:'aim',who:'Dad',x:200,y:150});});
  assert.equal(await host.evaluate(()=>window.__versusTest.targets.Dad),null);
@@ -67,6 +78,7 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  await guest.locator('#versus-again').click();await host.waitForFunction(()=>!document.querySelector('#versus-ready').disabled);
  await host.locator('#versus-ready').click();await guest.locator('#versus-ready').click();await host.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
  await host.locator('#versus-leave').click({timeout:7000});await guest.waitForFunction(()=>document.querySelector('#versus-status').textContent.includes('disconnected'));
+ await guest.locator('#versus-leave').click(); // The player can cancel reconnect and play offline.
  await guest.locator('#versus-cpu-difficulty').selectOption('legend');
  await guest.locator('#versus-practice-length').selectOption('60');
  await guest.locator('#versus-practice').click();await guest.waitForFunction(()=>!document.querySelector('#versus-kick').disabled);
