@@ -15,7 +15,8 @@ assert.match(html,/id="quality"/,'quality setting has a button');
 assert.match(html,/id="radar-toggle"/,'terrain radar is a collapsible mobile control');
 assert.match(html,/block-world-3d-next\.css/,'new 3D mobile visual stylesheet loaded');
 assert.match(script,/attribute float matId/,'WebGL shader receives voxel material IDs');
-assert.match(script,/gl\.vertexAttribPointer\(am,1,gl\.FLOAT,false,28,24\)/,'GPU material stride includes texture type');
+assert.match(script,/attribute vec3 normal/,'shader receives face normals for directional sunlight');
+assert.match(script,/gl\.vertexAttribPointer\(am,1,gl\.FLOAT,false,40,24\)/,'GPU material stride includes texture type');
 assert.match(script,/function chunkMesh\(/,'chunk mesher preserved');
 assert.match(script,/const skyFragment=/,'procedural GPU sky present');
 assert.match(script,/function drawRadar\(/,'radar rendering present');
@@ -30,7 +31,7 @@ function boot(shared=new Map()){
   createProgram(){return{};},createShader(){return{};},createBuffer(){return{};},
   getProgramParameter(){return true;},getShaderParameter(){return true;},
   getAttribLocation(){return 1;},getUniformLocation(){return{};},
-  bufferData(_target,data){if(data?.length!==6&&data?.length)assert.equal(data.length%7,0,'GPU cube vertex buffers use 7-float material format');}
+  bufferData(_target,data){if(data?.length!==6&&data?.length)assert.equal(data.length%10,0,'GPU cube vertex buffers use 10-float positions, material and normals');}
  },{get:(a,k)=>k in a?a[k]:()=>{}});
  function element(id=''){
   return {id,events:{},children:[],attrs:{},style:{},className:'',classList:{add(){},remove(){}},textContent:'',innerHTML:'',hidden:false,disabled:false,value:'',files:[],
