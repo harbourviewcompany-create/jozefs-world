@@ -11,6 +11,19 @@ An interactive family game universe with a spatial 3D headquarters and a shared 
 
 Block World 3D is a **native WebGL voxel game**, not a CSS imitation. The original 2D edition and its device saves remain independently playable.
 
+### Screenshot-driven 3D mobile forest correction (13 October 2026)
+
+Three iPhone screenshots showed enormous opaque box-like tree crowns, dark sky colour, grass/dirt surfaces that repeated as uniformly coloured tiles, dark rectangular character shadows, and a third-person camera that obscured the playfield. The updated playable game addresses those defects directly:
+
+- Meadow tree placement is less dense and crowns are smaller, while conifers have distinct tapered profiles. Procedurally generated natural leaves may have a slightly different arrangement after updating an existing world; **user-placed and mined block overrides, mission progression and inventories are retained**.
+- Grass, dirt, stone and leaves use spatial colour variation; existing voxel normal lighting and baked ambient occlusion remain active.
+- Third-person framing sits slightly closer and lower. Leaf faces between the camera and character dither away, improving visibility even when the canopy itself is not immediately touching the camera.
+- Player contact shadows use softer, smaller green-tinted decals rather than opaque black squares; the default sky starts at daylight rather than dim dawn.
+- The idle or walking companion rotates toward their travel direction; co-op movement packets synchronize yaw when the field is available, without requiring old clients to supply it.
+- The collapsed minimap uses an icon-sized MAP control instead of a wide second HUD bar.
+
+All three existing automated game smoke suites pass; the 3D smoke suite was repeated five times. Physical iPhone frame rate and screenshot comparison are not yet verified. The browser bottom address bar is Safari UI and cannot be programmatically hidden inside the browser; Add to Home Screen can launch with less browser chrome.
+
 ### Forest Vista environmental polish (13 October 2026)
 
 The Forest Vista update improves the **real playable 3D forest**, with no static background images. Chunk meshes bake vertex corner ambient occlusion and approximate canopy contact shadows (AUTO focuses on top faces; QUALITY shades more surfaces; ECO skips the expensive shading). Leaves near the third-person camera gradually dither away instead of fully obscuring the player. This is a low-cost approximation, not shadow-map-based real-time shadows.
