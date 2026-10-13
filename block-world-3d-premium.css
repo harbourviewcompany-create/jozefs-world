@@ -1,0 +1,96 @@
+/* Block World 3D · Forest Expedition visual release (2026-10).
+   Screen-first mobile composition, inspired by polished console voxel adventures.
+   This file improves real controls; no decorative inert buttons. */
+:root{--bw-ink:#071e37;--bw-blue:#1974bf;--bw-gold:#ffe29a;--bw-ice:#a2f2ff}
+#view{image-rendering:auto}
+.top{top:calc(env(safe-area-inset-top) + 10px);left:14px;right:12px;gap:9px}
+.brand{font-family:system-ui,-apple-system,sans-serif;font-weight:1000;font-size:clamp(18px,4.4vw,29px);
+ letter-spacing:.02em;line-height:1.02;text-shadow:0 2px 0 #1b4e78,0 5px 14px #011b32e8}
+.brand b{color:var(--bw-gold);text-shadow:0 2px #76552a,0 4px 10px #402b17}
+.brand small{display:block;margin-top:7px;font-size:clamp(8px,2vw,11px);letter-spacing:.13em;color:#e4f6ff}
+.stats{padding:9px 12px;border-radius:24px;background:#082b4ef0;border:1px solid #c3ecffab;
+ color:#f4ffff;box-shadow:0 4px 16px #001c35aa,inset 0 1px 4px #70deff3d}
+.stats strong{color:#b6ffd8}
+.menu{top:calc(env(safe-area-inset-top) + 63px);right:11px;max-width:none;left:auto}
+.menu button#options{min-height:42px;min-width:93px;padding:10px 15px!important;background:linear-gradient(155deg,#1577b7,#073364);
+ border:1.5px solid #b1efff;border-radius:15px;letter-spacing:.04em;
+ box-shadow:inset 0 2px 4px #e1fbff50,0 4px 14px #061f3fa8,0 0 10px #258ff75c}
+.mission{top:calc(env(safe-area-inset-top) + 67px);left:12px;max-width:min(56vw,230px);
+ padding:9px 11px!important;min-height:46px;
+ border-radius:14px;background:linear-gradient(155deg,#052848ed,#082e4af0);border:1px solid #8be7f5a8;
+ box-shadow:0 4px 15px #041a30a2;backdrop-filter:blur(7px)}
+.mission strong{font-weight:900;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;color:#ffe7ae}
+.mission small{color:#dcefff;line-height:1.4}
+.mission .progress{height:4px;margin-top:5px;border-radius:7px}
+.mission.expanded{max-width:min(75vw,282px);z-index:12}
+.compass{top:calc(env(safe-area-inset-top) + 115px);right:11px;max-width:48vw;padding:8px 10px;
+ background:#082741e0;border:1px solid #9ddef8b8;color:#e9fcff;border-radius:14px;box-shadow:0 3px 12px #07203f7d}
+.radar{top:calc(env(safe-area-inset-top) + 157px);right:11px;max-width:160px;border-radius:14px;
+ border:1px solid #a3ebf5a0;background:#06233fef;box-shadow:0 4px 15px #061a2e99}
+.radar.collapsed{min-width:0;width:auto;padding:4px 7px}
+.radar-header{gap:7px}
+.radar-header strong{letter-spacing:.04em;color:#d6f7ff}
+.radar-header button{min-height:30px;min-width:43px;color:#f0ffff!important;background:#155381!important;border-radius:10px!important}
+.target{font-size:27px;color:#fff4bd;text-shadow:0 0 10px #002a47,0 2px 3px #041c32}
+.bottom{bottom:calc(80px + env(safe-area-inset-bottom));left:12px;right:12px;gap:10px}
+.joystick{width:clamp(116px,29vw,162px);height:clamp(116px,29vw,162px);border:2px solid #c2f2ffcc;
+ background:radial-gradient(circle at 34% 25%,#247eb68c,#0a294bd6 78%);
+ box-shadow:0 0 13px #20c5ff8a,inset 0 0 19px #092342,0 7px 19px #00182fa6}
+.joystick #knob{width:44%;height:44%;border:3px solid #d1f5ffde;background:linear-gradient(145deg,#aedaf2,#4a7b9f);
+ box-shadow:0 3px 14px #051c38e0,inset 0 2px 10px #ffffff65}
+.actions{grid-template-columns:repeat(2,minmax(56px,78px));gap:8px}
+.actions button{height:clamp(54px,12vw,65px);border-radius:16px;background:linear-gradient(155deg,#328cd5,#08386f);
+ border:2px solid #b4f3ffde;box-shadow:0 3px 11px #01172ac0,inset 0 2px 5px #d3faff60,0 0 8px #25baff6b;
+ font-size:clamp(10px,2.5vw,13px);color:#f5ffff;letter-spacing:.02em}
+.actions #attack{background:linear-gradient(155deg,#ba607c,#612144);border-color:#ffc9d9}
+.actions button:active,.actions button:focus-visible{filter:brightness(1.14)}
+.hotbar{bottom:-78px;max-width:calc(100vw - 18px);padding:6px;gap:5px;border-radius:18px;
+ background:linear-gradient(150deg,#062c51f5,#061b38f6);
+ border:2px solid #9ceaffd4;box-shadow:0 4px 21px #001c36bc,inset 0 2px 7px #68dfff34;
+ overflow-x:auto;overscroll-behavior-x:contain}
+.hotbar button{border-radius:12px;background:#163b63e3;border:1px solid #76a8bb87;transition:background .12s}
+.hotbar button.active{border-color:#93ffff;box-shadow:0 0 13px #31edff9e,inset 0 2px 6px #2fe4ffd2}
+.hotbar i{filter:drop-shadow(1px 3px 2px #051527)}
+.drawer{z-index:35;border-radius:19px;border:1px solid #98e4f9;background:linear-gradient(150deg,#103c5cfa,#05192dfa);box-shadow:0 18px 45px #04162de3;
+ max-height:min(79dvh,680px);overflow-y:auto;touch-action:pan-y}
+.drawer .buttons{gap:7px}.drawer .buttons button,.drawer .buttons a{border-radius:11px;min-height:44px;display:flex;align-items:center;justify-content:center}
+.drawer .buttons .primary-action{background:linear-gradient(140deg,#1884c4,#0f476b);border:1px solid #a1f3e6;box-shadow:0 0 11px #55dbc755;color:#fff}
+.toast{border-radius:12px}
+button:focus-visible,a:focus-visible,.mission:focus-visible{outline:3px solid #fff0ac;outline-offset:3px}
+@media(max-width:450px){
+ .top{top:calc(env(safe-area-inset-top) + 9px);left:10px;right:9px}
+ .brand{font-size:clamp(17px,4.55vw,21px);max-width:57vw}
+ .stats{font-size:9px;padding:7px 9px}
+ .menu{top:calc(env(safe-area-inset-top) + 61px);right:9px}
+ .menu button#options{min-height:38px;min-width:82px;padding:7px 11px!important}
+ .mission{top:calc(env(safe-area-inset-top) + 61px);left:9px;max-width:56vw;padding:7px 9px!important;min-height:39px}
+ .mission strong{font-size:9px}
+ .compass{top:calc(env(safe-area-inset-top) + 105px);right:9px;font-size:8px}
+ .radar{top:calc(env(safe-area-inset-top) + 144px);right:9px}
+ .radar.collapsed{padding:4px 6px}
+ .bottom{bottom:calc(env(safe-area-inset-bottom) + 74px);left:10px;right:10px}
+ .actions{grid-template-columns:repeat(2,59px);gap:7px}
+ .actions button{height:56px;font-size:11px}
+ .joystick{width:121px;height:121px}
+ .hotbar{bottom:-73px;padding:5px}
+ .hotbar button{width:clamp(35px,10.3vw,48px);min-width:clamp(35px,10.3vw,48px);height:52px}
+}
+@media(max-width:370px){
+ .brand{font-size:16px}.brand small{font-size:7px}
+ .mission{max-width:55vw}.actions{grid-template-columns:repeat(2,53px);gap:6px}
+ .actions button{height:52px;font-size:10px}
+ .joystick{width:110px;height:110px}
+ .hotbar button{min-width:35px;width:35px;height:48px}
+}
+@media(max-height:530px){
+ .top{top:4px}.brand small{display:none}
+ .menu{top:40px;right:9px}
+ .mission{top:45px;max-width:30vw;padding:4px 7px!important;min-height:0}
+ .mission:not(.expanded) .progress{display:none}
+ .compass{top:84px}.radar{top:120px}
+ .bottom{bottom:calc(env(safe-area-inset-bottom) + 50px)}
+ .hotbar{bottom:-49px}.hotbar button{height:38px}
+ .joystick{height:88px;width:88px}
+ .actions button{height:40px}
+}
+@media(prefers-reduced-motion:reduce){.actions button,.joystick,.hotbar,.hotbar button{transition:none!important}}
