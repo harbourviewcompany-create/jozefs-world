@@ -331,8 +331,8 @@ assert.ok(travel&&travel.beacon,'host broadcasts scene and camp for both devices
 sharedGuest.testHooks.receive(travel);
 assert.equal(sharedGuest.testHooks.beacon().x,sharedHost.testHooks.beacon().x,'guest reaches same cooperative forest');
 const dual=sharedHost.testHooks.beacon();
-sharedHost.testHooks.setPlayer(dual.x-1.6,dual.z+1.4);
-sharedHost.testHooks.moveCompanion(dual.x+1.6,dual.z+1.4);
+sharedHost.testHooks.setPlayer(dual.x-3.2,dual.z+3.4);
+sharedHost.testHooks.moveCompanion(dual.x+3.2,dual.z+3.4);
 sharedHost.testHooks.updateBeacon();
 const litPacket=messages.find(m=>m.t==='beacon');
 assert.ok(litPacket?.beacon?.lit,'host broadcasts solved two-player puzzle');
