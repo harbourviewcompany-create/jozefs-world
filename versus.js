@@ -10,7 +10,7 @@
   const dpr = Math.min(devicePixelRatio || 1, 2);
   canvas.width = W * dpr; canvas.height = H * dpr;
   ctx.scale(dpr, dpr);
-  let portrait=false,cameraFlipped=false,cameraYReady=false,screenScale=1,screenX=0,screenY=0,cameraW=0,cameraH=0;
+  let portrait=false,cameraFlipped=false,cameraYReady=false,cameraPhase='',screenScale=1,screenX=0,screenY=0,cameraW=0,cameraH=0;
   function fitCamera(){
     const next=window.innerHeight>window.innerWidth;
     cameraFlipped=next&&(room.together||room.who==='Jozef');
@@ -43,11 +43,15 @@
         ?showAttackingGoal+(keepActionClear-showAttackingGoal)*.42
         :keepActionClear;
       const target=Math.max(-W*screenScale+lower,Math.min(upper,desired));
-      // Smooth camera motion; avoid a jump when rooms start or screens rotate.
-      if(cameraYReady&&Math.abs(target-screenY)<400)screenY+=(target-screenY)*.2;
+      // Snap on kickoff/phase transitions so the first playable frame is safe,
+      // then ease tracking during an active match. Hidden browser tabs can
+      // throttle requestAnimationFrame, so a delayed camera is not acceptable.
+      if(cameraYReady&&cameraPhase===room.phase&&room.phase==='playing'&&Math.abs(target-screenY)<400)
+        screenY+=(target-screenY)*.24;
       else screenY=target;
+      cameraPhase=room.phase;
       cameraYReady=true;
-    }else if(portrait)cameraYReady=false;
+    }else if(portrait){cameraYReady=false;cameraPhase='';}
     ctx.setTransform(dpr,0,0,dpr,0,0);
     if(portrait){
       if(cameraFlipped){ctx.translate(screenX,screenY+W*screenScale);ctx.scale(screenScale,screenScale);ctx.rotate(-Math.PI/2);}
@@ -620,7 +624,7 @@
     renderPracticeRecord();
   }
   function stopInput(){keys.clear();stickVector=null;targets[room.who]=null;send({type:'aim',x:null,y:null});const nub=$('versus-nub'),stick=$('versus-stick');nub.style.left=(stick.clientWidth-nub.offsetWidth)/2+'px';nub.style.top=(stick.clientHeight-nub.offsetHeight)/2+'px';}
-  function cleanup(){clearTimeout(connectTimer);clearTimeout(countdownTimer);const pending=room.pending,oldConn=room.conn,oldPeer=room.peer;room.pending=null;room.conn=null;room.peer=null;pending?.close();oldConn?.close();oldPeer?.destroy();room.other='';room.ready=false;room.remoteReady=false;room.host=false;room.practice=false;room.together=false;room.otherSpot='forward';room.remoteActive=true;room.phase='lobby';cameraYReady=false;stopInput();syncUI();}
+  function cleanup(){clearTimeout(connectTimer);clearTimeout(countdownTimer);const pending=room.pending,oldConn=room.conn,oldPeer=room.peer;room.pending=null;room.conn=null;room.peer=null;pending?.close();oldConn?.close();oldPeer?.destroy();room.other='';room.ready=false;room.remoteReady=false;room.host=false;room.practice=false;room.together=false;room.otherSpot='forward';room.remoteActive=true;room.phase='lobby';cameraYReady=false;cameraPhase='';stopInput();syncUI();}
   function fail(message){cleanup();say(message);}
   function freshMatch(){state.matchId=crypto.randomUUID?.()||Array.from(crypto.getRandomValues(new Uint8Array(16)),v=>v.toString(16).padStart(2,'0')).join('');state.kick='';state.score={dad:0,jozef:0};state.matchLeft=room.practice?practiceSeconds:120;state.call='Kickoff';kickLock=0;lastBotKick=-100;savedMatch=false;resultRecorded=false;state.overtime=false;state.star={x:360,y:120,on:true};state.super='';nextLocalSprint=0;dekeReady.Dad=dekeReady.Jozef=0;sprintUntil.Dad=sprintUntil.Jozef=0;sprintReady.Dad=sprintReady.Jozef=0;reset(0);
     const length=Math.ceil(state.matchLeft);$('versus-clock').textContent=Math.floor(length/60)+':'+String(length%60).padStart(2,'0');
