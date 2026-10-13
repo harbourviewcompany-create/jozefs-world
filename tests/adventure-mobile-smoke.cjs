@@ -95,8 +95,16 @@ const close=()=>new Promise(resolve=>server.close(resolve));
         if(stage===0&&who===0)
          await page.waitForFunction(()=>window.JozefTogether.progress().clues[0],null,{timeout:6500});
         else if(who===1){
-         if(stage===1)await page.evaluate(()=>window.JozefTogether.teamPulse(1));
-         await page.waitForFunction(s=>window.JozefTogether.progress().stage>s,stage,{timeout:6500});
+         if(stage===1){
+          // Auto-guidance is animated; a pulse before Dad reaches (9,2) must
+          // be rejected, so wait for arrival before activating the console.
+          await page.waitForFunction(()=>{
+           const p=window.JozefTogether.progress().positions[1];
+           return p.x===9&&p.y===2;
+          },null,{timeout:10000});
+          assert.equal(await page.evaluate(()=>window.JozefTogether.teamPulse(1)),true);
+         }
+         await page.waitForFunction(s=>window.JozefTogether.progress().stage>s,stage,{timeout:10000});
         }
         else {
          await page.waitForFunction(s=>{
