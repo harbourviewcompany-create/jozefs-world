@@ -110,6 +110,7 @@ function stadium(c,s){
  return paintStadium(c,s);
 }
 
+let headScale=1;
 function athlete(c,x,y,jersey,num,kind,phase,active,moving){
  c.save();c.translate(x,y);
  // Enlarge the captain and ball-carriers so he is recognizable on a phone.
@@ -147,7 +148,9 @@ function athlete(c,x,y,jersey,num,kind,phase,active,moving){
  rounded(c,-6,-13+bob,12,4,2,'#102b2f');
  c.fillStyle='#faffee';c.font='900 12px system-ui';
  c.textAlign='center';c.fillText(String(num),0,7+bob);
- // Head, defined hairline and face direction.
+ // Head, defined hairline and face direction. Wacky Big Heads scales this one block.
+ c.save();
+ if(headScale!==1){c.translate(0,-9+bob);c.scale(headScale,headScale);c.translate(0,9-bob);}
  circle(c,-8,-18+bob,2,kind==='opponent'?'#dfaa88':'#c99670');
  circle(c,8,-18+bob,2,kind==='opponent'?'#dfaa88':'#c99670');
  circle(c,0,-17+bob,8,kind==='opponent'?'#e2b08c':'#d7a37c');
@@ -156,6 +159,7 @@ function athlete(c,x,y,jersey,num,kind,phase,active,moving){
  circle(c,-2.5,-16+bob,.7,'#24312b');circle(c,2.5,-16+bob,.7,'#24312b');
  c.strokeStyle='#c49274';c.lineWidth=1;c.beginPath();c.moveTo(0,-15.5+bob);c.lineTo(0,-13.6+bob);c.stroke();
  c.beginPath();c.arc(0,-12.6+bob,2.2,.2,Math.PI-.2);c.stroke();
+ c.restore();
  // Captain insignia and keeper gloves.
  if(kind==='captain'){
   circle(c,15,-11+bob,3,'#cfff66');
@@ -173,6 +177,8 @@ function athlete(c,x,y,jersey,num,kind,phase,active,moving){
 function ball(c,s,phase,motion){
  const b=s.ball||{x:210,y:300,vx:0,vy:0,owner:'free'};
  c.save();
+ const ballScale=Number(s.wacky?.ballScale)||1;
+ if(ballScale!==1){c.translate(b.x,b.y);c.scale(ballScale,ballScale);c.translate(-b.x,-b.y);}
  const velocity=Math.hypot(b.vx||0,b.vy||0);
  if(motion&&velocity>40&&(b.owner==='shot'||b.owner==='free')){
   const dx=(b.vx||0)/velocity,dy=(b.vy||0)/velocity;
@@ -187,6 +193,33 @@ function ball(c,s,phase,motion){
  circle(c,b.x-2,b.y-2,4,'#d0dfdf');
  c.beginPath();c.moveTo(b.x-1,b.y-4);c.lineTo(b.x+4,b.y-1);c.lineTo(b.x+2,b.y+3);
  c.closePath();c.fillStyle='#1c5457';c.fill();
+ c.restore();
+}
+function coinsLayer(c,s,phase){
+ for(const coin of (Array.isArray(s.coins)?s.coins:[])){
+  const age=Number(coin.age)||0;
+  const fade=age>6?Math.max(.2,1-(age-6)/2):1;
+  const spin=Math.abs(Math.cos(phase*4+coin.x*.05));
+  c.save();c.globalAlpha=fade;
+  circle(c,coin.x,coin.y+8,9,'#00000033');
+  c.shadowColor='#ffd86b';c.shadowBlur=14;
+  c.beginPath();c.ellipse(coin.x,coin.y,5+7*spin,12,0,0,TAU);
+  c.fillStyle='#ffd24d';c.fill();c.shadowBlur=0;
+  c.lineWidth=2;c.strokeStyle='#fff3b0';c.stroke();
+  if(spin>.5){c.fillStyle='#b8860b';c.font='900 11px system-ui';c.textAlign='center';c.fillText('★',coin.x,coin.y+4);}
+  c.restore();
+ }
+}
+function ghostRunner(c,g,phase){
+ if(!g)return;
+ c.save();
+ c.globalAlpha=.4;
+ athlete(c,g.x,g.y,'#9ad8ff','👻','team',phase,false,true);
+ c.restore();
+ c.save();
+ rounded(c,g.x-30,g.y-45,60,12,5,'#10303bd0');
+ c.fillStyle='#bfeaff';c.font='900 8px system-ui';c.textAlign='center';
+ c.fillText(String(g.name||'GHOST').slice(0,12),g.x,g.y-36);
  c.restore();
 }
 function aimLine(c,s){
@@ -325,6 +358,8 @@ function matchScreen(c,s){
  c.restore();
 }
 function render(c,s){
+ headScale=clip(Number(s.wacky?.headScale)||1,1,2.2);
+ const club=s.club&&/^#[\da-fA-F]{6}$/.test(s.club.primary)?s.club:null;
  const phase=Math.max(0,Number(s.phase)||0);
  const motion=s.reducedMotion!==true;
  const cam=s.camera||{x:210,y:300,zoom:1};
@@ -364,19 +399,21 @@ function render(c,s){
  const jerseys={rookie:'11',goal:'9',explorer:'7',captain:'10',scholar:'8',super:'11',champion:'99'};
  const number=key=>jerseys[key]||null;
  const ax=s.actor||{x:210,y:495},mate=s.mate||{x:300,y:310};
- athlete(c,210+(ax.x-210)*.12,535,'#5db6d2',number(lineup.back)||'5','team',phase,false,false);
- athlete(c,210,558,'#e2bd71',number(lineup.keeper)||'1','keeper',phase,false,false);
+ athlete(c,210+(ax.x-210)*.12,535,club?club.primary:'#5db6d2',number(lineup.back)||'5','team',phase,false,false);
+ athlete(c,210,558,club&&/^#[\da-fA-F]{6}$/.test(club.secondary)?club.secondary:'#e2bd71',number(lineup.keeper)||'1','keeper',phase,false,false);
  if(s.counterTime>0&&s.ball?.owner!=='rival'){
   strokeCircle(c,mate.x,mate.y,30,'#a2fff2ae',2);
   rounded(c,mate.x-27,mate.y-46,54,12,5,'#0c4441ed');
   c.font='900 9px system-ui';c.fillStyle='#bdfff0';c.textAlign='center';
   c.fillText('RUN!',mate.x,mate.y-37);
  }
- athlete(c,mate.x,mate.y,'#78e8dc',number(lineup.mid||lineup.striker)||'7','team',phase,s.ball?.owner==='mate',motion&&s.mode==='playing');
+ athlete(c,mate.x,mate.y,club?club.primary:'#78e8dc',number(lineup.mid||lineup.striker)||'7','team',phase,s.ball?.owner==='mate',motion&&s.mode==='playing');
  const identity=s.identity||{};
  const color=/^#[\da-fA-F]{6}$/.test(identity.kit)?identity.kit:'#c8ff5a';
  const n=Number.isInteger(identity.number)&&identity.number>=1&&identity.number<=99?identity.number:11;
  athlete(c,ax.x,ax.y,color,n,'captain',phase,true,motion&&s.mode==='playing');
+ coinsLayer(c,s,phase);
+ ghostRunner(c,s.ghost,phase);
  ball(c,s,phase,motion);
  fx(c,s,p,phase,motion);
  c.restore();

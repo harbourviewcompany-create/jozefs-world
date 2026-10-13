@@ -77,11 +77,11 @@
   function shotCharge(elapsedMs) {
     return clamp((Number(elapsedMs)||0)/900,0,1);
   }
-  function movePlayer(player,velocity,input,dt,speed=190,boost=1) {
+  function movePlayer(player,velocity,input,dt,speed=190,boost=1,grip=1) {
     const step=clamp(dt,0,.05);
     const mag=Math.hypot(Number(input?.x)||0,Number(input?.y)||0);
     const normalized=mag>.001?{x:(Number(input.x)||0)/Math.max(1,mag),y:(Number(input.y)||0)/Math.max(1,mag)}:{x:0,y:0};
-    const response=1-Math.exp(-(mag>.08?15:22)*step);
+    const response=1-Math.exp(-(mag>.08?15:22)*clamp(grip,.1,1)*step);
     const limit=clamp(speed*boost,0,450);
     const vx=(Number(velocity?.x)||0)+(normalized.x*limit-(Number(velocity?.x)||0))*response;
     const vy=(Number(velocity?.y)||0)+(normalized.y*limit-(Number(velocity?.y)||0))*response;
@@ -296,10 +296,156 @@
     ];
     return {points,level,badges,earned:badges.filter(b=>b.earned).length};
   }
+
+  // ---- Wacky Rules: optional silly match twists. Pure helpers, no storage. ----
+  const WACKY_RULES=Object.freeze([
+    Object.freeze({id:'moon',label:'MOON GRAVITY',icon:'🌙',blurb:'The ball floats and bounces on and on.'}),
+    Object.freeze({id:'giant',label:'GIANT BALL',icon:'⚽',blurb:'A huge ball that is easy to grab.'}),
+    Object.freeze({id:'tiny',label:'TINY BALL',icon:'🔸',blurb:'A teeny ball. Stay close to keep it!'}),
+    Object.freeze({id:'banana',label:'BANANA PITCH',icon:'🍌',blurb:'Everybody slides on the slippery grass.'}),
+    Object.freeze({id:'bighead',label:'BIG HEADS',icon:'🤪',blurb:'Every head is enormous. Just for laughs.'}),
+    Object.freeze({id:'goldrain',label:'GOLD RAIN',icon:'🪙',blurb:'Coins fall from the sky. Grab them for stars!'}),
+    Object.freeze({id:'mirror',label:'MIRROR MODE',icon:'🪞',blurb:'Your controls are flipped. Good luck!'})
+  ]);
+  const WACKY_IDS=WACKY_RULES.map(r=>r.id);
+  function wackyChoiceValid(choice){return choice==='off'||choice==='spin'||choice==='double'||WACKY_IDS.includes(choice);}
+  function rulesForChoice(choice,rand=Math.random) {
+    if(choice==='spin'||choice==='double'){
+      const pool=WACKY_IDS.slice(),want=choice==='double'?2:1,out=[];
+      while(out.length<want&&pool.length){
+        const index=Math.min(pool.length-1,Math.floor(clamp(rand(),0,.9999)*pool.length));
+        const id=pool.splice(index,1)[0];
+        // A giant and a tiny ball would cancel out, so never pair them.
+        if((id==='giant'&&out.includes('tiny'))||(id==='tiny'&&out.includes('giant')))continue;
+        out.push(id);
+      }
+      return out;
+    }
+    return WACKY_IDS.includes(choice)?[choice]:[];
+  }
+  function wackyEffects(ids) {
+    const set=new Set(Array.isArray(ids)?ids.filter(id=>WACKY_IDS.includes(id)):[]);
+    return {
+      rules:WACKY_IDS.filter(id=>set.has(id)),
+      friction:set.has('moon')?.25:1,
+      bounce:set.has('moon')?.9:.55,
+      pickup:set.has('giant')?1.45:set.has('tiny')?.72:1,
+      ballScale:set.has('giant')?1.7:set.has('tiny')?.6:1,
+      grip:set.has('banana')?.28:1,
+      headScale:set.has('bighead')?1.9:1,
+      mirror:set.has('mirror'),
+      coins:set.has('goldrain')
+    };
+  }
+  // Gold Rain: at most three coins on the pitch, each lasts eight seconds.
+  const COIN_LIMIT=3,COIN_LIFE=8;
+  const freshCoins=()=>({list:[],clock:1.8,collected:0});
+  function spawnCoin(rand=Math.random) {
+    return {x:Math.round(46+clamp(rand(),0,1)*328),y:Math.round(130+clamp(rand(),0,1)*350),age:0};
+  }
+  function stepCoins(state,dt,player,rand=Math.random,radius=24) {
+    if(!state||!Array.isArray(state.list))return 0;
+    const step=clamp(dt,0,.1);let got=0;
+    state.clock+=step;
+    for(const coin of state.list)coin.age+=step;
+    state.list=state.list.filter(coin=>{
+      if(player&&distance(coin,player)<radius){got++;return false;}
+      return coin.age<COIN_LIFE;
+    });
+    if(state.clock>=2.6&&state.list.length<COIN_LIMIT){state.clock=0;state.list.push(spawnCoin(rand));}
+    state.collected=(state.collected||0)+got;
+    return got;
+  }
+
+  // ---- Ghost races: a compact recording of one match that can be raced again,
+  // or shared as a short text code. Decoding treats every code as untrusted. ----
+  const GHOST_STEP=.2,GHOST_MAX=380,GHOST_PREFIX='JG1.';
+  const asInt=(n,lo,hi)=>Math.round(clamp(Number(n),lo,hi));
+  function cleanGhostName(name) {
+    return String(name==null?'':name).replace(/[^A-Za-z0-9 ]/g,'').replace(/\s+/g,' ').trim().slice(0,12).toUpperCase();
+  }
+  const B64='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+  // Self-contained base64url: works in any browser or test runtime, with no Buffer or btoa needed.
+  function b64Encode(bytes) {
+    let out='';
+    for(let i=0;i<bytes.length;i+=3){
+      const a=bytes[i],b=i+1<bytes.length?bytes[i+1]:0,c=i+2<bytes.length?bytes[i+2]:0;
+      const n=(a<<16)|(b<<8)|c;
+      out+=B64[(n>>18)&63]+B64[(n>>12)&63];
+      if(i+1<bytes.length)out+=B64[(n>>6)&63];
+      if(i+2<bytes.length)out+=B64[n&63];
+    }
+    return out;
+  }
+  function b64Decode(text) {
+    if(typeof text!=='string'||!/^[A-Za-z0-9_-]*$/.test(text)||text.length%4===1)return null;
+    const out=[];
+    let bits=0,count=0;
+    for(let i=0;i<text.length;i++){
+      bits=(bits<<6)|B64.indexOf(text[i]);count+=6;
+      if(count>=8){count-=8;out.push((bits>>count)&255);bits&=(1<<count)-1;}
+    }
+    return new Uint8Array(out);
+  }
+  function encodeGhost(rec) {
+    const samples=(Array.isArray(rec?.samples)?rec.samples:[]).slice(0,GHOST_MAX);
+    if(samples.length<10)return null;
+    const bytes=new Uint8Array(samples.length*2);
+    samples.forEach((p,i)=>{
+      bytes[i*2]=Math.round(clamp(Array.isArray(p)?p[0]:0,0,420)/2);
+      bytes[i*2+1]=Math.round(clamp(Array.isArray(p)?p[1]:0,0,600)/3);
+    });
+    const header={
+      n:cleanGhostName(rec.name)||'GHOST',u:asInt(rec.us,0,99),t:asInt(rec.them,0,99),
+      g:(Array.isArray(rec.goals)?rec.goals:[]).slice(0,9).map(x=>Math.round(clamp(x,0,80)*10)/10),
+      w:wackyEffects(rec.rules).rules,l:samples.length
+    };
+    const json=JSON.stringify(header),head=new Uint8Array(json.length);
+    for(let i=0;i<json.length;i++)head[i]=json.charCodeAt(i)&127;
+    return GHOST_PREFIX+b64Encode(head)+'.'+b64Encode(bytes);
+  }
+  function decodeGhost(code) {
+    if(typeof code!=='string')return null;
+    const text=code.trim();
+    if(text.length>2600||!text.startsWith(GHOST_PREFIX))return null;
+    const parts=text.slice(GHOST_PREFIX.length).split('.');
+    if(parts.length!==2)return null;
+    const hb=b64Decode(parts[0]),db=b64Decode(parts[1]);
+    if(!hb||!db||hb.length>400||db.length%2||db.length<20||db.length>GHOST_MAX*2)return null;
+    let header;
+    try{header=JSON.parse(String.fromCharCode.apply(null,Array.from(hb)));}catch(_){return null;}
+    if(!header||typeof header!=='object'||Array.isArray(header)||header.l!==db.length/2)return null;
+    const samples=[];
+    for(let i=0;i<db.length;i+=2){
+      const x=db[i]*2,y=db[i+1]*3;
+      if(x>420||y>600)return null;
+      samples.push([x,y]);
+    }
+    const goals=(Array.isArray(header.g)?header.g:[]).slice(0,9).map(Number).filter(Number.isFinite).map(x=>clamp(x,0,80));
+    return {
+      name:cleanGhostName(header.n)||'GHOST',us:asInt(header.u,0,99),them:asInt(header.t,0,99),
+      goals,rules:wackyEffects(header.w).rules,samples
+    };
+  }
+  function ghostAt(ghost,seconds) {
+    const samples=ghost?.samples;
+    if(!Array.isArray(samples)||!samples.length)return null;
+    const position=clamp(seconds,0,1e6)/GHOST_STEP;
+    const last=samples.length-1,index=Math.min(last,Math.floor(position));
+    const next=Math.min(last,index+1),mix=Math.min(1,position-index);
+    const a=samples[index],b=samples[next];
+    return {x:a[0]+(b[0]-a[0])*mix,y:a[1]+(b[1]-a[1])*mix,finished:position>=last};
+  }
+  function ghostScoreAt(ghost,seconds) {
+    return (Array.isArray(ghost?.goals)?ghost.goals:[]).filter(t=>t<=seconds).length;
+  }
+  const ghostRank=rec=>(Number(rec?.us)||0)-(Number(rec?.them)||0)+(Number(rec?.us)||0)/100;
   return Object.freeze({
     clamp,distance,DIFFICULTIES,joystickVector,
     defenderDestination,teammateDestination,rivalRunTarget,counterSupportTarget,rivalThreatChance,shotCharge,movePlayer,feintTargets,findShotBlocker,bestShotLane,tacticalRead,shotAccuracy,shotProfile,shotTarget,keeperCommit,readGamepad,
-    flowChange,flowShotProfile,cameraFor,screenToWorld,dailyKey,CHALLENGES,freshDaily,normalizeDaily,awardDaily,progression
+    flowChange,flowShotProfile,cameraFor,screenToWorld,dailyKey,CHALLENGES,freshDaily,normalizeDaily,awardDaily,progression,
+    WACKY_RULES,wackyChoiceValid,rulesForChoice,wackyEffects,freshCoins,spawnCoin,stepCoins,
+    GHOST_STEP,cleanGhostName,encodeGhost,decodeGhost,ghostAt,ghostScoreAt,ghostRank
   });
 });
 ;
@@ -641,6 +787,7 @@ function stadium(c,s){
  return paintStadium(c,s);
 }
 
+let headScale=1;
 function athlete(c,x,y,jersey,num,kind,phase,active,moving){
  c.save();c.translate(x,y);
  // Enlarge the captain and ball-carriers so he is recognizable on a phone.
@@ -678,7 +825,9 @@ function athlete(c,x,y,jersey,num,kind,phase,active,moving){
  rounded(c,-6,-13+bob,12,4,2,'#102b2f');
  c.fillStyle='#faffee';c.font='900 12px system-ui';
  c.textAlign='center';c.fillText(String(num),0,7+bob);
- // Head, defined hairline and face direction.
+ // Head, defined hairline and face direction. Wacky Big Heads scales this one block.
+ c.save();
+ if(headScale!==1){c.translate(0,-9+bob);c.scale(headScale,headScale);c.translate(0,9-bob);}
  circle(c,-8,-18+bob,2,kind==='opponent'?'#dfaa88':'#c99670');
  circle(c,8,-18+bob,2,kind==='opponent'?'#dfaa88':'#c99670');
  circle(c,0,-17+bob,8,kind==='opponent'?'#e2b08c':'#d7a37c');
@@ -687,6 +836,7 @@ function athlete(c,x,y,jersey,num,kind,phase,active,moving){
  circle(c,-2.5,-16+bob,.7,'#24312b');circle(c,2.5,-16+bob,.7,'#24312b');
  c.strokeStyle='#c49274';c.lineWidth=1;c.beginPath();c.moveTo(0,-15.5+bob);c.lineTo(0,-13.6+bob);c.stroke();
  c.beginPath();c.arc(0,-12.6+bob,2.2,.2,Math.PI-.2);c.stroke();
+ c.restore();
  // Captain insignia and keeper gloves.
  if(kind==='captain'){
   circle(c,15,-11+bob,3,'#cfff66');
@@ -704,6 +854,8 @@ function athlete(c,x,y,jersey,num,kind,phase,active,moving){
 function ball(c,s,phase,motion){
  const b=s.ball||{x:210,y:300,vx:0,vy:0,owner:'free'};
  c.save();
+ const ballScale=Number(s.wacky?.ballScale)||1;
+ if(ballScale!==1){c.translate(b.x,b.y);c.scale(ballScale,ballScale);c.translate(-b.x,-b.y);}
  const velocity=Math.hypot(b.vx||0,b.vy||0);
  if(motion&&velocity>40&&(b.owner==='shot'||b.owner==='free')){
   const dx=(b.vx||0)/velocity,dy=(b.vy||0)/velocity;
@@ -718,6 +870,33 @@ function ball(c,s,phase,motion){
  circle(c,b.x-2,b.y-2,4,'#d0dfdf');
  c.beginPath();c.moveTo(b.x-1,b.y-4);c.lineTo(b.x+4,b.y-1);c.lineTo(b.x+2,b.y+3);
  c.closePath();c.fillStyle='#1c5457';c.fill();
+ c.restore();
+}
+function coinsLayer(c,s,phase){
+ for(const coin of (Array.isArray(s.coins)?s.coins:[])){
+  const age=Number(coin.age)||0;
+  const fade=age>6?Math.max(.2,1-(age-6)/2):1;
+  const spin=Math.abs(Math.cos(phase*4+coin.x*.05));
+  c.save();c.globalAlpha=fade;
+  circle(c,coin.x,coin.y+8,9,'#00000033');
+  c.shadowColor='#ffd86b';c.shadowBlur=14;
+  c.beginPath();c.ellipse(coin.x,coin.y,5+7*spin,12,0,0,TAU);
+  c.fillStyle='#ffd24d';c.fill();c.shadowBlur=0;
+  c.lineWidth=2;c.strokeStyle='#fff3b0';c.stroke();
+  if(spin>.5){c.fillStyle='#b8860b';c.font='900 11px system-ui';c.textAlign='center';c.fillText('★',coin.x,coin.y+4);}
+  c.restore();
+ }
+}
+function ghostRunner(c,g,phase){
+ if(!g)return;
+ c.save();
+ c.globalAlpha=.4;
+ athlete(c,g.x,g.y,'#9ad8ff','👻','team',phase,false,true);
+ c.restore();
+ c.save();
+ rounded(c,g.x-30,g.y-45,60,12,5,'#10303bd0');
+ c.fillStyle='#bfeaff';c.font='900 8px system-ui';c.textAlign='center';
+ c.fillText(String(g.name||'GHOST').slice(0,12),g.x,g.y-36);
  c.restore();
 }
 function aimLine(c,s){
@@ -856,6 +1035,8 @@ function matchScreen(c,s){
  c.restore();
 }
 function render(c,s){
+ headScale=clip(Number(s.wacky?.headScale)||1,1,2.2);
+ const club=s.club&&/^#[\da-fA-F]{6}$/.test(s.club.primary)?s.club:null;
  const phase=Math.max(0,Number(s.phase)||0);
  const motion=s.reducedMotion!==true;
  const cam=s.camera||{x:210,y:300,zoom:1};
@@ -895,19 +1076,21 @@ function render(c,s){
  const jerseys={rookie:'11',goal:'9',explorer:'7',captain:'10',scholar:'8',super:'11',champion:'99'};
  const number=key=>jerseys[key]||null;
  const ax=s.actor||{x:210,y:495},mate=s.mate||{x:300,y:310};
- athlete(c,210+(ax.x-210)*.12,535,'#5db6d2',number(lineup.back)||'5','team',phase,false,false);
- athlete(c,210,558,'#e2bd71',number(lineup.keeper)||'1','keeper',phase,false,false);
+ athlete(c,210+(ax.x-210)*.12,535,club?club.primary:'#5db6d2',number(lineup.back)||'5','team',phase,false,false);
+ athlete(c,210,558,club&&/^#[\da-fA-F]{6}$/.test(club.secondary)?club.secondary:'#e2bd71',number(lineup.keeper)||'1','keeper',phase,false,false);
  if(s.counterTime>0&&s.ball?.owner!=='rival'){
   strokeCircle(c,mate.x,mate.y,30,'#a2fff2ae',2);
   rounded(c,mate.x-27,mate.y-46,54,12,5,'#0c4441ed');
   c.font='900 9px system-ui';c.fillStyle='#bdfff0';c.textAlign='center';
   c.fillText('RUN!',mate.x,mate.y-37);
  }
- athlete(c,mate.x,mate.y,'#78e8dc',number(lineup.mid||lineup.striker)||'7','team',phase,s.ball?.owner==='mate',motion&&s.mode==='playing');
+ athlete(c,mate.x,mate.y,club?club.primary:'#78e8dc',number(lineup.mid||lineup.striker)||'7','team',phase,s.ball?.owner==='mate',motion&&s.mode==='playing');
  const identity=s.identity||{};
  const color=/^#[\da-fA-F]{6}$/.test(identity.kit)?identity.kit:'#c8ff5a';
  const n=Number.isInteger(identity.number)&&identity.number>=1&&identity.number<=99?identity.number:11;
  athlete(c,ax.x,ax.y,color,n,'captain',phase,true,motion&&s.mode==='playing');
+ coinsLayer(c,s,phase);
+ ghostRunner(c,s.ghost,phase);
  ball(c,s,phase,motion);
  fx(c,s,p,phase,motion);
  c.restore();
@@ -948,6 +1131,36 @@ function load(){
  }catch(_){return fresh();}
 }
 const lifetime=load();
+// Wacky Rules and Ghost Races: optional, device-only extras for fun.
+const WACKY_KEY='jozefs-world-wacky-v1',GHOST_KEY='jozefs-world-ghost-v1';
+function loadWacky(){
+ const out={choice:'off',played:0,wins:0};
+ try{
+  const d=JSON.parse(localStorage.getItem(WACKY_KEY)||'null');
+  if(d&&typeof d==='object'&&!Array.isArray(d)){
+   if(systems?.wackyChoiceValid?.(d.choice))out.choice=d.choice;
+   out.played=clamp(Math.floor(Number(d.played))||0,0,99999);out.wins=clamp(Math.floor(Number(d.wins))||0,0,99999);
+  }
+ }catch(_){}
+ return out;
+}
+function loadGhosts(){
+ const out={mode:'off',name:'JOZEF',best:null,last:null,friend:null};
+ try{
+  const d=JSON.parse(localStorage.getItem(GHOST_KEY)||'null');
+  if(d&&typeof d==='object'&&!Array.isArray(d)){
+   if(['off','best','last','friend'].includes(d.mode))out.mode=d.mode;
+   out.name=systems?.cleanGhostName?.(d.name)||'JOZEF';
+   for(const k of ['best','last','friend'])out[k]=typeof d[k]==='string'&&d[k].length<=2600&&systems?.decodeGhost?.(d[k])?d[k]:null;
+  }
+ }catch(_){}
+ return out;
+}
+const wackyPrefs=loadWacky(),ghostStore=loadGhosts();
+const saveWacky=()=>{try{localStorage.setItem(WACKY_KEY,JSON.stringify(wackyPrefs));}catch(_){}};
+const saveGhosts=()=>{try{localStorage.setItem(GHOST_KEY,JSON.stringify(ghostStore));}catch(_){}};
+const saveLifetime=()=>{try{localStorage.setItem(KEY,JSON.stringify(lifetime));}catch(_){}};
+let fx=systems.wackyEffects([]),coinState=systems.freshCoins(),activeGhost=null,ghostRec=null,ghostClock=0;
 const venues=[
   {name:'NEIGHBOURHOOD COURT',accent:'#cafa60',need:0,rival:'THE ROOFTOP ROVERS',story:'The neighbourhood knows your name. Earn two wins to unlock the lights of Neon City.'},
   {name:'NEON CITY',accent:'#73f7da',need:2,rival:'MIDNIGHT CITY FC',story:'The city has heard about Jozef. Earn five total victories to enter the Legend Arena.'},
@@ -1058,6 +1271,17 @@ function hud(){
  const chance=systems.flowShotProfile(systems.shotProfile(shooter.y,passChain,squad.shot+Math.min(.18,counterTime*.033),experience?.prefs.difficulty||'pro'),flow);
  put('arena-shot-quality',ball.owner==='rival'?'DEFEND':Math.round(chance.onTarget*100)+'%');
  const chanceLabel=$('arena-shot-quality');if(chanceLabel)chanceLabel.title=chance.label+' · Pass and move forward to improve your shooting chance.';
+
+ const wackyChip=$('arena-wacky-chip');
+ if(wackyChip){
+  const label=fx.rules.map(id=>systems.WACKY_RULES.find(r=>r.id===id)).filter(Boolean).map(r=>r.icon+' '+r.label).join(' + ');
+  wackyChip.hidden=!label||mode==='ready';wackyChip.textContent=label;
+ }
+ const ghostChip=$('arena-ghost-chip');
+ if(ghostChip){
+  const show=Boolean(activeGhost)&&mode!=='ready';ghostChip.hidden=!show;
+  if(show)ghostChip.textContent='👻 '+activeGhost.name+' '+systems.ghostScoreAt(activeGhost,MATCH_LENGTH-time)+' · YOU '+us;
+ }
  put('arena-skill-status',skillCooldown>0?'READY IN '+Math.ceil(skillCooldown)+'s':'SKILL READY');
  const skillButton=$('arena-skill');if(skillButton){skillButton.disabled=mode!=='playing'||skillCooldown>0;skillButton.textContent=experience?.prefs.mobileLayout==='immersive'?(ball.owner==='rival'?'TACKLE':'BOOST'):(ball.owner==='rival'?'TACKLE BURST L':'SKILL BURST L');}
  for(let i=0;i<3;i++){const b=$('arena-aim-'+i);if(b){b.setAttribute('aria-pressed',String(aim===i));b.classList.toggle('selected',aim===i);}}
@@ -1077,7 +1301,7 @@ function saveMatchSnapshot(){
    version:1,savedAt:Date.now(),time,us,them,shots,keeperSaves,
    actor,mate,ball,defenders,keeper,aim,skillCooldown,skillTime,
    shotCooldown,tackleCooldown,passCooldown,passChain,
-   rivalCarrier,rivalElapsed,counterTime,counterRecoveries,rivalAttacks,flow
+   rivalCarrier,rivalElapsed,counterTime,counterRecoveries,rivalAttacks,flow,wacky:fx.rules
   }));
  }catch(_){}
 }
@@ -1109,6 +1333,7 @@ function restoreMatchSnapshot(){
   counterRecoveries=clamp(Number(old.counterRecoveries)||0,0,99);
   rivalAttacks=clamp(Number(old.rivalAttacks)||0,0,99);
   flow=clamp(Number(old.flow)||0,0,100);
+  fx=systems.wackyEffects(Array.isArray(old.wacky)?old.wacky.slice(0,2):[]);coinState=systems.freshCoins();activeGhost=null;ghostRec=null;
   if(ball.owner==='rival'&&rivalCarrier<0)return false;
   squad=getSquad();mode='paused';playerVelocity={x:0,y:0};last=0;lastFrameTick=0;rawFrameTick=0;
   return true;
@@ -1119,8 +1344,14 @@ function start(){
  mode='playing';time=MATCH_LENGTH;us=0;them=0;streak=0;flash=0;last=0;
  shots=0;keeperSaves=0;blockedShots=0;counterRecoveries=0;rivalAttacks=0;flow=0;skillCooldown=0;skillTime=0;lastHudTick=-1;
  camera={x:210,y:300,zoom:1};replay=null;replayHistory=[];replayWait=0;joystick={x:0,y:0};padVector={x:0,y:0};experience?.reset();
- squad=getSquad();resetPositions();hud();cue('start');
- msg('KICK OFF! Move, pass to your teammate, and shoot into the top goal.');
+ squad=getSquad();resetPositions();
+ fx=systems.wackyEffects(systems.rulesForChoice(wackyPrefs.choice,Math.random));coinState=systems.freshCoins();
+ activeGhost=ghostStore.mode==='off'?null:systems.decodeGhost(ghostStore[ghostStore.mode]);
+ ghostRec={samples:[[actor.x,actor.y]],goals:[]};ghostClock=0;
+ hud();cue('start');
+ const twist=fx.rules.map(id=>systems.WACKY_RULES.find(r=>r.id===id)).filter(Boolean).map(r=>r.icon+' '+r.label).join(' + ');
+ msg(twist?'WACKY RULES: '+twist+'! '+(activeGhost?'Race the ghost too!':'Have fun!'):
+  activeGhost?'KICK OFF! Race '+activeGhost.name+"'s ghost — beat its goals!":'KICK OFF! Move, pass to your teammate, and shoot into the top goal.');
  last=0;lastFrameTick=0;rawFrameTick=0;
  cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
 }
@@ -1151,23 +1382,54 @@ function end(){
  window.JozefWorld?.record?.('arena',{result:won?'win':us===them?'draw':'loss',goals:us});
  if(won)cue('victory');
  const result=won?'VICTORY!':us===them?'A HARD-FOUGHT DRAW.':'FULL TIME. REMATCH?';
- msg(result+' '+us+'–'+them+'. '+(unlocked?'NEW STADIUM UNLOCKED!':won?'Your club has earned a win!':'Every match builds your skills.'));
+ let extra='';
+ try{extra=finishExtras(won);}catch(_){/* Wacky Rules and ghosts are extras: a full-time result never depends on them. */}
+ msg(result+' '+us+'–'+them+'. '+(unlocked?'NEW STADIUM UNLOCKED!':won?'Your club has earned a win!':'Every match builds your skills.')+extra);
  finishReplay();
  window.dispatchEvent?.(new Event('jozef:progress'));
  // A fully finished match counts toward today's shared HQ activities.
  window.dispatchEvent?.(new Event('jozef:arena-completed'));
  hud();draw();experience?.finish({won,us,them,shots,saves:keeperSaves});
 }
+function finishExtras(won){
+ let text='';
+ const played=fx.rules.length>0;
+ if(played){
+  wackyPrefs.played=Math.min(99999,wackyPrefs.played+1);
+  if(won){wackyPrefs.wins=Math.min(99999,wackyPrefs.wins+1);text+=' WACKY WIN #'+wackyPrefs.wins+'!';}
+  saveWacky();
+ }
+ if(coinState.collected>0)text+=' '+coinState.collected+' GOLD COIN'+(coinState.collected===1?'':'S')+' GRABBED!';
+ if(activeGhost){
+  const mine={us,them},theirs={us:activeGhost.us,them:activeGhost.them};
+  const better=systems.ghostRank(mine)>systems.ghostRank(theirs);
+  text+=better?' YOU BEAT '+activeGhost.name+"'S GHOST ("+activeGhost.us+'–'+activeGhost.them+')!':
+   systems.ghostRank(mine)===systems.ghostRank(theirs)?' YOU TIED THE GHOST!':' THE GHOST WON '+activeGhost.us+'–'+activeGhost.them+'. TRY AGAIN!';
+ }
+ if(ghostRec){
+  const rec={name:ghostStore.name,us,them,goals:ghostRec.goals,rules:fx.rules,samples:ghostRec.samples};
+  const code=systems.encodeGhost(rec);
+  if(code){
+   ghostStore.last=code;
+   const old=ghostStore.best?systems.decodeGhost(ghostStore.best):null;
+   if(!old||systems.ghostRank(rec)>systems.ghostRank(old))ghostStore.best=code;
+   saveGhosts();
+  }
+  ghostRec=null;
+ }
+ refreshExtrasUI();
+ return text;
+}
 function move(deltaX,deltaY,dt){
  const position=systems.movePlayer(actor,playerVelocity,
-  {x:deltaX,y:deltaY},dt,190*(1+squad.speed),skillTime>0?1.85:1);
+  {x:deltaX,y:deltaY},dt,190*(1+squad.speed),skillTime>0?1.85:1,fx.grip);
  actor.x=position.x;actor.y=position.y;
  playerVelocity={x:position.vx,y:position.vy};
 }
 function receive(){
  if(ball.owner!=='free')return;
- if(dist(ball,actor)<25){ball.owner='actor';passChain=0;msg('POSSESSION! Advance or pass to find a better shot.');}
- else if(dist(ball,mate)<24){ball.owner='mate';passChain=0;msg('Great recovery! Get closer to goal for the shot.');}
+ if(dist(ball,actor)<25*fx.pickup){ball.owner='actor';passChain=0;msg('POSSESSION! Advance or pass to find a better shot.');}
+ else if(dist(ball,mate)<24*fx.pickup){ball.owner='mate';passChain=0;msg('Great recovery! Get closer to goal for the shot.');}
 }
 function setAim(i){
  if(!Number.isInteger(i)||i<0||i>=SHOT_ZONES.length)return;
@@ -1316,7 +1578,7 @@ function finishReplay(){
 }
 function goal(){
  const finish=passChain>=2?'ONE-TWO MAGIC!':passChain>=1?'TEAMWORK GOAL!':counterTime>0?'FAST-BREAK FINISH!':'GOOOOOAL!';
- us+=1;flow=systems.flowChange(flow,'goal');flash=.75;cue('goal');experience?.haptic([40,40,40]);experience?.record('goals');startReplay('GOAL');
+ us+=1;ghostRec?.goals?.push(Math.round((MATCH_LENGTH-time)*10)/10);flow=systems.flowChange(flow,'goal');flash=.75;cue('goal');experience?.haptic([40,40,40]);experience?.record('goals');startReplay('GOAL');
  msg(finish+' JOZEF FC SCORES! '+us+'–'+them);
  if(us>=5){resetPositions();end();return;}
  resetPositions();
@@ -1325,6 +1587,18 @@ function update(dt){
  time-=dt;flash=flash>0?Math.max(0,flash-dt):Math.min(0,flash+dt);
  skillCooldown=Math.max(0,skillCooldown-dt);skillTime=Math.max(0,skillTime-dt);
  counterTime=Math.max(0,counterTime-dt);
+ if(ghostRec){
+  ghostClock+=dt;
+  while(ghostClock>=systems.GHOST_STEP){ghostClock-=systems.GHOST_STEP;if(ghostRec.samples.length<380)ghostRec.samples.push([actor.x,actor.y]);}
+ }
+ if(fx.coins){
+  const grabbed=systems.stepCoins(coinState,dt,actor,Math.random);
+  if(grabbed){
+   lifetime.coins=Math.min(99999,lifetime.coins+grabbed);saveLifetime();
+   flow=systems.flowChange(flow,'feint');cue('pass');experience?.haptic(10);
+   msg('GOLD COIN! +'+grabbed+' STAR'+(grabbed===1?'':'S')+' · '+coinState.collected+' THIS MATCH');
+  }
+ }
  keeperReact=Math.max(0,keeperReact-dt);
  shotCooldown=Math.max(0,shotCooldown-dt);passCooldown=Math.max(0,passCooldown-dt);
  tackleCooldown=Math.max(0,tackleCooldown-dt);
@@ -1334,6 +1608,7 @@ function update(dt){
   const td=dist(actor,target);
   if(td>10){dx=target.x-actor.x;dy=target.y-actor.y;}else target=null;
  }
+ if(fx.mirror){dx=-dx;dy=-dy;}
  move(dx,dy,dt);
  const difficulty=systems.DIFFICULTIES[experience?.prefs.difficulty||'pro']||systems.DIFFICULTIES.pro;
  if(ball.owner==='rival'){
@@ -1419,7 +1694,7 @@ function update(dt){
     const winner=defenders.findIndex(d=>dist(d,ball)<22*difficulty.pressure);
     if(winner>=0){rivalTakeover(winner,'RIVAL COLLECTS THE REBOUND! CHASE HIM!');return;}
    }
-   ball.vx*=Math.max(0,1-1.0*dt);ball.vy*=Math.max(0,1-1.0*dt);
+   ball.vx*=Math.max(0,1-fx.friction*dt);ball.vy*=Math.max(0,1-fx.friction*dt);
    receive();
    if(ball.owner==='free'){
     looseBallElapsed+=dt;
@@ -1437,7 +1712,7 @@ function update(dt){
     if(ball.x>GOAL.left&&ball.x<GOAL.right){goal();return;}
     resetAfterMiss();return;
   }
-  if(ball.x<14||ball.x>406){ball.x=clamp(ball.x,14,406);ball.vx*=-.55;}
+  if(ball.x<14||ball.x>406){ball.x=clamp(ball.x,14,406);ball.vx*=-fx.bounce;}
   if(ball.y>578){
    if(ball.owner==='free'){
     resetPositions();shotCooldown=.65;
@@ -1466,7 +1741,12 @@ function draw(){
  // an older device, fall back to the original playable canvas renderer.
  if(window.JozefArenaGraphics?.render){
   try{
+   const phaseNow=sample?.phase??(MATCH_LENGTH-time);
+   const ghostPos=activeGhost&&(mode==='playing'||mode==='paused')?systems.ghostAt(activeGhost,phaseNow):null;
+   const clubDesign=window.JozefClubDesign?.get?.();
    window.JozefArenaGraphics.render(ctx,{
+    wacky:fx,coins:coinState.list,ghost:ghostPos?{x:ghostPos.x,y:ghostPos.y,name:activeGhost.name}:null,
+    club:clubDesign&&clubDesign.custom?{primary:clubDesign.primary,secondary:clubDesign.secondary}:null,
     venue:venues[Math.min(lifetime.stadium,2)].name,stadium:lifetime.stadium,
     actor:sample?.actor||actor,mate:sample?.mate||mate,ball:sample?.ball||ball,
     defenders:sample?.defenders||defenders,keeper:sample?.keeper||keeper,
@@ -1772,6 +2052,70 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode==='pl
 window.addEventListener('blur',()=>{if(mode==='playing'){pause();draw();}});
 window.addEventListener('pagehide',()=>{if(mode==='playing')pause();});
 window.addEventListener('jozef:squad-updated',()=>{squad=getSquad();hud();});
+
+// Settings for Wacky Rules and Ghost Races.
+let ghostNote='';
+function ghostSummary(code){
+ const g=code?systems.decodeGhost(code):null;
+ return g?g.name+' '+g.us+'–'+g.them:'';
+}
+function refreshExtrasUI(){
+ const choice=$('arena-wacky-choice');
+ if(choice&&choice.value!==wackyPrefs.choice)choice.value=wackyPrefs.choice;
+ const note=$('arena-wacky-note');
+ if(note){
+  const rule=systems.WACKY_RULES.find(r=>r.id===wackyPrefs.choice);
+  const base=wackyPrefs.choice==='off'?'Normal football.':wackyPrefs.choice==='spin'?'A surprise twist every match!':
+   wackyPrefs.choice==='double'?'TWO surprise twists every match!':rule?rule.icon+' '+rule.blurb:'Normal football.';
+  note.textContent=base+(wackyPrefs.wins?' Wacky wins: '+wackyPrefs.wins+'.':'');
+ }
+ const mode=$('arena-ghost-mode');if(mode&&mode.value!==ghostStore.mode)mode.value=ghostStore.mode;
+ const name=$('arena-ghost-name');if(name&&document.activeElement!==name)name.value=ghostStore.name;
+ const slot=$('arena-ghost-share-slot'),share=$('arena-ghost-share');
+ if(share){
+  const code=ghostStore[slot?.value==='last'?'last':'best'];
+  share.value=code||'';
+  share.placeholder=code?'':'Finish a match to record a ghost';
+ }
+ const gn=$('arena-ghost-note');
+ if(gn){
+  gn.textContent=ghostNote||(ghostStore.best?'Best ghost: '+ghostSummary(ghostStore.best)+(ghostStore.friend?' · Friend: '+ghostSummary(ghostStore.friend):'')+'.':
+   'Finish a match to record your first ghost.');
+ }
+}
+function mountExtras(){
+ $('arena-wacky-choice')?.addEventListener('change',ev=>{
+  if(!systems.wackyChoiceValid(ev.target.value))return;
+  wackyPrefs.choice=ev.target.value;saveWacky();refreshExtrasUI();
+  if(mode==='ready'||mode==='over')msg(wackyPrefs.choice==='off'?'Wacky Rules off.':'Wacky Rules ready for the next kick-off!');
+ });
+ $('arena-ghost-mode')?.addEventListener('change',ev=>{
+  if(!['off','best','last','friend'].includes(ev.target.value))return;
+  ghostStore.mode=ev.target.value;
+  ghostNote=ghostStore.mode!=='off'&&!ghostStore[ghostStore.mode]?'No ghost saved there yet. Play a match first, or load a friend’s code.':'';
+  saveGhosts();refreshExtrasUI();
+ });
+ $('arena-ghost-name')?.addEventListener('change',ev=>{
+  ghostStore.name=systems.cleanGhostName(ev.target.value)||'JOZEF';ev.target.value=ghostStore.name;saveGhosts();
+ });
+ $('arena-ghost-share-slot')?.addEventListener('change',refreshExtrasUI);
+ $('arena-ghost-copy')?.addEventListener('click',()=>{
+  const box=$('arena-ghost-share'),text=box?.value||'';
+  if(!text){ghostNote='Nothing to copy yet. Finish a match first!';refreshExtrasUI();return;}
+  const done=()=>{ghostNote='Copied! Send this ghost code to a friend.';refreshExtrasUI();};
+  const fallback=()=>{try{box.select();document.execCommand?.('copy');done();}catch(_){ghostNote='Select the code and copy it by hand.';refreshExtrasUI();}};
+  try{navigator.clipboard?.writeText?navigator.clipboard.writeText(text).then(done,fallback):fallback();}catch(_){fallback();}
+ });
+ $('arena-ghost-load')?.addEventListener('click',()=>{
+  const box=$('arena-ghost-import'),ghost=systems.decodeGhost(box?.value||'');
+  if(!ghost){ghostNote='That ghost code did not work. Paste the whole code.';refreshExtrasUI();return;}
+  ghostStore.friend=systems.encodeGhost(ghost);ghostStore.mode='friend';
+  ghostNote='Loaded '+ghost.name+"'s ghost ("+ghost.us+'–'+ghost.them+'). Kick off to race it!';
+  if(box)box.value='';saveGhosts();refreshExtrasUI();
+ });
+ refreshExtrasUI();
+}
+mountExtras();
 experience=window.JozefArenaExperience?.mount({
  lifetime,getMode:()=>mode,pause,start,
  saveLifetime:()=>{try{localStorage.setItem(KEY,JSON.stringify(lifetime));}catch(_){}},

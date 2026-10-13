@@ -1,0 +1,14 @@
+/* Arena extras: Wacky Rules chips and Ghost Race settings. */
+.arena-twists{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:6px 0 0}
+.arena-chip{padding:5px 11px;border-radius:999px;font-weight:900;font-size:.72rem;letter-spacing:.05em;border:1px solid #ffffff33}
+.arena-chip[hidden]{display:none}
+.arena-chip-wacky{background:#f6c56b26;color:#ffe3a3;border-color:#f6c56b88}
+.arena-chip-ghost{background:#71e7e41f;color:#bff7f4;border-color:#71e7e480}
+.arena-twist-box{display:grid;gap:8px;margin:12px 0;padding:12px;border-radius:12px;border:1px solid #71e7e433;background:#0d1b2299}
+.arena-twist-box>strong{font-size:.85rem;letter-spacing:.06em}
+.arena-twist-box label{display:grid;gap:4px}
+.arena-twist-box input[type=text]{min-height:44px;padding:0 10px;border-radius:10px;border:1px solid #71e7e455;background:#071116;color:#f4f7f5;font:inherit;min-width:0}
+.arena-twist-box p{margin:0;font-size:.8rem}
+.arena-ghost-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.arena-ghost-row button{min-height:44px;padding:0 14px;border-radius:10px;border:1px solid #c8ff5a88;background:#c8ff5a1f;color:#e3ffa8;font-weight:900;cursor:pointer}
+.arena-twist-box select:focus-visible,.arena-twist-box input:focus-visible,.arena-ghost-row button:focus-visible{outline:3px solid #f6c56b;outline-offset:2px}
