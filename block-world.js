@@ -115,7 +115,7 @@ function moveAxis(p,delta,axis){
  }
 }
 function update(dt){
- if(craftingOpen)return;
+ if(craftingOpen&&!window.BlockWorld2D?.connected?.())return;
  clock+=dt;actionCooldown=Math.max(0,actionCooldown-dt);
  players.forEach((p,i)=>{
   const remote=i===1&&window.BlockWorld2D?.isHost?.()?window.BlockWorld2D.remoteInput:null;
@@ -138,7 +138,7 @@ function blockCoords(){const p=players[active];return {x:Math.floor((p.x+p.w/2+p
 function reachable(x,y){const p=players[active];return Math.hypot((x+.5)*TILE-(p.x+p.w/2),(y+.5)*TILE-(p.y+p.h/2))<TILE*4.3;}
 function aim(){if(focus&&reachable(focus.x,focus.y))return focus;focus=null;return blockCoords();}
 function mine(){
- if(craftingOpen)return;
+ if(craftingOpen&&!(window.BlockWorld2D?.connected?.()&&active===1))return;
  const a=aim();let x=a.x,y=a.y,id=get(x,y);
  if(!id){for(let dy=1;dy<=2&&!id;dy++){const test=get(x,y+dy);if(test&&reachable(x,y+dy)){id=test;y+=dy;}}}
  if(!id||id===14){say('Aim at a nearby block to mine');return;}
@@ -150,7 +150,7 @@ function mine(){
  }
 }
 function place(){
- if(craftingOpen)return;
+ if(craftingOpen&&!(window.BlockWorld2D?.connected?.()&&active===1))return;
  let a=aim(),x=a.x,y=a.y;
  if(get(x,y)!==0){x+=players[active].facing;if(get(x,y)!==0)y--;}
  if(!reachable(x,y)||get(x,y)!==0||selected===14){say('Aim at an empty nearby space');return;}
@@ -220,7 +220,9 @@ let cameraZoom=1;
 function draw(){
  ctx.setTransform(dpr*cameraZoom,0,0,dpr*cameraZoom,0,0);ctx.imageSmoothingEnabled=false;
  const viewW=cssW/cameraZoom,viewH=cssH/cameraZoom;
- const p=players[active],goalX=p.x+p.w/2-viewW*.5,goalY=p.y+p.h/2-viewH*.52;
+ const smooth=window.BlockWorld2D?.isGuest?.() ? .27 : 1;
+  for(const q of players){q.renderX=Number.isFinite(q.renderX)?q.renderX+(q.x-q.renderX)*smooth:q.x;q.renderY=Number.isFinite(q.renderY)?q.renderY+(q.y-q.renderY)*smooth:q.y;}
+  const p=players[active],goalX=p.renderX+p.w/2-viewW*.5,goalY=p.renderY+p.h/2-viewH*.52;
  camX+=(Math.max(0,Math.min(W*TILE-viewW,goalX))-camX)*.14;
  camY+=(Math.max(0,Math.min(H*TILE-viewH,goalY))-camY)*.14;
  drawBackground();
@@ -228,7 +230,7 @@ function draw(){
  const sy=Math.max(0,Math.floor(camY/TILE)-1),ey=Math.min(H,Math.ceil((camY+viewH)/TILE)+1);
  for(let y=sy;y<ey;y++)for(let x=sx;x<ex;x++){const id=world[y][x];if(!id)continue;ctx.drawImage(tex(id),Math.round(x*TILE-camX),Math.round(y*TILE-camY),TILE+1,TILE+1);}
  players.forEach((q,i)=>{
-  const x=Math.round(q.x-camX),y=Math.round(q.y-camY),bob=q.ground&&Math.abs(q.vx)>5?Math.sin(q.walk)*1.8:0;
+  const x=Math.round(q.renderX-camX),y=Math.round(q.renderY-camY),bob=q.ground&&Math.abs(q.vx)>5?Math.sin(q.walk)*1.8:0;
   ctx.fillStyle='#14294466';ctx.beginPath();ctx.ellipse(x+q.w/2,y+q.h+1,15,4,0,0,Math.PI*2);ctx.fill();
   ctx.fillStyle=i===0?'#2365d0':'#3d9a55';ctx.fillRect(x+2,y+15+bob,q.w-4,17);
   ctx.fillStyle='#293e5d';ctx.fillRect(x+3,y+30+bob,7,9);ctx.fillRect(x+q.w-10,y+30-bob,7,9);
@@ -438,7 +440,7 @@ place=function(){
 };
 const baseUpdate=update;
 update=function(dt){
- baseUpdate(dt);if(craftingOpen)return;
+ baseUpdate(dt);if(craftingOpen&&!window.BlockWorld2D?.connected?.())return;
  nightClock+=dt;season+=dt;
  if(season>48){season=0;weatherType=noise(Math.floor(nightClock/48),1)>.68?'rain':'clear';}
  if(teamFollow&&!window.BlockWorld2D?.connected?.()&&
@@ -458,7 +460,7 @@ draw=function(){
  for(const c of friends){const x=c.x-camX,y=c.y-camY+Math.sin(c.phase)*2;if(x<0||x>cssW||y<0||y>cssH)continue;
    ctx.fillStyle=['#a4db87','#e4bd84','#86d9cf','#b2a1ed'][c.c];ctx.fillRect(x,y+4,18,11);ctx.fillRect(x+3,y,12,6);
    ctx.fillStyle='#203442';ctx.fillRect(x+5,y+5,2,2);ctx.fillRect(x+12,y+5,2,2);}
- players.forEach((p,i)=>{const x=Math.round(p.x-camX),y=Math.round(p.y-camY),step=Math.sin(p.walk)*Math.min(3,Math.abs(p.vx)/40);
+ players.forEach((p,i)=>{const x=Math.round(p.renderX-camX),y=Math.round(p.renderY-camY),step=Math.sin(p.walk)*Math.min(3,Math.abs(p.vx)/40);
    ctx.fillStyle='#27354c';ctx.fillRect(x+3,y+30,6,9+step);ctx.fillRect(x+p.w-9,y+30,6,9-step);
    ctx.fillStyle=i===0?'#2363cb':'#36b06d';ctx.fillRect(x+1,y+15,p.w-2,15);
    ctx.fillStyle='#edb992';ctx.fillRect(x+3,y+3,p.w-6,14);
@@ -525,7 +527,7 @@ createAdventureUi();
  let hazardCooldown=0;
  const prevUpdate=update;
  update=function(dt){
-  prevUpdate(dt);if(craftingOpen)return;
+  prevUpdate(dt);if(craftingOpen&&!window.BlockWorld2D?.connected?.())return;
   hazardCooldown=Math.max(0,hazardCooldown-dt);
   if(!creative&&hazardCooldown===0){
     for(const c of friends){
@@ -954,9 +956,45 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
   }),
   aim:()=>aim(),selected:()=>selected,
   setStatus:message=>{say(message,2500);renderHotbar();},
+  craftFor:(playerId,recipeId)=>{
+   if(![0,1].includes(playerId)||!Number.isInteger(recipeId)||recipeId<0||recipeId>=recipes.length)return false;
+   const p=players[playerId],r=recipes[recipeId];
+   if(Object.entries(r.needs).some(([id,n])=>(p.inventory[id]||0)<n))return false;
+   for(const [id,n]of Object.entries(r.needs))p.inventory[id]-=n;
+   for(const [id,n]of Object.entries(r.makes))p.inventory[id]=(p.inventory[id]||0)+n;
+   queueSave();if(playerId===active){renderHotbar();if(craftingOpen)renderCrafting();}
+   return true;
+  },
+  giveTo:(from,id)=>{
+   if(![0,1].includes(from)||!Number.isInteger(id)||id<1||id>31)return false;
+   const a=players[from],b=players[1-from];
+   if(Math.hypot(a.x-b.x,a.y-b.y)>TILE*4.5||(a.inventory[id]||0)<1)return false;
+   a.inventory[id]--;b.inventory[id]=(b.inventory[id]||0)+1;
+   queueSave();renderHotbar();return true;
+  },
+  regroup:(owner)=>{
+   if(![0,1].includes(owner))return false;
+   const dest=players[1-owner],p=players[owner];
+   if(Math.hypot(p.x-dest.x,p.y-dest.y)<TILE*5)return false;
+   const base=Math.floor(dest.x/TILE),side=dest.facing===1?1:-1;
+   for(let step=2;step<=9;step++){
+    const x=base+side*step;if(x<=0||x>=W-1)continue;
+    const y=surface[x]*TILE-p.h-1,px=x*TILE;
+    if(!collision(p,px,y)&&get(x,surface[x]-1)===0){
+     p.x=px;p.y=y;p.vx=p.vy=0;p.ground=false;queueSave();return true;
+    }
+   }
+   return false;
+  },
+  localCraft:()=>({open:craftingOpen,index:recipeIndex}),
   saveHost:()=>{dirty=true;save();}
  };
- const normalMine=mine,normalPlace=place,normalSave=save;
+ const normalMine=mine,normalPlace=place,normalSave=save,normalCraft=craftItem;
+ craftItem=function(){
+  if(API.isGuest()){API.requestCraft?.(recipeIndex);say('Crafting in the shared world…',1000);return;}
+  return normalCraft();
+ };
+ window.craftItem=()=>craftItem();
  mine=function(){if(API.isGuest()){API.requestAction?.('mine',aim(),selected);return;}return normalMine();};
  place=function(){if(API.isGuest()){API.requestAction?.('place',aim(),selected);return;}return normalPlace();};
  save=function(){if(API.isGuest())return;return normalSave();};
