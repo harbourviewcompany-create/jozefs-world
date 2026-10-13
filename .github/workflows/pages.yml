@@ -7,9 +7,11 @@ permissions:
   contents: read
   pages: write
   id-token: write
+# Complete the active publication even when other games push changes to main.
+# The newest pending run then publishes after it without starving production.
 concurrency:
   group: github-pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
   deploy:
     environment:
