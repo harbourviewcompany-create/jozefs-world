@@ -81,7 +81,7 @@ function generate(){
  for(let x=65;x<81;x++)for(let y=surface[x]-4;y<surface[x];y++)world[y][x]=0;
 }
 function initPlayers(){
- [71,74].forEach((x,i)=>{const p=players[i];p.x=x*TILE;p.y=surface[x]*TILE-p.h-.1;p.vx=p.vy=0;p.ground=true;p.facing=1;p.walk=0;p.inventory={};});
+ [58,61].forEach((x,i)=>{const p=players[i];p.x=x*TILE;p.y=surface[x]*TILE-p.h-.1;p.vx=p.vy=0;p.ground=true;p.facing=1;p.walk=0;p.inventory={};});
  players[0].inventory={2:24,4:12,7:24,6:10,8:15};
  players[1].inventory={2:24,4:12,7:24,6:10,8:15};
 }
@@ -326,6 +326,7 @@ function createAdventureUi(){
  const panel=document.createElement('section');panel.id='bw-panel';panel.hidden=true;document.body.appendChild(panel);
  function action(label,fn){const b=document.createElement('button');b.type='button';b.textContent=label;b.addEventListener('click',fn);actions.appendChild(b);return b;}
  const followButton=action('FOLLOW ✓',()=>{teamFollow=!teamFollow;followButton.textContent=teamFollow?'FOLLOW ✓':'FOLLOW OFF';say(teamFollow?'Companion follows the leader':'Both players move independently');queueSave();});
+ action('FOREST CAMP',()=>travelToForest());
  action('BUILD KIT',()=>showKit());
  action('MAP',()=>showMap());
  action('TEAM PORTAL',()=>activateTeamPortal());
@@ -375,6 +376,32 @@ function createAdventureUi(){
  }
  document.addEventListener('keydown',ev=>{if(ev.code==='Escape')panel.hidden=true;});
  questHud();
+}
+/* Teleport is a menu-only travel convenience, not a world reset. The host
+   moves both players so co-op snapshots stay authoritative. */
+function travelToForest(){
+ if(window.BlockWorld2D?.isGuest?.()){say('Ask Daddy to open Forest Camp on the host device');return false;}
+ const targets=[];
+ for(let i=0;i<2;i++){
+  const p=players[i],start=i===0?58:61;
+  let spot=null;
+  for(let distance=0;distance<=6&&!spot;distance++){
+   for(const x of [start+distance,start-distance]){
+    if(x<55||x>66)continue;
+    let y=0;while(y<H-1&&get(x,y)===0)y++;
+    const py=y*TILE-p.h-.2,px=x*TILE+(TILE-p.w)/2;
+    if(y>2&&y<H-1&&!collision(p,px,py)) {spot={x:px,y:py};break;}
+   }
+  }
+  if(!spot){say('Forest Camp is blocked. Clear the landing area first.');return false;}
+  targets.push(spot);
+ }
+ players.forEach((p,i)=>{p.x=targets[i].x;p.y=targets[i].y;p.vx=p.vy=0;p.ground=true;p.renderX=p.x;p.renderY=p.y;});
+ const viewWidth=cssW/cameraZoom,viewHeight=cssH/cameraZoom;
+ camX=Math.max(0,Math.min(W*TILE-viewWidth,(players[0].x+players[1].x)/2-viewWidth/2));
+ camY=Math.max(0,Math.min(H*TILE-viewHeight,players[active].y-viewHeight*.48));
+ focus=null;queueSave();say('Back at Forest Camp — your world is preserved',2800);
+ return true;
 }
 function questHud(){
  const q=$('bw-mission');if(!q)return;
@@ -471,7 +498,10 @@ generate=function(){
    x+=2;
   }
  }
- for(let x=68;x<=77;x++){let y=0;while(y<H&&get(x,y)===0)y++;for(let k=1;k<5;k++)if(y-k>0)world[y-k][x]=0;}
+ for(const [start,end] of [[56,63],[68,77]])for(let x=start;x<=end;x++){
+   let y=0;while(y<H&&get(x,y)===0)y++;
+   for(let k=1;k<7;k++)if(y-k>0)world[y-k][x]=0;
+  }
  const px=portalX;let sy=0;while(sy<H&&get(px,sy)===0)sy++;
  for(let j=1;j<=5;j++){world[sy-j][px-2]=18;world[sy-j][px+2]=18;}for(let x=px-2;x<=px+2;x++)world[sy-5][x]=18;
  const oreX=Math.floor(W*.7);let oreY=0;while(oreY<H&&get(oreX,oreY)===0)oreY++;world[Math.min(H-4,oreY+17)][oreX]=18;
