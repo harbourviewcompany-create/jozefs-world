@@ -1,0 +1,111 @@
+/* Daddy + Jozef Block World 3D | October 2026 mobile-first visual system
+ * This layer is intentionally scoped to the existing WebGL game markup.
+ * All buttons and canvases remain live game controls. */
+:root{--ice:#8beaff;--gold:#ffe493;--navy:#052448;--glass:#062448e8}
+html,body{background:#68bcd9;overscroll-behavior:none}
+#view{image-rendering:auto;z-index:0}
+.hud{z-index:1}
+.top{top:calc(max(8px,env(safe-area-inset-top)) + 2px);left:max(11px,env(safe-area-inset-left));right:max(11px,env(safe-area-inset-right));gap:8px}
+.brand{font-size:clamp(17px,3.8vw,28px);line-height:1.13;letter-spacing:.025em;
+text-shadow:0 2px 0 #193c69,0 4px 10px #04192ed9}
+.brand b{color:#ffe08f;text-shadow:0 2px 0 #7b591d,0 4px 9px #3d310d}
+.brand small{font-size:clamp(7px,1.7vw,10px);line-height:1.3;letter-spacing:.115em}
+.stats{border:1.5px solid #b9eaff9c;border-radius:18px;background:linear-gradient(150deg,#0d3c62ea,#061c3bef);
+box-shadow:0 5px 16px #061a34ad,inset 0 2px 4px #c7f8ff25;
+padding:8px 11px;gap:7px;font-size:clamp(9px,2.3vw,12px);white-space:nowrap}
+.stats strong{color:#c3ffe9}.stats #hearts{color:#ffb4c4}
+.menu{top:calc(max(8px,env(safe-area-inset-top)) + 62px);right:max(10px,env(safe-area-inset-right));gap:5px;max-width:79vw}
+.menu a,.menu button{min-height:39px;padding:8px 11px;
+background:linear-gradient(150deg,#1575b9dd,#072c5cee);border:1.5px solid #9ce8ffc4;
+border-radius:12px;box-shadow:inset 0 1px 5px #ddffff47,0 4px 11px #001e3ab0;
+color:#f4fdff;font-weight:900;font-size:10px}
+.menu a:active,.menu button:active{filter:brightness(1.25)}
+.mission{top:calc(max(8px,env(safe-area-inset-top)) + 64px);left:max(10px,env(safe-area-inset-left));right:auto;
+pointer-events:auto;cursor:pointer;max-width:min(51vw,235px);
+padding:8px 10px!important;background:linear-gradient(145deg,#06375ce9,#071e39ec);border:1.5px solid #8beaffc0;
+box-shadow:0 4px 18px #001b39a0,inset 0 1px 4px #bbe5ff1d;border-radius:13px;font-size:10px;line-height:1.35}
+.mission strong{display:block;color:#ffe29d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px}
+.mission small{display:none}.mission .progress{margin-top:5px;height:4px}
+.mission.expanded{max-width:min(78vw,285px);padding:12px 13px!important}
+.mission.expanded strong{white-space:normal;font-size:12px}.mission.expanded small{display:block;margin-top:5px}
+.mission:focus-visible{outline:3px solid #ffdf80}
+.compass{top:calc(max(8px,env(safe-area-inset-top)) + 114px);right:max(10px,env(safe-area-inset-right));
+font:900 9px system-ui;padding:6px 9px;max-width:47vw;border-radius:12px;
+background:#071f39de;border:1px solid #a5ddffd1;box-shadow:0 3px 13px #06182ba0}
+.radar{pointer-events:auto;top:calc(max(8px,env(safe-area-inset-top)) + 153px);
+right:max(10px,env(safe-area-inset-right));width:146px;border:1px solid #a5eaffbc;
+background:linear-gradient(145deg,#082a44ec,#041b30f3);
+box-shadow:0 5px 15px #04162ba0;border-radius:13px}
+.radar-header{padding:0;gap:5px;min-height:28px;align-items:center}
+.radar-header strong{font-size:8px;letter-spacing:.04em;color:#ddf9ff}
+.radar-header span{display:none}
+.radar-header #radar-toggle{display:inline-block;font:900 9px system-ui;min-width:35px;min-height:28px;
+padding:3px 5px;margin:0;border:1px solid #9adfeac7;border-radius:7px;
+background:#164b70;color:#f7ffff;box-shadow:inset 0 1px 3px #fff4}
+.radar.collapsed{width:auto;min-width:106px;padding:5px 6px}
+.radar.collapsed canvas,.radar.collapsed .radar-legend{display:none!important}
+.radar.collapsed .radar-header{min-height:24px}
+.radar:not(.collapsed) .radar-header{margin-bottom:5px}
+.target{font:bold 23px system-ui;color:#fff0ad;text-shadow:0 0 9px #021d35,0 2px 3px #001b36}
+.target.aimed{color:#caff9a}
+.bottom{bottom:calc(env(safe-area-inset-bottom) + 80px);left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right));gap:6px;align-items:flex-end}
+.joystick{width:clamp(105px,25vw,150px);height:clamp(105px,25vw,150px);border:2px solid #a8ecffdb;
+background:linear-gradient(150deg,#0c4268b8,#071c41cf);box-shadow:0 0 17px #1a97f79c,0 5px 20px #001c38a0,inset 0 2px 17px #64caff55}
+.joystick #knob{width:46%;height:46%;border:3px solid #d5f7ffb9;background:linear-gradient(140deg,#91d0e9cc,#386a9bdf);box-shadow:inset 0 2px 10px #d6ffff44,0 3px 12px #001b3a}
+.actions{grid-template-columns:repeat(2,minmax(51px,77px));gap:7px}
+.actions button{height:clamp(47px,12vw,60px);border-radius:15px;border:1.5px solid #b9faffdd;
+background:linear-gradient(150deg,#1584cde8,#11427bfa);box-shadow:inset 0 2px 5px #ffffff5c,0 4px 10px #001e49b8,0 0 8px #32baff9a;
+font-size:clamp(10px,2.4vw,12px);text-shadow:0 2px 3px #09204f;font-weight:900}
+.actions #attack{background:linear-gradient(145deg,#af4b70ee,#58244bfa);border-color:#ffb4ca}
+.actions button:active{transform:scale(.94);filter:brightness(1.2)}
+.hotbar{position:absolute;bottom:calc(-80px + env(safe-area-inset-bottom)*0);
+left:50%;transform:translateX(-50%);width:max-content;max-width:min(97vw,680px);
+padding:6px;gap:5px;background:linear-gradient(145deg,#082b53f2,#061a37f7);border:1.5px solid #9ee4ffe0;
+border-radius:15px;box-shadow:0 4px 16px #00162acf,inset 0 1px 8px #3dc9ff40;scrollbar-width:none;touch-action:pan-x}
+.hotbar::-webkit-scrollbar{display:none}
+.hotbar button{min-width:clamp(37px,9.5vw,55px);width:clamp(37px,9.5vw,55px);height:clamp(51px,12vw,60px);
+border:1px solid #537d9e;padding:4px 2px;border-radius:10px;background:#17476be0}
+.hotbar button.active{border:2px solid #76ffff;box-shadow:0 0 10px #3decffbb,inset 0 1px 5px #88ffff62}
+.hotbar i{width:clamp(21px,5.5vw,26px);height:clamp(21px,5.5vw,26px)}
+.toast{top:28%;border:1px solid #9fdffcbb;box-shadow:0 5px 18px #04182fb8;
+background:#062646e8;font-weight:800}
+.drawer{border-radius:18px;border:1.5px solid #b4edffc9;
+background:linear-gradient(155deg,#103f65fa,#071c38fa);box-shadow:0 15px 50px #001529ed}
+.drawer .buttons button,.drawer .buttons a{background:linear-gradient(155deg,#215f8f,#0d3c66);border-color:#9adff9a0}
+@media(max-width:680px){
+ .top{top:calc(max(7px,env(safe-area-inset-top)) + 2px)}
+ .brand{font-size:clamp(17px,4.4vw,23px)}
+ .stats{gap:5px;font-size:9px;padding:7px}
+ .menu{top:calc(max(7px,env(safe-area-inset-top)) + 54px);right:8px}
+ .menu a,.menu button{font-size:9px;padding:7px;min-height:35px}
+ .mission{top:calc(max(7px,env(safe-area-inset-top)) + 60px);max-width:min(47vw,175px);font-size:9px}
+ .mission strong{font-size:9px}
+ .compass{top:calc(max(7px,env(safe-area-inset-top)) + 99px);font-size:8px;max-width:42vw}
+ .radar{top:calc(max(7px,env(safe-area-inset-top)) + 135px);width:112px}
+ .radar-header strong{font-size:7px}
+ .radar.collapsed{min-width:90px}
+ .bottom{bottom:calc(72px + env(safe-area-inset-bottom));}
+ .hotbar{bottom:-71px}
+ .actions{grid-template-columns:repeat(2,56px);gap:6px}
+ .actions button{height:49px;font-size:10px}
+ .joystick{width:106px;height:106px}
+}
+@media(max-width:385px){
+ .brand{font-size:16px}.brand small{font-size:7px}
+ .menu{top:calc(max(7px,env(safe-area-inset-top)) + 52px)}
+ .menu a,.menu button{min-height:32px;padding:6px}
+ .mission{top:calc(max(7px,env(safe-area-inset-top)) + 60px);max-width:47vw}
+ .compass{top:calc(max(7px,env(safe-area-inset-top)) + 105px)}
+ .radar{top:calc(max(7px,env(safe-area-inset-top)) + 141px)}
+ .hotbar button{min-width:35px;width:35px;height:50px}
+}
+@media(max-height:530px){
+ .mission{top:48px;max-width:25vw;max-height:46px;overflow:hidden}
+ .menu{top:45px;right:8px}
+ .compass{top:91px;right:8px}
+ .radar{top:124px;right:8px}
+ .bottom{bottom:49px}.hotbar{bottom:-47px;padding:3px}
+ .hotbar button{height:40px}.joystick{height:90px;width:90px}
+ .actions button{height:38px}
+}
+@media(prefers-reduced-motion:reduce){.actions button,.joystick,.hotbar{transition:none}}
