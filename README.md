@@ -145,3 +145,6 @@ The original Canvas 2D adventure includes two heroes, touch and keyboard movemen
 ## Jozef's broader world
 
 The shared HQ globe leads to the Sports Arcade, Football Arena, Jozef FC Career, Street // 11, Neon City, Together, Playbook, Club and Block World. Player XP earned by Block World 3D is stored with the existing HQ profile. Other legacy game scores and achievements are preserved.
+
+### Wacky Rules, Ghost Races and Club Designer
+Arena match settings offer optional twists (including Moon Gravity, Banana Pitch and Giant Ball), shareable offline Ghost Races, and a local-only team crest and mascot designer in My Club. Progress remains device-local; ghost codes can be shared voluntarily.
