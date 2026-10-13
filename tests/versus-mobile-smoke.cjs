@@ -34,6 +34,10 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  await host.waitForFunction(()=>window.__versusTest.camera().portrait=== (innerHeight>innerWidth));
  await guest.waitForFunction(expected=>window.__versusTest.camera().cameraFlipped===expected,
    viewport.height>viewport.width,{timeout:3500});
+ if(process.env.VERSUS_SCREENSHOTS){
+   await host.screenshot({path:path.join(process.env.VERSUS_SCREENSHOTS,engine+'-'+viewport.width+'-dad.png')});
+   await guest.screenshot({path:path.join(process.env.VERSUS_SCREENSHOTS,engine+'-'+viewport.width+'-jozef.png')});
+ }
  const hostCamera=await host.evaluate(()=>window.__versusTest.camera());
  const guestCamera=await guest.evaluate(()=>window.__versusTest.camera());
  if(viewport.height>viewport.width){
@@ -54,8 +58,17 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
        const canvas=document.querySelector('#versus-canvas').getBoundingClientRect();
        return c.screenY>board.bottom-canvas.top+5;
      },undefined,{timeout:4500}).catch(async err=>{
-       const camera=await page.evaluate(()=>window.__versusTest.camera());
-       throw Error('Camera did not settle below score HUD: '+JSON.stringify(camera)+'; '+err.message);
+       const diagnostics=await page.evaluate(()=>{
+         const rect=id=>{const e=document.querySelector(id);if(!e)return null;
+           const r=e.getBoundingClientRect(),s=getComputedStyle(e);
+           return {x:r.x,y:r.y,width:r.width,height:r.height,display:s.display,position:s.position};};
+         return {camera:window.__versusTest.camera(),body:document.body.className,
+           section:document.getElementById('versus').className,
+           window:{w:innerWidth,h:innerHeight},canvas:rect('#versus-canvas'),
+           stage:rect('.versus-stage'),board:rect('.versus-scoreboard'),
+           controls:rect('.versus-play'),errors:[]};
+       });
+       throw Error('Camera did not settle below score HUD: '+JSON.stringify(diagnostics)+'; '+err.message);
      });
      const frame=await page.evaluate(calculate);
      assert.ok(frame.goalY>frame.boardBottom,'goalkeeper below scoreboard: '+JSON.stringify(frame));
