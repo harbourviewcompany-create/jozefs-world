@@ -29,7 +29,8 @@ function boot(shared=new Map()){
   DEPTH_TEST:9,COLOR_BUFFER_BIT:16,DEPTH_BUFFER_BIT:32,FLOAT:10,
   createProgram(){return{};},createShader(){return{};},createBuffer(){return{};},
   getProgramParameter(){return true;},getShaderParameter(){return true;},
-  getAttribLocation(){return 1;},getUniformLocation(){return{};}
+  getAttribLocation(){return 1;},getUniformLocation(){return{};},
+  bufferData(_target,data){if(data?.length!==6&&data?.length)assert.equal(data.length%7,0,'GPU cube vertex buffers use 7-float material format');}
  },{get:(a,k)=>k in a?a[k]:()=>{}});
  function element(id=''){
   return {id,events:{},children:[],attrs:{},style:{},className:'',classList:{add(){},remove(){}},textContent:'',innerHTML:'',hidden:false,disabled:false,value:'',files:[],
@@ -115,6 +116,15 @@ assert.match(FakePeer.current.id,/^jw-block-[0-9a-f]{32}$/,'private invitation r
 FakePeer.current.handlers.open();
 assert.equal(test.document.getElementById('invite').value.length,32,'invitation shown only to host');
 assert.equal(test.document.getElementById('share').disabled,false,'share enabled after signalling opens');
+// Browser WebGL context interruptions must save safely and stop drawing.
+const interrupted=boot();interrupted.tick(2);
+const loss=interrupted.document.getElementById('view').events.webglcontextlost?.[0];
+assert.equal(typeof loss,'function','WebGL context loss handler installed');
+let prevented=false;loss({preventDefault(){prevented=true;}});
+assert.ok(prevented,'WebGL context loss prevented default teardown');
+assert.match(interrupted.document.getElementById('fallback-reason').textContent,/saved world is safe/,'shows actionable recovery');
+interrupted.tick(2);
+assert.ok(interrupted.shared.get('jozefs-block-3d-v1'),'progress persisted on graphics interruption');
 const next=boot(test.shared);
 next.tick(2);
 assert.ok(next.status().renderOk,'saved world renders after relaunch');
