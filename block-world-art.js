@@ -60,11 +60,14 @@ function tile(id){
  textures[id]=c;return c;
 }
 function sun(g,x,y,r,time){
- g.save();g.globalCompositeOperation='screen';
- for(let i=5;i>=1;i--){g.globalAlpha=.025*i;g.fillStyle='#ffd86e';g.beginPath();g.arc(x,y,r+i*16,0,twopi);g.fill();}
- g.globalAlpha=.8;g.strokeStyle='#ffea9d';g.lineWidth=2;
- for(let a=0;a<12;a++){const t=a*twopi/12+Math.sin(time*.1)*.015;g.beginPath();g.moveTo(x+Math.cos(t)*(r+9),y+Math.sin(t)*(r+9));g.lineTo(x+Math.cos(t)*(r+30),y+Math.sin(t)*(r+30));g.stroke();}
- g.globalCompositeOperation='source-over';g.globalAlpha=1;rect(g,x-r/2,y-r/2,r,r,'#fff9da');g.restore();
+ g.save();
+ const glow=g.createRadialGradient(x,y,2,x,y,r*2.9);
+ glow.addColorStop(0,'#fffaddaa');glow.addColorStop(.35,'#ffe69b4b');glow.addColorStop(1,'#fff8d000');
+ g.fillStyle=glow;g.fillRect(x-r*3,y-r*3,r*6,r*6);
+ // Small warm pixel sun rather than the giant concentric circles in the previous release.
+ rect(g,x-r*.64,y-r*.64,r*1.28,r*1.28,'#fff0ab');
+ rect(g,x-r*.45,y-r*.45,r*.9,r*.9,'#fff9dc');
+ g.restore();
 }
 function cloud(g,x,y,size,alpha){
  g.save();g.globalAlpha=alpha;
@@ -74,52 +77,66 @@ function cloud(g,x,y,size,alpha){
  rect(g,x+size*.15,y+size*.45,size*1.45,size*.18,'#c3e0fd');g.restore();
 }
 function mountains(g,w,h,pan,t){
- const base=h*.83;const par=pan*.06;
- // Sculpted distant peaks with snowcaps, bluish shadow sides and mist.
+ const baseline=h*.79;
+ // Mountain silhouettes stay behind the playing field; no huge white triangular peak.
  for(let layer=0;layer<3;layer++){
-  const depth=layer/2,mid=base-layer*14,period=170+layer*65;
-  for(let i=-2;i<=Math.ceil(w/period)+2;i++){
-   const x=i*period-(par*(.65+layer*.46)%period)-period*.25,y=mid;
-   const height=(h*.19+h*.14*depth)*( .8+hash(i,layer,55)*.8);
-   const c=['#9dc6e9','#78a3d0','#416f9a'][layer];
-   path(g,[[x-period*.7,h],[x,y-height],[x+period*.67,h]],c);
-   path(g,[[x,y-height],[x+period*.67,h],[x+period*.10,y-height*.25]],['#8ab1da','#537ea8','#385b82'][layer]);
-   path(g,[[x,y-height],[x-period*.21,y-height*.65],[x-period*.06,y-height*.67],[x,y-height*.48],
-    [x+period*.13,y-height*.61],[x+period*.24,y-height*.35]],'#edf5ff');
-   path(g,[[x,y-height],[x+period*.1,y-height*.75],[x+period*.24,y-height*.35],[x+period*.13,y-height*.61]],'#c1d9f1');
+  const period=128+layer*54,scroll=pan*(.035+layer*.034),offset=((scroll%period)+period)%period;
+  const base=baseline+layer*h*.018;
+  for(let i=-2;i<Math.ceil(w/period)+3;i++){
+   const world=Math.floor(scroll/period)+i;
+   const x=i*period-offset;
+   const peak=h*(.09+layer*.028+hash(world,layer,17)*.055);
+   const summit=base-peak,half=period*.83;
+   const left=x-half,right=x+half;
+   const ridge=[[left,base+28],[left+half*.22,base-peak*.19],[x-half*.47,base-peak*.46],
+    [x-half*.21,base-peak*.73],[x,summit],[x+half*.18,base-peak*.74],
+    [x+half*.40,base-peak*.48],[x+half*.66,base-peak*.24],[right,base+24]];
+   path(g,[...ridge,[right,h],[left,h]],['#a7cdea','#83b4d7','#557ea7'][layer]);
+   path(g,[[x,summit],[x+half*.18,base-peak*.74],[x+half*.4,base-peak*.48],
+    [right,base+24],[right,h],[x+half*.08,h]],['#86b3da','#6596c3','#426d99'][layer]);
+   const snowTop=summit+peak*.19;
+   path(g,[[x,summit],[x-half*.20,base-peak*.74],[x-half*.12,snowTop+peak*.10],
+    [x-half*.035,snowTop],[x+half*.045,snowTop+peak*.07],
+    [x+half*.16,base-peak*.73]],'#ecf7ff');
+   path(g,[[x,summit],[x+half*.16,base-peak*.73],[x+half*.06,snowTop+peak*.045]],
+     '#bfdcf0');
   }
  }
 }
 function distantTrees(g,w,h,cam,t){
- const spacing=54,scroll=cam*.23,treeFloor=h*.81;
+ const spacing=67,scroll=cam*.16,treeFloor=h*.88;
  for(let i=-2;i<Math.ceil(w/spacing)+3;i++){
   const world=Math.floor(scroll/spacing)+i,x=i*spacing-scroll%spacing;
-  const hei=24+hash(world,2,4)*58;
+  const hei=20+hash(world,2,4)*31;
   const y=treeFloor+Math.sin(world*.83)*28;
   rect(g,x,y-hei,6,hei,'#355d57');
   for(let l=0;l<3;l++){const width=19+hash(world,l,5)*18;path(g,[[x-width*.6,y-hei+l*12+16],[x+3,y-hei-l*10],[x+width*.7,y-hei+l*12+16]],l%2?'#3c886c':'#2d795b');}
  }
 }
 function cliff(g,w,h,cam,t){
- const offset=cam*.14,cliffX=w*.76+Math.sin(offset/350)*70,cliffY=h*.55;
- for(let i=0;i<5;i++){
-  const x=cliffX+i*34,y=cliffY-(i%3)*19;
-  rect(g,x,y,40,h-y,'#62845f');rect(g,x,y,40,7,'#66bd62');
-  rect(g,x+7,y+9,22,h-y,'#526d7c');
-  for(let k=0;k<12;k++)rect(g,x+hash(i,k,4)*29,y+16+k*21,5,5,'#8aa5aa80');
+ // Distant waterfall tucked to the right of the valley, behind the editable terrain.
+ const offset=cam*.11,cliffX=w*.90+Math.sin(offset/400)*25,cliffY=h*.71;
+ const end=Math.min(h,cliffY+h*.23);
+ for(let i=0;i<4;i++){
+  const x=cliffX+i*21,y=cliffY-(i%2)*11;
+  rect(g,x,y,24,end-y,'#577e78');rect(g,x,y,24,5,'#6ba75c');
+  rect(g,x+5,y+8,12,end-y,'#496d7c');
+  for(let k=0;k<5;k++)rect(g,x+hash(i,k,4)*19,y+11+k*16,5,3,'#96b9b58a');
  }
- const wx=cliffX+72;
- g.save();g.globalAlpha=.72;
- const fall=g.createLinearGradient(wx,cliffY,wx+32,h);fall.addColorStop(0,'#d8faff');fall.addColorStop(.5,'#73dcf8');fall.addColorStop(1,'#b2eeff');
- g.fillStyle=fall;g.fillRect(wx,cliffY-12,27,h-cliffY+20);
- g.fillStyle='#eefcff';for(let k=0;k<4;k++){const x=wx+4+k*6;g.fillRect(x,cliffY+12+(t*22+k*17)%110,2,32);}
+ const wx=cliffX+35;
+ g.save();g.globalAlpha=.55;
+ const fall=g.createLinearGradient(wx,cliffY,wx+20,end);
+ fall.addColorStop(0,'#e4ffff');fall.addColorStop(.5,'#72d9ef');fall.addColorStop(1,'#b2edff');
+ g.fillStyle=fall;g.fillRect(wx,cliffY,17,end-cliffY);
+ g.fillStyle='#eafbff';
+ for(let i=0;i<3;i++)g.fillRect(wx+3+i*6,cliffY+((t*14+i*28)%70),2,12);
  g.restore();
 }
 function background(g,o){
  const w=o.w,h=o.h,t=o.time||0,pan=o.camX||0;
  g.save();g.setTransform(o.dpr*o.zoom,0,0,o.dpr*o.zoom,0,0);
  const sky=g.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#0678dd');sky.addColorStop(.42,'#5cc7f8');sky.addColorStop(.78,'#c2f4fe');sky.addColorStop(1,'#f4e6b8');g.fillStyle=sky;g.fillRect(0,0,w,h);
- sun(g,w*.27,h*.21,27,t);
+ sun(g,w*.59,h*.19,18,t);
  for(let i=0;i<9;i++){const x=((i*151-pan*.09+t*(i%3+1)*.28)%(w+320)+(w+320))%(w+320)-150,y=h*(.14+.29*hash(i,0,9));cloud(g,x,y,21+hash(i,2,15)*28,.55+.38*hash(i,6,3));}
  mountains(g,w,h,pan,t);distantTrees(g,w,h,pan,t);cliff(g,w,h,pan,t);
  const haze=g.createLinearGradient(0,h*.56,0,h);haze.addColorStop(0,'#daebff00');haze.addColorStop(1,'#9fd3e550');g.fillStyle=haze;g.fillRect(0,h*.55,w,h*.45);
