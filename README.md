@@ -78,6 +78,12 @@ Both smoke tests are wired into `.github/workflows/block-world-smoke.yml` on cha
 
 The 2D game is built with Canvas and PeerJS. Real two-device WebRTC connections still require live-network testing; the repository includes a simulated two-peer integration test at `tests/block-world-coop-smoke.cjs`.
 
+### Scenic art overhaul — October 2026
+
+The playable Classic 2D game now uses a procedural cinematic voxel-art renderer, inspired by a vivid block-world expedition reference. **This is a live interactive game, not a screenshot or generated image.** Visual upgrades include textured grass, stone, wood, planks, ore and crystal blocks; layered parallax snowy mountains; a sun glow, clouds and a distant waterfall; flowers, reeds and warm cave torches; richer Daddy and Jozef characters with tools; multiple creature appearances; and ambient particles. Actual tiles remain destructible, placeable and saved.
+
+The mobile UI now has a left drag joystick, real **JUMP / MINE / BUILD / ATTACK** actions, a responsive block hotbar, top status, and a collapsible menu for inventory, save, world mode and online co-op. The Attack button damages nearby creatures using the host's game state when playing together. The renderer uses deterministic Canvas 2D sprites and does not require downloading graphic assets from a third party. Rendering still has stylized pixel-art limitations compared with a 3D GPU game.
+
 ## Block World Classic 2D
 
 The original Canvas 2D adventure includes two heroes, touch and keyboard movement, creative/survival, mining, crafting, seeded biomes, blueprints, a five-chapter cooperative campaign, creatures, weather, three unlockable realms, local browser/IndexedDB saves and backup import/export. It remains available from the Block World 3D game menu and is not deleted.
