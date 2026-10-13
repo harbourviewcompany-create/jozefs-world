@@ -42,6 +42,7 @@ function effectBurst(x,y,z,id=8){
    life:.35+(i%3)*.12,id:id===4?4:id===3?7:8});
  }
 }
+let lastGuestAttackAt=-100,netWorldClock=0;
 let menuPaused=false;
 let savedPose=null;
 let guestActive=false;
@@ -664,21 +665,49 @@ function change(kind){
   if(modify(p.x,p.y,p.z,selected)){if(!creative)hero.inventory[selected]--;gain('placed');effectBurst(p.x,p.y,p.z,selected);tone('place');hotbar();}
  }
 }
+function sendCombat(){
+ if(host&&conn?.open)send({t:'combat',boss:{x:boss.x,y:boss.y,z:boss.z,hp:boss.hp},mobs:mobs.map(m=>({id:m.id,x:m.x,y:m.y,z:m.z,hp:m.hp,kind:m.kind}))});
+}
+function applyCombat(m){
+ if(!m||!Array.isArray(m.mobs)||m.mobs.length>32)return;
+ for(const q of m.mobs){
+  const mob=mobs.find(e=>e.id===q.id);
+  if(!mob||![q.x,q.y,q.z,q.hp].every(Number.isFinite))continue;
+  mob.x=q.x;mob.y=q.y;mob.z=q.z;mob.hp=clamp(q.hp,0,30);
+ }
+ if(m.boss&&[m.boss.x,m.boss.y,m.boss.z,m.boss.hp].every(Number.isFinite)){
+  boss.x=m.boss.x;boss.y=m.boss.y;boss.z=m.boss.z;boss.hp=clamp(m.boss.hp,0,120);boss.alive=boss.hp>0;
+  if(!boss.alive)defeated=true;
+ }
+}
+function guestAttack(req){
+ if(!host||!conn?.open||clock-lastGuestAttackAt<.32)return;
+ lastGuestAttackAt=clock;
+ const victim=req.target==='boss'?boss:mobs.find(m=>m.id===req.mobId);
+ if(!victim||(victim===boss&&!boss.alive)||(victim!==boss&&victim.hp<=0))return;
+ if(Math.hypot(companion.x-victim.x,companion.z-victim.z)>4.4)return;
+ victim.hp=Math.max(0,victim.hp-24);
+ effectBurst(victim.x,victim.y+.8,victim.z,8);
+ if(victim===boss&&victim.hp===0){boss.alive=false;defeated=true;gain('boss');}
+ if(victim!==boss&&victim.hp===0)announce('Team creature defeated!');
+ dirty=true;sendCombat();
+}
 function attack(){
  hero.action='attack';hero.actionUntil=clock+.52;
  let victim=null,dist=4.3;for(const m of mobs){const d=Math.hypot(m.x-hero.x,m.z-hero.z);if(m.hp>0&&d<dist){victim=m;dist=d;}}
  const bd=Math.hypot(boss.x-hero.x,boss.z-hero.z);
  if(boss.alive&&bd<4.3&&bd<=dist+.3)victim=boss;
  if(!victim){announce('Get closer to an enemy');return;}
- if(conn?.open&&!host){send({t:'request',op:'attack',x:victim.x,z:victim.z});return;}
+ if(conn?.open&&!host){send({t:'request',op:'attack',target:victim===boss?'boss':'mob',mobId:victim.id});return;}
  victim.hp-=hero.role?24:18;effectBurst(victim.x,victim.y+.8,victim.z,8);tone('attack');
  if(victim===boss){send({t:'boss',hp:Math.max(0,boss.hp)});if(boss.hp<=0){boss.alive=false;defeated=true;gain('boss');announce('THE CRYSTAL GOLEM IS DEFEATED!',3400);}}
  else if(victim.hp<=0)announce('Creature defeated!');
+ if(host&&conn?.open)sendCombat();
  dirty=true;
 }
 function spawn(){
  mobs=[];for(let i=0;i<16;i++){const x=Math.floor(rnd(i,seed,5)*90)-45,z=Math.floor(rnd(i,seed,8)*90)-45;
- if(Math.hypot(x,z)>9)mobs.push({x,y:ground(x,z),z,hp:30,kind:i%2});}
+ if(Math.hypot(x,z)>9)mobs.push({id:i,x,y:ground(x,z),z,hp:30,kind:i%2});}
  const bossHp=Number.isFinite(dimensions[realm]?.bossHp)?dimensions[realm].bossHp:(realm===0&&defeated?0:120);
  boss={x:32.5,z:32.5,y:ground(32.5,32.5),hp:bossHp,alive:bossHp>0};
 }
@@ -719,15 +748,19 @@ function step(dt){
  companion.walkPower=clamp(Math.hypot(companion.x-oldCompX,companion.z-oldCompZ)/Math.max(.0001,dt*4.8),0,1);
  if(companion.walkPower>.07&&!conn?.open)companion.yaw=Math.atan2(companion.x-oldCompX,-(companion.z-oldCompZ));
  companion.ground=true;
- for(const m of mobs){if(m.hp<=0)continue;const d=Math.hypot(m.x-hero.x,m.z-hero.z);if(d<11&&d>1){
+ if(!conn?.open||host)for(const m of mobs){if(m.hp<=0)continue;const d=Math.hypot(m.x-hero.x,m.z-hero.z);if(d<11&&d>1){
   m.x+=(hero.x-m.x)/d*.7*dt;m.z+=(hero.z-m.z)/d*.7*dt;m.y=ground(m.x,m.z);}
   if(d<1.3&&!creative&&clock-(m.last||0)>1.3){hero.hp=Math.max(0,hero.hp-7);m.last=clock;}
  }
  const d=Math.hypot(boss.x-hero.x,boss.z-hero.z);
- if(boss.alive&&d<13){if(d>2){boss.x+=(hero.x-boss.x)/d*.45*dt;boss.z+=(hero.z-boss.z)/d*.45*dt;boss.y=ground(boss.x,boss.z);}
+ if((!conn?.open||host)&&boss.alive&&d<13){if(d>2){boss.x+=(hero.x-boss.x)/d*.45*dt;boss.z+=(hero.z-boss.z)/d*.45*dt;boss.y=ground(boss.x,boss.z);}
  else if(clock-(boss.last||0)>1.4&&!creative){hero.hp=Math.max(0,hero.hp-16);boss.last=clock;announce('The Crystal Golem attacks!');}}
- const zone=biome(hero.x,hero.z);if(!discovered[zone]&&Math.hypot(hero.x-2,hero.z-2)>24){discovered[zone]=true;gain('explore');}
- if(conn?.open){lastNet+=dt;if(lastNet>.13){lastNet=0;send({t:'move',x:hero.x,y:hero.y,z:hero.z,yaw:hero.yaw,hp:hero.hp,action:hero.actionUntil>clock?hero.action:null});}}
+ const zone=biome(hero.x,hero.z);if((!conn?.open||host)&&!discovered[zone]&&Math.hypot(hero.x-2,hero.z-2)>24){discovered[zone]=true;gain('explore');}
+ if(conn?.open){
+   lastNet+=dt;netWorldClock+=dt;
+   if(lastNet>.13){lastNet=0;send({t:'move',x:hero.x,y:hero.y,z:hero.z,yaw:hero.yaw,hp:hero.hp,action:hero.actionUntil>clock?hero.action:null});}
+   if(host&&netWorldClock>.35){netWorldClock=0;sendCombat();}
+  }
  // Traversal, camera changes and damage must save even without edits.
   if(!savedPose||Math.hypot(hero.x-savedPose.x,hero.y-savedPose.y,hero.z-savedPose.z)>.10||
      Math.abs(hero.yaw-savedPose.yaw)>.04||Math.abs(hero.pitch-savedPose.pitch)>.04||hero.hp!==savedPose.hp)dirty=true;
