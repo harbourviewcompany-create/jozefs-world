@@ -9,6 +9,7 @@ if(!g||!$('coop-panel'))return;
 let peer=null,conn=null,role='solo',invite='',ready=false,closed=false;
 let stateAt=0,inputAt=0,snapshotAt=0,lastRealm=-1,lastInput={left:false,right:false,jump:false};
 let lastPacketAt=0,editCount=0,lastActionAt=0,joinTimeout=0,lastGiveAt=0,lastRegroupAt=[0,0],lastLocatorAt=0;
+let retryTimer=0,retryCount=0,joiningCode='',peerReady=false;
 const COOP_RE=/^[0-9a-f]{32}$/i;
 const copyInput=s=>({left:!!s?.left,right:!!s?.right,jump:!!s?.jump});
 const connected=()=>!!conn?.open;
@@ -71,7 +72,7 @@ function onMessage(m){
  if(!m||typeof m!=='object')return;
  if(m.t==='world'&&role==='guest'){
   if(!validWorld(m.w)){setStatus('Invalid game data from host');return;}
-  g.useWorld(m.w);g.role(1);ready=true;clearTimeout(joinTimeout);joinTimeout=0;lastRealm=m.w.realmIndex;
+  g.useWorld(m.w);g.role(1);ready=true;retryCount=0;clearTimeout(retryTimer);retryTimer=0;clearTimeout(joinTimeout);joinTimeout=0;lastRealm=m.w.realmIndex;
   send({t:'ready'});setStatus('Connected! You are Jozef. Both of you can play.');
   $('btn-switch').style.display='none';
   $('reset').disabled=true;$('mode').disabled=true;
@@ -114,9 +115,40 @@ function onMessage(m){
   if([m.x,m.y,m.id].every(Number.isInteger)&&m.x>=0&&m.x<180&&m.y>=0&&m.y<72&&m.id>=0&&m.id<=31)g.useEdit(m.x,m.y,m.id);
  }else if(m.t==='resync'&&g.isHost())fullWorld();
 }
+
+function tryReconnect(){
+ if(role!=='guest'||ready||connected()||!joiningCode)return;
+ if(!peerReady){
+  if(peer?.disconnected&&typeof peer.reconnect==='function')try{peer.reconnect();}catch(_){}
+  setStatus('Reconnecting to Daddy…');return;
+ }
+ try{attach(peer.connect('jw2d-'+joiningCode,{reliable:true,serialization:'json'}));setStatus('Rejoining Daddy’s shared world…');}
+ catch(e){scheduleReconnect();}
+}
+function scheduleReconnect(){
+ if(role!=='guest'||ready)return;
+ clearTimeout(retryTimer);
+ if(retryCount>=4){setStatus('Connection lost. Tap JOIN AS JOZEF to retry.');show();return;}
+ const delay=[1000,2000,3500,6000][retryCount++];
+ setStatus('Reconnecting ('+retryCount+'/4)…');
+ retryTimer=setTimeout(()=>{
+  if(role!=='guest'||ready)return;
+  if(peer?.disconnected&&typeof peer.reconnect==='function')try{peer.reconnect();}catch(_){}
+  if(peerReady)tryReconnect();
+  if(role==='guest'&&!ready)retryTimer=setTimeout(()=>{if(role==='guest'&&!ready)scheduleReconnect();},4000);
+ },delay);
+}
+function onConnectionLost(reason){
+ conn=null;ready=false;clearTimeout(joinTimeout);joinTimeout=0;
+ g.remoteInput={left:false,right:false,jump:false};
+ $('partner-tools').hidden=true;
+ if(role==='host'){setStatus(reason+' · waiting for Jozef to reconnect');$('coop-disconnect').disabled=false;}
+ else if(role==='guest'){show();scheduleReconnect();}
+}
 function attach(connection){
  if(conn?.open){connection.close();return;}conn=connection;
  connection.on('open',()=>{
+  retryCount=0;clearTimeout(retryTimer);retryTimer=0;
   $('coop-disconnect').disabled=false;
   if(role==='host'){
    ready=false;g.role(0);setStatus('Jozef joined. Synchronizing your shared world…');
@@ -126,11 +158,11 @@ function attach(connection){
   }
  });
  connection.on('data',onMessage);
- connection.on('close',()=>disconnect('Connection ended'));
- connection.on('error',()=>disconnect('Connection failed'));
+ connection.on('close',()=>{if(conn===connection)onConnectionLost('Connection ended');});
+ connection.on('error',()=>{if(conn===connection)onConnectionLost('Connection failed');});
 }
 function leave(options={}){
- clearTimeout(joinTimeout);joinTimeout=0;
+ clearTimeout(joinTimeout);joinTimeout=0;clearTimeout(retryTimer);retryTimer=0;retryCount=0;joiningCode='';peerReady=false;
  const guest=role==='guest',c=conn,p=peer;
  conn=null;peer=null;ready=false;role='solo';invite='';lastRealm=-1;
  g.remoteInput={left:false,right:false,jump:false};
@@ -153,12 +185,12 @@ function startHost(){
   role='host';g.saveHost();g.role(0);
   peer=new window.Peer('jw2d-'+invite);
   peer.on('open',()=>{
-   $('coop-code').value=invite;
+   peerReady=true;$('coop-code').value=invite;
    $('coop-share').disabled=false;$('coop-disconnect').disabled=false;
    setStatus('Private invite ready. Send the link to Jo, then keep this page open.');
   });
   peer.on('connection',c=>{if(conn||ready){c.close();return;}attach(c);});
-  peer.on('disconnected',()=>{if(!connected())setStatus('Signalling disconnected. Waiting to reconnect…');});
+  peer.on('disconnected',()=>{peerReady=false;if(typeof peer.reconnect==='function')try{peer.reconnect();}catch(_){};if(!connected())setStatus('Signalling interrupted · reconnecting…');});
   peer.on('error',e=>{const reason='Could not host: '+(e?.type||'network error');leave({reason,skipReload:true});show();});
   setStatus('Creating private game…');
  }catch(e){leave({reason:e.message,skipReload:true});}
@@ -173,15 +205,16 @@ function join(){
  const code=extractCode($('coop-code').value);
  if(!code){setStatus('Paste a valid invitation from Daddy.');return;}
  if(role==='host'){setStatus('Close your hosted game before joining another');return;}
- if(role==='guest'){setStatus('Already connecting');return;}
+ if(role==='guest'){if(!connected()&&!ready){clearTimeout(retryTimer);retryTimer=0;tryReconnect();}else setStatus('Already connecting');return;}
  g.saveHost();
- role='guest';ready=false;
+ role='guest';ready=false;joiningCode=code;retryCount=0;peerReady=false;
  try{
   peer=new window.Peer();
-  peer.on('open',()=>{setStatus('Connecting to Daddy…');
+  peer.on('open',()=>{peerReady=true;setStatus('Connecting to Daddy…');
    attach(peer.connect('jw2d-'+code,{reliable:true,serialization:'json'}));
   });
-  peer.on('error',e=>{const reason='Unable to join: '+(e?.type||'network error')+'. Check the invitation.';leave({reason,skipReload:true});show();});
+  peer.on('error',e=>{const reason='Unable to join: '+(e?.type||'network error')+'. Check the invitation.';if(role==='guest'&&!ready){setStatus(reason);scheduleReconnect();}});
+  peer.on('disconnected',()=>{peerReady=false;if(typeof peer.reconnect==='function')try{peer.reconnect();}catch(_){};if(role==='guest'&&!ready)scheduleReconnect();});
   joinTimeout=setTimeout(()=>{if(role==='guest'&&!ready){leave({reason:'Connection timed out. Check that Daddy is still hosting.',skipReload:true});show();}},15000);
   setStatus('Opening private connection…');
  }catch(e){leave({reason:e.message,skipReload:true});}
