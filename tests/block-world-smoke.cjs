@@ -85,6 +85,22 @@ const game=first.window.__inspect;
 assert.ok(first.window.BlockWorldArt,'procedural art engine registered');
 assert.ok(first.window.BlockWorldArt.tile(1),'grass texture generated');
 assert.ok(first.window.BlockWorldArt.tile(18),'diamond ore texture generated');
+
+const terrain=first.window.BlockWorldArt.terrain;
+assert.equal(typeof terrain,'function','seamless terrain renderer exposed');
+const grassX=70,grassY=game.surface()[grassX];
+const sample1=terrain(game.world(),game.world()[grassY][grassX],grassX,grassY);
+const sample2=terrain(game.world(),game.world()[grassY][grassX],grassX,grassY);
+assert.equal(sample1,sample2,'adjacency-derived terrain atlases use cached canvas frames');
+assert.ok(first.window.BlockWorldArt.getQuality()==='cinematic','cinematic mode is the visual default');
+first.click('bw-quality');
+assert.equal(first.window.BlockWorldVisuals.graphics(),'cinematic','graphics menu selects cinematic');
+first.click('bw-quality');
+assert.equal(first.window.BlockWorldVisuals.graphics(),'balanced','graphics menu selects balanced');
+assert.equal(first.storage.get('jozefs-block-visual-quality-v1'),'balanced','graphics preference persists separately from world saves');
+first.click('bw-quality');
+assert.equal(first.window.BlockWorldVisuals.graphics(),'cinematic','auto mode restores full effects when performance allows');
+
 assert.equal(typeof first.window.BlockWorldArt.caveBackdrop,'function','caves render with a dark background instead of blue sky');
 assert.ok(first.window.BlockWorldVisuals,'mobile controls initialized');
 assert.ok(first.document.getElementById('toolbar-extra').children.includes(first.document.getElementById('bw-actions')),'world actions consolidated inside primary menu');
@@ -107,6 +123,12 @@ pad.events.pointerup[0]({pointerId:12});
 assert.equal(first.window.BlockWorld2D.input().left,false,'joystick releases left');
 assert.equal(first.window.BlockWorld2D.input().right,false,'joystick releases right');
 assert.ok(first.document.getElementById('btn-attack').events.pointerdown?.length,'attack button handles touch');
+
+const sprite=game.players[0];
+assert.ok(sprite.renderX>=0&&sprite.renderY>=0,'sprite coordinates render');
+assert.ok(first.window.BlockWorldArt.background,'biome-aware background present');
+first.window.BlockWorldArt.character(first.document.getElementById('game').getContext(),sprite,0,{camX:0,camY:0,w:390,h:844,active:0,time:2});
+
 
 assert.equal(game.world().length,72);
 assert.equal(game.world()[0].length,180);
