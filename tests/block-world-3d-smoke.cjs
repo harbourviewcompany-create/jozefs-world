@@ -34,6 +34,11 @@ assert.match(script,/function foliageCross\(/,'atlas vegetation includes cross-c
 assert.match(script,/function chunkMesh\(/,'chunk mesher preserved');
 assert.match(script,/const skyFragment=/,'procedural GPU sky present');
 assert.match(script,/function drawRadar\(/,'radar rendering present');
+assert.match(script,/function scheduleRecovery\(/,'3D co-op must attempt reconnection');
+assert.match(script,/approvedGuestPeer&&c.peer!==approvedGuestPeer/,'returning guest must match the original peer');
+assert.match(script,/guestActive=true;recovering=false;recoveryAttempts=0/,'reconnected guest retains shared-save protection');
+assert.match(script,/if\(wasGuest\)\{dirty=false;location.reload\(\);\}/,'explicit leaving is the only guest path that reloads solo play');
+
 assert.match(script,/adaptiveCap/,'adaptive FPS scaling present');
 
 assert.match(script,/qAO=aoEnabled/,'terrain computes baked vertex ambient occlusion');
@@ -225,6 +230,13 @@ assert.ok(outgoing.some(m=>m.t==='combat'),'host broadcasts authoritative creatu
 const guestGame=boot(),guestOutgoing=[];
 guestGame.tick(1);guestGame.testHooks.makeGuest(guestOutgoing);
 guestGame.testHooks.receive({t:'hello',...hostGame.testHooks.worldSnapshot(),x:2.5,y:10,z:2.5});
+const guestReturn=hostGame.testHooks.worldSnapshot();
+guestGame.testHooks.receive({t:'hello',...guestReturn,x:2.5,y:10,z:2.5,
+ guest:{x:11.5,y:16,z:12.5}});
+assert.ok(Math.abs(guestGame.status().hero.x-11.5)<.01&&
+ Math.abs(guestGame.status().hero.z-12.5)<.01,
+ 'rejoining Jozef continues at the host-approved position, not a fresh spawn');
+
 guestGame.testHooks.receive(outgoing.find(m=>m.t==='combat'));
 assert.equal(guestGame.testHooks.mobs().find(m=>m.id===enemy.id).hp,6,'guest applies host creature health');
 hostGame.testHooks.guestAttack({target:'mob',mobId:enemy.id});
