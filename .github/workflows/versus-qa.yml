@@ -41,6 +41,10 @@ jobs:
   browser-multiplayer:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, webkit]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -60,10 +64,11 @@ jobs:
       - name: Install browsers
         run: |
           npm install --no-save playwright@1.56.1
-          npx playwright install --with-deps chromium webkit
+          npx playwright install --with-deps ${{ matrix.engine }}
       - name: Dad and Jozef multiplayer, co-op and phone layouts
         env:
           VERSUS_SCREENSHOTS: qa-shots
+          VERSUS_BROWSERS: ${{ matrix.engine }}
         run: |
           mkdir -p qa-shots
           node tests/versus-mobile-smoke.cjs
@@ -71,7 +76,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: versus-mobile-screenshots
+          name: versus-mobile-screenshots-${{ matrix.engine }}
           path: qa-shots/*.png
           if-no-files-found: ignore
           retention-days: 7
