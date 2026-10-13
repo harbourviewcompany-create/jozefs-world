@@ -786,7 +786,16 @@
   window.addEventListener('keydown',e=>{if(!$('versus').classList.contains('active')||room.phase!=='playing'||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;const key=e.key.toLowerCase();if(key===' '&&e.target.tagName==='BUTTON')return;
     if(['1','2','3'].includes(key)&&!e.repeat){pickAim(Number(key)-1);return;}if(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d',' '].includes(key)){e.preventDefault();keys.add(key);if(key===' '&&!e.repeat)shoot();}});
   window.addEventListener('keyup',e=>{keys.delete(e.key.toLowerCase());if(!keys.size)stopInput();});
-  function activity(){const active=!document.hidden&&$('versus').classList.contains('active');if(active!==localActive){localActive=active;stopInput();send({type:'active',active});syncUI();}document.body.classList.toggle('versus-focused',active&&room.phase!=='lobby');}
+  function activity(){
+    const section=$('versus');
+    const playing=['countdown','playing','finished'].includes(room.phase);
+    // SPA navigation may reapply section classes while a live match continues.
+    // Keep the immersive layout bound to the authoritative game phase.
+    if(section.classList.contains('is-playing')!==playing)section.classList.toggle('is-playing',playing);
+    const active=!document.hidden&&section.classList.contains('active');
+    if(active!==localActive){localActive=active;stopInput();send({type:'active',active});syncUI();}
+    document.body.classList.toggle('versus-focused',active&&room.phase!=='lobby');
+  }
   document.addEventListener('visibilitychange',activity);window.addEventListener('blur',stopInput);
   new MutationObserver(activity).observe($('versus'),{attributes:true,attributeFilter:['class']});
   const invite=new URLSearchParams(location.search).get('room');if(invite&&/^[A-Z]{6}$/.test(invite))$('versus-code').value=invite;
