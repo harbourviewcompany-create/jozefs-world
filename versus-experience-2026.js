@@ -65,6 +65,22 @@ function finish(room,state,cupStage){
  byId('versus-finish-score').textContent=a+' — '+b;
  byId('versus-finish-stats').textContent=(state.shots||0)+' SHOTS · '+(state.saves||0)+' SAVES · '+(state.combo?.passes||0)+' PASSES · '+(state.combo?.assists||0)+' ASSISTS';
  byId('versus-finish-next').textContent=room.mode==='cup'&&a>b&&cupStage<2?'NEXT ROUND':'REMATCH';
+ const list=byId('versus-finish-moments');
+ const section=byId('versus-finish-highlights');
+ if(list&&section){
+  list.replaceChildren();
+  const events=Array.isArray(state.highlights)?state.highlights.slice(-5).reverse():[];
+  section.hidden=events.length===0;
+  for(const moment of events){
+   if(!moment||!['GOAL','SAVE','MISS'].includes(moment.type))continue;
+   const line=document.createElement('li');
+   const description=moment.type==='GOAL'?'GOAL':moment.type==='SAVE'?'KEEPER SAVE':'PENALTY MISSED';
+   line.textContent=String(moment.clock||'')+' · '+description+' · '+String(moment.team||'')+
+     (moment.assist?' · Assist: '+String(moment.assist):'');
+   list.appendChild(line);
+  }
+ }
+
 }
 byId('versus-finish-next')?.addEventListener('click',()=>byId('versus-again')?.click());
 byId('versus-finish-exit')?.addEventListener('click',()=>byId('versus-leave')?.click());
