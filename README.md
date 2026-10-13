@@ -20,6 +20,7 @@ This release prioritizes reliability and an explorable **shared forest landmark*
 - **Shared realms:** Host validates portal eligibility, broadcasts the destination realm/seed/world edits/boss state, and the guest reinitializes in that realm instead of silently staying behind. Forest Beacon location and completion are preserved independently per realm, including after a full three-realm round trip.
 - **Survival building:** Host keeps an optional guest inventory, validates resource spending and synchronizes updated counts/creative settings to the guest. No new server or account is required.
 - **Forest Camp:** MENU → VISIT FOREST now works for host and guest. Two rune pads require Daddy and Jozef to approach them together. Completing the **Forest Beacon** grants idempotent XP, celebrates with a visible character pose and illuminates an animated crystal landmark. Completion is saved and sent to both players.
+- **Canopy rendering:** Tall conifer crowns now mesh through their upper foliage layers instead of cutting off at the older chunk-height limit.
 - **Visual polish:** The camp has an animated shallow blue pond that sits over editable ground (water is currently decorative, not a swimmable or mineable fluid), low-cost local beacon illumination and hand-authored glowing voxel pads. ECO mode simplifies effects; the existing illustrated material atlas remains.
 - **Compatibility:** Single-player games, 2D modes, multi-realm export/import, local autosaves and existing block edits remain intact. All added persisted fields are optional.
 
