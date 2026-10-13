@@ -43,6 +43,7 @@ function effectBurst(x,y,z,id=8){
  }
 }
 let menuPaused=false;
+let savedPose=null;
 let guestActive=false;
 let keys={},joy={x:0,y:0},gamepadHeld={mine:false,place:false,attack:false},jumpWasDown=false,look=null,peer=null,conn=null,host=false,invite='',lastNet=0,remote=false,noticeTo=0,renderOk=false;
 const rnd=(x,z,s)=>{let n=Math.imul(x,374761393)+Math.imul(z,668265263)+Math.imul(s|0,2246822519);n=Math.imul(n^(n>>>13),1274126177);return((n^(n>>>16))>>>0)/4294967296;};
@@ -585,7 +586,7 @@ function render(){
  renderBuffer(dynamic,v.length/12);drawAimOutline();renderOk=true;
 }
 function ground(x,z){return height(Math.floor(x),Math.floor(z))+1.02;}
-function resetPose(){hero.x=2.5;hero.z=2.5;hero.y=ground(hero.x,hero.z);hero.vy=0;hero.hp=100;companion.x=4.5;companion.z=4.5;companion.y=ground(4.5,4.5);}
+function resetPose(){dirty=true;hero.x=2.5;hero.z=2.5;hero.y=ground(hero.x,hero.z);hero.vy=0;hero.hp=100;companion.x=4.5;companion.z=4.5;companion.y=ground(4.5,4.5);}
 function visible(x,y,z){const r=.28;for(const X of [x-r,x+r])for(const Z of [z-r,z+r])for(const Y of [y+.1,y+.9,y+1.69])if(block(X,Y,Z))return true;return false;}
 function target(){
  const d=[Math.sin(hero.yaw)*Math.cos(hero.pitch),Math.sin(hero.pitch),-Math.cos(hero.yaw)*Math.cos(hero.pitch)];
@@ -727,7 +728,10 @@ function step(dt){
  else if(clock-(boss.last||0)>1.4&&!creative){hero.hp=Math.max(0,hero.hp-16);boss.last=clock;announce('The Crystal Golem attacks!');}}
  const zone=biome(hero.x,hero.z);if(!discovered[zone]&&Math.hypot(hero.x-2,hero.z-2)>24){discovered[zone]=true;gain('explore');}
  if(conn?.open){lastNet+=dt;if(lastNet>.13){lastNet=0;send({t:'move',x:hero.x,y:hero.y,z:hero.z,yaw:hero.yaw,hp:hero.hp,action:hero.actionUntil>clock?hero.action:null});}}
- if(saveClock>15){saveClock=0;if(dirty)save();}
+ // Traversal, camera changes and damage must save even without edits.
+  if(!savedPose||Math.hypot(hero.x-savedPose.x,hero.y-savedPose.y,hero.z-savedPose.z)>.10||
+     Math.abs(hero.yaw-savedPose.yaw)>.04||Math.abs(hero.pitch-savedPose.pitch)>.04||hero.hp!==savedPose.hp)dirty=true;
+  if(saveClock>15){saveClock=0;if(dirty)save();}
  stream();if(frames%15===0)hud();
 }
 /* Optional, non-destructive scenic forest shortcut. It only moves the local
@@ -771,11 +775,11 @@ function portal(){
  resetPose();spawn();dirty=true;save();announce('PORTAL OPEN · REALM '+(realm+1),3300);
 }
 function captureDimension(){dimensions[realm]={seed,edits:[...edits].slice(-14000),bossHp:boss.hp};}
-function save(){if(!dirty||guestActive)return;try{
+function save(force=false){if((!dirty&&!force)||guestActive)return;try{
  captureDimension();
  localStorage.setItem(DIMKEY,JSON.stringify({version:1,baseSeed,dimensions}));
  localStorage.setItem(KEY,JSON.stringify({version:1,seed,realm,edits:[...edits].slice(-14000),hero:{x:hero.x,y:hero.y,z:hero.z,role:hero.role,yaw:hero.yaw,pitch:hero.pitch,inventory:hero.inventory},viewThird:third,stage,stats,rewards,discovered,defeated,portalOpened,creative}));
- dirty=false;}catch(e){announce('Save storage full · export a backup');}}
+ dirty=false;savedPose={x:hero.x,y:hero.y,z:hero.z,yaw:hero.yaw,pitch:hero.pitch,hp:hero.hp};}catch(e){announce('Save storage full · export a backup');}}
 function load(){try{const data=JSON.parse(localStorage.getItem(KEY)||'null');if(!data||data.version!==1)return false;
  seed=data.seed;realm=data.realm||0;
  baseSeed=seed-realm*1973-(realm?1:0);
@@ -788,7 +792,8 @@ function load(){try{const data=JSON.parse(localStorage.getItem(KEY)||'null');if(
   hero.pitch=Number.isFinite(data.hero?.pitch)?clamp(data.hero.pitch,-1.38,1.38):hero.pitch;
   if(typeof data.viewThird==='boolean')third=data.viewThird;
  stage=clamp(data.stage||0,0,6);stats=Object.assign(stats,data.stats||{});rewards=Array.isArray(data.rewards)?data.rewards:[];
- discovered=data.discovered||{};defeated=!!data.defeated;portalOpened=!!data.portalOpened;creative=data.creative!==false;return true;
+ discovered=data.discovered||{};defeated=!!data.defeated;portalOpened=!!data.portalOpened;creative=data.creative!==false;
+ savedPose={x:hero.x,y:hero.y,z:hero.z,yaw:hero.yaw,pitch:hero.pitch,hp:hero.hp};return true;
  }catch(e){console.warn('Save could not load',e);return false;}}
 /* Backup packs preserve all visited realms and use strict import validation. */
 function validEditRows(list){
@@ -936,7 +941,7 @@ function initUi(){
  document.addEventListener('keydown',e=>{if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();keys[e.code]=true;
   if(e.repeat)return;if(e.code==='KeyE')change('mine');if(e.code==='KeyR')change('place');if(e.code==='KeyF')attack();if(e.code==='KeyP')portal();if(e.code==='Escape')show(null);
  });document.addEventListener('keyup',e=>keys[e.code]=false);window.addEventListener('blur',()=>{keys={};resetStick();save();});
- window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)save();});
+ window.addEventListener('pagehide',()=>save(true));document.addEventListener('visibilitychange',()=>{if(document.hidden)save(true);});
  canvas.addEventListener('contextmenu',e=>e.preventDefault());
  canvas.addEventListener('webglcontextlost',e=>{
   e.preventDefault();webglLost=true;dirty=true;save();const panel=$('fallback');
