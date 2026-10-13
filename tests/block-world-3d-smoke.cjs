@@ -99,7 +99,7 @@ function boot(shared=new Map(),options={}){
  assert.equal(sample.width,256,'atlas width is WebGL1 power of two');
  assert.equal(sample.height,128,'atlas height is WebGL1 power of two');
  assert.notEqual(window.BlockWorld3DTextures.tileFor(1,0),window.BlockWorld3DTextures.tileFor(1,1),'grass top and dirt side use different artwork');
- const instrumented=script.replace('window.BlockWorld3D=Object.freeze',`window.__block3dTests={award,modify,portal,visitForest,receive,worldSnapshot,applyRealm,guestAttack,sendCombat,save,spawn,mobs:()=>mobs,boss:()=>boss,makeHost:(sent)=>{host=true;conn={open:true,send:v=>sent.push(v)};},makeGuest:(sent)=>{host=false;guestActive=true;conn={open:true,send:v=>sent.push(v)};},moveCompanion:(x,z)=>{companion.x=x;companion.z=z;},setPlayer:(x,z)=>{hero.x=x;hero.z=z;hero.y=ground(x,z);}};window.BlockWorld3D=Object.freeze`);
+ const instrumented=script.replace('window.BlockWorld3D=Object.freeze',`window.__block3dTests={award,modify,portal,visitForest,receive,worldSnapshot,applyRealm,guestAttack,sendCombat,save,spawn,updateBeacon,mobs:()=>mobs,boss:()=>boss,beacon:()=>forestBeacon,makeHost:(sent)=>{host=true;conn={open:true,send:v=>sent.push(v)};},makeGuest:(sent)=>{host=false;guestActive=true;conn={open:true,send:v=>sent.push(v)};},moveCompanion:(x,z)=>{companion.x=x;companion.z=z;companion.y=ground(x,z);},setPlayer:(x,z)=>{hero.x=x;hero.z=z;hero.y=ground(x,z);}};window.BlockWorld3D=Object.freeze`);
   assert.notEqual(instrumented,script,'test instrumentation inserted');
   vm.runInNewContext(instrumented,sandbox,{timeout:15000});
  const status=()=>window.BlockWorld3D?.status();
@@ -239,5 +239,29 @@ assert.equal(guestGame.status().seed,987123,'guest world seed follows host');
 assert.equal(guestGame.window.BlockWorld3D.block(1,4,1),9,'host world edits survive realm synchronization');
 assert.equal(guestGame.status().bossHp,88,'guest boss health follows host authoritative snapshot');
 assert.equal(guestGame.testHooks.applyRealm({...realmData,edits:[['invalid',999]]}),false,'invalid realm blocks are rejected');
+
+
+// Forest Beacon: both character pads are required; award remains idempotent.
+const beaconGame=boot();
+beaconGame.tick(2);
+assert.equal(beaconGame.testHooks.visitForest(),true,'forest camp remains accessible');
+const beacon=beaconGame.testHooks.beacon();
+assert.ok(beacon&&!beacon.lit,'new forest monument starts unlit');
+beaconGame.testHooks.setPlayer(beacon.x-1.6,beacon.z+1.4);
+beaconGame.testHooks.moveCompanion(beacon.x+6,beacon.z+1.4);
+beaconGame.testHooks.updateBeacon();
+assert.equal(beaconGame.testHooks.beacon().lit,false,'one hero alone cannot activate the team beacon');
+beaconGame.testHooks.moveCompanion(beacon.x+1.6,beacon.z+1.4);
+beaconGame.testHooks.updateBeacon();
+assert.equal(beaconGame.testHooks.beacon().lit,true,'both heroes activate the two-pad beacon');
+beaconGame.testHooks.save(true);
+const beaconReload=boot(beaconGame.shared);beaconReload.tick(2);
+assert.equal(beaconReload.testHooks.beacon().lit,true,'beacon completion persists across save/reload');
+const xpOnce=JSON.parse(beaconGame.shared.get('jozefs-world-player-v1')||'{}').xp;
+beaconGame.testHooks.updateBeacon();
+assert.equal(JSON.parse(beaconGame.shared.get('jozefs-world-player-v1')||'{}').xp,xpOnce,'beacon award cannot be farmed repeatedly');
+assert.match(script,/function waterTile\(/,'interactive world includes non-destructive animated water geometry');
+assert.match(script,/uniform vec3 beaconPoint/,'active beacon illuminates local terrain');
+assert.equal(boot().window.BlockWorld3DTextures.tileFor(27,0),29,'water renders using illustrated atlas tile');
 
 console.log('Block World 3D: WebGL, chunks, movement, save/reload, XP and private invite creation PASS');
