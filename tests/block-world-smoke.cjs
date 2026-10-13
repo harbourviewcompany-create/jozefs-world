@@ -7,11 +7,13 @@ const assert=require('node:assert/strict');
 const html=fs.readFileSync(require('node:path').join(__dirname,'..','block-world.html'),'utf8');
 const js=fs.readFileSync(require('node:path').join(__dirname,'..','block-world.js'),'utf8');
 const art=fs.readFileSync(require('node:path').join(__dirname,'..','block-world-art.js'),'utf8');
+const mobileUi=fs.readFileSync(require('node:path').join(__dirname,'..','block-world-ui.js'),'utf8');
 assert.match(html,/src="\.\/block-world\.js(?:\?v=[A-Za-z0-9._-]+)?"/,'HTML loads the extracted gameplay module');
 assert.match(html,/src="\.\/block-world-coop\.js(?:\?v=[A-Za-z0-9._-]+)?"/,'HTML loads the real co-op runtime');
 assert.ok(js,'Block World script must exist');
 new vm.Script(js,{filename:'block-world.html'});
 new vm.Script(art,{filename:'block-world-art.js'});
+new vm.Script(mobileUi,{filename:'block-world-ui.js'});
 assert.match(html,/block-world-art\.js/,'live game loads procedural art');
 assert.match(html,/block-world-ui\.js/,'live game loads functional HUD controls');
 function boot(storage=new Map()){
@@ -46,7 +48,7 @@ function boot(storage=new Map()){
     createElement(){return node();},
     addEventListener(t,fn){(events.get(t)||events.set(t,[]).get(t)).push(fn);}
   };
-  const window={innerWidth:390,innerHeight:844,devicePixelRatio:2};
+  const window={innerWidth:390,innerHeight:844,devicePixelRatio:2,addEventListener(t,fn){(events.get(t)||events.set(t,[]).get(t)).push(fn);}};
   const localStorage={
     getItem(k){return storage.get(k)??null;},
     setItem(k,v){storage.set(k,String(v));},
@@ -67,6 +69,8 @@ function boot(storage=new Map()){
   };
   vm.runInNewContext(art,sandbox,{filename:'block-world-art.js',timeout:10000});
   vm.runInNewContext(testScript,sandbox,{filename:'block-world.html',timeout:10000});
+  document.getElementById('toolbar-extra').hidden=true;
+  vm.runInNewContext(mobileUi,sandbox,{filename:'block-world-ui.js',timeout:10000});
   const advance=(count=1)=>{for(let i=0;i<count;i++){clock.now+=17;assert.ok(clock.frame);clock.frame(clock.now);}};
   const click=(id,type='click')=>{
     const el=document.getElementById(id);
@@ -81,6 +85,22 @@ const game=first.window.__inspect;
 assert.ok(first.window.BlockWorldArt,'procedural art engine registered');
 assert.ok(first.window.BlockWorldArt.tile(1),'grass texture generated');
 assert.ok(first.window.BlockWorldArt.tile(18),'diamond ore texture generated');
+assert.ok(first.window.BlockWorldVisuals,'mobile controls initialized');
+assert.equal(first.window.BlockWorldVisuals.menuOpen(),false,'menu starts closed');
+first.click('menu-toggle');
+assert.equal(first.window.BlockWorldVisuals.menuOpen(),true,'menu opens');
+first.click('menu-toggle');
+assert.equal(first.window.BlockWorldVisuals.menuOpen(),false,'menu closes');
+const pad=first.document.getElementById('movement-pad');
+pad.events.pointerdown[0]({clientX:30,pointerId:12});
+assert.equal(first.window.BlockWorld2D.input().left,true,'joystick left sends live movement');
+pad.events.pointermove[0]({clientX:350,pointerId:12});
+assert.equal(first.window.BlockWorld2D.input().right,true,'joystick drag changes direction');
+pad.events.pointerup[0]({pointerId:12});
+assert.equal(first.window.BlockWorld2D.input().left,false,'joystick releases left');
+assert.equal(first.window.BlockWorld2D.input().right,false,'joystick releases right');
+assert.ok(first.document.getElementById('btn-attack').events.pointerdown?.length,'attack button handles touch');
+
 assert.equal(game.world().length,72);
 assert.equal(game.world()[0].length,180);
 assert.equal(game.surface().length,180);
