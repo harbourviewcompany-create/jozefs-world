@@ -2965,6 +2965,50 @@
  display:flex!important;visibility:visible!important;opacity:1;min-height:50px;
 }
 
+/* BEGIN arena-twists.css */
+/* Arena extras: Wacky Rules chips and Ghost Race settings. */
+.arena-twists{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:6px 0 0}
+.arena-chip{padding:5px 11px;border-radius:999px;font-weight:900;font-size:.72rem;letter-spacing:.05em;border:1px solid #ffffff33}
+.arena-chip[hidden]{display:none}
+.arena-chip-wacky{background:#f6c56b26;color:#ffe3a3;border-color:#f6c56b88}
+.arena-chip-ghost{background:#71e7e41f;color:#bff7f4;border-color:#71e7e480}
+.arena-twist-box{display:grid;gap:8px;margin:12px 0;padding:12px;border-radius:12px;border:1px solid #71e7e433;background:#0d1b2299}
+.arena-twist-box>strong{font-size:.85rem;letter-spacing:.06em}
+.arena-twist-box label{display:grid;gap:4px}
+.arena-twist-box input[type=text]{min-height:44px;padding:0 10px;border-radius:10px;border:1px solid #71e7e455;background:#071116;color:#f4f7f5;font:inherit;min-width:0}
+.arena-twist-box p{margin:0;font-size:.8rem}
+.arena-ghost-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.arena-ghost-row button{min-height:44px;padding:0 14px;border-radius:10px;border:1px solid #c8ff5a88;background:#c8ff5a1f;color:#e3ffa8;font-weight:900;cursor:pointer}
+.arena-twist-box select:focus-visible,.arena-twist-box input:focus-visible,.arena-ghost-row button:focus-visible{outline:3px solid #f6c56b;outline-offset:2px}
+
+/* BEGIN club-designer.css */
+/* Design Your Club: crest, colours and mascot. Local CSS only. */
+[data-club-crest]{display:none}
+.club-custom [data-club-crest]{display:inline-block}
+.club-custom .chronicle-poster-shield{display:none}
+.chronicle-poster-crest{width:96px;height:115px;margin:auto}
+.chronicle-poster-crest svg{width:100%;height:100%}
+.club-crest-mini svg{width:14px;height:17px;vertical-align:-3px;margin-right:4px}
+.club-designer-grid{display:grid;grid-template-columns:minmax(0,160px) minmax(0,1fr);gap:18px;align-items:start}
+.club-designer-preview-wrap{display:grid;gap:8px;justify-items:center;text-align:center}
+.club-designer-preview{width:min(100%,150px);aspect-ratio:100/120;filter:drop-shadow(0 8px 18px rgba(0,0,0,.45))}
+.club-designer-preview svg{width:100%;height:100%;display:block}
+.club-designer-caption{margin:0;font-weight:800;font-size:.85rem;color:#d9ff84}
+.club-design-form{display:grid;gap:12px}
+.club-design-form label,.club-design-form legend{display:grid;gap:6px;font-weight:800;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase}
+.club-design-form fieldset{border:0;margin:0;padding:0;display:grid;gap:6px;min-width:0}
+.club-design-form input[type=text]{min-height:44px;padding:0 12px;border-radius:10px;border:1px solid #71e7e455;background:#0d1b22;color:#f4f7f5;font:inherit;text-transform:uppercase}
+.club-chip-row,.club-swatch-row{display:flex;flex-wrap:wrap;gap:8px}
+.club-chip,.club-swatch{min-width:44px;min-height:44px;border-radius:12px;border:2px solid #ffffff2e;background:#12252d;color:#fff;cursor:pointer;display:grid;place-items:center;padding:4px}
+.club-chip-shape{width:48px;padding:6px}
+.club-chip-shape svg{width:100%;height:auto;display:block}
+.club-chip-mascot{font-size:1.4rem;line-height:1}
+.club-swatch{width:44px}
+.club-chip[aria-checked=true],.club-swatch[aria-checked=true]{border-color:#fff;box-shadow:0 0 0 3px #71e7e4}
+.club-chip:focus-visible,.club-swatch:focus-visible,.club-design-form input:focus-visible,#club-design-reset:focus-visible{outline:3px solid #f6c56b;outline-offset:2px}
+#club-design-reset{justify-self:start;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid #ffffff44;background:transparent;color:inherit;font-weight:800;cursor:pointer}
+@media(max-width:560px){.club-designer-grid{grid-template-columns:1fr}}
+
 /* BEGIN ui-refine-2026.css */
 /* JOZEF'S WORLD // VISUAL UX REFINEMENT 2026
  * Last-loaded design layer. Navigation and controls remain semantic HTML.
