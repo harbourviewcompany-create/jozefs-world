@@ -7,6 +7,12 @@ on:
       - 'prime/**'
       - 'tests/prime-mobile-smoke.cjs'
       - '.github/workflows/prime-offline-qa.yml'
+  pull_request:
+    paths:
+      - 'sw.js'
+      - 'prime/**'
+      - 'tests/prime-mobile-smoke.cjs'
+      - '.github/workflows/prime-offline-qa.yml'
   workflow_dispatch:
 permissions:
   contents: read
