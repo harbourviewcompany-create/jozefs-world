@@ -46,7 +46,10 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
  const dims=await p.locator('#versus-canvas').evaluate(c=>({width:c.width,height:c.height}));assert.equal(dims.width>dims.height,viewport.width>viewport.height,'stadium camera follows orientation rather than viewport width');
  }
  await host.locator('#versus-canvas').focus();await host.keyboard.down('ArrowLeft');await host.waitForTimeout(200);await host.keyboard.up('ArrowLeft');await host.keyboard.press('Space');
- if(process.env.VERSUS_SCREENSHOTS)await host.screenshot({path:path.join(process.env.VERSUS_SCREENSHOTS,engine+'-'+viewport.width+'.png')});
+ if(process.env.VERSUS_SCREENSHOTS){
+   await host.screenshot({path:path.join(process.env.VERSUS_SCREENSHOTS,engine+'-'+viewport.width+'-dad.png')});
+   await guest.screenshot({path:path.join(process.env.VERSUS_SCREENSHOTS,engine+'-'+viewport.width+'-jozef.png')});
+ }
  await host.evaluate(()=>{const t=window.__versusTest;t.onData({type:'active',active:false});const before=t.state.matchLeft;t.step();if(t.state.matchLeft!==before)throw Error('paused clock advanced');t.onData({type:'active',active:true});});
  // A guest cannot choose which player to move or inject the host's state.
  await host.evaluate(()=>{const t=window.__versusTest;t.onData({type:'aim',who:'Dad',x:200,y:150});});
