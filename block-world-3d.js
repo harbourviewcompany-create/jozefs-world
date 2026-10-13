@@ -681,7 +681,11 @@ function hud(){
  $('quality').textContent='GRAPHICS '+quality;
  $('qualityState').textContent=quality==='AUTO'?'AUTO · '+Math.round(renderCap*100)+'%':quality;
  const beaconNear=forestBeacon?.realm===realm&&Math.hypot(forestBeacon.x-hero.x,forestBeacon.z-hero.z)<18;
-  $('compass').textContent=beaconNear?(forestBeacon.lit?'BEACON LIT ✓':'TEAM BEACON · 2 PADS'):
+  const padDad=beaconPad(0),padJo=beaconPad(1);
+  const dad=hero.role===0?hero:companion,jo=hero.role===1?hero:companion;
+  const dadReady=padDad&&Math.hypot(dad.x-padDad.x,dad.z-padDad.z)<=1.4;
+  const joReady=padJo&&Math.hypot(jo.x-padJo.x,jo.z-padJo.z)<=1.4;
+  $('compass').textContent=beaconNear?(forestBeacon.lit?'BEACON LIT ✓':'DAD '+(dadReady?'✓':'○')+' · JO '+(joReady?'✓':'○')):
    (biome(hero.x,hero.z)==='Evergreen Forest'?'FOREST':biome(hero.x,hero.z).toUpperCase())+' · X '+Math.floor(hero.x)+' Z '+Math.floor(hero.z);
  const done=stage>=missions.length,m=missions[Math.min(stage,missions.length-1)],ratio=done?1:clamp((stats[m[2]]||0)/m[3],0,1);
  $('mission').innerHTML='<strong>'+(done?'EXPEDITION COMPLETE':'MISSION '+(stage+1)+'/6 · '+m[0])+'</strong><small>'+m[1]+'</small><div class="progress"><i style="width:'+(ratio*100)+'%"></i></div><small>'+biome(hero.x,hero.z)+' · Realm '+(realm+1)+'</small>';
@@ -926,7 +930,7 @@ function captureDimension(){dimensions[realm]={seed,edits:[...edits].slice(-1400
 function save(force=false){if((!dirty&&!force)||guestActive)return;try{
  captureDimension();
  localStorage.setItem(DIMKEY,JSON.stringify({version:1,baseSeed,dimensions}));
- localStorage.setItem(KEY,JSON.stringify({version:1,seed,realm,edits:[...edits].slice(-14000),hero:{x:hero.x,y:hero.y,z:hero.z,role:hero.role,yaw:hero.yaw,pitch:hero.pitch,inventory:hero.inventory},viewThird:third,stage,stats,rewards,discovered,defeated,portalOpened,creative,forestBeacon,guestInventory}));
+ localStorage.setItem(KEY,JSON.stringify({version:1,seed,realm,edits:[...edits].slice(-14000),hero:{x:hero.x,y:hero.y,z:hero.z,hp:hero.hp,role:hero.role,yaw:hero.yaw,pitch:hero.pitch,inventory:hero.inventory},viewThird:third,stage,stats,rewards,discovered,defeated,portalOpened,creative,forestBeacon,guestInventory}));
  dirty=false;savedPose={x:hero.x,y:hero.y,z:hero.z,yaw:hero.yaw,pitch:hero.pitch,hp:hero.hp};}catch(e){announce('Save storage full · export a backup');}}
 function load(){try{const data=JSON.parse(localStorage.getItem(KEY)||'null');if(!data||data.version!==1)return false;
  seed=data.seed;realm=data.realm||0;
@@ -936,6 +940,7 @@ function load(){try{const data=JSON.parse(localStorage.getItem(KEY)||'null');if(
  edits=new Map(data.edits.filter(row=>Array.isArray(row)&&/^[-0-9]+,[-0-9]+,[-0-9]+$/.test(row[0])&&Number.isInteger(row[1])&&row[1]>=0&&row[1]<types.length));
  if(data.hero){Object.assign(hero,{x:data.hero.x,y:data.hero.y,z:data.hero.z,role:data.hero.role===1?1:0,inventory:data.hero.inventory||{}});}
  if(!Number.isFinite(hero.x+hero.y+hero.z))return false;
+  hero.hp=Number.isFinite(data.hero?.hp)?clamp(data.hero.hp,1,100):100;
   hero.yaw=Number.isFinite(data.hero?.yaw)?data.hero.yaw:hero.yaw;
   hero.pitch=Number.isFinite(data.hero?.pitch)?clamp(data.hero.pitch,-1.38,1.38):hero.pitch;
   if(typeof data.viewThird==='boolean')third=data.viewThird;
