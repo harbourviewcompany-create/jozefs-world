@@ -34,11 +34,11 @@ assert.match(script,/qAO=aoEnabled/,'terrain computes baked vertex ambient occlu
 assert.match(script,/gl_FragCoord/,'leaves dither out near the third-person camera');
 
 assert.match(script,/uniform vec3 heroPos/,'leaf fading uses camera-to-character sightline');
-assert.match(script,/along>\\.05&&along<\\.99/,'nearby leaf canopy occlusion has a bounded ray');
-assert.match(script,/biome\\(X,Z\\)==='Evergreen Forest'/,'forest trees have distinctive canopy profiles');
-assert.match(script,/b==='Meadows'\\?r>\\.992/,'meadow trees are intentionally spaced');
-assert.match(script,/const desired=third\\?\\[eye\\[0\\]-forward\\[0\\]\\*5\\.8/,'camera frames heroes more closely');
-assert.match(script,/companion\\.yaw=Math\\.atan2/,'companion looks toward travel direction');
+assert.match(script,/along>\.05&&along<\.99/,'nearby leaf canopy occlusion has a bounded ray');
+assert.match(script,/biome\(X,Z\)==='Evergreen Forest'/,'forest trees have distinctive canopy profiles');
+assert.match(script,/b==='Meadows'\?r>\.992/,'meadow trees are intentionally spaced');
+assert.match(script,/const desired=third\?\[eye\[0\]-forward\[0\]\*5\.8/,'camera frames heroes more closely');
+assert.match(script,/companion\.yaw=Math\.atan2/,'companion looks toward travel direction');
 
 assert.match(script,/function visitForest\(/,'non-destructive forest viewpoint is reachable from the menu');
 assert.match(script,/voxelBox\(v,p.x,ground\(p.x,p.z\)/,'voxel heroes have local ground contact shadows');
