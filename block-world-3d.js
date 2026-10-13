@@ -42,7 +42,7 @@ function effectBurst(x,y,z,id=8){
    life:.35+(i%3)*.12,id:id===4?4:id===3?7:8});
  }
 }
-let lastGuestAttackAt=-100,netWorldClock=0,forestBeacon=null;
+let lastGuestAttackAt=-100,netWorldClock=0,forestBeacon=null,guestInventory={};
 let menuPaused=false;
 let savedPose=null;
 let guestActive=false;
@@ -704,6 +704,7 @@ function change(kind){
   if(modify(p.x,p.y,p.z,selected)){if(!creative)hero.inventory[selected]--;gain('placed');effectBurst(p.x,p.y,p.z,selected);tone('place');hotbar();}
  }
 }
+function sendGuestInventory(){if(host&&conn?.open)send({t:'inventory',items:guestInventory});}
 function sendCombat(){
  if(host&&conn?.open)send({t:'combat',boss:{x:boss.x,y:boss.y,z:boss.z,hp:boss.hp},mobs:mobs.map(m=>({id:m.id,x:m.x,y:m.y,z:m.z,hp:m.hp,kind:m.kind}))});
 }
@@ -808,6 +809,15 @@ function step(dt){
 }
 /* Optional, non-destructive scenic forest shortcut. It only moves the local
    two-character party, never regenerates the saved world or changes edits. */
+function validInventory(data){
+ const result={};
+ if(!data||typeof data!=='object'||Array.isArray(data))return result;
+ for(let id=1;id<types.length;id++){
+  const amount=data[id];
+  if(Number.isInteger(amount)&&amount>=0&&amount<=99999)result[id]=amount;
+ }
+ return result;
+}
 function validBeacon(b){return b&&Number.isFinite(b.x)&&Number.isFinite(b.z)&&Number.isInteger(b.realm)&&b.realm>=0&&b.realm<3&&typeof b.lit==='boolean';}
 function beaconPad(role){
  if(!forestBeacon)return null;
@@ -869,7 +879,7 @@ function visitForest(){
 function worldSnapshot(){
  captureDimension();
  return {realm,seed,baseSeed,edits:[...edits].slice(-14000),stage,stats,
-  defeated,portalOpened,bossHp:boss.hp,discovered,forestBeacon};
+  defeated,portalOpened,bossHp:boss.hp,discovered,forestBeacon,creative,guestInventory};
 }
 function sendRealm(){
  if(host&&conn?.open)send({t:'realm',...worldSnapshot()});
@@ -884,6 +894,7 @@ function applyRealm(m){
  stats=Object.assign({wood:0,placed:0,explore:0,crystal:0,boss:0,portal:0},m.stats||{});
  defeated=!!m.defeated;portalOpened=!!m.portalOpened;
  discovered=m.discovered&&typeof m.discovered==='object'?m.discovered:{};
+ guestInventory=validInventory(m.guestInventory);creative=m.creative!==false;
  forestBeacon=validBeacon(m.forestBeacon)?{...m.forestBeacon}:null;
  dimensions[realm]={seed,edits:[...edits],bossHp:clamp(Number(m.bossHp)||0,0,120)};
  chunks.forEach(c=>gl.deleteBuffer(c.buffer));chunks.clear();lastCX=lastCZ=Infinity;
@@ -910,7 +921,7 @@ function captureDimension(){dimensions[realm]={seed,edits:[...edits].slice(-1400
 function save(force=false){if((!dirty&&!force)||guestActive)return;try{
  captureDimension();
  localStorage.setItem(DIMKEY,JSON.stringify({version:1,baseSeed,dimensions}));
- localStorage.setItem(KEY,JSON.stringify({version:1,seed,realm,edits:[...edits].slice(-14000),hero:{x:hero.x,y:hero.y,z:hero.z,role:hero.role,yaw:hero.yaw,pitch:hero.pitch,inventory:hero.inventory},viewThird:third,stage,stats,rewards,discovered,defeated,portalOpened,creative,forestBeacon}));
+ localStorage.setItem(KEY,JSON.stringify({version:1,seed,realm,edits:[...edits].slice(-14000),hero:{x:hero.x,y:hero.y,z:hero.z,role:hero.role,yaw:hero.yaw,pitch:hero.pitch,inventory:hero.inventory},viewThird:third,stage,stats,rewards,discovered,defeated,portalOpened,creative,forestBeacon,guestInventory}));
  dirty=false;savedPose={x:hero.x,y:hero.y,z:hero.z,yaw:hero.yaw,pitch:hero.pitch,hp:hero.hp};}catch(e){announce('Save storage full · export a backup');}}
 function load(){try{const data=JSON.parse(localStorage.getItem(KEY)||'null');if(!data||data.version!==1)return false;
  seed=data.seed;realm=data.realm||0;
@@ -924,7 +935,7 @@ function load(){try{const data=JSON.parse(localStorage.getItem(KEY)||'null');if(
   hero.pitch=Number.isFinite(data.hero?.pitch)?clamp(data.hero.pitch,-1.38,1.38):hero.pitch;
   if(typeof data.viewThird==='boolean')third=data.viewThird;
  stage=clamp(data.stage||0,0,6);stats=Object.assign(stats,data.stats||{});rewards=Array.isArray(data.rewards)?data.rewards:[];
- discovered=data.discovered||{};forestBeacon=validBeacon(data.forestBeacon)?{...data.forestBeacon}:null;defeated=!!data.defeated;portalOpened=!!data.portalOpened;creative=data.creative!==false;
+ discovered=data.discovered||{};forestBeacon=validBeacon(data.forestBeacon)?{...data.forestBeacon}:null;defeated=!!data.defeated;portalOpened=!!data.portalOpened;creative=data.creative!==false;guestInventory=validInventory(data.guestInventory);
  savedPose={x:hero.x,y:hero.y,z:hero.z,yaw:hero.yaw,pitch:hero.pitch,hp:hero.hp};return true;
  }catch(e){console.warn('Save could not load',e);return false;}}
 /* Backup packs preserve all visited realms and use strict import validation. */
@@ -974,6 +985,7 @@ function receive(m){
  if(m.t==='hello'&&!host){
   if(!Number.isInteger(m.seed)||!Array.isArray(m.edits)||m.edits.length>14000)return;
    if(validBeacon(m.forestBeacon))forestBeacon={...m.forestBeacon};
+   creative=m.creative!==false;hero.inventory=validInventory(m.guestInventory);
   seed=m.seed;realm=Number.isInteger(m.realm)&&m.realm>=0&&m.realm<3?m.realm:0;
    forestBeacon=validBeacon(m.forestBeacon)?{...m.forestBeacon}:null;
    baseSeed=Number.isFinite(m.baseSeed)?m.baseSeed:seed;
@@ -999,6 +1011,8 @@ function receive(m){
    }
   }
   else if(m.t==='combat'&&!host){applyCombat(m);}
+  else if(m.t==='inventory'&&!host){hero.inventory=validInventory(m.items);hotbar();}
+  else if(m.t==='settings'&&!host){creative=m.creative!==false;hotbar();}
   else if(m.t==='move'){
   if(!Number.isFinite(m.x+m.y+m.z)||Math.abs(m.x)>1e6||Math.abs(m.z)>1e6)return;
   companion.x=m.x;companion.y=m.y;companion.z=m.z;companion.hp=m.hp;
@@ -1014,8 +1028,17 @@ function receive(m){
    if(m.op==='portal'){portal();return;}
    if(m.op==='forest'){visitForest();return;}
   if(![m.x,m.y,m.z].every(Number.isInteger)||Math.hypot(companion.x-m.x,companion.z-m.z)>6.5)return;
-  if(m.op==='mine'){const id=block(m.x,m.y,m.z);if(id&&modify(m.x,m.y,m.z,0)){if(id===4)gain('wood');if(id===8)gain('crystal');}}
-  if(m.op==='place'&&Number.isInteger(m.id)&&m.id>0&&m.id<types.length&&!block(m.x,m.y,m.z)){modify(m.x,m.y,m.z,m.id);gain('placed');}
+  if(m.op==='mine'){const id=block(m.x,m.y,m.z);
+    if(id&&modify(m.x,m.y,m.z,0)){
+     guestInventory[id]=(guestInventory[id]||0)+1;dirty=true;sendGuestInventory();
+     if(id===4)gain('wood');if(id===8)gain('crystal');
+    }}
+  if(m.op==='place'&&Number.isInteger(m.id)&&m.id>0&&m.id<types.length&&!block(m.x,m.y,m.z)){
+    if(!creative&&!(guestInventory[m.id]>0))return;
+    if(modify(m.x,m.y,m.z,m.id)){
+     if(!creative)guestInventory[m.id]--;dirty=true;sendGuestInventory();gain('placed');
+    }
+   }
  }
 }
 function attach(c){
@@ -1065,7 +1088,9 @@ function initUi(){
  $('swap').onclick=()=>{if(conn?.open){announce('Heroes stay assigned during co-op');return;}hero.role=1-hero.role;companion.role=1-hero.role;hud();};
  $('perspective').textContent=third?'1ST PERSON':'3RD PERSON';
  $('perspective').onclick=()=>{third=!third;$('perspective').textContent=third?'1ST PERSON':'3RD PERSON';dirty=true;};
- $('creative').onclick=()=>{creative=!creative;$('creative').textContent='CREATIVE '+(creative?'ON':'OFF');dirty=true;hotbar();};
+ $('creative').onclick=()=>{if(conn?.open&&!host){announce('Only the host changes shared world rules');return;}
+   creative=!creative;$('creative').textContent='CREATIVE '+(creative?'ON':'OFF');
+   dirty=true;hotbar();if(host&&conn?.open)send({t:'settings',creative});};
  $('save').onclick=()=>{dirty=true;save();announce('World saved');};
  $('sound').onclick=()=>{sound=!sound;$('sound').textContent='SOUND '+(sound?'ON':'OFF');};
  $('quality').onclick=()=>{
