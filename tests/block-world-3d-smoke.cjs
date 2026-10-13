@@ -6,6 +6,7 @@ const vm=require('node:vm');
 const assert=require('node:assert/strict');
 const html=fs.readFileSync(path.join(__dirname,'../block-world-3d.html'),'utf8');
 const script=fs.readFileSync(path.join(__dirname,'../block-world-3d.js'),'utf8');
+const textures=fs.readFileSync(path.join(__dirname,'../block-world-3d-textures.js'),'utf8');
 assert.match(html,/src="\.\/block-world-3d\.js\?v=[A-Za-z0-9._-]+"/);
 assert.match(html,/__bw3dFail/,"HTML must display a fallback when the engine fails to start");
 assert.match(html,/12000/,"HTML must have a startup timeout");
@@ -15,6 +16,8 @@ assert.match(html,/id="quality"/,'quality setting has a button');
 assert.match(html,/id="radar-toggle"/,'terrain radar is a collapsible mobile control');
 assert.match(html,/block-world-3d-next\.css/,'new 3D mobile visual stylesheet loaded');
 assert.match(html,/block-world-3d-premium\.css/,'premium full-screen 3D mobile stylesheet loaded');
+assert.match(html,/block-world-3d-textures\.js\?v=/,'self-contained material atlas included');
+assert.ok(html.indexOf('block-world-3d-textures.js')<html.indexOf('block-world-3d.js?v='),'texture atlas loads before game code');
 assert.match(html,/id="pair"/,'multiplayer remains available from the menu');
 assert.match(html,/id="options"/,'top-level menu remains available');
 assert.match(script,/attribute float matId/,'WebGL shader receives voxel material IDs');
@@ -24,7 +27,10 @@ assert.match(script,/function voxelBox\(/,'animated hero has true oriented recta
 assert.match(script,/function chunkMesh\(/,'forest props stay integrated with streamed terrain');
 assert.match(script,/quality!=='ECO'/,'scenery density respects mobile ECO mode');
 assert.match(script,/jozefs-block-3d-v1/,'existing saved-world schema is unchanged');
-assert.match(script,/gl\.vertexAttribPointer\(am,1,gl\.FLOAT,false,40,24\)/,'GPU material stride includes texture type');
+assert.match(script,/gl\.vertexAttribPointer\(am,1,gl\.FLOAT,false,48,24\)/,'GPU material stride preserves voxel material type');
+assert.match(script,/gl\.vertexAttribPointer\(au,2,gl\.FLOAT,false,48,40\)/,'GPU material stride provides atlas UV attributes');
+assert.match(script,/uniform sampler2D tileAtlas/,'shader samples illustrated atlas');
+assert.match(script,/function foliageCross\(/,'atlas vegetation includes cross-card silhouette geometry');
 assert.match(script,/function chunkMesh\(/,'chunk mesher preserved');
 assert.match(script,/const skyFragment=/,'procedural GPU sky present');
 assert.match(script,/function drawRadar\(/,'radar rendering present');
@@ -51,12 +57,12 @@ function boot(shared=new Map(),options={}){
   ARRAY_BUFFER:1,STATIC_DRAW:2,DYNAMIC_DRAW:3,TRIANGLES:4,
   VERTEX_SHADER:5,FRAGMENT_SHADER:6,COMPILE_STATUS:7,LINK_STATUS:8,
   DEPTH_TEST:9,COLOR_BUFFER_BIT:16,DEPTH_BUFFER_BIT:32,FLOAT:10,
-  createProgram(){return{};},createShader(type){return {type,source:''};},createBuffer(){return{};},
+  createProgram(){return{};},createShader(type){return {type,source:''};},createBuffer(){return{};},createTexture(){return {};},getError(){return 0;},NO_ERROR:0,
   shaderSource(shader,src){shader.source=src;},
   getProgramParameter(){return true;},
   getShaderParameter(shader){return !(options.rejectPremium&&shader.type===6&&shader.source.includes('uniform vec3 sunDir'));},
   getAttribLocation(){return 1;},getUniformLocation(){return{};},
-  bufferData(_target,data){if(data?.length!==6&&data?.length)assert.equal(data.length%10,0,'GPU cube vertex buffers use 10-float positions, material and normals');}
+  bufferData(_target,data){if(data?.length!==6&&data?.length)assert.equal(data.length%12,0,'GPU cube vertex buffers use 12-float positions, material, normals, and atlas UVs');}
  },{get:(a,k)=>k in a?a[k]:()=>{}});
  function element(id=''){
   return {id,events:{},children:[],attrs:{},style:{},className:'',classList:{add(){},remove(){}},textContent:'',innerHTML:'',hidden:false,disabled:false,value:'',files:[],
@@ -66,7 +72,11 @@ function boot(shared=new Map(),options={}){
    setPointerCapture(){},hasPointerCapture(){return false;},querySelector(){return element();},click(){},remove(){}
   };
  }
- const document={hidden:false,createElement(){return element();},getElementById(id){if(!elements.has(id))elements.set(id,element(id));return elements.get(id);},
+ const document={hidden:false,createElement(tag){
+  const el=element();
+  if(tag==='canvas')el.getContext=kind=>kind==='2d'?{fillRect(){},strokeRect(){},clearRect(){},beginPath(){},lineTo(){},moveTo(){},stroke(){}}:gl;
+  return el;
+ },getElementById(id){if(!elements.has(id))elements.set(id,element(id));return elements.get(id);},
   addEventListener(t,fn){(events.get(t)||events.set(t,[]).get(t)).push(fn);}
  };
  let readyCalls=0;
@@ -83,6 +93,12 @@ function boot(shared=new Map(),options={}){
   Blob:class{},URL:{createObjectURL:()=>'/blob',revokeObjectURL(){}},confirm:()=>false,
   crypto:{getRandomValues:a=>a.fill(37)}
  };
+ vm.runInNewContext(textures,sandbox,{timeout:15000,filename:'block-world-3d-textures.js'});
+ assert.ok(window.BlockWorld3DTextures,'illustrated texture atlas initialized before 3D game');
+ const sample=window.BlockWorld3DTextures.createAtlas();
+ assert.equal(sample.width,256,'atlas width is WebGL1 power of two');
+ assert.equal(sample.height,128,'atlas height is WebGL1 power of two');
+ assert.notEqual(window.BlockWorld3DTextures.tileFor(1,0),window.BlockWorld3DTextures.tileFor(1,1),'grass top and dirt side use different artwork');
  const instrumented=script.replace('window.BlockWorld3D=Object.freeze','window.__block3dTests={award,modify,portal,visitForest};window.BlockWorld3D=Object.freeze');
   assert.notEqual(instrumented,script,'test instrumentation inserted');
   vm.runInNewContext(instrumented,sandbox,{timeout:15000});
@@ -100,10 +116,12 @@ assert.equal(test.status().camera,'THIRD_PERSON','modern default 3D camera shows
 assert.ok(test.document.getElementById('options'),'single top menu remains available');
 
 assert.equal(test.status().shaderMode,'CINEMATIC','premium GPU shader is used when available');
+assert.equal(test.status().atlasLoaded,true,'illustrated pixel atlas uploaded to the simulated GPU');
 const safeGPU=boot(new Map(),{rejectPremium:true});
 safeGPU.tick(2);
 assert.ok(safeGPU.status().renderOk,'compatibility shader still renders on an older GPU');
 assert.equal(safeGPU.status().shaderMode,'COMPATIBILITY','premium shader failures degrade safely');
+assert.equal(safeGPU.status().atlasLoaded,false,'compatibility shading does not require textures');
 
 assert.ok(test.document.getElementById('drawer').querySelector('.buttons'),'full accessible menu preserved');
 assert.ok(test.status().drawnChunks>0&&test.status().drawnChunks<=test.status().loadedChunks,'visible chunk frustum culling returns bounded drawn counts');
