@@ -1,7 +1,7 @@
 /* Jozef FC offline shell: only same-origin public game assets. Never caches personal progress. */
-const CACHE='jozef-fc-app-shell-v110';
+const CACHE='jozef-fc-app-shell-v111';
 const CORE=[
- './','./index.html','./world.html','./block-world.html','./block-world.js','./block-world-coop.js','./block-world-art.js','./block-world-ui.js','./block-world-premium.css','./block-world-art.js?v=20261013-art2','./block-world.js?v=20261013-art2','./block-world-coop.js?v=20261013-art2','./block-world-ui.js?v=20261013-art2','./block-world-premium.css?v=20261013-art2','./block-world.css','./block-world-3d.html','./block-world-3d.js','./block-world-3d.css','./block-quest.html','./site-foundation.css','./site-experience.css',
+ './','./index.html','./world.html','./block-world.html','./block-world.js','./block-world-coop.js','./block-world-art.js','./block-world-ui.js','./block-world-premium.css','./block-world-art.js?v=20261013-scene2','./block-world.js?v=20261013-scene2','./block-world-coop.js?v=20261013-scene2','./block-world-ui.js?v=20261013-scene2','./block-world-premium.css?v=20261013-scene2','./block-world.css','./block-world-3d.html','./block-world-3d.js','./block-world-3d.css','./block-quest.html','./site-foundation.css','./site-experience.css',
  './favicon.svg','./manifest.webmanifest','./matchday.css','./training.css','./jersey-bingo.css',
  './tournament.js','./career.js','./clubhouse.js','./scramble-positions.js','./celebrate.js',
  './training.js','./jersey-bingo.js','./matchday.js','./street.js','./adventure.js','./together-renderer.js','./together.js','./versus-physics.js','./versus.js','./presence.js','./peerjs.min.js','./street-phaser.js','./phaser.min.js','./arcade.js',
