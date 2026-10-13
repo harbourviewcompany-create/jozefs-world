@@ -11,6 +11,14 @@ An interactive family game universe with a spatial 3D headquarters and a shared 
 
 Block World 3D is a **native WebGL voxel game**, not a CSS imitation. The original 2D edition and its device saves remain independently playable.
 
+### Illustrated textures and animated heroes (October 2026)
+
+Block World 3D now includes a **self-contained illustrated WebGL1 8×4 atlas**, generated from deterministic pixel artwork in `block-world-3d-textures.js`. The atlas contains separate grass-top and grassy-soil edge tiles, dirt and stone grain, bark and end rings, foliage with alpha-cutout clusters, sand, snow, glowing crystal, wood planks, brick, glass, skin tones, cloth, denim, boots and accessories. The existing chunk mesher now transmits UVs (12 floats/vertex) for every terrain tile and character mesh. GPU material light and fog calculations are retained; if atlas creation or upload fails, the existing procedural material shading continues to work. The atlas is power-of-two, mipmapped and bundled offline rather than downloaded from an external asset library.
+
+Daddy and Jozef now have additional walk/idle bobbing and action-driven mining, building and attacking motions, with a visible voxel pickaxe or mallet. Peer-to-peer pose packets may include an optional action cue for co-op display without changing the saved-world or networking schema. Evergreen foliage uses a small amount of **GPU-animated alpha-cutout cross-card geometry**, reducing the purely cubic forest silhouette. ECO mode skips the extra foliage. Collision, mining, block placement, realm backups and saved edits remain as before.
+
+**Verification:** the 3D smoke suite now validates the atlas's distinct grass faces, generation size, GPU upload, UV attributes and compatibility shader. Legacy 2D and co-op smoke suites also pass. Real iPhone visual quality, battery cost, and sustained frame-rate require on-device verification. These are original procedural materials, not externally sourced AAA/PBR production assets.
+
 ### Screenshot-driven 3D mobile forest correction (13 October 2026)
 
 Three iPhone screenshots showed enormous opaque box-like tree crowns, dark sky colour, grass/dirt surfaces that repeated as uniformly coloured tiles, dark rectangular character shadows, and a third-person camera that obscured the playfield. The updated playable game addresses those defects directly:
