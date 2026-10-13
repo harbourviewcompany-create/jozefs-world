@@ -153,7 +153,7 @@ assert.equal(scenic.testHooks.modify(1,3,1,4),true,'scenic visit preserves edita
 assert.equal(scenic.testHooks.visitForest(),true,'visit-forest action finds a safe evergreen clearing');
 assert.equal(scenic.status().seed,scenicSeed,'forest travel preserves world generation seed');
 assert.ok(Math.hypot(scenic.status().hero.x-2.5,scenic.status().hero.z-2.5)>5,'forest viewpoint visibly relocates the hero');
-assert.match(scenic.document.getElementById('compass').textContent,/FOREST|TEAM BEACON/,'destination HUD identifies the Evergreen Forest camp objective');
+assert.match(scenic.document.getElementById('compass').textContent,/DAD.*JO|FOREST|BEACON/,'destination HUD identifies the cooperative forest objective');
 const scenicSave=JSON.parse(scenic.shared.get('jozefs-block-3d-v1')||'{}');
 assert.ok(scenicSave.edits.some(([key,value])=>key==='1,3,1'&&value===4),'forest travel preserves player-placed blocks and saves');
 const restored=boot(scenic.shared);restored.tick(2);
