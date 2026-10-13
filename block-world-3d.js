@@ -797,7 +797,36 @@ function visitForest(){
  announce('FOREST VISTA · Welcome to the Evergreen Forest',3400);
  return true;
 }
+function worldSnapshot(){
+ captureDimension();
+ return {realm,seed,baseSeed,edits:[...edits].slice(-14000),stage,stats,
+  defeated,portalOpened,bossHp:boss.hp,discovered};
+}
+function sendRealm(){
+ if(host&&conn?.open)send({t:'realm',...worldSnapshot()});
+}
+function applyRealm(m){
+ if(!m||!Number.isInteger(m.realm)||m.realm<0||m.realm>2||
+    !Number.isInteger(m.seed)||!Array.isArray(m.edits)||m.edits.length>14000||
+    !m.edits.every(e=>Array.isArray(e)&&typeof e[0]==='string'&&
+      /^-?\d+,-?\d+,-?\d+$/.test(e[0])&&Number.isInteger(e[1])&&e[1]>=0&&e[1]<types.length))return false;
+ realm=m.realm;seed=m.seed;baseSeed=Number.isInteger(m.baseSeed)?m.baseSeed:seed;
+ edits=new Map(m.edits);stage=clamp(Number(m.stage)||0,0,6);
+ stats=Object.assign({wood:0,placed:0,explore:0,crystal:0,boss:0,portal:0},m.stats||{});
+ defeated=!!m.defeated;portalOpened=!!m.portalOpened;
+ discovered=m.discovered&&typeof m.discovered==='object'?m.discovered:{};
+ dimensions[realm]={seed,edits:[...edits],bossHp:clamp(Number(m.bossHp)||0,0,120)};
+ chunks.forEach(c=>gl.deleteBuffer(c.buffer));chunks.clear();lastCX=lastCZ=Infinity;
+ resetPose();if(guestActive){
+  hero.x=4.5;hero.z=4.5;hero.y=ground(hero.x,hero.z);
+  companion.x=2.5;companion.z=2.5;companion.y=ground(companion.x,companion.z);
+ }
+ spawn();stream();hotbar();hud();chaseCam=null;dirty=false;
+ announce('Shared Realm '+(realm+1)+' ready',2400);
+ return true;
+}
 function portal(){
+ if(conn?.open&&!host){send({t:'request',op:'portal',x:hero.x,z:hero.z});announce('Waiting for Daddy to open the portal');return;}
  if(!defeated&&!portalOpened){announce('Defeat the Crystal Golem first');return;}
  if(Math.hypot(hero.x-40,hero.z-40)>5||Math.hypot(companion.x-40,companion.z-40)>5){announce('Both heroes must reach the portal at 40, 40');return;}
  if(!portalOpened){portalOpened=true;gain('portal');}
@@ -805,7 +834,7 @@ function portal(){
  const next=dimensions[realm];
  if(next){seed=next.seed;edits=new Map(next.edits||[]);}else{seed=baseSeed+realm*1973+1;edits=new Map();}
  chunks.forEach(c=>gl.deleteBuffer(c.buffer));chunks.clear();lastCX=Infinity;
- resetPose();spawn();dirty=true;save();announce('PORTAL OPEN · REALM '+(realm+1),3300);
+ resetPose();spawn();dirty=true;save();sendRealm();announce('PORTAL OPEN · REALM '+(realm+1),3300);
 }
 function captureDimension(){dimensions[realm]={seed,edits:[...edits].slice(-14000),bossHp:boss.hp};}
 function save(force=false){if((!dirty&&!force)||guestActive)return;try{
@@ -874,11 +903,16 @@ function receive(m){
  if(JSON.stringify(m).length>550000)return;
  if(m.t==='hello'&&!host){
   if(!Number.isInteger(m.seed)||!Array.isArray(m.edits)||m.edits.length>14000)return;
-  seed=m.seed;edits=new Map(m.edits.filter(a=>Array.isArray(a)&&typeof a[0]==='string'&&Number.isInteger(a[1])));
+  seed=m.seed;realm=Number.isInteger(m.realm)&&m.realm>=0&&m.realm<3?m.realm:0;
+   baseSeed=Number.isFinite(m.baseSeed)?m.baseSeed:seed;
+   edits=new Map(m.edits.filter(a=>Array.isArray(a)&&typeof a[0]==='string'&&Number.isInteger(a[1])&&a[1]>=0&&a[1]<types.length));
+   dimensions[realm]={seed,edits:[...edits],bossHp:clamp(Number(m.bossHp)||0,0,120)};
   hero.role=1;companion.role=0;stage=clamp(Number(m.stage)||0,0,6);stats=Object.assign(stats,m.stats||{});defeated=!!m.defeated;portalOpened=!!m.portalOpened;companion.x=m.x;companion.y=m.y;companion.z=m.z;
   hero.x=companion.x+2;hero.z=companion.z+2;hero.y=ground(hero.x,hero.z);
-  spawn();chunks.forEach(c=>gl.deleteBuffer(c.buffer));chunks.clear();lastCX=Infinity;hotbar();hud();announce('Connected · Jozef is ready');
- }else if(m.t==='move'){
+  spawn();chunks.forEach(c=>gl.deleteBuffer(c.buffer));chunks.clear();lastCX=Infinity;lastCZ=Infinity;hotbar();hud();announce('Connected · Jozef is ready');
+ }else if(m.t==='realm'&&!host){applyRealm(m);}
+  else if(m.t==='combat'&&!host){applyCombat(m);}
+  else if(m.t==='move'){
   if(!Number.isFinite(m.x+m.y+m.z)||Math.abs(m.x)>1e6||Math.abs(m.z)>1e6)return;
   companion.x=m.x;companion.y=m.y;companion.z=m.z;companion.hp=m.hp;
    if(Number.isFinite(m.yaw))companion.yaw=m.yaw;
@@ -889,7 +923,8 @@ function receive(m){
   for(let i=previous;i<stage;i++)award('block3d-'+i,missions[i][4]);hud();dirty=true;}
  else if(m.t==='request'&&host){
   if(!Number.isFinite(m.x+m.z))return;
-  if(m.op==='attack'){if(Math.hypot(companion.x-m.x,companion.z-m.z)>5)return;if(boss.alive&&Math.hypot(boss.x-m.x,boss.z-m.z)<2.5){boss.hp=Math.max(0,boss.hp-18);if(boss.hp===0){boss.alive=false;defeated=true;gain('boss');}send({t:'boss',hp:boss.hp});}return;}
+  if(m.op==='attack'){guestAttack(m);return;}
+   if(m.op==='portal'){portal();return;}
   if(![m.x,m.y,m.z].every(Number.isInteger)||Math.hypot(companion.x-m.x,companion.z-m.z)>6.5)return;
   if(m.op==='mine'){const id=block(m.x,m.y,m.z);if(id&&modify(m.x,m.y,m.z,0)){if(id===4)gain('wood');if(id===8)gain('crystal');}}
   if(m.op==='place'&&Number.isInteger(m.id)&&m.id>0&&m.id<types.length&&!block(m.x,m.y,m.z)){modify(m.x,m.y,m.z,m.id);gain('placed');}
@@ -897,7 +932,7 @@ function receive(m){
 }
 function attach(c){
  if(conn?.open){c.close();return;}conn=c;
- c.on('open',()=>{if(!host)guestActive=true;status('Connected · private encrypted session');if(host)send({t:'hello',seed,edits:[...edits].slice(-14000),x:hero.x,y:hero.y,z:hero.z,stage,stats,defeated,portalOpened});
+ c.on('open',()=>{if(!host)guestActive=true;status('Connected · private encrypted session');if(host)send({t:'hello',...worldSnapshot(),x:hero.x,y:hero.y,z:hero.z});
   else{hero.role=1;companion.role=0;}announce('Two-device co-op connected');});
  c.on('data',receive);c.on('close',()=>{conn=null;status('Disconnected · local play');if(guestActive){guestActive=false;dirty=false;location.reload();}});
  c.on('error',()=>status('Connection error · try a fresh invite'));
