@@ -727,7 +727,9 @@ function guestAttack(req){
  lastGuestAttackAt=clock;
  const victim=req.target==='boss'?boss:mobs.find(m=>m.id===req.mobId);
  if(!victim||(victim===boss&&!boss.alive)||(victim!==boss&&victim.hp<=0))return;
- if(Math.hypot(companion.x-victim.x,companion.z-victim.z)>4.4)return;
+ if(!['mob','boss'].includes(req.target))return;
+ if(Math.hypot(companion.x-victim.x,companion.z-victim.z)>4.4||
+    Math.abs(companion.y-victim.y)>4.5)return;
  victim.hp=Math.max(0,victim.hp-24);
  effectBurst(victim.x,victim.y+.8,victim.z,8);
  if(victim===boss&&victim.hp===0){boss.alive=false;defeated=true;gain('boss');}
@@ -1040,11 +1042,17 @@ function receive(m){
  else if(m.t==='progress'&&!host){const previous=stage;stage=clamp(Number(m.stage)||0,0,6);stats=Object.assign(stats,m.stats||{});defeated=!!m.defeated;portalOpened=!!m.portalOpened;
   for(let i=previous;i<stage;i++)award('block3d-'+i,missions[i][4]);hud();dirty=true;}
  else if(m.t==='request'&&host){
-  if(!Number.isFinite(m.x+m.z))return;
+  // Combat requests use stable entity IDs, never voxel coordinates. Apply
+  // per-action validation; do not drop attacks just because x/z are absent.
   if(m.op==='attack'){guestAttack(m);return;}
-   if(m.op==='portal'){portal();return;}
-   if(m.op==='forest'){visitForest();return;}
-  if(![m.x,m.y,m.z].every(Number.isInteger)||Math.hypot(companion.x-m.x,companion.z-m.z)>6.5)return;
+  if(m.op==='portal'||m.op==='forest'){
+   if(!Number.isFinite(m.x)||!Number.isFinite(m.z)||
+      Math.hypot(companion.x-m.x,companion.z-m.z)>6.5)return;
+   if(m.op==='portal')portal();else visitForest();
+   return;
+  }
+  if(![m.x,m.y,m.z].every(Number.isInteger)||
+     Math.hypot(companion.x-(m.x+.5),companion.z-(m.z+.5))>6.5)return;
   if(m.op==='mine'){const id=block(m.x,m.y,m.z);
     if(id&&modify(m.x,m.y,m.z,0)){
      guestInventory[id]=(guestInventory[id]||0)+1;dirty=true;sendGuestInventory();
