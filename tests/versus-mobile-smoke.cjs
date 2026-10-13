@@ -70,6 +70,7 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
    for(let i=0;i<4;i++)t.onData({type:'state',state,phase:'finished',active:true});
  },finalState);
  for(const p of [host,guest]){
+   await p.waitForFunction(()=>JSON.parse(localStorage.getItem('jozefs-world-season-match-ids')||'[]').length===1,undefined,{timeout:5000});
    const scores=await p.evaluate(()=>JSON.parse(localStorage.getItem('jozefs-world-season')||'[]'));
    assert.equal(scores.length,1,'one match only counts once despite repeated finished packets');
     const ids=await p.evaluate(()=>JSON.parse(localStorage.getItem('jozefs-world-season-match-ids')||'[]'));
