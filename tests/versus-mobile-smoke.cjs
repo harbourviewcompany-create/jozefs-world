@@ -62,13 +62,13 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
          const rect=id=>{const e=document.querySelector(id);if(!e)return null;
            const r=e.getBoundingClientRect(),s=getComputedStyle(e);
            return {x:r.x,y:r.y,width:r.width,height:r.height,display:s.display,position:s.position};};
-         return {camera:window.__versusTest.camera(),body:document.body.className,
+         return {camera:window.__versusTest.camera(),phase:window.__versusTest.room.phase,kickDisabled:document.getElementById('versus-kick').disabled,body:document.body.className,
            section:document.getElementById('versus').className,
            window:{w:innerWidth,h:innerHeight},canvas:rect('#versus-canvas'),
            stage:rect('.versus-stage'),board:rect('.versus-scoreboard'),
            controls:rect('.versus-play'),errors:[]};
        });
-       throw Error('Camera did not settle below score HUD: '+JSON.stringify(diagnostics)+'; '+err.message);
+       throw Error('Camera did not settle below score HUD: '+JSON.stringify(diagnostics)+'; page errors: '+JSON.stringify(errors)+'; '+err.message);
      });
      const frame=await page.evaluate(calculate);
      assert.ok(frame.goalY>frame.boardBottom,'goalkeeper below scoreboard: '+JSON.stringify(frame));
