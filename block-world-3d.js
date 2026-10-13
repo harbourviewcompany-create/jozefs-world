@@ -244,24 +244,65 @@ function render(){
   cube(v,p.x+.10,p.y+1.35,p.z-.30,11,.10);
  };
  figure(companion,companion.role);if(third)figure(hero,hero.role);
+ // Living voxel creatures with distinguishable silhouettes and animated movement.
  for(const m of mobs)if(m.hp>0&&Math.hypot(m.x-hero.x,m.z-hero.z)<52){
-  const bob=Math.sin(clock*2.4+m.x)*.08;
-  cube(v,m.x-.3,m.y+bob,m.z-.3,m.kind?8:5,.6);
-  cube(v,m.x-.18,m.y+.53+bob,m.z-.22,m.kind?7:1,.35);
-  cube(v,m.x-.16,m.y+.63+bob,m.z-.26,8,.09);
-  cube(v,m.x+.10,m.y+.63+bob,m.z-.26,8,.09);
+  const bob=Math.sin(clock*2.4+m.x)*.075;
+  if(m.kind){
+   // Crystal slime: translucent-looking layered body, luminous crest and eyes.
+   cube(v,m.x-.32,m.y+bob,m.z-.32,8,.64);
+   cube(v,m.x-.25,m.y+.44+bob,m.z-.24,11,.51);
+   cube(v,m.x-.13,m.y+.79+bob,m.z-.12,8,.25);
+   cube(v,m.x-.18,m.y+.54+bob,m.z-.34,3,.12);
+   cube(v,m.x+.09,m.y+.54+bob,m.z-.34,3,.12);
+  }else{
+   // Forest guardian: rounded voxel ears, head, four little feet and expressive eyes.
+   cube(v,m.x-.32,m.y+.22+bob,m.z-.32,5,.64);
+   cube(v,m.x-.26,m.y+.71+bob,m.z-.28,1,.52);
+   cube(v,m.x-.28,m.y+1.04+bob,m.z-.27,5,.21);
+   cube(v,m.x+.11,m.y+1.04+bob,m.z-.27,5,.21);
+   for(const dx of [-.25,.15])for(const dz of [-.25,.15])cube(v,m.x+dx,m.y+bob,m.z+dz,4,.17);
+   cube(v,m.x-.15,m.y+.85+bob,m.z-.29,3,.10);
+   cube(v,m.x+.10,m.y+.85+bob,m.z-.29,3,.10);
+  }
  }
+ // Crystal Golem is a multi-part animated boss with a bright core and crown.
  if(boss.alive&&Math.hypot(boss.x-hero.x,boss.z-hero.z)<72){
-  const breath=Math.sin(clock*1.8)*.08;
-  cube(v,boss.x-.8,boss.y,boss.z-.8,3,1.6);
-  cube(v,boss.x-.55,boss.y+1.51+breath,boss.z-.55,8,1.1);
-  cube(v,boss.x-.26,boss.y+.86,boss.z-.83,8,.48);
-  cube(v,boss.x-1.02,boss.y+.72,boss.z-.68,3,.42);
-  cube(v,boss.x+.59,boss.y+.72,boss.z-.68,3,.42);
+  const breath=Math.sin(clock*1.8)*.09,swing=Math.sin(clock*1.35)*.22;
+  // Heavy grounded legs / mossy stone armor.
+  cube(v,boss.x-.73,boss.y,boss.z-.49,3,.56);
+  cube(v,boss.x+.20,boss.y,boss.z-.49,3,.56);
+  cube(v,boss.x-.79,boss.y+.53,boss.z-.60,10,1.58);
+  cube(v,boss.x-.63,boss.y+1.19,boss.z-.73,3,1.25);
+  cube(v,boss.x-.51,boss.y+1.28+breath,boss.z-.77,8,1.04);
+  // Pulsing crystal heart, runic shoulder crystals, face and floating crown shards.
+  cube(v,boss.x-.28,boss.y+1.51+breath,boss.z-.84,8,.57);
+  cube(v,boss.x-.09,boss.y+1.71+breath,boss.z-.88,11,.20);
+  for(const side of [-1,1]){
+   const dx=side<0?-.98:.57;
+   cube(v,boss.x+dx,boss.y+1.42+swing*side,boss.z-.58,3,.48);
+   cube(v,boss.x+dx,boss.y+.76+swing*side,boss.z-.55,10,.49);
+   cube(v,boss.x+dx+.08,boss.y+1.75+breath,boss.z-.54,8,.33);
+  }
+  cube(v,boss.x-.34,boss.y+2.35+breath,boss.z-.33,3,.78);
+  cube(v,boss.x-.29,boss.y+2.56+breath,boss.z-.43,8,.20);
+  cube(v,boss.x+.13,boss.y+2.56+breath,boss.z-.43,8,.20);
+  for(const dx of [-.27,.21])cube(v,boss.x+dx,boss.y+3.08+breath,boss.z-.23,8,.17);
  }
+ // Real 3D Team Portal arch. Bright material is handled by the crystal GPU shader.
  if(Math.hypot(hero.x-40,hero.z-40)<84){
-  cube(v,40,height(40,40)+.1,40,8,.9);
-  cube(v,40,height(40,40)+1.1+Math.sin(clock*2)*.12,40,11,.9);
+  const h=height(40,40)+1;
+  const pulse=Math.sin(clock*2)*.11;
+  for(const side of [-1,1]){
+   for(let y=0;y<4;y++)cube(v,40+side*1.4-.36,h+y*.82,40-.42,8,.8);
+   cube(v,40+side*1.4-.19,h+3.55+pulse,40-.31,11,.43);
+  }
+  for(let x=-1;x<=1;x++)cube(v,40+x*.82-.38,h+3.1,40-.42,8,.82);
+  cube(v,39.79,h+1.1+pulse,40-.15,11,.43);
+  cube(v,39.81,h+2.05-pulse,40-.13,8,.34);
+  for(let i=0;i<5;i++){
+   const angle=clock*.8+i*Math.PI*2/5;
+   cube(v,40+Math.cos(angle)*.82-.08,h+1.75+Math.sin(clock*1.3+i)*.6,40+Math.sin(angle)*.38-.08,8,.15);
+  }
  }
  for(const particle of effects)if(Math.hypot(particle.x-hero.x,particle.z-hero.z)<40)
    cube(v,particle.x,particle.y,particle.z,particle.id,.10);
