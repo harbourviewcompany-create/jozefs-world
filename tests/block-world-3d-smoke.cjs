@@ -99,7 +99,7 @@ function boot(shared=new Map(),options={}){
  assert.equal(sample.width,256,'atlas width is WebGL1 power of two');
  assert.equal(sample.height,128,'atlas height is WebGL1 power of two');
  assert.notEqual(window.BlockWorld3DTextures.tileFor(1,0),window.BlockWorld3DTextures.tileFor(1,1),'grass top and dirt side use different artwork');
- const instrumented=script.replace('window.BlockWorld3D=Object.freeze','window.__block3dTests={award,modify,portal,visitForest};window.BlockWorld3D=Object.freeze');
+ const instrumented=script.replace('window.BlockWorld3D=Object.freeze',`window.__block3dTests={award,modify,portal,visitForest,receive,worldSnapshot,applyRealm,guestAttack,sendCombat,save,spawn,mobs:()=>mobs,boss:()=>boss,makeHost:(sent)=>{host=true;conn={open:true,send:v=>sent.push(v)};},makeGuest:(sent)=>{host=false;guestActive=true;conn={open:true,send:v=>sent.push(v)};},moveCompanion:(x,z)=>{companion.x=x;companion.z=z;},setPlayer:(x,z)=>{hero.x=x;hero.z=z;hero.y=ground(x,z);}};window.BlockWorld3D=Object.freeze`);
   assert.notEqual(instrumented,script,'test instrumentation inserted');
   vm.runInNewContext(instrumented,sandbox,{timeout:15000});
  const status=()=>window.BlockWorld3D?.status();
@@ -199,4 +199,45 @@ assert.equal(next.status().seed,test.status().seed,'saved seed preserved');
 assert.equal(next.status().camera,'FIRST_PERSON','saved camera preference survives relaunch');
 assert.ok(test.document.getElementById('mission').innerHTML.includes('MISSION'),'mission HUD initialized');
 assert.equal(test.errors.length,0,'no startup/frame errors: '+test.errors.join('; '));
+
+// Autosave regression: pagehide must persist exploration with no block edits.
+const moving=boot();moving.tick(2);
+for(const fn of moving.events.get('keydown')||[])fn({code:'KeyW',repeat:false,preventDefault(){}});
+moving.tick(8);
+for(const fn of moving.events.get('keyup')||[])fn({code:'KeyW'});
+for(const fn of moving.events.get('pagehide')||[])fn({});
+const movementSave=JSON.parse(moving.shared.get('jozefs-block-3d-v1')||'{}');
+assert.equal(movementSave.version,1,'pose save keeps v1 schema');
+assert.ok(movementSave.hero.z<moving.status().hero.z+.001,'traversal saved on pagehide');
+assert.ok(movementSave.hero.z<2.5,'movement persisted without mining');
+const movementReload=boot(moving.shared);movementReload.tick(1);
+assert.ok(Math.abs(movementReload.status().hero.z-movementSave.hero.z)<.01,'saved traversal reloads');
+
+// Host controls enemy health; guest receives state rather than simulating its own mobs.
+const hostGame=boot(),outgoing=[];
+hostGame.tick(1);hostGame.testHooks.makeHost(outgoing);
+const enemy=hostGame.testHooks.mobs()[0];
+assert.ok(enemy&&Number.isInteger(enemy.id),'mob IDs are stable for network references');
+hostGame.testHooks.moveCompanion(enemy.x,enemy.z);
+hostGame.testHooks.guestAttack({target:'mob',mobId:enemy.id});
+assert.equal(enemy.hp,6,'host applies Jozef combat damage to ordinary enemies');
+assert.ok(outgoing.some(m=>m.t==='combat'),'host broadcasts authoritative creature health');
+const guestGame=boot(),guestOutgoing=[];
+guestGame.tick(1);guestGame.testHooks.makeGuest(guestOutgoing);
+guestGame.testHooks.receive({t:'hello',...hostGame.testHooks.worldSnapshot(),x:2.5,y:10,z:2.5});
+guestGame.testHooks.receive(outgoing.find(m=>m.t==='combat'));
+assert.equal(guestGame.testHooks.mobs().find(m=>m.id===enemy.id).hp,6,'guest applies host creature health');
+hostGame.testHooks.guestAttack({target:'mob',mobId:enemy.id});
+assert.equal(enemy.hp,6,'rate-limited repeated attack cannot instantly kill an enemy');
+
+// Realm snapshots are host-owned and must preserve the active world edits.
+hostGame.testHooks.modify(1,4,1,9);
+const realmData={t:'realm',...hostGame.testHooks.worldSnapshot(),realm:2,seed:987123,bossHp:88};
+assert.equal(guestGame.testHooks.applyRealm(realmData),true,'guest accepts validated host realm snapshot');
+assert.equal(guestGame.status().realm,2,'guest switches to the host realm');
+assert.equal(guestGame.status().seed,987123,'guest world seed follows host');
+assert.equal(guestGame.window.BlockWorld3D.block(1,4,1),9,'host world edits survive realm synchronization');
+assert.equal(guestGame.status().bossHp,88,'guest boss health follows host authoritative snapshot');
+assert.equal(guestGame.testHooks.applyRealm({...realmData,edits:[['invalid',999]]}),false,'invalid realm blocks are rejected');
+
 console.log('Block World 3D: WebGL, chunks, movement, save/reload, XP and private invite creation PASS');
