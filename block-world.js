@@ -123,7 +123,8 @@ function update(dt){
  if(craftingOpen&&!window.BlockWorld2D?.connected?.())return;
  clock+=dt;actionCooldown=Math.max(0,actionCooldown-dt);
  players.forEach((p,i)=>{
-  const remote=i===1&&window.BlockWorld2D?.isHost?.()?window.BlockWorld2D.remoteInput:null;
+  p.actionT=Math.max(0,(p.actionT||0)-dt);
+   const remote=i===1&&window.BlockWorld2D?.isHost?.()?window.BlockWorld2D.remoteInput:null;
   const left=remote?!!remote.left:(i===0?down.has('KeyA'):down.has('ArrowLeft'));
   const right=remote?!!remote.right:(i===0?down.has('KeyD'):down.has('ArrowRight'));
   const dir=remote?Number(right)-Number(left):Number(right||(i===active&&touch.right))-Number(left||(i===active&&touch.left));
@@ -152,7 +153,8 @@ function mine(){
  if(!id||id===14){say('Aim at a nearby block to mine');return;}
  if(!reachable(x,y)){say('Move closer to mine');return;}
  if(set(x,y,0)){
-  const p=players[active];const drop=({1:2,3:8,10:25,11:11,17:17,18:18,21:21,22:29,23:30,24:31})[id]||id;
+  const p=players[active];p.action='mine';p.actionT=.4;
+   const drop=({1:2,3:8,10:25,11:11,17:17,18:18,21:21,22:29,23:30,24:31})[id]||id;
   p.inventory[drop]=(p.inventory[drop]||0)+1;
   focus=null;renderHotbar();say('+1 '+names[drop],900);
  }
@@ -166,6 +168,7 @@ function place(){
  if(!creative&&(p.inventory[selected]||0)<1){say('Mine '+names[selected]+' first');return;}
  if(players.some(q=>x*TILE<q.x+q.w&&x*TILE+TILE>q.x&&y*TILE<q.y+q.h&&y*TILE+TILE>q.y)){say('Cannot build inside a player');return;}
  if(set(x,y,selected)){
+  p.action='mine';p.actionT=.33;
   if(!creative)p.inventory[selected]--;
   focus=null;renderHotbar();say('Placed '+names[selected],800);
  }
@@ -225,22 +228,30 @@ function drawBackground(){
   ctx.lineTo(cssW,cssH);ctx.closePath();ctx.fill();
  }
 }
-let cameraZoom=1;
+let cameraZoom=(window.innerWidth||800)<650?1.25:1.08;
 function draw(){
  ctx.setTransform(dpr*cameraZoom,0,0,dpr*cameraZoom,0,0);ctx.imageSmoothingEnabled=false;
  const viewW=cssW/cameraZoom,viewH=cssH/cameraZoom;
  const smooth=window.BlockWorld2D?.isGuest?.() ? .27 : 1;
   for(const q of players){q.renderX=Number.isFinite(q.renderX)?q.renderX+(q.x-q.renderX)*smooth:q.x;q.renderY=Number.isFinite(q.renderY)?q.renderY+(q.y-q.renderY)*smooth:q.y;}
-  const p=players[active],goalX=p.renderX+p.w/2-viewW*.5,goalY=p.renderY+p.h/2-viewH*.46;
+  const p=players[active],partner=players[1-active];
+  const separation=Math.abs(partner.renderX-p.renderX);
+  const together=!window.BlockWorld2D?.connected?.()&&separation<viewW*.60;
+  const centerX=p.renderX+p.w/2+(together?(partner.renderX-p.renderX)*.28:0);
+  const goalX=centerX-viewW*.5+p.vx*.10,goalY=p.renderY+p.h/2-viewH*.46;
  camX+=(Math.max(0,Math.min(W*TILE-viewW,goalX))-camX)*.14;
  camY+=(Math.max(0,Math.min(H*TILE-viewH,goalY))-camY)*.14;
  drawBackground();
  if(window.BlockWorldArt?.caveBackdrop)window.BlockWorldArt.caveBackdrop(ctx,{surface,camX,camY,tileSize:TILE,w:viewW,h:viewH});
  const sx=Math.max(0,Math.floor(camX/TILE)-1),ex=Math.min(W,Math.ceil((camX+viewW)/TILE)+1);
  const sy=Math.max(0,Math.floor(camY/TILE)-1),ey=Math.min(H,Math.ceil((camY+viewH)/TILE)+1);
- for(let y=sy;y<ey;y++)for(let x=sx;x<ex;x++){const id=world[y][x];if(!id)continue;ctx.drawImage(tex(id),Math.round(x*TILE-camX),Math.round(y*TILE-camY),TILE+1,TILE+1);}
+ for(let y=sy;y<ey;y++)for(let x=sx;x<ex;x++){
+  const id=world[y][x];if(!id)continue;
+  const texture=window.BlockWorldArt?.terrain?.(world,id,x,y)||tex(id);
+  ctx.drawImage(texture,Math.round(x*TILE-camX),Math.round(y*TILE-camY),TILE+1,TILE+1);
+ }
  if(window.BlockWorldArt)window.BlockWorldArt.embellish(ctx,{world,surface,camX,camY,tileSize:TILE,w:viewW,h:viewH,time:clock});
- if(window.BlockWorldArt)players.forEach((q,i)=>window.BlockWorldArt.character(ctx,q,i,{camX,camY,w:viewW,h:viewH,active}));
+ if(window.BlockWorldArt)players.forEach((q,i)=>window.BlockWorldArt.character(ctx,q,i,{camX,camY,w:viewW,h:viewH,active,time:clock}));
  else players.forEach((q,i)=>{
   const x=Math.round(q.renderX-camX),y=Math.round(q.renderY-camY),bob=q.ground&&Math.abs(q.vx)>5?Math.sin(q.walk)*1.8:0;
   ctx.fillStyle='#14294466';ctx.beginPath();ctx.ellipse(x+q.w/2,y+q.h+1,15,4,0,0,Math.PI*2);ctx.fill();
@@ -259,6 +270,7 @@ function draw(){
 function frame(now){
  const dt=Math.min(.05,(now-lastTime)/1000);lastTime=now;acc+=dt;
  let n=0;while(acc>=1/60&&n<4){if(!window.BlockWorld2D?.isGuest?.())update(1/60);acc-=1/60;n++;}
+ if(window.BlockWorld2D?.isGuest?.())for(const hero of players)hero.actionT=Math.max(0,(hero.actionT||0)-dt);
  draw();window.BlockWorld2D?.onFrame?.(now);requestAnimationFrame(frame);
 }
 function bindButton(id,key,once){
@@ -410,6 +422,7 @@ function attackEnemy(){
  }
  if(!victim){say('Move closer to a creature to attack',1150);return false;}
  nextAttackAt=now+360;
+ p.action='attack';p.actionT=.42;
  victim.hp=(Number.isFinite(victim.hp)?victim.hp:active===0?40:35)-(active===0?20:16);
  spark(victim.x+8,victim.y+7,15);chime();
  if(victim.hp<=0){
@@ -452,7 +465,7 @@ generate=function(){
 const baseRead=readSave;
 readSave=function(){
  const wasLoaded=baseRead();
- try{const s=JSON.parse(localStorage.getItem(advSaveKey)||'null');if(s){adventureSeed=s.adventureSeed||adventureSeed;questStage=Math.max(0,Math.min(Q.length,s.questStage||0));goals=Object.assign(goals,s.goals||{});explored=s.explored||{};achievements=s.achievements||[];portalUnlocked=!!s.portalUnlocked;teamFollow=s.teamFollow!==false;cameraZoom=Math.max(1,Math.min(2,Number(s.cameraZoom)||1));}}catch(_){}
+ try{const s=JSON.parse(localStorage.getItem(advSaveKey)||'null');if(s){adventureSeed=s.adventureSeed||adventureSeed;questStage=Math.max(0,Math.min(Q.length,s.questStage||0));goals=Object.assign(goals,s.goals||{});explored=s.explored||{};achievements=s.achievements||[];portalUnlocked=!!s.portalUnlocked;teamFollow=s.teamFollow!==false;cameraZoom=Math.max(1,Math.min(2,Number(s.cameraZoom)||cameraZoom));}}catch(_){}
  return wasLoaded;
 };
 const baseSave=save;
@@ -675,7 +688,7 @@ createAdventureUi();
       });
       const e=data.extra||{};questStage=Math.max(0,Math.min(Q.length,Number(e.questStage)||0));goals=Object.assign(goals,e.goals||{});
       explored=e.explored||{};achievements=Array.isArray(e.achievements)?e.achievements:[];portalUnlocked=!!e.portalUnlocked;
-      teamFollow=e.teamFollow!==false;cameraZoom=Math.max(1,Math.min(2,Number(e.cameraZoom)||1));
+      teamFollow=e.teamFollow!==false;cameraZoom=Math.max(1,Math.min(2,Number(e.cameraZoom)||cameraZoom));
       dirty=true;save();renderHotbar();questHud();say('Recovered your world from offline storage',3600);
      };
     }catch(err){console.warn('Offline recovery unavailable',err);}
@@ -928,13 +941,13 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
   onBlockChanged:null,onFrame:null,requestAction:null,
   getWorld:()=>({
    w:W,h:H,world:world.map(r=>r.slice()),surface:surface.slice(),
-   players:players.map(p=>({x:p.x,y:p.y,vx:p.vx,vy:p.vy,facing:p.facing,ground:p.ground,health:p.health,inventory:{...p.inventory}})),
+   players:players.map(p=>({x:p.x,y:p.y,vx:p.vx,vy:p.vy,facing:p.facing,ground:p.ground,health:p.health,action:p.action,actionT:p.actionT||0,inventory:{...p.inventory}})),
    creative,adventureSeed,realmIndex:window.__bw2dRealm?.get()??0,questStage,goals:{...goals},
    friends:friends.map(c=>({...c})),nightClock,weatherType,
    achievements:achievements.slice(),explored:{...explored},portalUnlocked
   }),
   getState:()=>({
-   players:players.map(p=>({x:p.x,y:p.y,vx:p.vx,vy:p.vy,facing:p.facing,ground:p.ground,health:p.health,inventory:{...p.inventory}})),
+   players:players.map(p=>({x:p.x,y:p.y,vx:p.vx,vy:p.vy,facing:p.facing,ground:p.ground,health:p.health,action:p.action,actionT:p.actionT||0,inventory:{...p.inventory}})),
    creative,realmIndex:window.__bw2dRealm?.get()??0,questStage,goals:{...goals},portalUnlocked,
    friends:friends.map(c=>({...c})),nightClock,weatherType
   }),
@@ -943,7 +956,8 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
    world=s.world.map(r=>r.slice());surface=s.surface.slice();
    players.forEach((p,i)=>{
     const q=s.players[i];if(!q)return;
-    for(const k of ['x','y','vx','vy','facing','health'])if(Number.isFinite(q[k]))p[k]=q[k];
+    for(const k of ['x','y','vx','vy','facing','health','actionT'])if(Number.isFinite(q[k]))p[k]=q[k];
+    if(['mine','attack','idle'].includes(q.action))p.action=q.action;
     p.ground=!!q.ground;p.inventory={...q.inventory};
    });
    active=1;creative=!!s.creative;adventureSeed=s.adventureSeed;
@@ -960,7 +974,8 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
    const oldInventory=JSON.stringify(players[1].inventory),oldCreative=creative;
    players.forEach((p,i)=>{
     const q=s.players[i];if(!q)return;
-    for(const k of ['x','y','vx','vy','facing','health'])if(Number.isFinite(q[k]))p[k]=q[k];
+    for(const k of ['x','y','vx','vy','facing','health','actionT'])if(Number.isFinite(q[k]))p[k]=q[k];
+    if(['mine','attack','idle'].includes(q.action))p.action=q.action;
     p.ground=!!q.ground;
     if(q.inventory&&typeof q.inventory==='object')p.inventory={...q.inventory};
    });
