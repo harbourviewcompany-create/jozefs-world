@@ -1,0 +1,18 @@
+/* Single-thumb navigation without removing existing keyboard-accessible routes. */
+#jw-family-dock{display:none}
+@media(max-width:700px){
+ body{padding-bottom:calc(74px + env(safe-area-inset-bottom,0px))}
+ #jw-family-dock:not([hidden]){display:grid;position:fixed;left:8px;right:8px;bottom:max(7px,env(safe-area-inset-bottom,0px));z-index:600;
+  grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;padding:7px 8px 18px;border-radius:20px;
+  border:1px solid #a2dbdf6d;background:linear-gradient(150deg,#0a2332f7,#07131df9);
+  box-shadow:0 12px 32px #000b,inset 0 1px #bbfaff27}
+ #jw-family-dock button{display:flex;min-width:0;min-height:47px;align-items:center;justify-content:center;
+  padding:7px 1px;border:1px solid transparent;border-radius:11px;background:transparent;color:#c4e4e8;
+  font:800 clamp(9px,2.4vw,11px)/1.05 system-ui,sans-serif;letter-spacing:.025em}
+ #jw-family-dock button.is-current{background:linear-gradient(140deg,#d8ff89,#91eaca);color:#08242a}
+ #jw-family-dock button:focus-visible{outline:3px solid #fff;outline-offset:-2px}
+ #jw-family-dock .jw-dock-level{position:absolute;bottom:4px;right:15px;font:800 9px/1 system-ui;color:#baf7d7;letter-spacing:.09em}
+ body.versus-focused #jw-family-dock,body.versus-focused #jw-family-dock:not([hidden]){display:none!important}
+ body.versus-focused{padding-bottom:0}
+}
+@media(prefers-reduced-motion:reduce){#jw-family-dock *{transition:none!important}}
