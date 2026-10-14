@@ -33,7 +33,7 @@ class FakePeer {
  destroy(){if(this.id)peers.delete(this.id);}
 }
 function flush(){while(tasks.length)tasks.shift()();}
-function boot(store=new Map()){
+function boot(store=new Map(),tabStore=new Map()){
  const els=new Map(),events=new Map(),clock={now:0,cb:null},trace=[];
  const ctx=new Proxy({},{get(_,k){return k==='createLinearGradient'?()=>({addColorStop(){}}):()=>{}},set(){return true}});
  function element(initial=''){
@@ -61,6 +61,7 @@ function boot(store=new Map()){
   performance:{now:()=>clock.now},
   requestAnimationFrame:fn=>clock.cb=fn,addEventListener:(k,fn)=>(events.get(k)||events.set(k,[]).get(k)).push(fn),
   localStorage:{getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,String(v)),removeItem:k=>store.delete(k)},
+  sessionStorage:{getItem:k=>tabStore.get(k)||null,setItem:(k,v)=>tabStore.set(k,String(v)),removeItem:k=>tabStore.delete(k)},
   navigator:{getGamepads:()=>[]},location,history:{replaceState(){}},confirm:()=>false,
   URL,Blob:class{},setTimeout:()=>1,clearTimeout(){},
   console:{warn:msg=>trace.push(String(msg)),error:msg=>trace.push(String(msg))}
@@ -79,7 +80,7 @@ function boot(store=new Map()){
  function key(code,pressed){
   for(const fn of events.get(pressed?'keydown':'keyup')||[])fn({code,repeat:false,preventDefault(){}});
  }
- return{window,doc,store,clock,click,advance,key,trace,location,
+ return{window,doc,store,tabStore,clock,click,advance,key,trace,location,
   game:()=>window.BlockWorld2D,session:()=>window.BlockWorldCoop};
 }
 // Without a network, two people on one keyboard can independently control both heroes.
@@ -211,6 +212,16 @@ assert.equal(guest.store.get('jozefs-world-block-v3'),ownSave,'Jozef joining mus
 host.click('save');
 assert.equal(JSON.parse(host.store.get('jozefs-world-block-v3')).world[tileY][tileX],2,'shared construction saved on the host');
 assert.ok(host.game().getWorld().players[0].x>0,'Daddy remains independently present');
-guest.session().disconnect();
-assert.ok(guest.trace.includes('reload'),'guest reload restores own solo world on disconnect');
+// A tab refresh reconstructs the guest VM with its own storage, but no new invite.
+FakePeer.links.at(-1).guest.close();
+const book=JSON.parse(guest.tabStore.get('jozefs-block-2d-guest-tab-v1'));
+assert.equal(book.active,true,'the approved guest is bookmarked only in this tab');
+const samePeer=book.peerId;
+const refreshed=boot(guest.store,guest.tabStore);
+flush();
+assert.ok(refreshed.session().connected()&&host.session().connected(),'hard-refreshed guest rejoins without fresh invitation');
+assert.equal(JSON.parse(refreshed.tabStore.get('jozefs-block-2d-guest-tab-v1')).peerId,samePeer,'stable approved guest identity');
+assert.equal(refreshed.game().getWorld().players.length,2,'host world synchronized after refresh');
+refreshed.session().disconnect();
+assert.ok(refreshed.trace.includes('reload'),'guest disconnect restores own solo world');
 console.log('Block World 2D co-op: local keyboard, two-device movement, mining/building, crafting, gifting, reconnect and save isolation PASS');
