@@ -73,6 +73,25 @@
   const keeperSide=who=>room.together?'left':who==='Dad'?'right':'left';
   const isKeeper=who=>room.mode==='penalties'?false:(who===room.who?room.spot==='keeper':room.otherSpot==='keeper');
   let connectTimer, countdownTimer, recoveryTimer, connectWatchdog, reconnectAttempts = 0, lastPacket = 0, lastSent = 0, lastHello = 0, localActive = true;
+  // Private to this tab: keep the *approved* guest identity across a hard reload.
+  const RESUME_KEY='jozefs-versus-tab-resume-v1';
+  const sessionGet=()=>{try{const data=JSON.parse(sessionStorage.getItem(RESUME_KEY)||'null');
+    return data&&Date.now()-data.at<3600000&&/^[A-Z]{6}$/.test(data.code||'')&&
+      /^jw-rival-guest-[0-9a-f]{32}$/.test(data.peerId||'')?data:null;}catch(_){return null;}};
+  const sessionPut=data=>{try{sessionStorage.setItem(RESUME_KEY,JSON.stringify({...data,at:Date.now()}));}catch(_){}};
+  const sessionClear=()=>{try{sessionStorage.removeItem(RESUME_KEY);}catch(_){}};
+  function guestIdentity(code){
+   const old=sessionGet();if(old?.code===code)return old.peerId;
+   const bytes=crypto.getRandomValues(new Uint8Array(16));
+   const peerId='jw-rival-guest-'+Array.from(bytes,n=>n.toString(16).padStart(2,'0')).join('');
+   sessionPut({code,peerId,active:false});return peerId;
+  }
+  function rememberGuest(){
+   if(room.host||room.practice||!room.conn?.open||!room.other||!['waiting','countdown','playing','finished'].includes(room.phase))return;
+   const prior=sessionGet();if(prior?.code!==room.code)return;
+   sessionPut({...prior,active:true,who:room.who,other:room.other,spot:room.spot,
+    together:room.together,mode:room.mode,phase:room.phase});
+  }
   let stickVector=null;
   const SHOT_LANES=[160,210,260],shotOptions={Dad:{aim:1,power:1},Jozef:{aim:1,power:1},Rovers:{aim:1,power:1,mode:'shot'}};
   let selectedAim=1,chargingSince=0,chargeFill=0;
@@ -863,7 +882,7 @@
     renderPracticeRecord();
   }
   function stopInput(){keys.clear();stickVector=null;targets[room.who]=null;send({type:'aim',x:null,y:null});const nub=$('versus-nub'),stick=$('versus-stick');nub.style.left=(stick.clientWidth-nub.offsetWidth)/2+'px';nub.style.top=(stick.clientHeight-nub.offsetHeight)/2+'px';}
-  function cleanup(){clearTimeout(connectTimer);clearTimeout(countdownTimer);clearTimeout(recoveryTimer);clearTimeout(connectWatchdog);reconnectAttempts=0;const pending=room.pending,oldConn=room.conn,oldPeer=room.peer;room.pending=null;room.conn=null;room.peer=null;pending?.close();oldConn?.close();oldPeer?.destroy();room.other='';room.otherPeer='';room.reconnecting=false;room.ready=false;room.remoteReady=false;room.host=false;room.practice=false;room.together=false;room.mode='classic';room.otherSpot='forward';room.remoteActive=true;room.phase='lobby';cameraYReady=false;cameraPhase='';stopInput();syncUI();}
+  function cleanup(){sessionClear();clearTimeout(connectTimer);clearTimeout(countdownTimer);clearTimeout(recoveryTimer);clearTimeout(connectWatchdog);reconnectAttempts=0;const pending=room.pending,oldConn=room.conn,oldPeer=room.peer;room.pending=null;room.conn=null;room.peer=null;pending?.close();oldConn?.close();oldPeer?.destroy();room.other='';room.otherPeer='';room.reconnecting=false;room.ready=false;room.remoteReady=false;room.host=false;room.practice=false;room.together=false;room.mode='classic';room.otherSpot='forward';room.remoteActive=true;room.phase='lobby';cameraYReady=false;cameraPhase='';stopInput();syncUI();}
   function fail(message){cleanup();say(message);}
   function freshMatch(){state.mode=room.mode;state.matchId=crypto.randomUUID?.()||Array.from(crypto.getRandomValues(new Uint8Array(16)),v=>v.toString(16).padStart(2,'0')).join('');state.kick='';state.score={dad:0,jozef:0};state.shots=0;state.saves=0;state.highlights=[];state.matchLeft=room.mode==='classic'&&room.practice?practiceSeconds:rules.config(room.mode).seconds;state.call='Kickoff';kickLock=0;lastBotKick=-100;savedMatch=false;resultRecorded=false;state.overtime=false;state.star={x:360,y:120,on:room.mode!=='penalties'};state.super='';state.lastShot=null;
     state.combo={passes:0,assists:0,boostUntil:0,passTo:'',passFrom:'',passAt:-999,lastShooter:'',assistFrom:'',assistTo:'',receivedAt:-1};
@@ -919,13 +938,14 @@
       if(room.mode==='duo'&&!msg.state.rival2)return;
       if(room.mode==='penalties'&&!msg.state.penalty)return;
       Object.assign(state,msg.state);const changed=room.phase!==msg.phase||room.remoteActive!==(msg.active!==false);room.phase=msg.phase;room.remoteActive=msg.active!==false;if(changed){syncUI();if(!room.remoteActive)say('Paused — opponent switched away.');}
+      rememberGuest();
       if(room.phase==='finished')say(state.score.dad===state.score.jozef?'Full time — a draw. Rematch?':(room.together?(state.score.jozef>state.score.dad?'Dad & Jozef':'Rovers'):(state.score.dad>state.score.jozef?'Dad':'Jozef'))+' wins! Ready for a rematch?');
     }else if(msg.type==='resume'&&room.host&&room.conn&&room.otherPeer===room.conn.peer){
       room.remoteActive=true;room.reconnecting=false;clearTimeout(recoveryTimer);
       send({type:'resume-ok'});broadcast();syncUI();say('Reconnected — match continues.');
     }else if(msg.type==='resume-ok'&&!room.host&&room.reconnecting){
       clearTimeout(connectWatchdog);clearTimeout(recoveryTimer);room.reconnecting=false;
-      room.remoteActive=true;reconnectAttempts=0;syncUI();say('Reconnected — match continues.');
+      room.remoteActive=true;reconnectAttempts=0;rememberGuest();syncUI();say('Reconnected — match continues.');
     }else if(msg.type==='active'){room.remoteActive=msg.active===true;if(!room.remoteActive)targets[room.other]=null;syncUI();say(room.remoteActive?'Opponent is back.':'Paused — opponent switched away.');}
     else if(msg.type==='rematch'&&room.host&&room.phase==='finished'){prepareRematch();}
     else if(msg.type==='lobby'&&!room.host){room.phase='waiting';room.ready=false;room.remoteReady=false;resultRecorded=false;syncUI();say('Rematch — both players tap Ready.');}
@@ -993,9 +1013,18 @@
     const code=host?Array.from(crypto.getRandomValues(new Uint8Array(6)),n=>'ABCDEFGHJKLMNPQRSTUVWXYZ'[n%24]).join(''):$('versus-code').value.trim().toUpperCase();
     if(!/^[A-Z]{6}$/.test(code)){say('Enter the six-letter code from the other player.');$('versus-code').focus();return;}
     cleanup();room.code=code;room.host=host;room.together=together;room.mode=selectedMode(false,together);room.phase='connecting';syncUI();say(host?'Creating your room…':'Joining room…');
-    const peer=new Peer(host?'jw-rival-'+code:undefined);room.peer=peer;
+    const recoveringGuest=!host&&!!sessionGet()?.active&&sessionGet().code===code;
+    const prior=recoveringGuest?sessionGet():null;
+    if(prior){
+      room.who=prior.who==='Jozef'?'Jozef':'Dad';room.other=prior.other==='Dad'?'Dad':'Jozef';
+      room.spot=prior.spot==='keeper'?'keeper':'forward';room.together=prior.together===true;
+      room.mode=rules.safeMode(prior.mode,room.together,false);
+      room.phase=['waiting','countdown','playing','finished'].includes(prior.phase)?prior.phase:'playing';
+      room.reconnecting=true;syncUI();say('Restoring approved player after reload…');
+    }
+    const peer=new Peer(host?'jw-rival-'+code:guestIdentity(code));room.peer=peer;
     connectTimer=setTimeout(()=>{if(room.phase==='connecting')fail('Could not connect. Check the code and connection, then retry.');},15000);
-    peer.on('open',()=>{if(room.peer!==peer)return;if(host){clearTimeout(connectTimer);room.phase='waiting';syncUI();say('Share the code. Your opponent joins automatically as the other player.');}else wire(peer.connect('jw-rival-'+code,{reliable:true}));});
+    peer.on('open',()=>{if(room.peer!==peer)return;if(host){clearTimeout(connectTimer);room.phase='waiting';syncUI();say('Share the code. Your opponent joins automatically as the other player.');}else wire(peer.connect('jw-rival-'+code,{reliable:true}),recoveringGuest);});
     peer.on('connection',conn=>{
       if(room.host&&!room.conn&&!room.pending&&room.otherPeer&&conn.peer===room.otherPeer&&room.other&&room.phase!=='lobby'){
         wire(conn,true);return;
@@ -1236,4 +1265,10 @@
   if (savedResult && $('today-versus-result')) $('today-versus-result').textContent = savedResult;
   paintSeason();
   pickAim(1);syncUI();draw();requestAnimationFrame(frame);
+  const savedTab=sessionGet();
+  if(savedTab?.active&&window.Peer&&savedTab.code){
+    $('versus-code').value=savedTab.code;
+    // Rejoin only a previously authenticated live guest, never a room just typed.
+    connect(false,savedTab.together===true);
+  }
 })();
