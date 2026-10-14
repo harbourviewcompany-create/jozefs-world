@@ -938,9 +938,9 @@
   // The peer ID remains constant for a single approved player throughout one room.
   function attemptResume(){
     if(room.host||room.practice||!room.peer||room.phase==='lobby')return;
-    if(reconnectAttempts>=3){fail('Opponent disconnected. Could not reconnect. Join again to play.');return;}
+    if(reconnectAttempts>=5){fail('Connection could not be restored. Join again to play.');return;}
     const attempt=++reconnectAttempts;room.reconnecting=true;syncUI();
-    say('Opponent disconnected — reconnecting ('+attempt+'/3).');
+    say('Opponent disconnected — reconnecting ('+attempt+'/5).');
     clearTimeout(recoveryTimer);
     recoveryTimer=setTimeout(()=>{
       if(room.host||!room.peer||room.phase==='lobby'||room.conn)return;
@@ -953,7 +953,7 @@
           if(room.conn===conn&&room.reconnecting)conn.close();
         },5000);
       }catch(_){attemptResume();}
-    },attempt===1?450:950);
+    },[450,900,1800,3200,5200][attempt-1]);
   }
   function wire(conn,resuming=false){
     if(room.conn){conn.close();return;}
@@ -982,7 +982,7 @@
       if(room.host){
         say('Opponent disconnected — waiting for approved player to reconnect.');
         clearTimeout(recoveryTimer);
-        recoveryTimer=setTimeout(()=>{if(!room.conn)fail('Opponent disconnected. Room closed after reconnect timeout.');},30000);
+        recoveryTimer=setTimeout(()=>{if(!room.conn)fail('Opponent disconnected. Room closed after reconnect timeout.');},60000);
       }else attemptResume();
     };
     conn.on('close',lost);
@@ -1153,7 +1153,13 @@
     if(active!==localActive){localActive=active;stopInput();send({type:'active',active});syncUI();}
     document.body.classList.toggle('versus-focused',active&&room.phase!=='lobby');
   }
-  document.addEventListener('visibilitychange',activity);window.addEventListener('blur',stopInput);
+  document.addEventListener('visibilitychange',()=>{
+    // A locked iPhone suspends signalling. Grant a new heartbeat window on foreground.
+    lastPacket=performance.now();activity();
+    if(!document.hidden&&room.reconnecting&&!room.host&&!room.conn)attemptResume();
+  });
+  window.addEventListener('pageshow',()=>{lastPacket=performance.now();activity();});
+  window.addEventListener('blur',stopInput);
   new MutationObserver(activity).observe($('versus'),{attributes:true,attributeFilter:['class']});
   const invite=new URLSearchParams(location.search).get('room');if(invite&&/^[A-Z]{6}$/.test(invite))$('versus-code').value=invite;
   let previous=performance.now(),accumulator=0,heartbeat=0,uiTime=0,lastPaint=0;
