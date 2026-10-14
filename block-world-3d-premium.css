@@ -114,3 +114,13 @@ button:focus-visible,a:focus-visible,.mission:focus-visible{outline:3px solid #f
  .radar.collapsed .radar-header{height:38px;min-height:38px}
  .radar.collapsed #radar-toggle{min-width:39px;height:38px;min-height:38px}
 }
+
+/* Mobile expedition legibility, with low-cost compositor surfaces. */
+@media(max-width:700px){
+ .hud .top{padding-top:max(7px,env(safe-area-inset-top))}
+ .hud .stats{background:linear-gradient(130deg,#082437e8,#134a54d9);border:1px solid #b2f8df4d;border-radius:13px}
+ .hud .mission{background:linear-gradient(135deg,#071e31f0,#0b353de6);border:1px solid #b3ecdd4f}
+ .hud .actions button{box-shadow:inset 0 1px #ffffff22,0 4px 12px #00111d65}
+ #pairStatus{min-height:2.8em;line-height:1.5}
+}
+@media(prefers-reduced-motion:reduce){.hud button,.hud .toast{animation:none!important;transition:none!important}}
