@@ -1,0 +1,21 @@
+/* Broadcast polish: no physics changes or canvas overlays that steal touches. */
+#versus .versus-stage{isolation:isolate}
+#versus-broadcast{position:absolute;top:clamp(68px,13%,106px);left:50%;transform:translateX(-50%);
+ z-index:8;pointer-events:none;display:flex;align-items:center;gap:8px;max-width:calc(100% - 16px);
+ padding:6px 11px;border:1px solid #b7efe35b;border-radius:999px;
+ background:linear-gradient(95deg,#0a2030ef,#17474ad9,#0c2031ed);
+ box-shadow:0 6px 15px #0006,inset 0 1px #d2ffe92c;color:#e5fff8;
+ font:800 10px/1.2 system-ui,sans-serif;letter-spacing:.07em;white-space:nowrap}
+#versus-broadcast[hidden],.vs-crowd-glow[hidden]{display:none!important}
+#versus-broadcast .vs-broadcast-signal{color:#ddff91}
+#versus-broadcast .vs-broadcast-signal::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:#d8ff91;margin-right:5px;box-shadow:0 0 7px #ddff91}
+#versus-broadcast .vs-broadcast-role{color:#a3cdd6}
+#versus-broadcast.scored{animation:vs-broadcast-goal .8s ease-out}
+@keyframes vs-broadcast-goal{0%{box-shadow:0 0 0 9px #d3ff8980}100%{box-shadow:0 6px 15px #0006}}
+#versus .vs-crowd-glow{position:absolute;inset:0;z-index:2;pointer-events:none;
+ background:linear-gradient(90deg,#70f1cf0c,transparent 19%,transparent 81%,#91b9ff0d);
+ box-shadow:inset 0 0 22px #001020}
+@media(max-width:700px){#versus-broadcast{top:clamp(56px,13%,82px);gap:5px;font-size:9px;padding:5px 8px}
+ #versus-broadcast .vs-broadcast-role{display:none}}
+@media(max-height:450px){#versus-broadcast{top:7px;left:12px;transform:none;font-size:8px;opacity:.9}}
+@media(prefers-reduced-motion:reduce){#versus-broadcast.scored{animation:none}}
