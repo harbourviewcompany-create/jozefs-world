@@ -21,10 +21,13 @@ const close=()=>new Promise(resolve=>server.close(resolve));
  const port=await listen();
  try{
   for(const browserName of (process.env.ADVENTURE_BROWSERS||'chromium,webkit').split(',')){
-   const browser=await ({chromium,webkit})[browserName].launch();
-   try{
     for(const viewport of [{width:390,height:844},{width:320,height:568}]){
-     const page=await browser.newPage({viewport,isMobile:true,hasTouch:true,reducedMotion:'reduce'});
+     // A fresh browser per viewport prevents GPU/canvas and SW state from leaking
+     // across mobile scenarios. Never reuse a renderer process after full reloads.
+     const browser=await ({chromium,webkit})[browserName].launch();
+     let page;
+     try{
+      page=await browser.newPage({viewport,isMobile:true,hasTouch:true,reducedMotion:'reduce'});
      const errors=[];page.on('pageerror',error=>errors.push(error.message));
      try{
       await page.goto('http://127.0.0.1:'+port+'/',{waitUntil:'domcontentloaded'});
@@ -133,9 +136,12 @@ const close=()=>new Promise(resolve=>server.close(resolve));
       assert.equal(await page.evaluate(()=>window.JozefTogether.progress().won),true,'replay never removes shared cup');
       assert.deepEqual(errors,[],'no uncaught browser script errors');
       console.log(browserName+' '+viewport.width+'x'+viewport.height+' adventure PASS');
-     }finally{await page.close();}
+     }finally{
+      // Close both objects even if a browser renderer crashed mid-navigation.
+      await page?.close().catch(()=>{});
+      await browser.close().catch(()=>{});
+     }
     }
-   }finally{await browser.close();}
   }
  }finally{await close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

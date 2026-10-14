@@ -1,0 +1,36 @@
+name: Adventure isolated mobile QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'adventure.js'
+      - 'together.js'
+      - 'together-renderer.js'
+      - 'tests/adventure-mobile-smoke.cjs'
+      - '.github/workflows/adventure-mobile-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright browser
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Adventure progress and cooperative gameplay smoke
+        env:
+          ADVENTURE_BROWSERS: ${{ matrix.browser }}
+        run: |
+          node --check tests/adventure-mobile-smoke.cjs
+          node tests/adventure-mobile-smoke.cjs
