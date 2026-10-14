@@ -4,7 +4,8 @@ const root=path.resolve(__dirname,'..'),read=name=>fs.readFileSync(path.join(roo
 test('canonical pages ship quick dock, broadcast and offline assets',()=>{
  const index=read('index.html');assert.equal(index,read('world.html'));
  for(const asset of ['family-navigation-2026.js','family-navigation-2026.css','versus-broadcast-2026.js','versus-broadcast-2026.css']){
-  assert.ok(index.includes(asset),'homepage loads '+asset);
+  if(asset.endsWith('.css'))assert.ok(read('site-experience.css').includes('/* BEGIN '+asset+' */'),'bundled CSS '+asset);
+  else assert.ok(index.includes(asset),'homepage loads '+asset);
   assert.ok(read('sw.js').includes("'./"+asset+"'"),'offline precaches '+asset);
  }
 });
