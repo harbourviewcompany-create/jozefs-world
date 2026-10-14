@@ -48,6 +48,21 @@ function effectBurst(x,y,z,id=8){
 }
 let lastGuestAttackAt=-100,netWorldClock=0,forestBeacon=null,guestInventory={};
 let menuPaused=false;
+const REJOIN_KEY='jozefs-block-3d-tab-guest-v1';
+function readRejoin(){
+ try{const data=JSON.parse(sessionStorage.getItem(REJOIN_KEY)||'null');
+  return data&&Date.now()-data.at<3600000&&/^[a-f0-9]{32}$/.test(data.room||'')&&
+   /^jw-block-guest-[a-f0-9]{32}$/.test(data.peerId||'')?data:null;
+ }catch(_){return null;}
+}
+function saveRejoin(data){try{sessionStorage.setItem(REJOIN_KEY,JSON.stringify({...data,at:Date.now()}));}catch(_){}}
+function clearRejoin(){try{sessionStorage.removeItem(REJOIN_KEY);}catch(_){}}
+function rejoinId(room){
+ const saved=readRejoin();if(saved?.room===room)return saved.peerId;
+ if(!crypto?.getRandomValues)return null;
+ const bytes=crypto.getRandomValues(new Uint8Array(16));
+ return 'jw-block-guest-'+[...bytes].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
 let savedPose=null;
 let guestActive=false;
 let joiningRoom='',approvedGuestPeer='',recoveryTimer=0,recoveryWatchdog=0,recoveryAttempts=0,recovering=false;
@@ -1008,6 +1023,7 @@ async function importFile(file){
 function send(v){try{if(conn?.open)conn.send(v);}catch(_){}}
 function status(s){$('pairStatus').textContent=s;}
 function detach(){
+ clearRejoin();
  const wasGuest=guestActive;
  clearTimeout(recoveryTimer);clearTimeout(recoveryWatchdog);
  recoveryTimer=recoveryWatchdog=0;recoveryAttempts=0;recovering=false;joiningRoom='';approvedGuestPeer='';
@@ -1038,7 +1054,9 @@ function receive(m){
      Math.abs(guestPose.x)<100000&&Math.abs(guestPose.z)<100000){
     hero.x=guestPose.x;hero.z=guestPose.z;hero.y=guestPose.y;
   }else{hero.x=companion.x+2;hero.z=companion.z+2;hero.y=ground(hero.x,hero.z);}
-  guestActive=true;recovering=false;recoveryAttempts=0;clearTimeout(recoveryTimer);clearTimeout(recoveryWatchdog);
+  guestActive=true;recovering=false;recoveryAttempts=0;
+  const tab=readRejoin();if(tab?.room===joiningRoom)saveRejoin({...tab,active:true});
+  clearTimeout(recoveryTimer);clearTimeout(recoveryWatchdog);
   spawn();chunks.forEach(c=>gl.deleteBuffer(c.buffer));chunks.clear();lastCX=Infinity;lastCZ=Infinity;hotbar();hud();announce('Connected · Jozef is ready');
  }else if(m.t==='realm'&&!host){applyRealm(m);}
   else if(m.t==='forestTravel'&&!host){
@@ -1160,8 +1178,11 @@ function joinRoom(code){
   recoveryAttempts=0;scheduleRecovery();return;
  }
  dirty=true;save(); // Persist the guest's solo world before joining the host.
+ const tab=readRejoin(),peerId=rejoinId(token);
+ if(!peerId){status('Secure connection unavailable');return;}
  detach();joiningRoom=token;
- peer=new window.Peer();
+ saveRejoin({room:token,peerId,active:!!(tab?.room===token&&tab.active)});
+ peer=new window.Peer(peerId);
  peer.on('open',()=>{
   if(!peer||!joiningRoom)return;
   status('Connecting privately…');
@@ -1277,7 +1298,17 @@ function loop(now){
  }catch(e){console.error('3D frame failure',e);window.__bw3dFail?.('3D rendering stopped unexpectedly. Retry or play Classic 2D.');announce('3D rendering problem · reload or use Classic');}
  requestAnimationFrame(loop);
 }
-try{if(!load())resetPose();spawn();initUi();stream();requestAnimationFrame(loop);announce('3D WORLD READY · Explore and build!',3400);}
+try{
+ if(!load())resetPose();spawn();initUi();stream();requestAnimationFrame(loop);
+ announce('3D WORLD READY · Explore and build!',3400);
+ const previous=readRejoin();
+ if(previous?.active&&window.Peer){
+  $('invite').value=previous.room;
+  $('pairPanel').hidden=false;
+  status('Restoring approved Jozef after reload…');
+  joinRoom(previous.room);
+ }
+}
 catch(e){console.error('3D startup failure',e);window.__bw3dFail?.('Could not initialize the 3D engine. Retry or play Classic 2D.');$('fallback').hidden=false;}
 window.BlockWorld3D=Object.freeze({status:()=>({renderOk,seed,loadedChunks:chunks.size,realm,stage,quality,renderScale:renderCap,connected:!!conn?.open,recovering,networkIdleMs:conn?.open&&lastRx?Math.round(performance.now()-lastRx):null,averageFps:Math.round(1/Math.max(.001,averageFrame)),hero:{x:hero.x,y:hero.y,z:hero.z,hp:hero.hp,role:hero.role},camera:third?'THIRD_PERSON':'FIRST_PERSON',shaderMode,atlasLoaded,drawnChunks:lastChunksDrawn,bossHp:boss.hp}),height,block});
 })();
