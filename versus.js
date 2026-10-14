@@ -1012,7 +1012,9 @@
     if(!window.Peer){say('Online play is unavailable. Try Practice solo or reload when connected.');return;}
     const code=host?Array.from(crypto.getRandomValues(new Uint8Array(6)),n=>'ABCDEFGHJKLMNPQRSTUVWXYZ'[n%24]).join(''):$('versus-code').value.trim().toUpperCase();
     if(!/^[A-Z]{6}$/.test(code)){say('Enter the six-letter code from the other player.');$('versus-code').focus();return;}
-    cleanup();room.code=code;room.host=host;room.together=together;room.mode=selectedMode(false,together);room.phase='connecting';syncUI();say(host?'Creating your room…':'Joining room…');
+    const resumed=!host?sessionGet():null;
+    cleanup();if(resumed?.code===code)sessionPut(resumed);
+    room.code=code;room.host=host;room.together=together;room.mode=selectedMode(false,together);room.phase='connecting';syncUI();say(host?'Creating your room…':'Joining room…');
     const recoveringGuest=!host&&!!sessionGet()?.active&&sessionGet().code===code;
     const prior=recoveringGuest?sessionGet():null;
     if(prior){
