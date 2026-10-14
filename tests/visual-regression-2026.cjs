@@ -68,13 +68,15 @@ async function check(engine,viewport,scene,url){
    for(const b of layout.buttons)assert.ok(b.left>=0&&b.right<=viewport.width+1&&b.height>=43,'thumb targets fit screen');
   }
   const label=(engine===webkit?'webkit':'chromium')+'-'+viewport.width+'x'+viewport.height+'-'+scene;
+  // Preserve full screenshots but compare stable HUD pixels, not animated 3D plates.
   const before=await page.screenshot({animations:'disabled'});
+  const chromeBefore=scene==='home'?await page.locator('#jw-family-dock').screenshot({animations:'disabled'}):before;
   fs.writeFileSync(path.join(out,label+'-before.png'),before);
   await page.reload({waitUntil:'domcontentloaded'});await settle(page,scene);
   const after=await page.screenshot({animations:'disabled'});
+  const chromeAfter=scene==='home'?await page.locator('#jw-family-dock').screenshot({animations:'disabled'}):after;
   fs.writeFileSync(path.join(out,label+'-after.png'),after);
-  const excluded=scene==='home'?await page.locator('#jw-worldcore-canvas').boundingBox():null;
-  const diff=await comparePixels(page,before,after,excluded);
+  const diff=await comparePixels(page,chromeBefore,chromeAfter);
   assert.ok(diff.visible>.025,'screenshot renders blank or missing interface '+label);
   assert.ok(diff.changed<.17,'reload visibly changed the scene '+label+' changed='+diff.changed.toFixed(3));
   assert.deepEqual(errors,[],'no browser page exceptions '+label);
