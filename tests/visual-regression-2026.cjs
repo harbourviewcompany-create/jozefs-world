@@ -70,15 +70,17 @@ async function check(engine,viewport,scene,url){
   const label=(engine===webkit?'webkit':'chromium')+'-'+viewport.width+'x'+viewport.height+'-'+scene;
   // Preserve full screenshots but compare stable HUD pixels, not animated 3D plates.
   const before=await page.screenshot({animations:'disabled'});
-  const chromeBefore=scene==='home'?await page.locator('#jw-family-dock').screenshot({animations:'disabled'}):before;
+  // The Versus lobby contains stable controls while the arena scene is animated.
+  const stable=scene==='home'?'#jw-family-dock':'#versus-lobby';
+  const chromeBefore=await page.locator(stable).screenshot({animations:'disabled'});
   fs.writeFileSync(path.join(out,label+'-before.png'),before);
   await page.reload({waitUntil:'domcontentloaded'});await settle(page,scene);
   const after=await page.screenshot({animations:'disabled'});
-  const chromeAfter=scene==='home'?await page.locator('#jw-family-dock').screenshot({animations:'disabled'}):after;
+  const chromeAfter=await page.locator(stable).screenshot({animations:'disabled'});
   fs.writeFileSync(path.join(out,label+'-after.png'),after);
   const diff=await comparePixels(page,chromeBefore,chromeAfter);
   assert.ok(diff.visible>.025,'screenshot renders blank or missing interface '+label);
-  assert.ok(diff.changed<.17,'reload visibly changed the scene '+label+' changed='+diff.changed.toFixed(3));
+  assert.ok(diff.changed<.10,'reload visibly changed the scene '+label+' changed='+diff.changed.toFixed(3));
   assert.deepEqual(errors,[],'no browser page exceptions '+label);
   console.log('SCREENSHOT PASS',label,JSON.stringify(diff));
   await context.close();
