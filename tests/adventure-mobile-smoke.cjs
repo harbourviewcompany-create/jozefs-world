@@ -29,7 +29,6 @@ const close=()=>new Promise(resolve=>server.close(resolve));
      try{
       page=await browser.newPage({viewport,isMobile:true,hasTouch:true,reducedMotion:'reduce'});
      const errors=[];page.on('pageerror',error=>errors.push(error.message));
-     try{
       await page.goto('http://127.0.0.1:'+port+'/',{waitUntil:'domcontentloaded'});
       await page.waitForFunction(()=>Boolean(window.JozefAdventure?.getProgress));
       await page.evaluate(()=>window.showSection('adventure'));
@@ -128,6 +127,8 @@ const close=()=>new Promise(resolve=>server.close(resolve));
       }
       assert.equal(await page.evaluate(()=>window.JozefTogether.progress().stage),4,'both champions scored twice');
       assert.equal(await page.evaluate(()=>window.JozefTogether.progress().won),true,'shared trophy recorded');
+      // Stop the animated renderer before page navigation; earned rewards are already saved.
+      await page.evaluate(()=>window.JozefTogether.close());
       await page.reload({waitUntil:'domcontentloaded'});
       await page.waitForFunction(()=>Boolean(window.JozefTogether));
       assert.equal(await page.evaluate(()=>window.JozefTogether.progress().won),true,'shared trophy survives reload');
