@@ -29,3 +29,7 @@ Automated browser tests emulate two separate pages, not two physical cellular ra
 - Screenshot CI compares deterministic page chrome across reload in Chromium and WebKit and retains full before/after PNGs. It is not a substitute for physical WebRTC or iPhone GPU testing.
 
 **Release gate:** Physical sign-off requires successful results on two actual devices and the latest publish, 2D/3D, Versus, HQ and visual CI checks.
+
+## 20-minute iPhone endurance evidence
+
+Open Block World 3D → MENU → **START 20-MIN IPHONE TEST**. Explore forest, pond, portal and other terrain during recording. Return to MENU and choose **STOP & EXPORT REPORT**, or complete all 20 active minutes. Keep the generated JSON file privately. The report captures 1-second frame-rate samples, scaling, rendered chunks, approximate JS heap where exposed, WebGL losses, and page suspension counts; it does **not** measure thermal/battery condition or prove a physical iPhone pass automatically. Record those observations separately. Mark certification only after both phones pass the multiplayer matrix and measured sustained play.

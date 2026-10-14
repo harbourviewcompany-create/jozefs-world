@@ -1,0 +1,9 @@
+.jw-perf-panel{margin:14px 0;padding:12px;border:1px solid #79e7ce73;border-radius:12px;background:#081b28dd;display:grid;gap:8px}
+.jw-perf-panel button{min-height:45px;border:1px solid #bafac080;background:#bcefb2;color:#092d30;border-radius:9px;font:800 12px system-ui}
+.jw-perf-panel button[hidden]{display:none}
+.jw-perf-status{margin:0;font:600 12px/1.4 system-ui;color:#c0dedf}
+.jw-perf-chip{position:fixed;z-index:12;top:max(64px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);
+ pointer-events:none;padding:6px 12px;border:1px solid #cafa9177;border-radius:999px;
+ background:#071b27ec;color:#ddffab;font:800 11px/1.2 system-ui;white-space:nowrap}
+.jw-perf-chip[hidden]{display:none}
+@media(max-width:700px){.jw-perf-chip{top:max(78px,calc(env(safe-area-inset-top) + 55px));font-size:9px}}
