@@ -10,6 +10,20 @@ let peer=null,conn=null,role='solo',invite='',ready=false,closed=false;
 let stateAt=0,inputAt=0,snapshotAt=0,lastRealm=-1,lastInput={left:false,right:false,jump:false};
 let lastPacketAt=0,editCount=0,lastActionAt=0,joinTimeout=0,lastGiveAt=0,lastRegroupAt=[-15000,-15000],lastLocatorAt=0;
 let retryTimer=0,retryCount=0,joiningCode='',peerReady=false,foregroundAt=performance.now();
+const TAB_KEY='jozefs-block-2d-guest-tab-v1';
+const rejoin=()=>{
+ try{const s=JSON.parse(sessionStorage.getItem(TAB_KEY)||'null');
+  return s&&Date.now()-s.at<3600000&&COOP_RE.test(s.room||'')&&
+   /^jw2d-guest-[a-f0-9]{32}$/.test(s.peerId||'')?s:null;
+ }catch(_){return null;}
+};
+const bookmark=s=>{try{sessionStorage.setItem(TAB_KEY,JSON.stringify({...s,at:Date.now()}));}catch(_){}};
+const clearBookmark=()=>{try{sessionStorage.removeItem(TAB_KEY);}catch(_){}};
+function ownPeerId(room){
+ const saved=rejoin();if(saved?.room===room)return saved.peerId;
+ const bytes=new Uint8Array(16);window.crypto.getRandomValues(bytes);
+ return 'jw2d-guest-'+[...bytes].map(n=>n.toString(16).padStart(2,'0')).join('');
+}
 const COOP_RE=/^[0-9a-f]{32}$/i;
 const copyInput=s=>({left:!!s?.left,right:!!s?.right,jump:!!s?.jump});
 const connected=()=>!!conn?.open;
@@ -74,7 +88,8 @@ function onMessage(m){
  lastPacketAt=performance.now();
  if(m.t==='world'&&role==='guest'){
   if(!validWorld(m.w)){setStatus('Invalid game data from host');return;}
-  g.useWorld(m.w);g.role(1);ready=true;retryCount=0;clearTimeout(retryTimer);retryTimer=0;clearTimeout(joinTimeout);joinTimeout=0;lastRealm=m.w.realmIndex;
+  g.useWorld(m.w);g.role(1);ready=true;retryCount=0;
+  const previous=rejoin();if(previous?.room===joiningCode)bookmark({...previous,active:true});clearTimeout(retryTimer);retryTimer=0;clearTimeout(joinTimeout);joinTimeout=0;lastRealm=m.w.realmIndex;
   send({t:'ready'});setStatus('Connected! You are Jozef. Both of you can play.');
   $('btn-switch').style.display='none';
   $('reset').disabled=true;$('mode').disabled=true;
@@ -168,6 +183,7 @@ function attach(connection){
  connection.on('error',()=>{if(conn===connection)onConnectionLost('Connection failed');});
 }
 function leave(options={}){
+ clearBookmark();
  clearTimeout(joinTimeout);joinTimeout=0;clearTimeout(retryTimer);retryTimer=0;retryCount=0;joiningCode='';peerReady=false;
  const guest=role==='guest',c=conn,p=peer;
  conn=null;peer=null;ready=false;role='solo';invite='';lastRealm=-1;
@@ -218,7 +234,9 @@ function join(){
  g.saveHost();
  role='guest';ready=false;joiningCode=code;retryCount=0;peerReady=false;$('coop-disconnect').disabled=false;
  try{
-  peer=new window.Peer();
+  const old=rejoin(),peerId=ownPeerId(code);
+  bookmark({room:code,peerId,active:!!(old?.room===code&&old.active)});
+  peer=new window.Peer(peerId);
   peer.on('open',()=>{peerReady=true;setStatus('Connecting to Daddy…');
    attach(peer.connect('jw2d-'+code,{reliable:true,serialization:'json'}));
   });
@@ -300,6 +318,13 @@ if(incoming){
  // Remove the invitation from the address bar to avoid accidentally sharing the secret.
  try{history.replaceState(null,'',location.pathname+location.search);}catch(_){}
 }
-if(!incoming)setStatus('Offline · two players on keyboard, or invite Jo on another device');
+if(!incoming){
+ const previous=rejoin();
+ if(previous?.active&&window.Peer){
+  $('coop-code').value=previous.room;show();
+  setStatus('Restoring approved shared world after reload…');
+  join();
+ }else setStatus('Offline · two players on keyboard, or invite Jo on another device');
+}
 window.BlockWorldCoop=Object.freeze({role:()=>role,connected,host:startHost,join,disconnect,code:()=>invite});
 })();
