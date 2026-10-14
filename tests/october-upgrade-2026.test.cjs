@@ -34,7 +34,7 @@ test('HQ globe renders only while visible and restores its selected plate',()=>{
 test('Versus retains room identity and tolerates mobile reconnect',()=>{
  const js=read('versus.js');
  assert.match(js,/if\(reconnectAttempts>=5\)/);
- assert.match(js,/same approved player/);
+ assert.match(js,/single approved player/);
  assert.match(js,/60[0]{3}\);/);
  assert.match(js,/window\.addEventListener\('pageshow'/);
 });
