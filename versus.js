@@ -86,9 +86,12 @@
    const peerId='jw-rival-guest-'+Array.from(bytes,n=>n.toString(16).padStart(2,'0')).join('');
    sessionPut({code,peerId,active:false});return peerId;
   }
+  let lastGuestBookmark=0;
   function rememberGuest(){
    if(room.host||room.practice||!room.conn?.open||!room.other||!['waiting','countdown','playing','finished'].includes(room.phase))return;
+   const now=Date.now();if(now-lastGuestBookmark<2500&&sessionGet()?.active)return;
    const prior=sessionGet();if(prior?.code!==room.code)return;
+   lastGuestBookmark=now;
    sessionPut({...prior,active:true,who:room.who,other:room.other,spot:room.spot,
     together:room.together,mode:room.mode,phase:room.phase});
   }

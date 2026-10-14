@@ -137,6 +137,21 @@ for(const engine of (process.env.VERSUS_BROWSERS||'chromium,webkit').split(','))
    window.__versusTest.room.phase==='playing',undefined,{timeout:15000});
  await host.waitForFunction(()=>window.__versusTest.room.remoteActive,undefined,{timeout:5000});
  assert.equal(await host.evaluate(()=>window.__versusTest.state.matchId),matchBefore,'reconnect resumes original match');
+ // A real browser reload must preserve the tab-scoped, previously approved guest identity.
+ // Run on one viewport to avoid repeating the costly reload in every mobile layout.
+ if(engine==='chromium'&&viewport.width===390){
+   const approved=await guest.evaluate(()=>JSON.parse(sessionStorage.getItem('jozefs-versus-tab-resume-v1')||'null'));
+   assert.equal(approved?.active,true,'guest bookmark persists the approved session');
+   const identity=approved.peerId;
+   await guest.evaluate(()=>window.__versusTest.room.conn.close());
+   await host.waitForFunction(()=>!window.__versusTest.room.remoteActive,undefined,{timeout:6000});
+   await guest.reload({waitUntil:'domcontentloaded'});
+   await guest.waitForFunction(()=>window.__versusTest?.room?.phase==='playing'&&
+    window.__versusTest?.room?.conn?.open&&!window.__versusTest?.room?.reconnecting,undefined,{timeout:20000});
+   await host.waitForFunction(()=>window.__versusTest.room.remoteActive&&window.__versusTest.room.conn?.open,undefined,{timeout:6000});
+   assert.equal(await guest.evaluate(()=>window.__versusTest.room.peer.id),identity,'hard reload retains same approved player ID');
+   assert.equal(await host.evaluate(()=>window.__versusTest.state.matchId),matchBefore,'hard reload never resets the match');
+ }
  // A guest cannot choose which player to move or inject the host's state.
  await host.evaluate(()=>{const t=window.__versusTest;t.onData({type:'aim',who:'Dad',x:200,y:150});});
  assert.equal(await host.evaluate(()=>window.__versusTest.targets.Dad),null);
