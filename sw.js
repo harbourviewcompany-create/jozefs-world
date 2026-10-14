@@ -1,5 +1,5 @@
 /* Jozef FC offline shell: only same-origin public game assets. Never caches personal progress. */
-const CACHE='jozef-fc-app-shell-v135';
+const CACHE='jozef-fc-app-shell-v136';
 const CORE=[
  './','./index.html','./world.html','./block-world.html','./block-world.js','./block-world-coop.js','./block-world-art.js','./block-world-art-forest.js','./block-world-ui.js','./block-world-premium.css','./block-world-premium-forest.css','./block-world-art-forest.js?v=20261013-forest3','./block-world.js?v=20261013-forest3','./block-world-coop.js?v=20261013-forest3','./block-world-ui.js?v=20261013-forest3','./block-world-premium-forest.css?v=20261013-forest3','./block-world.css','./block-world-3d.html','./block-world-3d.js','./block-world-3d-textures.js','./block-world-3d-textures.js?v=20261013-forest-coop6','./block-world-3d.css','./block-world-3d-next.css','./block-world-3d-premium.css','./block-world-3d-premium.css?v=20261013-forest-coop6','./block-world-3d.js?v=20261013-forest-coop6','./block-world-3d-next.css?v=20261013-forest-coop6','./block-quest.html','./site-foundation.css','./site-experience.css',
  './favicon.svg','./manifest.webmanifest','./matchday.css','./training.css','./jersey-bingo.css',
@@ -7,7 +7,7 @@ const CORE=[
  './training.js','./jersey-bingo.js','./matchday.js','./street.js','./adventure.js','./together-renderer.js','./together.js','./versus-physics.js','./versus-experience-2026.js','./versus-modes-2026.js','./versus-visual-2026.js','./versus.js','./presence.js','./peerjs.min.js','./street-phaser.js','./phaser.min.js','./arcade.js',
  './roblox.js','./squad.js','./site-core.js','./site-features.js','./arena-bundle.js',
  './visual-2026.js','./campaign-2026.js','./club-hq.js','./chronicle.js','./playbook.js',
- './world-core.js','./world-core.css',
+ './world-core.js','./world-core.css','./family-navigation-2026.js','./family-navigation-2026.css','./versus-broadcast-2026.js','./versus-broadcast-2026.css',
  './prime/'
 ];
 self.addEventListener('install',event=>{
