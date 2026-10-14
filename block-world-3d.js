@@ -326,7 +326,15 @@ function stream(){
   for(let r=0;r<=R;r++)for(let x=-r;x<=r;x++)for(let z=-r;z<=r;z++)if(Math.max(Math.abs(x),Math.abs(z))===r)queue.push([cx+x,cz+z]);
   for(const [k,c]of chunks){const [a,b]=k.split(':').map(Number);if(Math.abs(a-cx)>R+1||Math.abs(b-cz)>R+1){gl.deleteBuffer(c.buffer);chunks.delete(k);}}
  }
- let built=0;for(const [x,z]of queue){const c=chunks.get(x+':'+z);if(!c||c.dirty){chunkMesh(x,z);if(++built===2)break;}}
+ // Budget geometry uploads to avoid blocking touch inputs on mobile GPUs.
+ const streamStart=performance.now();let built=0;
+ for(const [x,z]of queue){
+  const c=chunks.get(x+':'+z);
+  if(!c||c.dirty){
+   chunkMesh(x,z);built++;
+   if(built>=(phoneGPU?1:2)||performance.now()-streamStart>8)break;
+  }
+ }
 }
 function shader(type,src){const o=gl.createShader(type);gl.shaderSource(o,src);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(o));return o;}
 // Low-cost WebGL 1 atmospheric rendering: animated sky, sunset and night haze.
