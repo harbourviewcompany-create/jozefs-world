@@ -491,7 +491,11 @@
     }
   }
   function animate(t){
-    const activeScene=$('adventure')?.classList.contains('active')&&!document.hidden;
+    const adventureSection=$('adventure');
+    // Together has its own animated canvas. Never render Adventure underneath
+    // it: competing GPU contexts can stall WebKit and waste mobile battery.
+    const activeScene=!!adventureSection?.classList.contains('active')&&
+      !adventureSection.classList.contains('together-focused')&&!document.hidden;
     if(activeScene)pollController(t);
     else controllerButtons={action:false,switchPlayer:false,guide:false};
     // Throttle expensive dynamic lighting on lower-end mobile devices.

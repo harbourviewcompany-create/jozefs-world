@@ -71,3 +71,10 @@ test('controller navigation uses cardinal movement and action edges',()=>{
  assert.match(source,/shoot\(Number\(e\.key\)-1\)/);
  assert.match(source,/function pollController\(/);
 });
+
+test('Adventure stops rendering behind the open Together canvas',()=>{
+ const source=read('adventure.js');
+ assert.match(source,/!adventureSection\.classList\.contains\('together-focused'\)/);
+ assert.match(read('together.js'),/classList\.add\('together-focused'\)/);
+ assert.match(read('together.js'),/classList\.remove\('together-focused'\)/);
+});
