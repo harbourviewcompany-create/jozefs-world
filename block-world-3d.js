@@ -15,7 +15,11 @@ let selected=4,creative=true,third=true,sound=false,stage=0,stats={wood:0,placed
 const hero={x:2.5,y:12,z:2.5,vy:0,yaw:0,pitch:-.24,role:0,hp:100,ground:false,double:false,inventory:{},action:'idle',actionUntil:0};
 const companion={x:4.5,y:12,z:4.5,role:1,hp:100};
 let boss={x:32.5,y:12,z:32.5,hp:120,alive:true},mobs=[],clock=0,last=0,frames=0,dirty=false,saveClock=0,skyPhase=0;
-let quality='AUTO',adaptiveCap=1.5,renderCap=1.5,averageFrame=.0167,lastChunksDrawn=0,webglLost=false,chaseCam=null;
+const phoneGPU=innerWidth<=700;
+const lowMemory=Number(navigator.deviceMemory||8)<=4;
+const autoCeiling=phoneGPU?(lowMemory?1.05:1.3):1.5;
+let quality='AUTO',adaptiveCap=autoCeiling,renderCap=autoCeiling,averageFrame=.0167,lastChunksDrawn=0,webglLost=false,chaseCam=null;
+let lastRx=0,netPulse=0,foregroundAt=performance.now(),slowFrames=0,fastFrames=0;
 let effects=[],audioCtx=null;
 function tone(kind){
  if(!sound)return;
@@ -810,6 +814,8 @@ function step(dt){
  else if(clock-(boss.last||0)>1.4&&!creative){hero.hp=Math.max(0,hero.hp-16);boss.last=clock;announce('The Crystal Golem attacks!');}}
  const zone=biome(hero.x,hero.z);if((!conn?.open||host)&&!discovered[zone]&&Math.hypot(hero.x-2,hero.z-2)>24){discovered[zone]=true;gain('explore');}
  if(conn?.open){
+   netPulse+=dt;
+   if(netPulse>=2.5){netPulse=0;send({t:'ping'});}
    lastNet+=dt;netWorldClock+=dt;
    if(lastNet>.13){lastNet=0;send({t:'move',x:hero.x,y:hero.y,z:hero.z,yaw:hero.yaw,hp:hero.hp,action:hero.actionUntil>clock?hero.action:null});}
    if(host&&netWorldClock>.35){netWorldClock=0;sendCombat();}
@@ -1006,6 +1012,9 @@ function detach(){
 function receive(m){
  if(!m||typeof m!=='object')return;
  if(JSON.stringify(m).length>550000)return;
+ lastRx=performance.now();
+ if(m.t==='ping'){send({t:'pong'});return;}
+ if(m.t==='pong')return;
  if(m.t==='hello'&&!host){
   if(!Number.isInteger(m.seed)||!Array.isArray(m.edits)||m.edits.length>14000)return;
    if(validBeacon(m.forestBeacon))forestBeacon={...m.forestBeacon};
@@ -1098,7 +1107,7 @@ function scheduleRecovery(){
 }
 function connectionLost(c){
  if(conn!==c)return;
- conn=null;clearTimeout(recoveryWatchdog);
+ conn=null;lastRx=0;netPulse=0;clearTimeout(recoveryWatchdog);
  if(host)status('Jozef disconnected · waiting for the same player to reconnect.');
  else if(joiningRoom)scheduleRecovery();
 }
@@ -1107,6 +1116,7 @@ function attach(c){
  conn=c;
  c.on('open',()=>{
   if(conn!==c)return;
+  lastRx=foregroundAt=performance.now();netPulse=0;
   clearTimeout(recoveryTimer);clearTimeout(recoveryWatchdog);
   if(host){
    if(approvedGuestPeer&&c.peer!==approvedGuestPeer){c.close();return;}
@@ -1214,7 +1224,11 @@ function initUi(){
  document.addEventListener('keydown',e=>{if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();keys[e.code]=true;
   if(e.repeat)return;if(e.code==='KeyE')change('mine');if(e.code==='KeyR')change('place');if(e.code==='KeyF')attack();if(e.code==='KeyP')portal();if(e.code==='Escape')show(null);
  });document.addEventListener('keyup',e=>keys[e.code]=false);window.addEventListener('blur',()=>{keys={};resetStick();save();});
- window.addEventListener('pagehide',()=>save(true));document.addEventListener('visibilitychange',()=>{if(document.hidden)save(true);});
+ window.addEventListener('pagehide',()=>save(true));
+document.addEventListener('visibilitychange',()=>{
+ if(document.hidden)save(true);
+ else {foregroundAt=performance.now();last=0;netPulse=0;}
+});
  canvas.addEventListener('contextmenu',e=>e.preventDefault());
  canvas.addEventListener('webglcontextlost',e=>{
   e.preventDefault();webglLost=true;dirty=true;save();const panel=$('fallback');
@@ -1230,20 +1244,32 @@ function initUi(){
  hotbar();hud();
 }
 function loop(now){
- if(webglLost){requestAnimationFrame(loop);return;}
+ // Suspended iPhones must not accumulate physics, GPU work or network timeouts.
+ if(webglLost||document.hidden){last=0;requestAnimationFrame(loop);return;}
  const rawDt=last?clamp((now-last)/1000,0,.14):.0167,dt=clamp(rawDt,0,.045);last=now;frames++;
- averageFrame=averageFrame*.97+rawDt*.03;
- if(quality==='AUTO'&&frames%120===0){
-  if(averageFrame>.027)adaptiveCap=Math.max(.85,adaptiveCap-.2);
-  else if(averageFrame<.018)adaptiveCap=Math.min(1.5,adaptiveCap+.1);
+ averageFrame=averageFrame*.975+rawDt*.025;
+ if(quality==='AUTO'&&frames%90===0){
+  if(averageFrame>.029){slowFrames++;fastFrames=0;}
+  else if(averageFrame<.020){fastFrames++;slowFrames=0;}
+  else {slowFrames=0;fastFrames=0;}
+  if(slowFrames>=2){adaptiveCap=Math.max(phoneGPU?.75:.85,adaptiveCap-.15);slowFrames=0;}
+  if(fastFrames>=3){adaptiveCap=Math.min(autoCeiling,adaptiveCap+.1);fastFrames=0;}
  }
  renderCap=quality==='QUALITY'?Math.min(2,devicePixelRatio||1):quality==='ECO'?1:adaptiveCap;
+ if(conn?.open&&lastRx&&now-foregroundAt>20000&&now-lastRx>25000){
+  status('Connection stalled · recovering shared session…');
+  try{conn.close();}catch(_){}
+ }
  if(frames%15===0&&!$('radar')?.classList?.contains?.('collapsed'))drawRadar();
- try{step(dt);render();if(renderOk)window.__bw3dReady?.();if(noticeTo&&now>noticeTo){$('toast').classList.remove('on');noticeTo=0;}}
- catch(e){console.error('3D frame failure',e);window.__bw3dFail?.('3D rendering stopped unexpectedly. Retry or play Classic 2D.');announce('3D rendering problem · reload or use Classic');}
+ try{
+  step(dt);
+  if(quality!=='AUTO'||!phoneGPU||averageFrame<.034||frames%2===0)render();
+  if(renderOk)window.__bw3dReady?.();
+  if(noticeTo&&now>noticeTo){$('toast').classList.remove('on');noticeTo=0;}
+ }catch(e){console.error('3D frame failure',e);window.__bw3dFail?.('3D rendering stopped unexpectedly. Retry or play Classic 2D.');announce('3D rendering problem · reload or use Classic');}
  requestAnimationFrame(loop);
 }
 try{if(!load())resetPose();spawn();initUi();stream();requestAnimationFrame(loop);announce('3D WORLD READY · Explore and build!',3400);}
 catch(e){console.error('3D startup failure',e);window.__bw3dFail?.('Could not initialize the 3D engine. Retry or play Classic 2D.');$('fallback').hidden=false;}
-window.BlockWorld3D=Object.freeze({status:()=>({renderOk,seed,loadedChunks:chunks.size,realm,stage,quality,renderScale:renderCap,connected:!!conn?.open,hero:{x:hero.x,y:hero.y,z:hero.z,hp:hero.hp,role:hero.role},camera:third?'THIRD_PERSON':'FIRST_PERSON',shaderMode,atlasLoaded,drawnChunks:lastChunksDrawn,bossHp:boss.hp}),height,block});
+window.BlockWorld3D=Object.freeze({status:()=>({renderOk,seed,loadedChunks:chunks.size,realm,stage,quality,renderScale:renderCap,connected:!!conn?.open,recovering,networkIdleMs:conn?.open&&lastRx?Math.round(performance.now()-lastRx):null,averageFps:Math.round(1/Math.max(.001,averageFrame)),hero:{x:hero.x,y:hero.y,z:hero.z,hp:hero.hp,role:hero.role},camera:third?'THIRD_PERSON':'FIRST_PERSON',shaderMode,atlasLoaded,drawnChunks:lastChunksDrawn,bossHp:boss.hp}),height,block});
 })();
