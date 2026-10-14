@@ -25,11 +25,15 @@
    if(selected)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
   const points=Math.max(0,Number(progress().xp)||0);
   xp.textContent='LVL '+(Math.floor(points/100)+1);
-  dock.hidden=document.querySelector('#versus.is-playing.active')!==null||
-   document.querySelector('#arena.active .arena-game.is-playing')!==null;
+  // Never cover game controls or a full-screen walkout/dialog.
+  dock.hidden=active==='arena'||document.querySelector('#versus.is-playing.active')!==null||
+   document.querySelector('#walkout:not([hidden])')!==null||
+   document.body.classList.contains('arena-focused');
  }
  const observer=new MutationObserver(refresh);
  document.querySelectorAll('.section').forEach(el=>observer.observe(el,{attributes:true,attributeFilter:['class']}));
+ const walkout=document.getElementById('walkout');
+ if(walkout)observer.observe(walkout,{attributes:true,attributeFilter:['hidden']});
  window.addEventListener('jozef:progress',refresh);
  window.addEventListener('jozef:versus-progress-updated',refresh);
  window.addEventListener('jozef:versus-completed',refresh);
