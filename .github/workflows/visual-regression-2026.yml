@@ -1,0 +1,42 @@
+name: 2026 visual screenshot regression
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'world.html'
+      - 'index.html'
+      - 'world-core*'
+      - 'versus*'
+      - 'family-navigation-2026.*'
+      - 'site-*.css'
+      - 'tests/visual-regression-2026.cjs'
+      - '.github/workflows/visual-regression-2026.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: visual-regression-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  screenshot-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install mobile browser engines
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium webkit
+      - name: Screenshot consistency on 320/390 mobile
+        run: node tests/visual-regression-2026.cjs
+      - name: Preserve before/after PNGs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-visual-regression
+          path: .visual-artifacts/*.png
+          if-no-files-found: warn
+          retention-days: 14
