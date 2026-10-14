@@ -9,7 +9,7 @@ if(!g||!$('coop-panel'))return;
 let peer=null,conn=null,role='solo',invite='',ready=false,closed=false;
 let stateAt=0,inputAt=0,snapshotAt=0,lastRealm=-1,lastInput={left:false,right:false,jump:false};
 let lastPacketAt=0,editCount=0,lastActionAt=0,joinTimeout=0,lastGiveAt=0,lastRegroupAt=[-15000,-15000],lastLocatorAt=0;
-let retryTimer=0,retryCount=0,joiningCode='',peerReady=false;
+let retryTimer=0,retryCount=0,joiningCode='',peerReady=false,foregroundAt=performance.now();
 const COOP_RE=/^[0-9a-f]{32}$/i;
 const copyInput=s=>({left:!!s?.left,right:!!s?.right,jump:!!s?.jump});
 const connected=()=>!!conn?.open;
@@ -71,6 +71,7 @@ function fullWorld(){
 }
 function onMessage(m){
  if(!m||typeof m!=='object')return;
+ lastPacketAt=performance.now();
  if(m.t==='world'&&role==='guest'){
   if(!validWorld(m.w)){setStatus('Invalid game data from host');return;}
   g.useWorld(m.w);g.role(1);ready=true;retryCount=0;clearTimeout(retryTimer);retryTimer=0;clearTimeout(joinTimeout);joinTimeout=0;lastRealm=m.w.realmIndex;
@@ -132,9 +133,9 @@ function tryReconnect(){
 function scheduleReconnect(){
  if(role!=='guest'||ready)return;
  clearTimeout(retryTimer);
- if(retryCount>=4){setStatus('Connection lost. Tap JOIN AS JOZEF to retry.');show();return;}
- const delay=[1000,2000,3500,6000][retryCount++];
- setStatus('Reconnecting ('+retryCount+'/4)…');
+ if(retryCount>=6){setStatus('Connection lost. Tap JOIN AS JOZEF to retry.');show();return;}
+ const delay=[1000,2000,3500,6000,8500,11000][retryCount++];
+ setStatus('Reconnecting ('+retryCount+'/6)…');
  retryTimer=setTimeout(()=>{
   if(role!=='guest'||ready)return;
   if(peer?.disconnected&&typeof peer.reconnect==='function')try{peer.reconnect();}catch(_){}
@@ -152,6 +153,7 @@ function onConnectionLost(reason){
 function attach(connection){
  if(conn?.open){connection.close();return;}conn=connection;
  connection.on('open',()=>{
+  lastPacketAt=foregroundAt=performance.now();
   retryCount=0;clearTimeout(retryTimer);retryTimer=0;
   $('coop-disconnect').disabled=false;
   if(role==='host'){
@@ -226,8 +228,18 @@ function join(){
   setStatus('Opening private connection…');
  }catch(e){leave({reason:e.message,skipReload:true});}
 }
+document.addEventListener('visibilitychange',()=>{
+ if(!document.hidden){foregroundAt=lastPacketAt=performance.now();
+  if(role==='guest'&&!ready&&!connected()&&joiningCode){retryCount=0;scheduleReconnect();}
+ }
+});
 g.onFrame=now=>{
- if(!connected()||!ready)return;
+ if(!connected()||!ready||document.hidden)return;
+ if(now-foregroundAt>20000&&now-lastPacketAt>25000){
+  setStatus('Shared game stalled · reconnecting…');
+  try{conn?.close();}catch(_){}
+  return;
+ }
  if(now-lastLocatorAt>220){lastLocatorAt=now;partnerTools(now);}
  if(role==='host'){
   if(now-stateAt>100){stateAt=now;send({t:'state',s:g.getState()});}
