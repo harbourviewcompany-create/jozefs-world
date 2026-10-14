@@ -175,3 +175,10 @@ The shared HQ globe leads to the Sports Arcade, Football Arena, Jozef FC Career,
 
 ### Wacky Rules, Ghost Races and Club Designer
 Arena match settings offer optional twists (including Moon Gravity, Banana Pitch and Giant Ball), shareable offline Ghost Races, and a local-only team crest and mascot designer in My Club. Progress remains device-local; ghost codes can be shared voluntarily.
+
+## October 2026 connection and mobile quality pass
+
+- 2D/3D co-op and Versus now use longer bounded reconnection windows and foreground-aware session recovery. 3D adds explicit heartbeat freshness and exposes diagnostics in `BlockWorld3D.status()`.
+- Block World 3D adjusts rendering resolution under mobile thermal load without changing movement and combat simulation; the HQ globe restores the last selected plate and idles at a lower GPU rate.
+- Mobile now offers a five-destination quick dock with the existing player XP level. A non-interactive match broadcast ribbon adds presentation without changing Versus physics.
+- New Playwright Chromium/WebKit screenshot reload checks save PNG artifacts. See `tests/two-phone-acceptance-2026.md` for actual two-device acceptance criteria; simulated CI passes alone must not be represented as live physical verification.
