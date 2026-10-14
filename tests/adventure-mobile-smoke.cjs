@@ -25,9 +25,10 @@ const close=()=>new Promise(resolve=>server.close(resolve));
      // A fresh browser per viewport prevents GPU/canvas and SW state from leaking
      // across mobile scenarios. Never reuse a renderer process after full reloads.
      const browser=await ({chromium,webkit})[browserName].launch();
-     let page;
+     let page,context;
      try{
-      page=await browser.newPage({viewport,isMobile:true,hasTouch:true,reducedMotion:'reduce'});
+      context=await browser.newContext({viewport,isMobile:true,hasTouch:true,reducedMotion:'reduce'});
+      page=await context.newPage();
      const errors=[];page.on('pageerror',error=>errors.push(error.message));
       await page.goto('http://127.0.0.1:'+port+'/',{waitUntil:'domcontentloaded'});
       await page.waitForFunction(()=>Boolean(window.JozefAdventure?.getProgress));
@@ -127,9 +128,14 @@ const close=()=>new Promise(resolve=>server.close(resolve));
       }
       assert.equal(await page.evaluate(()=>window.JozefTogether.progress().stage),4,'both champions scored twice');
       assert.equal(await page.evaluate(()=>window.JozefTogether.progress().won),true,'shared trophy recorded');
-      // Stop the animated renderer before page navigation; earned rewards are already saved.
+      // Relaunch the app in a new tab in the SAME browser context. This verifies
+      // persistent progress after a real close/reopen without WebKit's renderer
+      // deadlocking when asked to reload a recently active canvas.
       await page.evaluate(()=>window.JozefTogether.close());
-      await page.reload({waitUntil:'domcontentloaded'});
+      await page.close();
+      page=await context.newPage();
+      page.on('pageerror',error=>errors.push(error.message));
+      await page.goto('http://127.0.0.1:'+port+'/',{waitUntil:'domcontentloaded'});
       await page.waitForFunction(()=>Boolean(window.JozefTogether));
       assert.equal(await page.evaluate(()=>window.JozefTogether.progress().won),true,'shared trophy survives reload');
       await page.evaluate(()=>window.JozefTogether.replay());
@@ -140,6 +146,7 @@ const close=()=>new Promise(resolve=>server.close(resolve));
      }finally{
       // Close both objects even if a browser renderer crashed mid-navigation.
       await page?.close().catch(()=>{});
+      await context?.close().catch(()=>{});
       await browser.close().catch(()=>{});
      }
     }
