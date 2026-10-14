@@ -200,11 +200,11 @@ if(!host)return;
 const $=id=>document.getElementById(id);
 const canvas=$('jw-worldcore-canvas'),overlay=$('jw-worldcore-labels'),list=$('jw-worldcore-index');
 const reduced=!!root.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
-let graphics=null,selected=0,yaw=0,pitch=0,velocity=[0,0],target=null,zoom=1,frame=0,last=0,drag=null,visible=false,disposed=false,forceFallback=false,armed=-1,rendererError='';
+let graphics=null,selected=0,yaw=0,pitch=0,velocity=[0,0],target=null,zoom=1,frame=0,last=0,lastDraw=0,drag=null,visible=true,disposed=false,forceFallback=false,armed=-1,rendererError='';
 const pointers=new Map();let pinchStart=0,pinchZoom=1;
 const labels=[];
 function say(msg){const el=$('jw-worldcore-announcement');if(el)el.textContent=msg;}
-function isActive(){return !!document.getElementById('home')?.classList.contains('active')&&!document.hidden;}
+function isActive(){return visible&&!!document.getElementById('home')?.classList.contains('active')&&!document.hidden;}
 function setDetail(){
  const d=DESTINATIONS[selected];
  $('jw-worldcore-selected-type').textContent=d.tag;
@@ -219,6 +219,7 @@ function setDetail(){
 function focusPlate(i,announce=true){
  if(!Number.isInteger(i)||i<0||i>=DESTINATIONS.length)return;
  selected=i;armed=-1;velocity=[0,0];
+ try{root.localStorage?.setItem('jozefs-world-hq-plate',DESTINATIONS[i].id);}catch(_){/* Private mode */}
  // Solve for the plate normal facing camera, then use the nearest revolutions.
  const raw=DESTINATIONS[i].normal;
  const wrap=(angle,current)=>angle+Math.PI*2*Math.round((current-angle)/(Math.PI*2));
@@ -279,6 +280,9 @@ function paint(t){
  frame=0;
  if(disposed||!graphics||!isActive())return;
  resize();
+ // Idle globe animation runs at 30 Hz, dragging and plate focus remain responsive.
+ if(!drag&&!target&&Math.abs(velocity[0])+Math.abs(velocity[1])<.02&&t-lastDraw<32){start();return;}
+ lastDraw=t;
  const dt=last?clamp((t-last)/1000,0,.06):.016;last=t;
  const motion=(!reduced&&!drag)?dt:0;
  if(target){
@@ -296,7 +300,7 @@ function paint(t){
  if(!reduced||target)start();
 }
 function start(){if(frame||!graphics||!isActive()||disposed)return;frame=root.requestAnimationFrame(paint);}
-function stop(){if(frame)root.cancelAnimationFrame(frame);frame=0;last=0;}
+function stop(){if(frame)root.cancelAnimationFrame(frame);frame=0;last=0;lastDraw=0;}
 function coordinates(e){
  const rect=canvas.getBoundingClientRect();
  return [(e.clientX-rect.left-rect.width/2)/(rect.width*.5*.83*zoom),-(e.clientY-rect.top-rect.height/2)/(rect.height*.5*.83*zoom)];
@@ -399,12 +403,16 @@ function init(){
  root.addEventListener('resize',()=>{resize();start();},{passive:true});
  if(typeof IntersectionObserver==='function')new IntersectionObserver(entries=>{
   visible=entries[0]?.isIntersecting||false;
-  if(visible&&isActive())start();else if(!isActive())stop();
+  if(isActive())start();else stop();
  },{threshold:.01}).observe(host);
  try{
   graphics=glRenderer(canvas);
   if(!graphics){rendererError='No WebGL context';graphicsFallback('WebGL is not supported. Every world is still available below.');}
-  else {resize();focusPlate(0,false);start();}
+  else {
+   resize();let restored=0;
+   try{const id=root.localStorage?.getItem('jozefs-world-hq-plate');const i=DESTINATIONS.findIndex(d=>d.id===id);if(i>=0)restored=i;}catch(_){}
+   focusPlate(restored,false);start();
+  }
  }catch(error){
   rendererError=String(error?.message||error);
   console.warn('World Core WebGL initialization:',rendererError);
