@@ -1,0 +1,18 @@
+/* Parent-approved transfer: clear destructive actions and thumb-sized controls. */
+#jw-family-transfer{margin-top:18px;padding:clamp(14px,2vw,20px);border:1px solid #91e6db80;border-radius:18px;background:linear-gradient(155deg,#092c3bec,#0c2233ed);color:#e7fff7}
+#jw-family-transfer h4{font:900 clamp(15px,2.3vw,22px)/1.15 system-ui,sans-serif;letter-spacing:.035em;margin:0 0 10px}
+#jw-family-transfer>p{font:600 13px/1.48 system-ui,sans-serif;color:#c7e5e6;margin:8px 0 14px}
+#jw-family-transfer .jw-family-transfer-controls{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin:10px 0}
+#jw-family-transfer button{min-height:45px;padding:9px 13px;border:1px solid #b4f3df72;border-radius:10px;font:800 12px/1.15 system-ui;background:linear-gradient(135deg,#bdfa8b,#92e7d6);color:#082b35;cursor:pointer}
+#jw-family-transfer #ft-apply{background:linear-gradient(130deg,#fbe49b,#ffb675);color:#332c15}
+#jw-family-transfer button:disabled{opacity:.45;cursor:not-allowed}
+#jw-family-transfer button[hidden],#jw-family-transfer label[hidden]{display:none!important}
+#jw-family-transfer input:not([type=checkbox]),#jw-family-transfer select{min-height:45px;border:1px solid #8fc7d8ac;border-radius:9px;color:#e7fff7;background:#071d2c;padding:10px;max-width:100%;font:600 13px system-ui}
+#jw-family-transfer #ft-code{flex:1 1 230px;width:min(100%,390px)}
+#jw-family-transfer #ft-mode-wrap{display:flex;flex-direction:column;gap:6px;flex:1 1 100%}
+#jw-family-transfer #ft-confirm-wrap{display:flex;gap:9px;align-items:center;flex:1 1 100%;font:600 13px/1.4 system-ui;color:#ffedc8}
+#jw-family-transfer #ft-confirm{width:20px;height:20px;flex-shrink:0}
+#jw-family-transfer #ft-status{padding:10px;border-left:3px solid #b8f297;color:#e6fff3;background:#ffffff0b}
+#jw-family-transfer button:focus-visible,#jw-family-transfer :is(input,select):focus-visible{outline:3px solid #fff;outline-offset:2px}
+@media(max-width:700px){#jw-family-transfer .jw-family-transfer-controls>button{flex:1 1 125px}#jw-family-transfer .jw-family-transfer-controls{gap:8px}}
+@media(prefers-reduced-motion:reduce){#jw-family-transfer *{animation:none!important;transition:none!important}}
