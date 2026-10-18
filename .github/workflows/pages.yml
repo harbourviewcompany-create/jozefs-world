@@ -48,6 +48,9 @@ jobs:
           node tests/prime-mobile-smoke.cjs
           node tests/neon-mobile-smoke.cjs
       - name: Gate publishing on Arena, HQ and Versus mobile browser checks
+        env:
+          # Full Versus viewport coverage remains in the dedicated QA workflow.
+          VERSUS_VIEWPORTS: 390x844
         run: |
           npm install --no-save playwright@1.56.1
           node tests/arena-mobile-smoke.cjs
