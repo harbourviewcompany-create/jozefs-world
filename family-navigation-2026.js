@@ -25,8 +25,8 @@
    if(selected)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
   const points=Math.max(0,Number(progress().xp)||0);
   xp.textContent='LVL '+(Math.floor(points/100)+1);
-  // Never cover game controls or a full-screen walkout/dialog.
-  dock.hidden=active==='arena'||document.querySelector('#versus.is-playing.active')!==null||
+  // Never cover game controls, the full-screen Adventure or a walkout/dialog.
+  dock.hidden=active==='arena'||active==='adventure'||document.querySelector('#versus.is-playing.active')!==null||
    document.querySelector('#walkout:not([hidden])')!==null||
    document.body.classList.contains('arena-focused');
  }
