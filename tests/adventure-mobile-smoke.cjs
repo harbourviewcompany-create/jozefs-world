@@ -58,6 +58,8 @@ const close=()=>new Promise(resolve=>server.close(resolve));
         'optional kits start collapsed so the game stays playable');
       assert.equal(await page.locator('.phone-dock').isVisible(),false,
         'global navigation is replaced by compact game controls');
+      assert.equal(await page.locator('#jw-family-dock').isVisible(),false,
+        'new family quick dock must not cover Adventure controls or disclosures');
       await page.locator('.jw-adventure-collection summary').click();
       assert.equal(await page.locator('.jw-adventure-collection').evaluate(el=>el.open),true,
         'kits remain accessible using the disclosure');
