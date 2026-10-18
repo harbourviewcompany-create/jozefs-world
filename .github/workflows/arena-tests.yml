@@ -96,5 +96,10 @@ jobs:
         run: node tests/arena-mobile-smoke.cjs
       - name: HQ layout and navigation in Chromium and WebKit
         run: node tests/hq-mobile-smoke.cjs
-      - name: Two-player Versus lifecycle and mobile controls
+      # Full three-viewport Chromium/WebKit coverage runs independently in versus-qa.yml.
+      # Keep one representative portrait viewport in this cross-game job so the
+      # 12-minute job budget isn't consumed by a duplicate exhaustive suite.
+      - name: Versus integration smoke (Chromium and WebKit)
+        env:
+          VERSUS_VIEWPORTS: 390x844
         run: node tests/versus-mobile-smoke.cjs
