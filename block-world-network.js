@@ -1,8 +1,11 @@
-/* Set peerServer.host to the deployed HTTPS signalling hostname (no https://).
-   GitHub Pages is public: never place permanent TURN passwords in this file.
-   Leave peerServer null until the dedicated endpoint is live. */
+/* Jozef's World private co-op signalling. TURN requires separately issued ephemeral credentials. */
 window.BLOCK_WORLD_NETWORK={
- peerServer:null,
+ peerServer:{
+  host:'jozefs-world-signalling-3vtw.onrender.com',
+  port:443,
+  path:'/peerjs/',
+  secure:true
+ },
  iceServers:[
   {urls:'stun:stun.l.google.com:19302'},
   {urls:'stun:stun1.l.google.com:19302'}
