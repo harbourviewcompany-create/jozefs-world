@@ -25,6 +25,31 @@ const PEER_OPTIONS={
  debug:0,
  config:{iceServers,iceTransportPolicy:'all'}
 };
+// Request short-lived Cloudflare TURN credentials from our Render backend.
+// A failure preserves STUN-only play; no permanent provider secret is exposed.
+let iceCache=null,iceCacheUntil=0;
+async function peerOptions(){
+ const now=Date.now();
+ if(iceCache&&now<iceCacheUntil)return {...PEER_OPTIONS,config:{...PEER_OPTIONS.config,iceServers:iceCache}};
+ const host=endpoint.host;
+ if(!host)return PEER_OPTIONS;
+ try{
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),9000);
+  let response;
+  try{response=await fetch('https://'+host+'/api/ice',{mode:'cors',cache:'no-store',signal:controller.signal});}
+  finally{clearTimeout(timer);}
+  if(!response.ok)return PEER_OPTIONS;
+  const data=await response.json();
+  if(!Array.isArray(data.iceServers)||!data.iceServers.length)return PEER_OPTIONS;
+  const valid=data.iceServers.filter(item=>item&&
+   (typeof item.urls==='string'||Array.isArray(item.urls))&&
+   (item.username===undefined||typeof item.username==='string')&&
+   (item.credential===undefined||typeof item.credential==='string'));
+  if(!valid.length)return PEER_OPTIONS;
+  iceCache=valid;iceCacheUntil=Date.now()+Math.min(1800000,Math.max(60000,Number(data.expiresIn||3600)*500));
+  return {...PEER_OPTIONS,config:{...PEER_OPTIONS.config,iceServers:valid}};
+ }catch(_){return PEER_OPTIONS;}
+}
 let retryTimer=0,retryCount=0,joiningCode='',peerReady=false,foregroundAt=performance.now();
 const TAB_KEY='jozefs-block-2d-guest-tab-v1';
 const rejoin=()=>{
@@ -219,7 +244,7 @@ function leave(options={}){
  else if(!guest){g.role(0);g.setStatus('Disconnected. You can keep playing solo.');}
 }
 function disconnect(reason){if(role==='solo')return;leave({reason});}
-function startHost(recover=false){
+async function startHost(recover=false){
  if(!window.Peer){setStatus('Online co-op is unavailable: PeerJS could not load.');return;}
  if(role!=='solo'&&!recover)leave({skipReload:true});
  const generation=++hostGeneration;
@@ -227,7 +252,10 @@ function startHost(recover=false){
   if(!recover)hostRetryCount=0;
   invite=recover&&invite?invite:secureCode();
   role='host';g.saveHost();g.role(0);
-  peer=new window.Peer('jw2d-'+invite,PEER_OPTIONS);
+  setStatus('Preparing secure multiplayer connection…');
+  const options=await peerOptions();
+  if(generation!==hostGeneration||role!=='host')return;
+  peer=new window.Peer('jw2d-'+invite,options);
   peer.on('open',()=>{
    if(generation!==hostGeneration)return;
    peerReady=true;hostRetryCount=0;clearTimeout(hostRetryTimer);hostRetryTimer=0;$('coop-code').value=invite;
@@ -263,7 +291,7 @@ function extractCode(input){
  const raw=s.match(/(?:^|[=#\/])(jw2d-)?([a-f0-9]{32})(?:$|[&#])/i);
  return raw?raw[2].toLowerCase():(COOP_RE.test(s)?s.toLowerCase():null);
 }
-function join(){
+async function join(){
  if(!window.Peer){setStatus('Online co-op is unavailable: PeerJS could not load.');return;}
  const code=extractCode($('coop-code').value);
  if(!code){setStatus('Paste a valid invitation from Daddy.');return;}
@@ -274,7 +302,10 @@ function join(){
  try{
   const old=rejoin(),peerId=ownPeerId(code);
   bookmark({room:code,peerId,active:!!(old?.room===code&&old.active)});
-  peer=new window.Peer(peerId,PEER_OPTIONS);
+  setStatus('Preparing secure multiplayer connection…');
+  const options=await peerOptions();
+  if(role!=='guest'||joiningCode!==code)return;
+  peer=new window.Peer(peerId,options);
   peer.on('open',()=>{peerReady=true;setStatus('Connecting to Daddy…');
    attach(peer.connect('jw2d-'+code,{reliable:true,serialization:'json'}));
   });
