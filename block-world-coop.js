@@ -10,7 +10,21 @@ let peer=null,conn=null,role='solo',invite='',ready=false,closed=false;
 let stateAt=0,inputAt=0,snapshotAt=0,lastRealm=-1,lastInput={left:false,right:false,jump:false};
 let lastPacketAt=0,editCount=0,lastActionAt=0,joinTimeout=0,lastGiveAt=0,lastRegroupAt=[-15000,-15000],lastLocatorAt=0;
 let hostRetryTimer=0,hostRetryCount=0;
-const PEER_OPTIONS={host:'0.peerjs.com',port:443,path:'/',secure:true,debug:1,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]}};
+let hostGeneration=0;
+// Deployment may inject a dedicated PeerServer and short-lived TURN credentials.
+// Never embed long-lived TURN secrets in a public GitHub Pages bundle.
+const cfg=window.BLOCK_WORLD_NETWORK||{};
+const endpoint=cfg.peerServer||{};
+const iceServers=Array.isArray(cfg.iceServers)&&cfg.iceServers.length?cfg.iceServers:
+ [{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}];
+const PEER_OPTIONS={
+ host:endpoint.host||'0.peerjs.com',
+ port:endpoint.port||443,
+ path:endpoint.path||'/',
+ secure:true,
+ debug:0,
+ config:{iceServers,iceTransportPolicy:'all'}
+};
 let retryTimer=0,retryCount=0,joiningCode='',peerReady=false,foregroundAt=performance.now();
 const TAB_KEY='jozefs-block-2d-guest-tab-v1';
 const rejoin=()=>{
@@ -185,6 +199,7 @@ function attach(connection){
  connection.on('error',()=>{if(conn===connection)onConnectionLost('Connection failed');});
 }
 function leave(options={}){
+ ++hostGeneration;
  clearTimeout(hostRetryTimer);hostRetryTimer=0;hostRetryCount=0;
  clearBookmark();
  clearTimeout(joinTimeout);joinTimeout=0;clearTimeout(retryTimer);retryTimer=0;retryCount=0;joiningCode='';peerReady=false;
@@ -203,6 +218,7 @@ function leave(options={}){
 }
 function disconnect(reason){if(role==='solo')return;leave({reason});}
 function startHost(recover=false){
+ const generation=++hostGeneration;
  if(!window.Peer){setStatus('Online co-op is unavailable: PeerJS could not load.');return;}
  if(role!=='solo'&&!recover)leave({skipReload:true});
  try{
@@ -211,13 +227,15 @@ function startHost(recover=false){
   role='host';g.saveHost();g.role(0);
   peer=new window.Peer('jw2d-'+invite,PEER_OPTIONS);
   peer.on('open',()=>{
+   if(generation!==hostGeneration)return;
    peerReady=true;hostRetryCount=0;clearTimeout(hostRetryTimer);hostRetryTimer=0;$('coop-code').value=invite;
    $('coop-share').disabled=false;$('coop-disconnect').disabled=false;
    setStatus('Private invite ready. Send the link to Jo, then keep this page open.');
   });
-  peer.on('connection',c=>{if(conn||ready){c.close();return;}attach(c);});
-  peer.on('disconnected',()=>{peerReady=false;if(typeof peer.reconnect==='function')try{peer.reconnect();}catch(_){};if(!connected())setStatus('Signalling interrupted · reconnecting…');});
+  peer.on('connection',c=>{if(generation!==hostGeneration){c.close();return;}if(conn||ready){c.close();return;}attach(c);});
+  peer.on('disconnected',()=>{if(generation!==hostGeneration)return;peerReady=false;if(typeof peer.reconnect==='function')try{peer.reconnect();}catch(_){};if(!connected())setStatus('Signalling interrupted · reconnecting…');});
   peer.on('error',e=>{
+   if(generation!==hostGeneration)return;
    if(connected()){setStatus('Game connected · signalling temporarily interrupted');return;}
    const type=e?.type||'network';
    if(['network','server-error','socket-error','socket-closed','disconnected'].includes(type)&&hostRetryCount<3){
