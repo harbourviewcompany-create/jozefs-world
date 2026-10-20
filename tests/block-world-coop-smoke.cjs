@@ -219,6 +219,9 @@ assert.equal(host.session().role(),'host','host room survives disconnection');
 assert.equal(guest.session().role(),'guest','guest waits for reconnection without solo-save reload');
 guest.click('coop-join');flush();
 assert.ok(host.session().connected()&&guest.session().connected(),'session can rejoin without sharing a new link');
+assert.deepEqual(Array.from(guest.game().getWorld().world[tileY]),Array.from(host.game().getWorld().world[tileY]),'world edits resynchronized after reconnect');
+assert.equal(guest.game().getState().realmIndex,host.game().getState().realmIndex,'realm resynchronized after reconnect');
+
 guest.click('save');
 assert.equal(guest.store.get('jozefs-world-block-v3'),ownSave,'Jozef joining must not overwrite their solo save');
 host.click('save');
