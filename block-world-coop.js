@@ -188,6 +188,7 @@ function attach(connection){
  if(conn&&conn!==connection){try{conn.close();}catch(_){}}
  conn=connection;
  connection.on('open',()=>{
+  if(conn!==connection){try{connection.close();}catch(_){}return;}
   lastPacketAt=foregroundAt=performance.now();
   retryCount=0;clearTimeout(retryTimer);retryTimer=0;
   $('coop-disconnect').disabled=false;
@@ -198,7 +199,7 @@ function attach(connection){
    ready=false;g.role(1);setStatus('Connected. Loading the shared world…');
   }
  });
- connection.on('data',onMessage);
+ connection.on('data',message=>{if(conn===connection)onMessage(message);});
  connection.on('close',()=>{if(conn===connection)onConnectionLost('Connection ended');});
  connection.on('error',()=>{if(conn===connection)onConnectionLost('Connection failed');});
 }
@@ -283,11 +284,12 @@ function join(){
   const options=peerOptions();
   if(role!=='guest'||joiningCode!==code)return;
   peer=new window.Peer(peerId,options);
-  peer.on('open',()=>{peerReady=true;setStatus('Connecting to Daddy…');
+  const currentPeer=peer;
+  peer.on('open',()=>{if(peer!==currentPeer||role!=='guest')return;peerReady=true;setStatus('Connecting to Daddy…');
    attach(peer.connect('jw2d-'+code,{reliable:true,serialization:'json'}));
   });
-  peer.on('error',e=>{const reason='Unable to join: '+(e?.type||'network error')+'. Check the invitation.';if(role==='guest'&&!ready){setStatus(reason);scheduleReconnect();}});
-  peer.on('disconnected',()=>{peerReady=false;if(typeof peer.reconnect==='function')try{peer.reconnect();}catch(_){};if(role==='guest'&&!ready)scheduleReconnect();});
+  peer.on('error',e=>{if(peer!==currentPeer||role!=='guest')return;const reason='Unable to join: '+(e?.type||'network error')+'. Check the invitation.';if(role==='guest'&&!ready){setStatus(reason);scheduleReconnect();}});
+  peer.on('disconnected',()=>{if(peer!==currentPeer||role!=='guest')return;peerReady=false;if(typeof peer.reconnect==='function')try{peer.reconnect();}catch(_){};if(role==='guest'&&!ready)scheduleReconnect();});
   joinTimeout=setTimeout(()=>{if(role==='guest'&&!ready){leave({reason:'Connection timed out. Daddy must show “Private invite ready” before Jozef joins. If hosting fails, check the network or signalling service.',skipReload:true});show();}},90000);
   setStatus('Opening private connection…');
  }catch(e){leave({reason:e.message,skipReload:true});}
