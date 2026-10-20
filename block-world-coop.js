@@ -25,31 +25,8 @@ const PEER_OPTIONS={
  debug:0,
  config:{iceServers,iceTransportPolicy:'all'}
 };
-// Request short-lived Cloudflare TURN credentials from our Render backend.
-// A failure preserves STUN-only play; no permanent provider secret is exposed.
-let iceCache=null,iceCacheUntil=0;
-async function peerOptions(){
- const now=Date.now();
- if(iceCache&&now<iceCacheUntil)return {...PEER_OPTIONS,config:{...PEER_OPTIONS.config,iceServers:iceCache}};
- const host=endpoint.host;
- if(!host)return PEER_OPTIONS;
- try{
-  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),9000);
-  let response;
-  try{response=await fetch('https://'+host+'/api/ice',{mode:'cors',cache:'no-store',signal:controller.signal});}
-  finally{clearTimeout(timer);}
-  if(!response.ok)return PEER_OPTIONS;
-  const data=await response.json();
-  if(!Array.isArray(data.iceServers)||!data.iceServers.length)return PEER_OPTIONS;
-  const valid=data.iceServers.filter(item=>item&&
-   (typeof item.urls==='string'||Array.isArray(item.urls))&&
-   (item.username===undefined||typeof item.username==='string')&&
-   (item.credential===undefined||typeof item.credential==='string'));
-  if(!valid.length)return PEER_OPTIONS;
-  iceCache=valid;iceCacheUntil=Date.now()+Math.min(1800000,Math.max(60000,Number(data.expiresIn||3600)*500));
-  return {...PEER_OPTIONS,config:{...PEER_OPTIONS.config,iceServers:valid}};
- }catch(_){return PEER_OPTIONS;}
-}
+// Free STUN-only mode: no credential service, billing or third-party TURN account.
+async function peerOptions(){return PEER_OPTIONS;}
 let retryTimer=0,retryCount=0,joiningCode='',peerReady=false,foregroundAt=performance.now();
 const TAB_KEY='jozefs-block-2d-guest-tab-v1';
 const rejoin=()=>{
@@ -252,7 +229,7 @@ async function startHost(recover=false){
   if(!recover)hostRetryCount=0;
   invite=recover&&invite?invite:secureCode();
   role='host';g.saveHost();g.role(0);
-  setStatus('Preparing secure multiplayer connection…');
+  setStatus('Preparing direct multiplayer connection…');
   const options=await peerOptions();
   if(generation!==hostGeneration||role!=='host')return;
   peer=new window.Peer('jw2d-'+invite,options);
@@ -302,7 +279,7 @@ async function join(){
  try{
   const old=rejoin(),peerId=ownPeerId(code);
   bookmark({room:code,peerId,active:!!(old?.room===code&&old.active)});
-  setStatus('Preparing secure multiplayer connection…');
+  setStatus('Preparing direct multiplayer connection…');
   const options=await peerOptions();
   if(role!=='guest'||joiningCode!==code)return;
   peer=new window.Peer(peerId,options);
@@ -365,7 +342,7 @@ $('coop-regroup').addEventListener('click',()=>{
 });
 $('open-coop').addEventListener('click',show);
 $('coop-close').addEventListener('click',hide);
-$('coop-host').addEventListener('click',startHost);
+$('coop-host').addEventListener('click',()=>startHost(false));
 $('coop-join').addEventListener('click',join);
 $('coop-disconnect').addEventListener('click',()=>leave({reason:'Disconnected'}));
 $('coop-share').addEventListener('click',async()=>{
