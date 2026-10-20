@@ -208,7 +208,7 @@ function startHost(recover=false){
   if(!recover)hostRetryCount=0;
   invite=recover&&invite?invite:secureCode();
   role='host';g.saveHost();g.role(0);
-  peer=new window.Peer('jw2d-'+invite);
+  peer=new window.Peer('jw2d-'+invite,{host:'0.peerjs.com',port:443,path:'/',secure:true,debug:1});
   peer.on('open',()=>{
    peerReady=true;hostRetryCount=0;clearTimeout(hostRetryTimer);hostRetryTimer=0;$('coop-code').value=invite;
    $('coop-share').disabled=false;$('coop-disconnect').disabled=false;
@@ -253,7 +253,7 @@ function join(){
  try{
   const old=rejoin(),peerId=ownPeerId(code);
   bookmark({room:code,peerId,active:!!(old?.room===code&&old.active)});
-  peer=new window.Peer(peerId);
+  peer=new window.Peer(peerId,{host:'0.peerjs.com',port:443,path:'/',secure:true,debug:1});
   peer.on('open',()=>{peerReady=true;setStatus('Connecting to Daddy…');
    attach(peer.connect('jw2d-'+code,{reliable:true,serialization:'json'}));
   });
