@@ -11,6 +11,7 @@ let stateAt=0,inputAt=0,snapshotAt=0,lastRealm=-1,lastInput={left:false,right:fa
 let lastPacketAt=0,editCount=0,lastActionAt=0,joinTimeout=0,lastGiveAt=0,lastRegroupAt=[-15000,-15000],lastLocatorAt=0;
 let hostRetryTimer=0,hostRetryCount=0;
 let hostGeneration=0;
+let lastResyncRequestAt=0;
 // Deployment may inject a dedicated PeerServer and short-lived TURN credentials.
 // Never embed long-lived TURN secrets in a public GitHub Pages bundle.
 const cfg=window.BLOCK_WORLD_NETWORK||{};
@@ -106,7 +107,7 @@ function onMessage(m){
  lastPacketAt=performance.now();
  if(m.t==='world'&&role==='guest'){
   if(!validWorld(m.w)){setStatus('Invalid game data from host');return;}
-  g.useWorld(m.w);g.role(1);ready=true;retryCount=0;
+  g.useWorld(m.w);g.role(1);ready=true;retryCount=0;lastResyncRequestAt=0;
   const previous=rejoin();if(previous?.room===joiningCode)bookmark({...previous,active:true});clearTimeout(retryTimer);retryTimer=0;clearTimeout(joinTimeout);joinTimeout=0;lastRealm=m.w.realmIndex;
   send({t:'ready'});setStatus('Connected! You are Jozef. Both of you can play.');
   $('btn-switch').style.display='none';
@@ -147,7 +148,11 @@ function onMessage(m){
   g.setStatus(String(m.msg||'').slice(0,100));
  }else if(m.t==='state'&&role==='guest'&&ready){
   if(!validState(m.s))return;
-  if(m.s.realmIndex!==lastRealm){send({t:'resync'});return;}
+  if(m.s.realmIndex!==lastRealm){
+   const now=performance.now();
+   if(now-lastResyncRequestAt>=1500){lastResyncRequestAt=now;send({t:'resync'});}
+   return;
+  }
   g.useState(m.s);
  }else if(m.t==='edit'&&role==='guest'&&ready){
   if([m.x,m.y,m.id].every(Number.isInteger)&&m.x>=0&&m.x<180&&m.y>=0&&m.y<72&&m.id>=0&&m.id<=31)g.useEdit(m.x,m.y,m.id);
@@ -177,7 +182,7 @@ function scheduleReconnect(){
  },delay);
 }
 function onConnectionLost(reason){
- conn=null;ready=false;clearTimeout(joinTimeout);joinTimeout=0;
+ conn=null;ready=false;lastResyncRequestAt=0;clearTimeout(joinTimeout);joinTimeout=0;
  g.remoteInput={left:false,right:false,jump:false};
  $('partner-tools').hidden=true;
  if(role==='host'){setStatus(reason+' · waiting for Jozef to reconnect');$('coop-disconnect').disabled=false;}
@@ -209,7 +214,7 @@ function leave(options={}){
  clearBookmark();
  clearTimeout(joinTimeout);joinTimeout=0;clearTimeout(retryTimer);retryTimer=0;retryCount=0;joiningCode='';peerReady=false;
  const guest=role==='guest',c=conn,p=peer;
- conn=null;peer=null;ready=false;role='solo';invite='';lastRealm=-1;
+ conn=null;peer=null;ready=false;role='solo';invite='';lastRealm=-1;lastResyncRequestAt=0;
  g.remoteInput={left:false,right:false,jump:false};
  $('coop-share').disabled=true;$('coop-disconnect').disabled=true;
  $('btn-switch').style.display='';$('reset').disabled=false;$('mode').disabled=false;$('inventory').disabled=false;$('save').disabled=false;
@@ -240,7 +245,7 @@ function startHost(recover=false){
    $('coop-share').disabled=false;$('coop-disconnect').disabled=false;
    setStatus('Private invite ready. Send the link to Jo, then keep this page open.');
   });
-  peer.on('connection',c=>{if(generation!==hostGeneration){c.close();return;}if(conn||ready){c.close();return;}attach(c);});
+  peer.on('connection',c=>{if(generation!==hostGeneration){c.close();return;}if(conn?.open||ready){c.close();return;}attach(c);});
   peer.on('disconnected',()=>{if(generation!==hostGeneration)return;peerReady=false;if(typeof peer.reconnect==='function')try{peer.reconnect();}catch(_){};if(!connected())setStatus('Signalling interrupted · reconnecting…');});
   peer.on('error',e=>{
    if(generation!==hostGeneration)return;
