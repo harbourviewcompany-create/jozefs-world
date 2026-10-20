@@ -10,6 +10,7 @@ let peer=null,conn=null,role='solo',invite='',ready=false,closed=false;
 let stateAt=0,inputAt=0,snapshotAt=0,lastRealm=-1,lastInput={left:false,right:false,jump:false};
 let lastPacketAt=0,editCount=0,lastActionAt=0,joinTimeout=0,lastGiveAt=0,lastRegroupAt=[-15000,-15000],lastLocatorAt=0;
 let hostRetryTimer=0,hostRetryCount=0;
+const PEER_OPTIONS={host:'0.peerjs.com',port:443,path:'/',secure:true,debug:1,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]}};
 let retryTimer=0,retryCount=0,joiningCode='',peerReady=false,foregroundAt=performance.now();
 const TAB_KEY='jozefs-block-2d-guest-tab-v1';
 const rejoin=()=>{
@@ -208,7 +209,7 @@ function startHost(recover=false){
   if(!recover)hostRetryCount=0;
   invite=recover&&invite?invite:secureCode();
   role='host';g.saveHost();g.role(0);
-  peer=new window.Peer('jw2d-'+invite,{host:'0.peerjs.com',port:443,path:'/',secure:true,debug:1});
+  peer=new window.Peer('jw2d-'+invite,PEER_OPTIONS);
   peer.on('open',()=>{
    peerReady=true;hostRetryCount=0;clearTimeout(hostRetryTimer);hostRetryTimer=0;$('coop-code').value=invite;
    $('coop-share').disabled=false;$('coop-disconnect').disabled=false;
@@ -253,13 +254,13 @@ function join(){
  try{
   const old=rejoin(),peerId=ownPeerId(code);
   bookmark({room:code,peerId,active:!!(old?.room===code&&old.active)});
-  peer=new window.Peer(peerId,{host:'0.peerjs.com',port:443,path:'/',secure:true,debug:1});
+  peer=new window.Peer(peerId,PEER_OPTIONS);
   peer.on('open',()=>{peerReady=true;setStatus('Connecting to Daddy…');
    attach(peer.connect('jw2d-'+code,{reliable:true,serialization:'json'}));
   });
   peer.on('error',e=>{const reason='Unable to join: '+(e?.type||'network error')+'. Check the invitation.';if(role==='guest'&&!ready){setStatus(reason);scheduleReconnect();}});
   peer.on('disconnected',()=>{peerReady=false;if(typeof peer.reconnect==='function')try{peer.reconnect();}catch(_){};if(role==='guest'&&!ready)scheduleReconnect();});
-  joinTimeout=setTimeout(()=>{if(role==='guest'&&!ready){leave({reason:'Connection timed out. Check that Daddy is still hosting.',skipReload:true});show();}},15000);
+  joinTimeout=setTimeout(()=>{if(role==='guest'&&!ready){leave({reason:'Connection timed out. Daddy must show “Private invite ready” before Jozef joins. If hosting fails, check the network or signalling service.',skipReload:true});show();}},30000);
   setStatus('Opening private connection…');
  }catch(e){leave({reason:e.message,skipReload:true});}
 }
