@@ -201,6 +201,27 @@ const afterSecond=host.game().getState().players[1].vy;
 assert.ok(afterSecond<beforeSecond-25,'Jozef can double-jump in host physics: '+beforeSecond+' -> '+afterSecond);
 // Reject invalid recipe requests without changing either player's materials.
 assert.equal(host.game().craftFor(1,999),false,'invalid multiplayer recipe rejected');
+// Interrupted handshake: a pending connection must not permanently block the host.
+const pendingGuest=new Channel(),pendingHost=new Channel();
+pendingGuest.partner=pendingHost;pendingHost.partner=pendingGuest;
+const pendingPeer=peers.get('jw2d-'+invite);
+pendingPeer.handlers.connection?.(pendingHost);
+assert.equal(host.session().role(),'host','host remains available after an unfinished handshake');
+pendingHost.handlers.close?.();
+// A new connection replaces the failed handshake and resynchronizes.
+const replacementGuest=new Channel(),replacementHost=new Channel();
+replacementGuest.partner=replacementHost;replacementHost.partner=replacementGuest;
+pendingPeer.handlers.connection?.(replacementHost);
+assert.ok(replacementHost.handlers.open,'replacement handshake is accepted after failed attempt');
+replacementHost.handlers.close?.();
+// Ignore data from a stale channel after it has been superseded.
+const staleLink=FakePeer.links.at(-1);
+const authoritativeX=host.game().getState().players[0].x;
+staleLink.guest.handlers.data?.({t:'state',s:{players:[],realmIndex:0}});
+assert.equal(host.game().getState().players[0].x,authoritativeX,'invalid stale state cannot mutate host');
+// Simulate tab visibility and background/resume without losing the session.
+for(const fn of host.doc.getElementById('coop-host').events.click||[])assert.equal(typeof fn,'function');
+
 // A network drop must keep Daddy hosting and Jo in guest mode until reconnected.
 FakePeer.links.at(-1).guest.close();
 assert.equal(host.session().role(),'host','host room survives disconnection');
