@@ -26,7 +26,7 @@ const PEER_OPTIONS={
  config:{iceServers,iceTransportPolicy:'all'}
 };
 // Free STUN-only mode: no credential service, billing or third-party TURN account.
-async function peerOptions(){return PEER_OPTIONS;}
+function peerOptions(){return PEER_OPTIONS;}
 let retryTimer=0,retryCount=0,joiningCode='',peerReady=false,foregroundAt=performance.now();
 const TAB_KEY='jozefs-block-2d-guest-tab-v1';
 const rejoin=()=>{
@@ -221,7 +221,7 @@ function leave(options={}){
  else if(!guest){g.role(0);g.setStatus('Disconnected. You can keep playing solo.');}
 }
 function disconnect(reason){if(role==='solo')return;leave({reason});}
-async function startHost(recover=false){
+function startHost(recover=false){
  if(!window.Peer){setStatus('Online co-op is unavailable: PeerJS could not load.');return;}
  if(role!=='solo'&&!recover)leave({skipReload:true});
  const generation=++hostGeneration;
@@ -230,7 +230,7 @@ async function startHost(recover=false){
   invite=recover&&invite?invite:secureCode();
   role='host';g.saveHost();g.role(0);
   setStatus('Preparing direct multiplayer connection…');
-  const options=await peerOptions();
+  const options=peerOptions();
   if(generation!==hostGeneration||role!=='host')return;
   peer=new window.Peer('jw2d-'+invite,options);
   peer.on('open',()=>{
@@ -268,7 +268,7 @@ function extractCode(input){
  const raw=s.match(/(?:^|[=#\/])(jw2d-)?([a-f0-9]{32})(?:$|[&#])/i);
  return raw?raw[2].toLowerCase():(COOP_RE.test(s)?s.toLowerCase():null);
 }
-async function join(){
+function join(){
  if(!window.Peer){setStatus('Online co-op is unavailable: PeerJS could not load.');return;}
  const code=extractCode($('coop-code').value);
  if(!code){setStatus('Paste a valid invitation from Daddy.');return;}
@@ -280,7 +280,7 @@ async function join(){
   const old=rejoin(),peerId=ownPeerId(code);
   bookmark({room:code,peerId,active:!!(old?.room===code&&old.active)});
   setStatus('Preparing direct multiplayer connection…');
-  const options=await peerOptions();
+  const options=peerOptions();
   if(role!=='guest'||joiningCode!==code)return;
   peer=new window.Peer(peerId,options);
   peer.on('open',()=>{peerReady=true;setStatus('Connecting to Daddy…');
