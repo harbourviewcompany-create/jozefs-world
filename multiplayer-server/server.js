@@ -1,0 +1,11 @@
+import express from 'express';
+import helmet from 'helmet';
+import {ExpressPeerServer} from 'peer';
+const app=express();
+app.disable('x-powered-by');
+app.use(helmet({contentSecurityPolicy:false,crossOriginEmbedderPolicy:false}));
+app.get('/health',(_req,res)=>res.json({ok:true,service:'jozefs-world-signalling'}));
+const port=Number(process.env.PORT||3000);
+const server=app.listen(port,'0.0.0.0',()=>console.log('Signalling listening on '+port));
+const peer=ExpressPeerServer(server,{path:'/',proxied:true,allow_discovery:false,alive_timeout:60000,key:'peerjs'});
+app.use('/peerjs',peer);
