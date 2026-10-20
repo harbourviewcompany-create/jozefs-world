@@ -182,7 +182,9 @@ function onConnectionLost(reason){
  else if(role==='guest'){show();scheduleReconnect();}
 }
 function attach(connection){
- if(conn?.open){connection.close();return;}conn=connection;
+ if(conn?.open){connection.close();return;}
+ if(conn&&conn!==connection){try{conn.close();}catch(_){}}
+ conn=connection;
  connection.on('open',()=>{
   lastPacketAt=foregroundAt=performance.now();
   retryCount=0;clearTimeout(retryTimer);retryTimer=0;
@@ -218,9 +220,9 @@ function leave(options={}){
 }
 function disconnect(reason){if(role==='solo')return;leave({reason});}
 function startHost(recover=false){
- const generation=++hostGeneration;
  if(!window.Peer){setStatus('Online co-op is unavailable: PeerJS could not load.');return;}
  if(role!=='solo'&&!recover)leave({skipReload:true});
+ const generation=++hostGeneration;
  try{
   if(!recover)hostRetryCount=0;
   invite=recover&&invite?invite:secureCode();
@@ -238,9 +240,9 @@ function startHost(recover=false){
    if(generation!==hostGeneration)return;
    if(connected()){setStatus('Game connected · signalling temporarily interrupted');return;}
    const type=e?.type||'network';
-   if(['network','server-error','socket-error','socket-closed','disconnected'].includes(type)&&hostRetryCount<3){
-    const delay=[1500,3500,7000][hostRetryCount++];
-    setStatus('Signalling unavailable ('+type+'). Retrying '+hostRetryCount+'/3…');
+   if(['network','server-error','socket-error','socket-closed','disconnected'].includes(type)&&hostRetryCount<5){
+    const delay=[1500,3500,7000,12000,18000][hostRetryCount++];
+    setStatus('Signalling unavailable ('+type+'). Retrying '+hostRetryCount+'/5…');
     clearTimeout(hostRetryTimer);
     hostRetryTimer=setTimeout(()=>{
      if(role!=='host'||peerReady)return;
@@ -278,7 +280,7 @@ function join(){
   });
   peer.on('error',e=>{const reason='Unable to join: '+(e?.type||'network error')+'. Check the invitation.';if(role==='guest'&&!ready){setStatus(reason);scheduleReconnect();}});
   peer.on('disconnected',()=>{peerReady=false;if(typeof peer.reconnect==='function')try{peer.reconnect();}catch(_){};if(role==='guest'&&!ready)scheduleReconnect();});
-  joinTimeout=setTimeout(()=>{if(role==='guest'&&!ready){leave({reason:'Connection timed out. Daddy must show “Private invite ready” before Jozef joins. If hosting fails, check the network or signalling service.',skipReload:true});show();}},30000);
+  joinTimeout=setTimeout(()=>{if(role==='guest'&&!ready){leave({reason:'Connection timed out. Daddy must show “Private invite ready” before Jozef joins. If hosting fails, check the network or signalling service.',skipReload:true});show();}},90000);
   setStatus('Opening private connection…');
  }catch(e){leave({reason:e.message,skipReload:true});}
 }
