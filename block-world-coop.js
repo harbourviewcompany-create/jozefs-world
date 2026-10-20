@@ -9,6 +9,7 @@ if(!g||!$('coop-panel'))return;
 let peer=null,conn=null,role='solo',invite='',ready=false,closed=false;
 let stateAt=0,inputAt=0,snapshotAt=0,lastRealm=-1,lastInput={left:false,right:false,jump:false};
 let lastPacketAt=0,editCount=0,lastActionAt=0,joinTimeout=0,lastGiveAt=0,lastRegroupAt=[-15000,-15000],lastLocatorAt=0;
+let hostRetryTimer=0,hostRetryCount=0;
 let retryTimer=0,retryCount=0,joiningCode='',peerReady=false,foregroundAt=performance.now();
 const TAB_KEY='jozefs-block-2d-guest-tab-v1';
 const rejoin=()=>{
@@ -183,6 +184,7 @@ function attach(connection){
  connection.on('error',()=>{if(conn===connection)onConnectionLost('Connection failed');});
 }
 function leave(options={}){
+ clearTimeout(hostRetryTimer);hostRetryTimer=0;hostRetryCount=0;
  clearBookmark();
  clearTimeout(joinTimeout);joinTimeout=0;clearTimeout(retryTimer);retryTimer=0;retryCount=0;joiningCode='';peerReady=false;
  const guest=role==='guest',c=conn,p=peer;
@@ -199,15 +201,16 @@ function leave(options={}){
  else if(!guest){g.role(0);g.setStatus('Disconnected. You can keep playing solo.');}
 }
 function disconnect(reason){if(role==='solo')return;leave({reason});}
-function startHost(){
+function startHost(recover=false){
  if(!window.Peer){setStatus('Online co-op is unavailable: PeerJS could not load.');return;}
- if(role!=='solo')leave({skipReload:true});
+ if(role!=='solo'&&!recover)leave({skipReload:true});
  try{
-  invite=secureCode();
+  if(!recover)hostRetryCount=0;
+  invite=recover&&invite?invite:secureCode();
   role='host';g.saveHost();g.role(0);
   peer=new window.Peer('jw2d-'+invite);
   peer.on('open',()=>{
-   peerReady=true;$('coop-code').value=invite;
+   peerReady=true;hostRetryCount=0;clearTimeout(hostRetryTimer);hostRetryTimer=0;$('coop-code').value=invite;
    $('coop-share').disabled=false;$('coop-disconnect').disabled=false;
    setStatus('Private invite ready. Send the link to Jo, then keep this page open.');
   });
@@ -215,7 +218,21 @@ function startHost(){
   peer.on('disconnected',()=>{peerReady=false;if(typeof peer.reconnect==='function')try{peer.reconnect();}catch(_){};if(!connected())setStatus('Signalling interrupted · reconnecting…');});
   peer.on('error',e=>{
    if(connected()){setStatus('Game connected · signalling temporarily interrupted');return;}
-   const reason='Could not host: '+(e?.type||'network error');leave({reason,skipReload:true});show();
+   const type=e?.type||'network';
+   if(['network','server-error','socket-error','socket-closed','disconnected'].includes(type)&&hostRetryCount<3){
+    const delay=[1500,3500,7000][hostRetryCount++];
+    setStatus('Signalling unavailable ('+type+'). Retrying '+hostRetryCount+'/3…');
+    clearTimeout(hostRetryTimer);
+    hostRetryTimer=setTimeout(()=>{
+     if(role!=='host'||peerReady)return;
+     try{peer?.destroy();}catch(_){}
+     peer=null;
+     startHost(true);
+    },delay);
+    return;
+   }
+   const reason='Could not host ('+type+'). Check internet access and try again.';
+   leave({reason,skipReload:true});show();
   });
   setStatus('Creating private game…');
  }catch(e){leave({reason:e.message,skipReload:true});}
