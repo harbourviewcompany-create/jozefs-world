@@ -1,0 +1,14 @@
+{
+  "name": "jozefs-world-multiplayer",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "peer": "^1.0.2",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0"
+  }
+}
