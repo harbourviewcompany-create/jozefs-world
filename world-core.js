@@ -14,7 +14,7 @@ const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
 const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 const add=(a,b,s=1)=>[a[0]+b[0]*s,a[1]+b[1]*s,a[2]+b[2]*s];
 const DESTINATIONS=Object.freeze([
- {id:'adventure',title:'Adventure',tag:'EXPLORE',symbol:'A',description:'Explore mysterious worlds, hidden routes and rival champions.',route:'adventure',color:'#c5fc79'},
+ {id:'video-chat',title:'Video Chat',tag:'FAMILY CALL',symbol:'VC',description:'See and talk to Dad or Jozef in a private full-screen family video call.',href:'family-video.html',color:'#c5fc79'},
  {id:'together',title:'Together',tag:'DUO QUEST',symbol:'2',description:'Jozef and Dad solve cooperative mysteries, build their legacy and win as a team.',route:'together',color:'#85e8e7'},
  {id:'neon',title:'Neon City',tag:'NIGHT RUN',symbol:'N',description:'Enter the living neon city and discover the next chapter.',href:'prime/neon.html',color:'#bd9cff'},
  {id:'prime',title:'Prime Arena',tag:'FIVE SPORTS',symbol:'11',description:'Football, hockey, basketball, baseball and wrestling showtime.',href:'prime/',color:'#ffc77f'},
