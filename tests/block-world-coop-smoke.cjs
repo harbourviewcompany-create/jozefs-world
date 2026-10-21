@@ -256,4 +256,18 @@ assert.equal(JSON.parse(refreshed.tabStore.get('jozefs-block-2d-guest-tab-v1')).
 assert.equal(refreshed.game().getWorld().players.length,2,'host world synchronized after refresh');
 refreshed.session().disconnect();
 assert.ok(refreshed.trace.includes('reload'),'guest disconnect restores own solo world');
+// Independent connection handshake regression.
+const isolated=boot();
+isolated.advance(3);
+isolated.session().host();flush();
+const isolatedPeer=peers.get('jw2d-'+isolated.session().code());
+const firstAttempt=new Channel();
+isolatedPeer.handlers.connection(firstAttempt);
+assert.equal(typeof firstAttempt.handlers.open,'function');
+firstAttempt.handlers.close();
+const secondAttempt=new Channel();
+isolatedPeer.handlers.connection(secondAttempt);
+assert.equal(typeof secondAttempt.handlers.open,'function','host accepts new handshake after abandoned attempt');
+assert.equal(isolated.session().role(),'host');
+isolated.session().disconnect();
 console.log('Block World 2D co-op: local keyboard, two-device movement, mining/building, crafting, gifting, reconnect and save isolation PASS');
