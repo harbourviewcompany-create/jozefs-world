@@ -232,6 +232,10 @@ assert.equal(host.session().role(),'host','host room survives disconnection');
 assert.equal(guest.session().role(),'guest','guest waits for reconnection without solo-save reload');
 guest.click('coop-join');flush();
 assert.ok(host.session().connected()&&guest.session().connected(),'session can rejoin without sharing a new link');
+const recoveredX=guest.game().getState().players[0].x;
+priorHandler({t:'state',s:{players:[],realmIndex:0}});
+assert.equal(guest.game().getState().players[0].x,recoveredX,'late packets from disconnected channel are ignored');
+
 assert.deepEqual(Array.from(guest.game().getWorld().world[tileY]),Array.from(host.game().getWorld().world[tileY]),'world edits resynchronized after reconnect');
 assert.equal(guest.game().getState().realmIndex,host.game().getState().realmIndex,'realm resynchronized after reconnect');
 
