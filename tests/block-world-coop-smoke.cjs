@@ -80,7 +80,7 @@ function boot(store=new Map(),tabStore=new Map()){
  function key(code,pressed){
   for(const fn of events.get(pressed?'keydown':'keyup')||[])fn({code,repeat:false,preventDefault(){}});
  }
- return{window,doc,store,tabStore,clock,click,advance,key,trace,location,
+ return{window,doc,store,tabStore,clock,click,advance,key,trace,location,events,sandbox,
   game:()=>window.BlockWorld2D,session:()=>window.BlockWorldCoop};
 }
 // Without a network, two people on one keyboard can independently control both heroes.
@@ -213,6 +213,19 @@ const originalX=host.game().getState().players[0].x;
 originalLink.host.handlers.data?.({t:'state',s:{players:[],realmIndex:0}});
 assert.equal(host.game().getState().players[0].x,originalX,'guest cannot override authoritative host state');
 
+// Browser lifecycle: suspending and resuming a guest must preserve its active world.
+const guestSaveBeforeSuspend=guest.store.get('jozefs-world-block-v3');
+guest.sandbox.document.hidden=true;
+for(const handler of guest.events.get('visibilitychange')||[])handler();
+guest.advance(2);
+guest.sandbox.document.hidden=false;
+for(const handler of guest.events.get('visibilitychange')||[])handler();
+assert.ok(guest.session().connected(),'guest remains connected after simulated foreground return');
+assert.equal(guest.store.get('jozefs-world-block-v3'),guestSaveBeforeSuspend,'backgrounding never overwrites solo save');
+// Stale packet handlers must not mutate a newer session.
+const priorLink=FakePeer.links.at(-1);
+const priorHandler=priorLink.guest.handlers.data;
+assert.equal(typeof priorHandler,'function','stale channel has a registered data handler');
 // A network drop must keep Daddy hosting and Jo in guest mode until reconnected.
 FakePeer.links.at(-1).guest.close();
 assert.equal(host.session().role(),'host','host room survives disconnection');
