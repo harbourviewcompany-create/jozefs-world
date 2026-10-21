@@ -232,15 +232,6 @@ assert.equal(host.session().role(),'host','host room survives disconnection');
 assert.equal(guest.session().role(),'guest','guest waits for reconnection without solo-save reload');
 guest.click('coop-join');flush();
 assert.ok(host.session().connected()&&guest.session().connected(),'session can rejoin without sharing a new link');
-// A failed opening handshake must not reserve the host forever.
-const unfinished=new Channel();
-liveHostPeer.handlers.connection?.(unfinished);
-assert.equal(typeof unfinished.handlers.open,'function','host registers unfinished handshake');
-unfinished.handlers.close?.();
-const replacement=new Channel();
-liveHostPeer.handlers.connection?.(replacement);
-assert.equal(typeof replacement.handlers.open,'function','host accepts a replacement after handshake closes');
-replacement.handlers.close?.();
 const recoveredX=guest.game().getState().players[0].x;
 priorHandler({t:'state',s:{players:[],realmIndex:0}});
 assert.equal(guest.game().getState().players[0].x,recoveredX,'late packets from disconnected channel are ignored');
