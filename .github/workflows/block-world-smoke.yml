@@ -19,6 +19,7 @@ on:
       - 'block-world-premium.css'
       - 'block-world-premium-forest.css'
       - 'tests/block-world-coop-smoke.cjs'
+      - 'tests/block-world-browser-performance.cjs'
       - 'block-world.css'
       - 'tests/block-world-smoke.cjs'
       - '.github/workflows/block-world-smoke.yml'
@@ -60,3 +61,27 @@ jobs:
           node tests/block-world-smoke.cjs
           node tests/block-world-coop-smoke.cjs
           node tests/block-world-3d-smoke.cjs
+
+  browser-performance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser engines
+        run: |
+          npm ci --prefix prime --no-audit --no-fund
+          npm exec --prefix prime -- playwright install --with-deps chromium webkit
+      - name: Benchmark Block World mobile browser emulation
+        run: node tests/block-world-browser-performance.cjs
+      - name: Save browser performance measurements
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: block-world-browser-performance
+          path: artifacts/block-world-browser-performance.json
+          if-no-files-found: warn
