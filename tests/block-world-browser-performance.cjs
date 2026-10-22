@@ -17,14 +17,11 @@ async function sample(engine,viewport){
  try{
   const page=await browser.newPage({viewport,isMobile:true,hasTouch:true,deviceScaleFactor:2});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.addInitScript(()=>{
-   window.__frames=[];
-   const raf=window.requestAnimationFrame.bind(window);
-   window.requestAnimationFrame=callback=>raf(t=>{window.__frames.push(t);if(window.__frames.length>5000)window.__frames.shift();callback(t)});
-  });
+  await page.addInitScript(()=>{window.__frames=[];});
   const start=Date.now();
   await page.goto('http://127.0.0.1:'+server.address().port+'/block-world.html',{waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>!!window.BlockWorld2D,{timeout:20000});
+  await page.evaluate(()=>{window.__frames=[];let previous=0;const probe=t=>{if(previous&&t>previous)window.__frames.push(t);previous=t;requestAnimationFrame(probe);};requestAnimationFrame(probe);});
   await page.waitForTimeout(4500);
   const data=await page.evaluate(()=>{
    const t=window.__frames;
@@ -33,10 +30,10 @@ async function sample(engine,viewport){
     heapBytes:performance.memory?.usedJSHeapSize??null,
     canvasCount:document.querySelectorAll('canvas').length};
   });
-  if(data.deltas.length<=30)console.warn(engine.name()+' insufficient animation samples: '+data.deltas.length);
+  assert.ok(data.deltas.length>30,engine.name()+' insufficient independent animation samples: '+data.deltas.length);
   assert.ok(data.canvasCount>0,'game canvas missing');
   assert.deepEqual(errors,[],'browser script exceptions');
-  const enoughFrames=data.deltas.length>30;
+  const enoughFrames=true;
   const p50=enoughFrames?percentile(data.deltas,.5):null,p95=enoughFrames?percentile(data.deltas,.95):null;
   const result={engine:engine.name(),viewport,loadMs:Date.now()-start,
    frameSamples:data.deltas.length,medianFrameMs:p50===null?null:+p50.toFixed(2),
