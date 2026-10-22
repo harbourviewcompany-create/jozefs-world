@@ -40,6 +40,8 @@ async function sample(engine,viewport){
    p95FrameMs:p95===null?null:+p95.toFixed(2),estimatedMedianFps:p50===null?null:+(1000/p50).toFixed(1),
    estimatedP95Fps:p95===null?null:+(1000/p95).toFixed(1),heapBytes:data.heapBytes,
    horizontalOverflowPx:Math.max(0,data.scrollWidth-data.viewport),status:enoughFrames?'measured':'insufficient-samples',errors};
+  assert.ok(result.horizontalOverflowPx<=1,'mobile viewport overflow');
+  assert.ok(result.p95FrameMs<=100,'p95 frame time exceeds 100ms release budget');
   console.log(JSON.stringify(result));
   await page.close();
   return result;
