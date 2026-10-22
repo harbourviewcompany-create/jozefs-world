@@ -12,6 +12,10 @@ let lastPacketAt=0,editCount=0,lastActionAt=0,joinTimeout=0,lastGiveAt=0,lastReg
 let hostRetryTimer=0,hostRetryCount=0;
 let hostGeneration=0;
 let lastResyncRequestAt=0;
+let diagnosticPhase='offline',diagnosticError='',diagnosticChangedAt=performance.now();
+function diagnostic(phase,error=''){diagnosticPhase=phase;diagnosticError=error;diagnosticChangedAt=performance.now();}
+function connectionReport(){return {role,phase:diagnosticPhase,ready,channelOpen:connected(),signallingReady:peerReady,peerDisconnected:!!peer?.disconnected,lastPacketAgeMs:lastPacketAt?Math.round(performance.now()-lastPacketAt):null,phaseAgeMs:Math.round(performance.now()-diagnosticChangedAt),error:diagnosticError,transport:'PeerJS WebRTC (STUN only)'};}
+window.BlockWorldConnectionDiagnostics=()=>connectionReport();
 // Deployment may inject a dedicated PeerServer and short-lived TURN credentials.
 // Never embed long-lived TURN secrets in a public GitHub Pages bundle.
 const cfg=window.BLOCK_WORLD_NETWORK||{};
@@ -61,7 +65,14 @@ g.onBlockChanged=(x,y,id)=>{
  if(g.isHost())send({t:'edit',x,y,id});
 };
 function setStatus(msg){
+ if(role==='solo')diagnostic('offline');
+ else if(ready&&connected())diagnostic('playing');
+ else if(/reconnect|interrupted|stalled|lost|ended/i.test(msg))diagnostic('recovering',msg);
+ else if(/invalid|unable|failed|error|timed out|unavailable/i.test(msg))diagnostic('error',msg);
+ else if(/synchroniz|loading the shared world/i.test(msg))diagnostic('synchronizing');
+ else diagnostic('connecting');
  const e=$('coop-status');if(e)e.textContent=msg;
+ const d=$('coop-diagnostics');if(d){const report=connectionReport();d.textContent='Connection: '+report.phase+' · Signalling: '+(report.signallingReady?'ready':'waiting')+' · Data: '+(report.channelOpen?'open':'closed')+(report.lastPacketAgeMs===null?'':' · Last packet: '+(report.lastPacketAgeMs/1000).toFixed(1)+'s')+(report.error?' · '+report.error:'');}
  const bar=$('coop-live');if(bar){
   bar.textContent=role==='host'?(ready?'● DADDY + JO · CONNECTED':'● DADDY · WAITING'):role==='guest'?(ready?'● JO · CONNECTED':'● JO · CONNECTING'):'● 2D SOLO';
   bar.className=ready?'coop-live online':'coop-live';
