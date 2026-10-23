@@ -41,6 +41,7 @@ on:
       - 'block-world-premium.css'
       - 'block-world-premium-forest.css'
       - 'tests/block-world-coop-smoke.cjs'
+      - 'tests/block-world-browser-performance.cjs'
       - 'block-world.css'
       - 'tests/block-world-smoke.cjs'
       - '.github/workflows/block-world-smoke.yml'
