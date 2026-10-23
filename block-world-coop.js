@@ -17,6 +17,33 @@ function diagnostic(phase,error=''){diagnosticPhase=phase;diagnosticError=error;
 function connectionReport(){return {role,phase:diagnosticPhase,ready,channelOpen:connected(),signallingReady:peerReady,peerDisconnected:!!peer?.disconnected,lastPacketAgeMs:lastPacketAt?Math.round(performance.now()-lastPacketAt):null,phaseAgeMs:Math.round(performance.now()-diagnosticChangedAt),error:diagnosticError,transport:'PeerJS WebRTC (STUN only)'};}
 function refreshDiagnostics(){const d=$('coop-diagnostics');if(!d)return;const r=connectionReport();d.textContent='Connection: '+r.phase+' · Signalling: '+(r.signallingReady?'ready':'waiting')+' · Data: '+(r.channelOpen?'open':'closed')+(r.lastPacketAgeMs===null?'':' · Last packet: '+(r.lastPacketAgeMs/1000).toFixed(1)+'s')+(r.error?' · '+r.error:'');}
 window.BlockWorldConnectionDiagnostics=()=>connectionReport();
+
+let certification=null,certificationResult=null;
+const certButton=$('coop-certify'),exportButton=$('coop-certify-export'),certStatus=$('coop-certify-status');
+if(certButton)certButton.addEventListener('click',()=>{
+ if(certification)return;
+ const start=performance.now(),frames=[],phases=[],connectedAtStart=g.connected();
+ certButton.disabled=true;certStatus.textContent='Measuring 60 seconds on this device. Keep the game visible and playing.';
+ certification={start,frames,phases,connectedAtStart};
+ const record=t=>{
+  if(certification?.start!==start)return;
+  frames.push(t);if(frames.length>5000)frames.shift();
+  if(t-start<60000){requestAnimationFrame(record);return;}
+  const intervals=frames.slice(1).map((v,i)=>v-frames[i]).filter(v=>v>0&&v<1000).sort((a,b)=>a-b);
+  const percentile=p=>intervals[Math.floor((intervals.length-1)*p)]??null;
+  certificationResult={kind:'physical-device-browser-measurement',collectedAt:new Date().toISOString(),userAgent:navigator.userAgent,viewport:{width:innerWidth,height:innerHeight},durationMs:Math.round(t-start),frameSamples:intervals.length,medianFrameMs:percentile(.5),p95FrameMs:percentile(.95),connectedAtStart,connectedAtEnd:g.connected(),connection:connectionReport(),visibilityChanges:phases};
+  certification=null;certButton.disabled=false;exportButton.disabled=false;
+  certStatus.textContent='60s test complete · '+intervals.length+' frame samples · p95 '+(percentile(.95)?.toFixed(1)??'n/a')+' ms. Export from both phones.';
+ };
+ requestAnimationFrame(record);
+});
+document.addEventListener('visibilitychange',()=>{if(certification)certification.phases.push({atMs:Math.round(performance.now()-certification.start),hidden:document.hidden});});
+if(exportButton)exportButton.addEventListener('click',()=>{
+ if(!certificationResult)return;
+ const blob=new Blob([JSON.stringify(certificationResult,null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='block-world-device-certification-'+Date.now()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);
+});
+
 // Deployment may inject a dedicated PeerServer and short-lived TURN credentials.
 // Never embed long-lived TURN secrets in a public GitHub Pages bundle.
 const cfg=window.BLOCK_WORLD_NETWORK||{};
