@@ -15,6 +15,7 @@ let lastResyncRequestAt=0;
 let diagnosticPhase='offline',diagnosticError='',diagnosticChangedAt=performance.now();
 function diagnostic(phase,error=''){diagnosticPhase=phase;diagnosticError=error;diagnosticChangedAt=performance.now();}
 function connectionReport(){return {role,phase:diagnosticPhase,ready,channelOpen:connected(),signallingReady:peerReady,peerDisconnected:!!peer?.disconnected,lastPacketAgeMs:lastPacketAt?Math.round(performance.now()-lastPacketAt):null,phaseAgeMs:Math.round(performance.now()-diagnosticChangedAt),error:diagnosticError,transport:'PeerJS WebRTC (STUN only)'};}
+function refreshDiagnostics(){const d=$('coop-diagnostics');if(!d)return;const r=connectionReport();d.textContent='Connection: '+r.phase+' · Signalling: '+(r.signallingReady?'ready':'waiting')+' · Data: '+(r.channelOpen?'open':'closed')+(r.lastPacketAgeMs===null?'':' · Last packet: '+(r.lastPacketAgeMs/1000).toFixed(1)+'s')+(r.error?' · '+r.error:'');}
 window.BlockWorldConnectionDiagnostics=()=>connectionReport();
 // Deployment may inject a dedicated PeerServer and short-lived TURN credentials.
 // Never embed long-lived TURN secrets in a public GitHub Pages bundle.
@@ -72,7 +73,7 @@ function setStatus(msg){
  else if(/synchroniz|loading the shared world/i.test(msg))diagnostic('synchronizing');
  else diagnostic('connecting');
  const e=$('coop-status');if(e)e.textContent=msg;
- const d=$('coop-diagnostics');if(d){const report=connectionReport();d.textContent='Connection: '+report.phase+' · Signalling: '+(report.signallingReady?'ready':'waiting')+' · Data: '+(report.channelOpen?'open':'closed')+(report.lastPacketAgeMs===null?'':' · Last packet: '+(report.lastPacketAgeMs/1000).toFixed(1)+'s')+(report.error?' · '+report.error:'');}
+ refreshDiagnostics();
  const bar=$('coop-live');if(bar){
   bar.textContent=role==='host'?(ready?'● DADDY + JO · CONNECTED':'● DADDY · WAITING'):role==='guest'?(ready?'● JO · CONNECTED':'● JO · CONNECTING'):'● 2D SOLO';
   bar.className=ready?'coop-live online':'coop-live';
@@ -322,7 +323,7 @@ g.onFrame=now=>{
   try{conn?.close();}catch(_){}
   return;
  }
- if(now-lastLocatorAt>220){lastLocatorAt=now;partnerTools(now);}
+ if(now-lastLocatorAt>220){lastLocatorAt=now;partnerTools(now);refreshDiagnostics();}
  if(role==='host'){
   if(now-stateAt>100){stateAt=now;send({t:'state',s:g.getState()});}
   const r=g.getState().realmIndex;
