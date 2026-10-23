@@ -52,9 +52,18 @@ async function sample(engine,viewport){
  await new Promise(ok=>server.listen(0,'127.0.0.1',ok));
  try{
   const results=[];
-  for(const engine of [chromium,webkit])for(const viewport of [{width:390,height:844},{width:320,height:568}])
-   results.push(await sample(engine,viewport));
+  for(const engine of [chromium,webkit])for(const viewport of [{width:390,height:844},{width:320,height:568}]){
+   let result;
+   for(let attempt=1;attempt<=3;attempt++){
+    result=await sample(engine,viewport);
+    result.attempt=attempt;
+    if(result.status==='measured')break;
+    console.warn(engine.name()+' '+viewport.width+'px attempt '+attempt+' inconclusive; retrying');
+   }
+   results.push(result);
+  }
   fs.mkdirSync(path.join(root,'artifacts'),{recursive:true});
   fs.writeFileSync(path.join(root,'artifacts/block-world-browser-performance.json'),JSON.stringify({kind:'desktop-browser-mobile-emulation',physicalDevice:false,results},null,2));
+  assert.ok(results.every(r=>r.status==='measured'),'Release gate failed: Safari/Chromium benchmarks require conclusive samples');
  }finally{await new Promise(ok=>server.close(ok))}
 })().catch(e=>{console.error(e);process.exitCode=1});
