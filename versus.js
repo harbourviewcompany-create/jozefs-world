@@ -288,6 +288,13 @@
     const text=season.length?'Season: Jozef '+jozef+' · Dad '+dad:'Season: no matches yet.';
     line.textContent=text;
     const lobby=$('versus-season-line'); if(lobby) lobby.textContent=text;
+    const lead=$('versus-fulltime-lead'); if(lead) lead.textContent=text;
+    const boardList=$('versus-fulltime-list');
+    if(boardList) boardList.replaceChildren(...season.map(score=>{
+      const li=document.createElement('li'); li.textContent=score; return li;
+    }));
+    const ftTrophy=$('versus-fulltime-trophy');
+    if(ftTrophy) ftTrophy.hidden=Number(localStorage.getItem('jozefs-world-versus-streak')||0)<3;
     const streak=Number(localStorage.getItem('jozefs-world-versus-streak')||0);
     const trophy=$('hq-trophy'), cup=$('versus-trophy');
     if(trophy) trophy.hidden=streak<3;
@@ -741,7 +748,11 @@
       (state.score.dad>state.score.jozef?'Dad':'Jozef');
     const cupNote=room.mode==='cup'&&room.practice?
       (isCupVictory()?(cupStage===2?' WORLD CUP CHAMPIONS!':' Round cleared! Next opponent awaits.'):' Cup run ended. Try again.'): '';
-    say(winner==='A draw'?'Full time — a draw. Rematch?':winner+(winner==='Dad & Jozef'?' win!':' wins!')+cupNote+' Ready for a rematch?');
+    const line=winner==='A draw'?'Full time — a draw. Rematch?':winner+(winner==='Dad & Jozef'?' win!':' wins!')+cupNote+' Ready for a rematch?';
+    say(line);
+    const title=$('versus-fulltime-winner'); if(title) title.textContent=winner==='A draw'?'A draw':winner+' wins';
+    const score=$('versus-fulltime-score'); if(score) score.textContent=state.score.jozef+' – '+state.score.dad;
+    paintSeason();
   }
   function step(){
     if(!room.host||room.phase!=='playing'||!localActive||!room.remoteActive)return;
@@ -844,6 +855,7 @@
     const connected=room.phase!=='lobby';const playing=['playing','finished','countdown'].includes(room.phase);
     $('versus-lobby').hidden=connected;$('versus-room').hidden=!connected||playing||room.practice;
     $('versus-leave').hidden=!connected;$('versus-again').hidden=room.phase!=='finished';
+    const fulltime=$('versus-fulltime'); if(fulltime) fulltime.hidden=room.phase!=='finished';
     $('versus-kick').disabled=room.phase!=='playing'||!localActive||!room.remoteActive;
     if ($('versus-sprint')) $('versus-sprint').disabled=room.phase!=='playing'||!localActive||!room.remoteActive;
     $('versus-ready').disabled=!room.other||room.ready;
@@ -1072,6 +1084,7 @@
   });
   $('versus-share').addEventListener('click',async()=>{const url=new URL(location.href);url.hash='versus';url.searchParams.set('room',room.code);try{await navigator.clipboard.writeText(url.href);say('Invite copied. Send it to your opponent.');}catch{say('Your room code is '+room.code+'. Share it with your opponent.');}});
   $('versus-again').addEventListener('click',()=>{if(room.phase!=='finished')return;if(room.host)prepareRematch();else{send({type:'rematch'});say('Rematch requested.');}});
+  $('versus-fulltime-again')?.addEventListener('click',()=>$('versus-again').click());
   function aim(x,y){
     if(room.phase!=='playing')return;
     if(room.mode==='penalties'){

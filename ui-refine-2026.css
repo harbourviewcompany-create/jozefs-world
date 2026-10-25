@@ -1665,3 +1665,17 @@ body.versus-focused #versus.is-playing .vs-finish:not([hidden]){display:block!im
 #family-pair-panel small{display:block;color:#bed4df;font:500 11px/1.5 system-ui}
 #hq-versus #family-pair-open{min-height:42px;border-radius:9px;padding:7px 11px;font-weight:800}
 @media(max-width:380px){#family-pair-panel .family-pair-actions{grid-template-columns:1fr}#family-pair-panel{padding:12px}}
+
+.jw-home-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px 14px 4px}
+.jw-home-tile{display:flex;flex-direction:column;gap:2px;min-height:92px;padding:14px 12px;border-radius:18px;border:1px solid #8bd2d155;background:linear-gradient(160deg,#163040,#0b1c28);color:#fff;text-decoration:none;text-align:left;font:inherit}
+.jw-home-tile span{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#9ee7ff}
+.jw-home-tile strong{font-size:20px}
+.jw-home-tile small{color:#c9ddd8}
+.versus-fulltime{position:absolute;inset:52px 12px 150px;z-index:8;display:grid;align-content:center;gap:8px;padding:22px;border-radius:22px;background:rgba(6,16,24,.92);color:#fff;text-align:center}
+.versus-fulltime[hidden]{display:none}
+.versus-fulltime-kicker{letter-spacing:.16em;color:#d7ff4a;font-weight:800}
+.versus-fulltime h3{margin:0;font-size:32px}
+#versus-fulltime-score{font-size:28px;font-weight:800}
+#versus-fulltime-list{list-style:none;margin:0;padding:0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+#versus-fulltime-list li{padding:6px 10px;border-radius:10px;background:#163040}
+#versus-fulltime-again{min-height:52px;border:0;border-radius:14px;background:#d7ff4a;color:#122320;font-weight:800}

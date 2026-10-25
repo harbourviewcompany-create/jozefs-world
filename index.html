@@ -69,11 +69,9 @@ body.nav-open .nav-extra{display:inline-flex}
       <button class="nav-btn nav-extra" data-section="career">Career</button>
       <button class="nav-btn nav-extra" data-section="news">Scores</button>
       <button class="nav-btn nav-extra" data-section="sports-arcade">Sports Arcade</button>
-      <a class="nav-btn nav-extra" href="family-video.html">Video Chat</a>
-      <a class="nav-btn nav-extra" href="family-photos.html">Our Photos</a>
+      <button class="nav-btn nav-extra" data-section="adventure">Adventure</button>
       <button class="nav-btn nav-extra" data-section="sports">Sports Scores</button>
       <button class="nav-btn" data-section="versus">Versus</button>
-      
       <button class="nav-btn" data-section="watch">Watch</button>
       <button class="nav-btn nav-extra" data-section="learn">Learn</button>
       <button class="nav-btn nav-extra" data-section="training">Training</button>
@@ -93,6 +91,18 @@ body.nav-open .nav-extra{display:inline-flex}
 
   <!-- HOME SECTION -->
   <section id="home" class="section active" tabindex="-1"><div id="main"></div>
+    <nav class="jw-home-tiles" aria-label="Start here">
+      <button type="button" class="jw-home-tile" onclick="showSection('versus')">
+        <span>1 v 1</span><strong>Versus</strong><small>Play the match</small>
+      </button>
+      <a class="jw-home-tile" href="block-world.html">
+        <span>World</span><strong>Block World</strong><small>Build together</small>
+      </a>
+      <a class="jw-home-tile" href="family-video.html">
+        <span>Family</span><strong>Call Dad</strong><small>Video chat</small>
+      </a>
+    </nav>
+
 
     <section id="jw-worldcore" class="jw-worldcore" aria-label="Jozef's World interactive three-dimensional headquarters">
       <header class="jw-worldcore-top">
@@ -110,15 +120,15 @@ body.nav-open .nav-extra{display:inline-flex}
           <div>
             <span class="jw-worldcore-panel-overline">YOUR NEXT DESTINATION</span>
             <div id="jw-worldcore-selected-type" class="jw-worldcore-selected-type">EXPLORE</div>
-            <h2 id="jw-worldcore-selected-title">Video Chat</h2>
+            <h2 id="jw-worldcore-selected-title">Adventure</h2>
           </div>
-          <p id="jw-worldcore-selected-description">See and talk to Dad or Jozef in a private full-screen family video call.</p>
+          <p id="jw-worldcore-selected-description">Explore mysterious worlds, hidden routes and rival champions.</p>
           <div class="jw-worldcore-quicknav" role="group" aria-label="Browse destination plates">
             <button type="button" id="jw-worldcore-prev" aria-label="Previous world plate">‹</button>
             <output id="jw-worldcore-position" aria-label="Selected plate number">01 / 12</output>
             <button type="button" id="jw-worldcore-next" aria-label="Next world plate">›</button>
           </div>
-          <button type="button" id="jw-worldcore-enter">OPEN VIDEO CHAT ↗</button>
+          <button type="button" id="jw-worldcore-enter">ENTER ADVENTURE ↗</button>
           <div class="jw-worldcore-instruction"><span>DRAG TO ROTATE 360°</span><span>TAP TO SELECT</span><span>TAP TWICE TO ENTER</span></div>
         </aside>
       </div>
@@ -132,7 +142,7 @@ body.nav-open .nav-extra{display:inline-flex}
       </footer>
       <div id="jw-worldcore-index" class="jw-worldcore-index" role="group" aria-label="Accessible world destination index" hidden></div>
       <p id="jw-worldcore-announcement" class="jw-sr-only" role="status" aria-live="polite"></p>
-      <noscript><nav aria-label="World destinations"><a href="family-video.html">Video Chat</a> · <a href="#arena">Football Arena</a> · <a href="#sports-arcade">Sports Arcade</a> · <a href="#club">My Club</a></nav></noscript>
+      <noscript><nav aria-label="World destinations"><a href="#adventure">Adventure</a> · <a href="#arena">Football Arena</a> · <a href="#sports-arcade">Sports Arcade</a> · <a href="#club">My Club</a></nav></noscript>
     </section>
 
 
@@ -172,7 +182,7 @@ body.nav-open .nav-extra{display:inline-flex}
     </nav>
     <aside class="jw-adventure-teaser" aria-label="Explore the playable Adventure Circuit">
       <div><strong>EXPLORE JOZEF'S WORLD.</strong><p>Four worlds, hidden collectibles, champion battles and local two-player co-op.</p></div>
-      <div class="jw-together-teaser-actions"><button type="button" data-start-together>PLAY TOGETHER ↗</button><a href="family-video.html" class="jw-video-chat-link">VIDEO CHAT ↗</a></div>
+      <div class="jw-together-teaser-actions"><button type="button" data-start-together>PLAY TOGETHER ↗</button><button type="button" onclick="showSection('adventure')">SOLO ADVENTURE</button></div>
     </aside>
 
     <details class="hq-details">
@@ -1531,6 +1541,16 @@ body.nav-open .nav-extra{display:inline-flex}
     <p id="versus-status" role="status">Create a room, join with a code, or warm up solo.</p>
     <p id="versus-season-line">Season: no matches yet.</p>
     <p id="versus-trophy" hidden>Trophy: three in a row.</p>
+    <div id="versus-fulltime" class="versus-fulltime" hidden>
+      <p class="versus-fulltime-kicker">FULL TIME</p>
+      <h3 id="versus-fulltime-winner">Match over</h3>
+      <p id="versus-fulltime-score">0 – 0</p>
+      <p id="versus-fulltime-lead">Season: no matches yet.</p>
+      <ol id="versus-fulltime-list"></ol>
+      <p id="versus-fulltime-trophy" hidden>Trophy: three in a row.</p>
+      <button type="button" id="versus-fulltime-again">Rematch</button>
+    </div>
+
     <div id="versus-lobby">
       <button type="button" id="versus-tutorial-open" class="vs-help-open">HOW TO PLAY · 5 QUICK STEPS</button>
       <section id="versus-tutorial-panel" class="vs-tutorial" aria-label="Versus quick tutorial" hidden>
@@ -1762,7 +1782,7 @@ body.nav-open .nav-extra{display:inline-flex}
     <button type="button" data-dock-section="sports-arcade" onclick="showSection('sports-arcade')"><span class="jw-dock-symbol" aria-hidden="true">✦</span><span>Sports</span></button>
     <button type="button" data-dock-section="playbook" onclick="showSection('playbook')"><span class="jw-dock-symbol" aria-hidden="true">◆</span><span>Playbook</span></button>
     <button type="button" data-dock-section="versus" onclick="showSection('versus')"><span class="jw-dock-symbol" aria-hidden="true">⚡</span><span>Versus</span></button>
-    <button type="button" data-dock-section="club" onclick="showSection('club')"><span class="jw-dock-symbol" aria-hidden="true">★</span><span>Club</span></button><a href="family-video.html" style="display:flex;flex-direction:column;align-items:center;justify-content:center;color:inherit;text-decoration:none;min-width:54px;font-size:12px;font-weight:800"><span style="font-size:22px">▣</span>Video</a>
+    <button type="button" data-dock-section="club" onclick="showSection('club')"><span class="jw-dock-symbol" aria-hidden="true">★</span><span>Club</span></button>
   </nav>
 
   <div id="jw-toast" class="jw-toast" aria-live="polite" role="status"></div>
