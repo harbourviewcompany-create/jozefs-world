@@ -1681,3 +1681,9 @@ body.versus-focused #versus.is-playing .vs-finish:not([hidden]){display:block!im
 #versus-fulltime-again{min-height:52px;border:0;border-radius:14px;background:#d7ff4a;color:#122320;font-weight:800}
 
 #home .jw-home-tiles{display:grid!important;position:relative;z-index:3;margin:8px 10px 0}
+
+#home .jw-home-tiles{grid-template-columns:repeat(3,1fr);gap:8px;padding:8px 12px 0}
+#home .jw-home-tile{min-height:0;padding:12px 10px;border-radius:16px;background:linear-gradient(180deg,#1a3a4a,#0c1e2a);border-color:#9ef0ff44}
+#home .jw-home-tile strong{font-size:16px;line-height:1.1;white-space:nowrap}
+#home .jw-home-tile small{font-size:11px;white-space:nowrap}
+#home .jw-home-tile span{font-size:9px}
