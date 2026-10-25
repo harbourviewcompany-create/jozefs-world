@@ -1,7 +1,7 @@
 /* World Core // immersive spatial HQ, October 2026.
    CSS never fakes the 3D plates; WebGL supplies the real geometry. */
 #home.section{max-width:none;width:100%;min-width:0}
-#home:not(.jw-hq-more-open)>:not(#main):not(.jw-worldcore){display:none!important}
+#home:not(.jw-hq-more-open)>:not(#main):not(.jw-worldcore):not(.jw-home-tiles){display:none!important}
 #home .jw-worldcore{
  --cw-lime:#cafa82;--cw-blue:#7fdbf5;
  position:relative;isolation:isolate;box-sizing:border-box;order:-50;

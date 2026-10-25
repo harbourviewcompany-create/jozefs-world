@@ -1,5 +1,5 @@
 /* Jozef FC offline shell: only same-origin public game assets. Never caches personal progress. */
-const CACHE='jozef-fc-app-shell-v139';
+const CACHE='jozef-fc-app-shell-v140';
 const CORE=[
  './','./index.html','./world.html','./block-world.html','./block-world.js','./block-world-coop.js','./block-world-art.js','./block-world-art-forest.js','./block-world-ui.js','./block-world-premium.css','./block-world-premium-forest.css','./block-world-art-forest.js?v=20261013-forest3','./block-world.js?v=20261013-forest3','./block-world-coop.js?v=20261013-forest3','./block-world-ui.js?v=20261013-forest3','./block-world-premium-forest.css?v=20261013-forest3','./block-world.css','./block-world-3d.html','./block-world-3d.js','./block-world-3d-textures.js','./block-world-3d-textures.js?v=20261013-forest-coop6','./block-world-3d.css','./block-world-3d-next.css','./block-world-3d-premium.css','./iphone-performance-2026.js','./iphone-performance-2026.css','./block-world-3d-premium.css?v=20261013-forest-coop6','./block-world-3d.js?v=20261013-forest-coop6','./block-world-3d-next.css?v=20261013-forest-coop6','./block-quest.html','./site-foundation.css','./site-experience.css',
  './favicon.svg','./manifest.webmanifest','./matchday.css','./training.css','./jersey-bingo.css',
