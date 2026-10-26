@@ -144,6 +144,8 @@ function fullWorld(){
 function onMessage(m){
  if(!m||typeof m!=='object')return;
  lastPacketAt=performance.now();
+ if(m.t==='heartbeat'){send({t:'heartbeat-ack',nonce:m.nonce});return;}
+ if(m.t==='heartbeat-ack'){lastPongAt=performance.now();return;}
  if(m.t==='world'&&role==='guest'){
   if(!validWorld(m.w)){setStatus('Invalid game data from host');return;}
   g.useWorld(m.w);g.role(1);ready=true;retryCount=0;lastResyncRequestAt=0;
