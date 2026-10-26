@@ -34,5 +34,26 @@ $('bw-adventure-regroup').addEventListener('click',()=>{
  const success=g.regroup?.(0);
  g.setStatus?.(success?'Regrouped with Jozef.':'Move farther apart before regrouping.');
 });
+
+const backupKey='jozefs-block-shared-backups-v1',challengeKey='jozefs-block-build-challenge-v1';
+const blueprints={cabin:{title:'Forest Cabin',materials:{4:12,7:16,12:4}},bridge:{title:'River Bridge',materials:{7:24,4:8}},tower:{title:'Lookout Tower',materials:{3:20,7:12,12:4}}};
+let challenge=null,backupTimer=0;
+try{challenge=JSON.parse(localStorage.getItem(challengeKey)||'null');}catch(_){}
+const isGuest=()=>window.BlockWorldCoop?.role?.()==='guest';
+const hostCanSave=()=>!isGuest();
+const notifyBackup=t=>{const e=$('bw-backup-status');if(e)e.textContent=t;};
+function backups(){try{const b=JSON.parse(localStorage.getItem(backupKey)||'[]');return Array.isArray(b)?b:[]}catch(_){return []}}
+function snapshot(){const world=g.getWorld?.();if(!world||!Array.isArray(world.world)||world.world.length!==72)return null;return {format:'JozefBlockSharedBackup',version:1,createdAt:new Date().toISOString(),world};}
+function backup(){if(!hostCanSave()){notifyBackup('Only Dad’s hosting device can back up the shared world.');return false;}const b=snapshot();if(!b)return false;try{const history=backups();history.unshift(b);localStorage.setItem(backupKey,JSON.stringify(history.slice(0,3)));g.saveHost?.();notifyBackup('Saved '+new Date(b.createdAt).toLocaleString()+' · '+Math.min(history.length,3)+' restore points on this device');return true;}catch(_){notifyBackup('Storage is full. Export a backup file instead.');return false;}}
+function exportBackup(){const b=snapshot();if(!b)return;const blob=new Blob([JSON.stringify(b)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='dad-jozef-shared-world-'+Date.now()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+$('bw-backup-now').onclick=backup;
+$('bw-backup-export').onclick=exportBackup;
+$('bw-backup-import').onclick=()=>{if(isGuest()){notifyBackup('Only the host can restore a world.');return;}$('bw-backup-import-file').click();};
+$('bw-backup-import-file').onchange=async e=>{const file=e.target.files?.[0];if(!file||file.size>1200000)return notifyBackup('Invalid or oversized backup file.');try{const b=JSON.parse(await file.text()),w=b.world;if(b.format!=='JozefBlockSharedBackup'||b.version!==1||w?.w!==180||w?.h!==72||!Array.isArray(w.world)||w.world.length!==72||!w.world.every(row=>Array.isArray(row)&&row.length===180&&row.every(v=>Number.isInteger(v)&&v>=0&&v<=31))||!Array.isArray(w.players)||w.players.length!==2)throw Error('Invalid world data');if(!confirm('Replace the current world with this backup?'))return;backup();if(!g.useWorld(w))throw Error('Restore rejected');g.saveHost?.();notifyBackup('Backup restored on host. Reconnect Jozef to synchronize.');}catch(_){notifyBackup('Backup could not be restored.');}finally{e.target.value='';}};
+function refreshChallenge(){const e=$('bw-build-progress');if(!e)return;if(!challenge||!blueprints[challenge.id]){e.textContent='Choose a blueprint to begin.';return;}const spec=blueprints[challenge.id],counts={};for(const row of g.getWorld?.().world||[])for(const id of row)if(id in spec.materials)counts[id]=(counts[id]||0)+1;const parts=Object.entries(spec.materials).map(([id,required])=>id+': '+Math.min(required,counts[id]||0)+'/'+required);e.textContent=spec.title+' · '+parts.join(' · ')+' (world-wide materials; build a structure together)';}
+$('bw-build-start').onclick=()=>{if(isGuest()){g.setStatus?.('Ask Dad to start the team challenge.');return;}const id=$('bw-build-blueprint').value;if(!blueprints[id])return;challenge={id,startedAt:Date.now()};try{localStorage.setItem(challengeKey,JSON.stringify(challenge));}catch(_){}window.BlockWorldCoop?.broadcastTeamMessage?.('challenge:'+id);refreshChallenge();};
+window.addEventListener('blockworld-team-message',e=>{const m=e.detail?.message||'';if(m.startsWith('challenge:')&&blueprints[m.slice(10)]){challenge={id:m.slice(10),startedAt:Date.now()};refreshChallenge();}});
+setInterval(()=>{if(!document.hidden){refreshChallenge();if(hostCanSave()&&Date.now()-backupTimer>300000){backupTimer=Date.now();backup();}}},12000);
+
 setInterval(update,1500);
 })();
