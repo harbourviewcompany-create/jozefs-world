@@ -223,7 +223,7 @@ function scheduleReconnect(){
  },delay);
 }
 function stopHeartbeat(){clearInterval(heartbeatTimer);heartbeatTimer=0;lastPongAt=0;}
-function startHeartbeat(){stopHeartbeat();lastPongAt=performance.now();heartbeatTimer=setInterval(()=>{if(!connected())return;const now=performance.now();if(now-lastPongAt>22000){const stale=conn;stopHeartbeat();try{stale?.close()}catch(_){}if(conn===stale)onConnectionLost('Partner stopped responding');return;}send({t:'heartbeat',nonce:++heartbeatNonce});},5000);}
+function startHeartbeat(){stopHeartbeat();lastPongAt=performance.now();heartbeatTimer=setInterval(()=>{if(!connected()||document.hidden)return;const now=performance.now();if(!document.hidden&&now-lastPongAt>22000){const stale=conn;stopHeartbeat();try{stale?.close()}catch(_){}if(conn===stale)onConnectionLost('Partner stopped responding');return;}send({t:'heartbeat',nonce:++heartbeatNonce});},5000);}
 function onConnectionLost(reason){stopHeartbeat();
  conn=null;ready=false;lastResyncRequestAt=0;clearTimeout(joinTimeout);joinTimeout=0;
  g.remoteInput={left:false,right:false,jump:false};
@@ -404,6 +404,7 @@ $('coop-share').addEventListener('click',async()=>{
   else setStatus('Copy your invitation code and send it privately: '+invite);
  }catch(e){setStatus('Invite ready; copy the code if sharing was cancelled.');}
 });
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&connected())lastPongAt=performance.now();});
 window.addEventListener('pagehide',()=>{
  if(role==='host')g.saveHost();
 });
