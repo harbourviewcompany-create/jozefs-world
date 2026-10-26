@@ -9,7 +9,7 @@ if(!g||!$('coop-panel'))return;
 let peer=null,conn=null,role='solo',invite='',ready=false,closed=false;
 let stateAt=0,inputAt=0,snapshotAt=0,lastRealm=-1,lastInput={left:false,right:false,jump:false};
 let lastPacketAt=0,editCount=0,lastActionAt=0,joinTimeout=0,lastGiveAt=0,lastRegroupAt=[-15000,-15000],lastLocatorAt=0;
-let hostRetryTimer=0,hostRetryCount=0;
+let hostRetryTimer=0,hostRetryCount=0,heartbeatTimer=0,lastPongAt=0,heartbeatNonce=0;
 let hostGeneration=0;
 let lastResyncRequestAt=0;
 let diagnosticPhase='offline',diagnosticError='',diagnosticChangedAt=performance.now();
@@ -220,7 +220,9 @@ function scheduleReconnect(){
   if(role==='guest'&&!ready)retryTimer=setTimeout(()=>{if(role==='guest'&&!ready)scheduleReconnect();},4000);
  },delay);
 }
-function onConnectionLost(reason){
+function stopHeartbeat(){clearInterval(heartbeatTimer);heartbeatTimer=0;lastPongAt=0;}
+function startHeartbeat(){stopHeartbeat();lastPongAt=performance.now();heartbeatTimer=setInterval(()=>{if(!connected())return;const now=performance.now();if(now-lastPongAt>22000){const stale=conn;stopHeartbeat();try{stale?.close()}catch(_){}if(conn===stale)onConnectionLost('Partner stopped responding');return;}send({t:'heartbeat',nonce:++heartbeatNonce});},5000);}
+function onConnectionLost(reason){stopHeartbeat();
  conn=null;ready=false;lastResyncRequestAt=0;clearTimeout(joinTimeout);joinTimeout=0;
  g.remoteInput={left:false,right:false,jump:false};
  $('partner-tools').hidden=true;
@@ -233,7 +235,7 @@ function attach(connection){
  conn=connection;
  connection.on('open',()=>{
   if(conn!==connection){try{connection.close();}catch(_){}return;}
-  lastPacketAt=foregroundAt=performance.now();
+  lastPacketAt=foregroundAt=performance.now();startHeartbeat();
   retryCount=0;clearTimeout(retryTimer);retryTimer=0;
   $('coop-disconnect').disabled=false;
   if(role==='host'){
@@ -247,7 +249,7 @@ function attach(connection){
  connection.on('close',()=>{if(conn===connection)onConnectionLost('Connection ended');});
  connection.on('error',()=>{if(conn===connection)onConnectionLost('Connection failed');});
 }
-function leave(options={}){
+function leave(options={}){stopHeartbeat();
  ++hostGeneration;
  clearTimeout(hostRetryTimer);hostRetryTimer=0;hostRetryCount=0;
  clearBookmark();
