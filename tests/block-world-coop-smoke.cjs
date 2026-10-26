@@ -63,7 +63,7 @@ function boot(store=new Map(),tabStore=new Map()){
   localStorage:{getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,String(v)),removeItem:k=>store.delete(k)},
   sessionStorage:{getItem:k=>tabStore.get(k)||null,setItem:(k,v)=>tabStore.set(k,String(v)),removeItem:k=>tabStore.delete(k)},
   navigator:{getGamepads:()=>[]},location,history:{replaceState(){}},confirm:()=>false,
-  URL,Blob:class{},setTimeout:()=>1,clearTimeout(){},
+  URL,Blob:class{},setTimeout:()=>1,clearTimeout(){},setInterval:()=>1,clearInterval(){},
   console:{warn:msg=>trace.push(String(msg)),error:msg=>trace.push(String(msg))}
  };
  vm.runInNewContext(core,sandbox,{timeout:10000});
