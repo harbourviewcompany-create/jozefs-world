@@ -9,13 +9,13 @@ if(!g||!$('coop-panel'))return;
 let peer=null,conn=null,role='solo',invite='',ready=false,closed=false;
 let stateAt=0,inputAt=0,snapshotAt=0,lastRealm=-1,lastInput={left:false,right:false,jump:false};
 let lastPacketAt=0,editCount=0,lastActionAt=0,joinTimeout=0,lastGiveAt=0,lastRegroupAt=[-15000,-15000],lastLocatorAt=0;
-let hostRetryTimer=0,hostRetryCount=0,heartbeatTimer=0,lastPongAt=0,heartbeatNonce=0;
+let hostRetryTimer=0,hostRetryCount=0,heartbeatTimer=0,lastPongAt=0,heartbeatNonce=0,heartbeatSentAt=0,heartbeatRttMs=null;
 let hostGeneration=0;
 let lastResyncRequestAt=0;
 let diagnosticPhase='offline',diagnosticError='',diagnosticChangedAt=performance.now();
 function diagnostic(phase,error=''){diagnosticPhase=phase;diagnosticError=error;diagnosticChangedAt=performance.now();}
-function connectionReport(){return {role,phase:diagnosticPhase,ready,channelOpen:connected(),signallingReady:peerReady,peerDisconnected:!!peer?.disconnected,lastPacketAgeMs:lastPacketAt?Math.round(performance.now()-lastPacketAt):null,phaseAgeMs:Math.round(performance.now()-diagnosticChangedAt),error:diagnosticError,transport:'PeerJS WebRTC (STUN only)'};}
-function refreshDiagnostics(){const d=$('coop-diagnostics');if(!d)return;const r=connectionReport();d.textContent='Connection: '+r.phase+' · Signalling: '+(r.signallingReady?'ready':'waiting')+' · Data: '+(r.channelOpen?'open':'closed')+(r.lastPacketAgeMs===null?'':' · Last packet: '+(r.lastPacketAgeMs/1000).toFixed(1)+'s')+(r.error?' · '+r.error:'');}
+function connectionReport(){return {role,phase:diagnosticPhase,ready,channelOpen:connected(),signallingReady:peerReady,peerDisconnected:!!peer?.disconnected,lastPacketAgeMs:lastPacketAt?Math.round(performance.now()-lastPacketAt):null,phaseAgeMs:Math.round(performance.now()-diagnosticChangedAt),error:diagnosticError,heartbeatRttMs,transport:'PeerJS WebRTC (STUN only unless runtime ICE config supplies TURN)'};}
+function refreshDiagnostics(){const d=$('coop-diagnostics');if(!d)return;const r=connectionReport();d.textContent='Connection: '+r.phase+' · Signalling: '+(r.signallingReady?'ready':'waiting')+' · Data: '+(r.channelOpen?'open':'closed')+(r.lastPacketAgeMs===null?'':' · Last packet: '+(r.lastPacketAgeMs/1000).toFixed(1)+'s')+(r.heartbeatRttMs===null?'':' · Peer RTT: '+Math.round(r.heartbeatRttMs)+'ms')+(r.error?' · '+r.error:'');}
 window.BlockWorldConnectionDiagnostics=()=>connectionReport();
 
 let certification=null,certificationResult=null;
@@ -145,7 +145,7 @@ function onMessage(m){
  if(!m||typeof m!=='object')return;
  lastPacketAt=performance.now();
  if(m.t==='heartbeat'){send({t:'heartbeat-ack',nonce:m.nonce});return;}
- if(m.t==='heartbeat-ack'){lastPongAt=performance.now();return;}
+ if(m.t==='heartbeat-ack'){lastPongAt=performance.now();if(m.nonce===heartbeatNonce)heartbeatRttMs=Math.round(lastPongAt-heartbeatSentAt);refreshDiagnostics();return;}
  if(m.t==='world'&&role==='guest'){
   if(!validWorld(m.w)){setStatus('Invalid game data from host');return;}
   g.useWorld(m.w);g.role(1);ready=true;retryCount=0;lastResyncRequestAt=0;
@@ -222,8 +222,8 @@ function scheduleReconnect(){
   if(role==='guest'&&!ready)retryTimer=setTimeout(()=>{if(role==='guest'&&!ready)scheduleReconnect();},4000);
  },delay);
 }
-function stopHeartbeat(){clearInterval(heartbeatTimer);heartbeatTimer=0;lastPongAt=0;}
-function startHeartbeat(){stopHeartbeat();lastPongAt=performance.now();heartbeatTimer=setInterval(()=>{if(!connected()||document.hidden)return;const now=performance.now();if(!document.hidden&&now-lastPongAt>22000){const stale=conn;stopHeartbeat();try{stale?.close()}catch(_){}if(conn===stale)onConnectionLost('Partner stopped responding');return;}send({t:'heartbeat',nonce:++heartbeatNonce});},5000);}
+function stopHeartbeat(){clearInterval(heartbeatTimer);heartbeatTimer=0;lastPongAt=0;heartbeatRttMs=null;}
+function startHeartbeat(){stopHeartbeat();lastPongAt=performance.now();heartbeatTimer=setInterval(()=>{if(!connected()||document.hidden)return;const now=performance.now();if(!document.hidden&&now-lastPongAt>22000){const stale=conn;stopHeartbeat();try{stale?.close()}catch(_){}if(conn===stale)onConnectionLost('Partner stopped responding');return;}heartbeatSentAt=now;send({t:'heartbeat',nonce:++heartbeatNonce});},5000);}
 function onConnectionLost(reason){stopHeartbeat();
  conn=null;ready=false;lastResyncRequestAt=0;clearTimeout(joinTimeout);joinTimeout=0;
  g.remoteInput={left:false,right:false,jump:false};
