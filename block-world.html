@@ -37,6 +37,8 @@
 .partner-tools button:disabled{opacity:.4}.partner-tools span{color:#d6f7ec}
 @media(max-width:530px){.partner-tools{top:calc(139px + env(safe-area-inset-top));right:5px;max-width:55vw;font-size:9px}.partner-tools button{font-size:9px;padding:6px}}
 @media(max-height:470px){.partner-tools{top:37px;right:5px;font-size:9px}}
+
+#bw-adventure{position:fixed;z-index:19;left:max(8px,env(safe-area-inset-left));top:calc(112px + env(safe-area-inset-top));width:min(260px,62vw);color:#f2ffef;background:#082b35e8;border:1px solid #7fe4be88;border-radius:14px;padding:10px 12px;font:600 12px system-ui;box-shadow:0 8px 25px #0008;pointer-events:auto}#bw-adventure summary{cursor:pointer;font-weight:900;font-size:13px}#bw-adventure[open] .bw-mission{margin-top:8px;line-height:1.55}#bw-adventure progress{width:100%;accent-color:#baff79;height:8px}#bw-adventure p{margin:5px 0}#bw-adventure button{border:1px solid #7fe4be88;background:#144654;color:white;border-radius:7px;padding:7px} @media(max-width:530px){#bw-adventure{top:auto;bottom:calc(86px + env(safe-area-inset-bottom));max-height:42dvh;overflow:auto;width:min(235px,58vw);font-size:11px}}
 </style>
 <link rel="stylesheet" href="./block-world-premium-forest.css?v=20261013-forest3">
 </head>
@@ -112,12 +114,12 @@
  </div>
 </div>
 
-<script src="./peerjs.min.js" defer></script>
+<details id="bw-adventure"><summary>ADVENTURE JOURNAL</summary><div class="bw-mission"><p id="bw-adventure-mission">Loading your adventure…</p><progress id="bw-adventure-progress" max="5" value="0"></progress><p id="bw-adventure-team">Team status loading…</p><p id="bw-adventure-goals"></p><button type="button" id="bw-adventure-regroup">REGROUP WITH PARTNER</button></div></details><script src="./peerjs.min.js" defer></script>
 <script src="./block-world-art-forest.js?v=20261013-forest3" defer></script>
 <script src="./block-world.js?v=20261013-forest3" defer></script>
 <script src="./block-world-network.js?v=20261020" defer></script>
 <script src="./block-world-coop.js?v=20261023-certification1" defer></script>
-<script src="./block-world-ui.js?v=20261013-forest3" defer></script>
+<script src="./block-world-ui.js?v=20261013-forest3" defer></script><script src="./block-world-adventure.js?v=20261026" defer></script>
 
 </body>
 </html>
