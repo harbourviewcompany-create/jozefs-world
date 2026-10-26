@@ -23,6 +23,8 @@ function update(){
  const goals=Object.entries(s.goals||{}).filter(([key,value])=>key in goalNames&&Number.isFinite(value));
  $('bw-adventure-goals').textContent=goals.map(([key,value])=>goalNames[key]+': '+Math.max(0,Math.floor(value))).join(' · ');
  $('bw-adventure-regroup').disabled=!(coop?.channelOpen&&coop?.ready);
+ const health=(s.players||[]).map((p,i)=>(i?'Jozef':'Dad')+': '+Math.max(0,Math.round(p.health||0))+' HP');
+ const team=$('bw-adventure-health');if(team)team.textContent=health.join(' · ');
 }
 $('bw-adventure').addEventListener('toggle',update);
 $('bw-adventure-regroup').addEventListener('click',()=>{
