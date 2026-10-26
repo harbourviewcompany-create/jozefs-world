@@ -144,6 +144,7 @@ function fullWorld(){
 function onMessage(m){
  if(!m||typeof m!=='object')return;
  lastPacketAt=performance.now();
+ if(m.t==='team-message'&&typeof m.message==='string'&&m.message.length<160){window.dispatchEvent(new CustomEvent('blockworld-team-message',{detail:{message:m.message,from:role==='host'?'Jozef':'Dad'}}));return;}
  if(m.t==='heartbeat'){send({t:'heartbeat-ack',nonce:m.nonce});return;}
  if(m.t==='heartbeat-ack'){lastPongAt=performance.now();if(m.nonce===heartbeatNonce)heartbeatRttMs=Math.round(lastPongAt-heartbeatSentAt);refreshDiagnostics();return;}
  if(m.t==='world'&&role==='guest'){
@@ -423,5 +424,5 @@ if(!incoming){
   join();
  }else setStatus('Offline · two players on keyboard, or invite Jo on another device');
 }
-window.BlockWorldCoop=Object.freeze({role:()=>role,connected,host:startHost,join,disconnect,code:()=>invite});
+window.BlockWorldCoop=Object.freeze({role:()=>role,connected,host:startHost,join,disconnect,code:()=>invite,sendTeamMessage:(message)=>{if(role==='guest'&&connected()&&ready&&typeof message==='string'&&message.length<160)send({t:'team-message',message});},broadcastTeamMessage:(message)=>{if(role==='host'&&connected()&&ready&&typeof message==='string'&&message.length<160)send({t:'team-message',message});}});
 })();
