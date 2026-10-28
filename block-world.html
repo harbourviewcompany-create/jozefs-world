@@ -12,33 +12,28 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="stylesheet" href="./block-world.css">
 <style>
-#coop-panel{display:none;position:fixed;inset:0;background:#061c28ee;z-index:50;place-items:center;padding:16px}
+#coop-panel{display:none;position:fixed;inset:0;background:#061c28ee;z-index:50;place-items:center;padding:16px;overflow-y:auto}
 #coop-panel.open{display:grid}
-#coop-card{width:min(420px,100%);background:#0f3841;border:1px solid #7fe4be63;border-radius:14px;padding:18px;text-align:center;color:#eefff2;font-family:system-ui}
-#coop-card h3{margin:0 0 8px}
-#coop-card p{font-size:13px;color:#c0e5d3;margin:0 0 12px}
-#coop-card input{width:100%;padding:10px;border-radius:8px;border:1px solid #83e5d6;background:#183d49;color:#fff;margin:6px 0}
-#coop-card button,#coop-card a{display:inline-block;margin:4px;padding:10px 14px;border-radius:8px;border:1px solid #83e5d6;background:#183d49;color:#fff;font-weight:700;text-decoration:none;cursor:pointer}
-#coop-status{margin-top:10px;font-size:12px;color:#d6ff7f}
-
-/* Shared-world status and responsive session dialog */
+#coop-card{width:min(420px,100%);background:#0f3841;border:1px solid #7fe4be63;border-radius:16px;padding:20px;text-align:center;color:#eefff2;font-family:system-ui;max-height:min(86dvh,680px);overflow-y:auto;box-shadow:0 12px 45px #000c}
+#coop-card h3{margin:0 0 10px;font-size:20px;letter-spacing:.02em}
+#coop-card .steps{text-align:left;font-size:14px;line-height:1.55;color:#d4f0e4;margin:0 0 16px;padding:12px 14px;background:#0a2a34;border-radius:12px;border:1px solid #3d6b6a}
+#coop-card .steps strong{color:#ffe18c}
+#coop-card .steps ol{margin:8px 0 0;padding-left:18px}
+#coop-card .steps li{margin:6px 0}
+#coop-card input{width:100%;padding:12px;border-radius:10px;border:1px solid #83e5d6;background:#183d49;color:#fff;margin:8px 0;font-size:14px;box-sizing:border-box}
+#coop-card button{display:inline-block;margin:5px;padding:12px 16px;border-radius:10px;border:1px solid #83e5d6;background:#183d49;color:#fff;font-weight:800;font-size:14px;cursor:pointer}
+#coop-card button.primary{background:#1f6b4a;border-color:#7fe4be}
+#coop-card button:disabled{opacity:.45;cursor:not-allowed}
+#coop-status{margin-top:12px;font-size:13px;color:#d6ff7f;min-height:1.4em}
+#coop-status.ok{color:#9dffb8}
+#coop-status.err{color:#ffb4a8}
 .coop-live{position:fixed;right:max(8px,env(safe-area-inset-right));top:calc(49px + env(safe-area-inset-top));z-index:17;padding:6px 9px;border-radius:10px;background:#11263acf;color:#cce1f0;border:1px solid #8ca9b463;font:800 10px system-ui;pointer-events:none;max-width:48vw;text-align:right;box-shadow:0 3px 12px #0006}
 .coop-live.online{border-color:#82ecb6;color:#b7ffd0;background:#073b31ee}
-#coop-panel{overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y}
-#coop-card{max-height:min(82dvh,650px);overflow-y:auto;box-shadow:0 12px 45px #000c}
-#coop-card p{line-height:1.6}#coop-card strong{color:#fff4ae}
-#coop-card button:disabled{opacity:.45;cursor:not-allowed}
-#coop-card button:focus-visible,#coop-card input:focus-visible{outline:3px solid #ffe18c;outline-offset:2px}
-@media(max-width:530px){.coop-live{top:calc(104px + env(safe-area-inset-top));font-size:9px;padding:5px 7px}#coop-card{padding:15px}#coop-card button{padding:10px;font-size:12px}}
-@media(max-height:470px){.coop-live{top:4px;right:4px;font-size:9px}#coop-card{max-height:86dvh}}
-
 .partner-tools{position:fixed;z-index:18;top:calc(85px + env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));max-width:min(78vw,390px);display:flex;align-items:center;justify-content:flex-end;gap:5px;flex-wrap:wrap;padding:6px;background:#0c293be3;border:1px solid #7ee3c374;border-radius:11px;box-shadow:0 4px 16px #00172786;font:800 10px system-ui}
 .partner-tools[hidden]{display:none!important}.partner-tools button{margin:0;border:1px solid #96d9ed77;color:white;background:#184565;padding:6px 8px;border-radius:8px;font-size:10px}
 .partner-tools button:disabled{opacity:.4}.partner-tools span{color:#d6f7ec}
-@media(max-width:530px){.partner-tools{top:calc(139px + env(safe-area-inset-top));right:5px;max-width:55vw;font-size:9px}.partner-tools button{font-size:9px;padding:6px}}
-@media(max-height:470px){.partner-tools{top:37px;right:5px;font-size:9px}}
-
-#bw-adventure{position:fixed;z-index:19;left:max(8px,env(safe-area-inset-left));top:calc(112px + env(safe-area-inset-top));width:min(260px,62vw);color:#f2ffef;background:#082b35e8;border:1px solid #7fe4be88;border-radius:14px;padding:10px 12px;font:600 12px system-ui;box-shadow:0 8px 25px #0008;pointer-events:auto}#bw-adventure summary{cursor:pointer;font-weight:900;font-size:13px}#bw-adventure[open] .bw-mission{margin-top:8px;line-height:1.55}#bw-adventure progress{width:100%;accent-color:#baff79;height:8px}#bw-adventure p{margin:5px 0}#bw-adventure button{border:1px solid #7fe4be88;background:#144654;color:white;border-radius:7px;padding:7px} @media(max-width:530px){#bw-adventure{top:auto;bottom:calc(86px + env(safe-area-inset-bottom));max-height:42dvh;overflow:auto;width:min(235px,58vw);font-size:11px}}
+#bw-adventure{position:fixed;z-index:19;left:max(8px,env(safe-area-inset-left));top:calc(112px + env(safe-area-inset-top));width:min(260px,62vw);color:#f2ffef;background:#082b35e8;border:1px solid #7fe4be88;border-radius:14px;padding:10px 12px;font:600 12px system-ui;box-shadow:0 8px 25px #0008;pointer-events:auto}#bw-adventure summary{cursor:pointer;font-weight:900;font-size:13px}#bw-adventure[open] .bw-mission{margin-top:8px;line-height:1.55}#bw-adventure progress{width:100%;accent-color:#baff79;height:8px}#bw-adventure p{margin:5px 0}#bw-adventure button{border:1px solid #7fe4be88;background:#144654;color:white;border-radius:7px;padding:7px}
+@media(max-width:530px){.coop-live{top:calc(104px + env(safe-area-inset-top));font-size:9px}#coop-card{padding:16px}.partner-tools{top:calc(139px + env(safe-area-inset-top));max-width:55vw}#bw-adventure{top:auto;bottom:calc(86px + env(safe-area-inset-bottom));max-height:42dvh;overflow:auto;width:min(235px,58vw);font-size:11px}}
 </style>
 <link rel="stylesheet" href="./block-world-premium-forest.css?v=20261013-forest3">
 </head>
@@ -98,28 +93,37 @@
 <div id="coop-panel" aria-label="Two-phone co-op">
  <div id="coop-card">
   <h3>PLAY TOGETHER</h3>
-  <p><strong>Daddy hosts.</strong> Jozef joins from another phone or tablet. You both move, jump, mine and build <strong>at the same time</strong> in one shared world. Both devices need internet.</p>
-  <div>
-   <button id="coop-host">HOST AS DADDY</button>
-   <button id="coop-share" disabled>SHARE LINK</button>
+  <div class="steps">
+   <strong>3 easy steps</strong>
+   <ol>
+    <li><strong>Daddy:</strong> tap <em>Host</em>, then <em>Share link</em></li>
+    <li><strong>Jozef:</strong> open the link (or paste the code) and tap <em>Join</em></li>
+    <li>Keep both phones on the game — you play in the same world</li>
+   </ol>
+   <p style="margin:10px 0 0;font-size:12px;opacity:.9">Tip: same Wi‑Fi works best. Both phones need internet.</p>
   </div>
-  <label>Or paste invite code<br><input id="coop-code" placeholder="Paste invite code" autocomplete="off"></label>
   <div>
-   <button id="coop-join">JOIN AS JOZEF</button>
-   <button id="coop-disconnect" disabled>DISCONNECT</button>
-   <button id="coop-close">CLOSE</button>
+   <button id="coop-host" class="primary" type="button">1 · HOST AS DADDY</button>
+   <button id="coop-share" type="button" disabled>2 · SHARE LINK</button>
   </div>
-  <div id="coop-status">Offline · solo play</div>
-  <details style="margin-top:10px;text-align:left"><summary style="cursor:pointer;font-size:12px">Connection diagnostics</summary><p id="coop-diagnostics" role="status" aria-live="polite">Connection: offline · Signalling: waiting · Data: closed</p><p>Direct WebRTC connections may fail on restrictive networks without a TURN relay.</p><button id="coop-certify" type="button">START 60s DEVICE TEST</button><button id="coop-certify-export" type="button" disabled>EXPORT RESULTS</button><p id="coop-certify-status" role="status">No physical-device measurement collected.</p></details>
+  <label style="display:block;margin-top:12px;font-size:13px">Or paste invite code<br><input id="coop-code" placeholder="Paste invite code from Daddy" autocomplete="off" spellcheck="false"></label>
+  <div>
+   <button id="coop-join" class="primary" type="button">JOIN AS JOZEF</button>
+   <button id="coop-disconnect" type="button" disabled>DISCONNECT</button>
+   <button id="coop-close" type="button">CLOSE</button>
+  </div>
+  <div id="coop-status">Ready when you are</div>
+  <details style="margin-top:12px;text-align:left;font-size:12px;opacity:.85"><summary style="cursor:pointer">Advanced diagnostics</summary><p id="coop-diagnostics" role="status" aria-live="polite">Connection: offline</p><button id="coop-certify" type="button">START 60s DEVICE TEST</button><button id="coop-certify-export" type="button" disabled>EXPORT RESULTS</button><p id="coop-certify-status" role="status"></p></details>
  </div>
 </div>
 
-<details id="bw-adventure"><summary>ADVENTURE JOURNAL</summary><div class="bw-mission"><p id="bw-adventure-mission">Loading your adventure…</p><progress id="bw-adventure-progress" max="5" value="0"></progress><p id="bw-adventure-team">Team status loading…</p><p id="bw-adventure-health"></p><p id="bw-adventure-goals"></p><button type="button" id="bw-adventure-regroup">REGROUP WITH PARTNER</button><hr><strong>TEAM BUILD CHALLENGE</strong><p id="bw-build-progress">Choose a blueprint to begin.</p><select id="bw-build-blueprint" aria-label="Choose building challenge"><option value="cabin">Forest Cabin</option><option value="bridge">River Bridge</option><option value="tower">Lookout Tower</option></select><button type="button" id="bw-build-start">START CHALLENGE</button><p id="bw-backup-status">Shared-world backups: waiting</p><button type="button" id="bw-backup-now">BACK UP WORLD</button><button type="button" id="bw-backup-export">EXPORT BACKUP</button><input id="bw-backup-import-file" type="file" accept="application/json,.json" hidden><button type="button" id="bw-backup-import">IMPORT BACKUP</button></div></details><script src="./peerjs.min.js" defer></script>
+<details id="bw-adventure"><summary>ADVENTURE JOURNAL</summary><div class="bw-mission"><p id="bw-adventure-mission">Loading your adventure…</p><progress id="bw-adventure-progress" max="5" value="0"></progress><p id="bw-adventure-team">Team status loading…</p><p id="bw-adventure-health"></p><p id="bw-adventure-goals"></p><button type="button" id="bw-adventure-regroup">REGROUP WITH PARTNER</button><hr><strong>TEAM BUILD CHALLENGE</strong><p id="bw-build-progress">Choose a blueprint to begin.</p><select id="bw-build-blueprint" aria-label="Choose building challenge"><option value="cabin">Forest Cabin</option><option value="bridge">River Bridge</option><option value="tower">Lookout Tower</option></select><button type="button" id="bw-build-start">START CHALLENGE</button><p id="bw-backup-status">Shared-world backups: waiting</p><button type="button" id="bw-backup-now">BACK UP WORLD</button><button type="button" id="bw-backup-export">EXPORT BACKUP</button><input id="bw-backup-import-file" type="file" accept="application/json,.json" hidden><button type="button" id="bw-backup-import">IMPORT BACKUP</button></div></details>
+<script src="./peerjs.min.js" defer></script>
 <script src="./block-world-art-forest.js?v=20261013-forest3" defer></script>
 <script src="./block-world.js?v=20261013-forest3" defer></script>
-<script src="./block-world-network.js?v=20261020" defer></script>
-<script src="./block-world-coop.js?v=20261026-build" defer></script>
-<script src="./block-world-ui.js?v=20261013-forest3" defer></script><script src="./block-world-adventure.js?v=20261026-buildfix" defer></script>
-
+<script src="./block-world-network.js?v=20261028-turn" defer></script>
+<script src="./block-world-coop.js?v=20261028-turn" defer></script>
+<script src="./block-world-ui.js?v=20261013-forest3" defer></script>
+<script src="./block-world-adventure.js?v=20261026-buildfix" defer></script>
 </body>
 </html>
