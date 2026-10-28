@@ -1,15 +1,8 @@
-/* Jozef's World private co-op signalling + ICE.
-   Primary: dedicated PeerServer on Render.
-   Fallback: public PeerJS cloud if primary is busy/down.
-   ICE: Google STUN + open public TURN for cellular/CGNAT. */
+/* Daddy + Jozef co-op networking.
+   Single public PeerJS broker so both phones always meet on the same server.
+   TURN relays help cellular / different-network connections. */
 window.BLOCK_WORLD_NETWORK={
  peerServer:{
-  host:'jozefs-world-signalling-3vtw.onrender.com',
-  port:443,
-  path:'/peerjs/',
-  secure:true
- },
- peerServerFallback:{
   host:'0.peerjs.com',
   port:443,
   path:'/',
@@ -22,6 +15,6 @@ window.BLOCK_WORLD_NETWORK={
   {urls:'turn:openrelay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},
   {urls:'turn:openrelay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'},
   {urls:'turn:openrelay.metered.ca:443?transport=tcp',username:'openrelayproject',credential:'openrelayproject'},
-  {urls:'turn:openrelay.metered.ca:80?transport=tcp',username:'openrelayproject',credential:'openrelayproject'}
+  {urls:'turns:openrelay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'}
  ]
 };
