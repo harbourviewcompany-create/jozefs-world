@@ -27,6 +27,23 @@
 #coop-status.ok{color:#9dffb8}
 #coop-status.err{color:#ffb4a8}
 #coop-code,#coop-diagnostics,#coop-certify,#coop-certify-export,#coop-certify-status{display:none!important}
+
+/* Jozef loading animation */
+#jozef-loading{display:none;position:fixed;inset:0;z-index:60;background:#06251ef5;place-items:center;padding:20px;text-align:center;font-family:system-ui;color:#e8fff4}
+#jozef-loading.show{display:grid}
+#jozef-loading .box-row{display:flex;gap:10px;justify-content:center;margin:18px 0 14px}
+#jozef-loading .box{width:28px;height:28px;border-radius:6px;animation:jozef-bounce 0.9s ease-in-out infinite}
+#jozef-loading .box:nth-child(1){background:#6ab553;animation-delay:0s}
+#jozef-loading .box:nth-child(2){background:#936039;animation-delay:.12s}
+#jozef-loading .box:nth-child(3){background:#7c8994;animation-delay:.24s}
+#jozef-loading .box:nth-child(4){background:#e3c77d;animation-delay:.36s}
+#jozef-loading .box:nth-child(5){background:#518baf;animation-delay:.48s}
+@keyframes jozef-bounce{0%,100%{transform:translateY(0) scale(1)}40%{transform:translateY(-18px) scale(1.08)}60%{transform:translateY(-8px)}}
+#jozef-loading h2{margin:0;font-size:26px;font-weight:900;color:#b7ffd0}
+#jozef-loading p{margin:8px 0 0;font-size:16px;color:#c8e8da;font-weight:700}
+#jozef-loading .dots::after{content:'';animation:jozef-dots 1.2s steps(4,end) infinite}
+@keyframes jozef-dots{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}}
+
 .coop-live{position:fixed;right:max(8px,env(safe-area-inset-right));top:calc(49px + env(safe-area-inset-top));z-index:17;padding:6px 9px;border-radius:10px;background:#11263acf;color:#cce1f0;border:1px solid #8ca9b463;font:800 10px system-ui;pointer-events:none;max-width:48vw;text-align:right}
 .coop-live.online{border-color:#82ecb6;color:#b7ffd0;background:#073b31ee}
 .partner-tools{position:fixed;z-index:18;top:calc(85px + env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));max-width:min(78vw,390px);display:flex;align-items:center;justify-content:flex-end;gap:5px;flex-wrap:wrap;padding:6px;background:#0c293be3;border:1px solid #7ee3c374;border-radius:11px;font:800 10px system-ui}
@@ -90,6 +107,14 @@
  <button id="coop-regroup" type="button">REGROUP</button>
 </div>
 
+<div id="jozef-loading" aria-live="polite" aria-label="Joining Daddy">
+ <h2>Finding Daddy</h2>
+ <div class="box-row" aria-hidden="true">
+  <span class="box"></span><span class="box"></span><span class="box"></span><span class="box"></span><span class="box"></span>
+ </div>
+ <p class="dots">Almost ready</p>
+</div>
+
 <div id="coop-panel" aria-label="Play together">
  <div id="coop-card">
   <h3>PLAY TOGETHER</h3>
@@ -117,7 +142,7 @@
 <script src="./block-world-art-forest.js?v=20261013-forest3" defer></script>
 <script src="./block-world.js?v=20261013-forest3" defer></script>
 <script src="./block-world-network.js?v=20261028-turn" defer></script>
-<script src="./block-world-coop.js?v=20261028-jozef" defer></script>
+<script src="./block-world-coop.js?v=20261028-load" defer></script>
 <script src="./block-world-ui.js?v=20261013-forest3" defer></script>
 <script src="./block-world-adventure.js?v=20261026-buildfix" defer></script>
 </body>
