@@ -9,6 +9,7 @@ let lastPacketAt=0,editCount=0,lastActionAt=0,joinTimeout=0,lastGiveAt=0,lastReg
 let hostRetryTimer=0,hostRetryCount=0,heartbeatTimer=0,lastPongAt=0,heartbeatNonce=0,heartbeatSentAt=0,heartbeatRttMs=null;
 let hostGeneration=0,lastResyncRequestAt=0,peerReady=false;
 let retryTimer=0,retryCount=0,joiningCode='';
+const WORLD_W=280,WORLD_H=110,MAX_TILE=62;
 const cfg=window.BLOCK_WORLD_NETWORK||{};
 const endpoint=cfg.peerServer||{};
 const iceServers=Array.isArray(cfg.iceServers)&&cfg.iceServers.length?cfg.iceServers:[{urls:'stun:stun.l.google.com:19302'}];
@@ -34,15 +35,13 @@ function showLoader(on){const el=$('jozef-loading');if(!el)return;el.classList.t
 function setStatus(msg){
  const e=$('coop-status');if(e){e.textContent=msg;e.className=/fail|error|unable|timed|lost|Could not/i.test(msg)?'err':/in!|Waiting|Connected|playing|Here we go|Yay/i.test(msg)?'ok':'';}
  const bar=$('coop-live');if(bar){bar.textContent=role==='host'?(ready?'● DADDY + JO · CONNECTED':'● DADDY · WAITING'):role==='guest'?(ready?'● JO · CONNECTED':'● JO · CONNECTING'):'● 2D SOLO';bar.className=ready?'coop-live online':'coop-live';}
- // Keep loader up while Jozef is connecting
- if(role==='guest'&&!ready)showLoader(true);
- else showLoader(false);
+ if(role==='guest'&&!ready)showLoader(true);else showLoader(false);
 }
 function show(){$('coop-panel').classList.add('open');}
 function hide(){$('coop-panel').classList.remove('open');}
 function send(value){try{if(connected())conn.send(value);}catch(_){setStatus('Connection interrupted');}}
 function validPlayer(p){return p&&['x','y','health','facing'].every(k=>Number.isFinite(p[k]))&&p.inventory&&typeof p.inventory==='object';}
-function validWorld(s){return s&&s.w===180&&s.h===72&&Array.isArray(s.world)&&s.world.length===72&&Array.isArray(s.players)&&s.players.length===2&&s.players.every(validPlayer);}
+function validWorld(s){return s&&s.w===WORLD_W&&s.h===WORLD_H&&Array.isArray(s.world)&&s.world.length===WORLD_H&&Array.isArray(s.players)&&s.players.length===2&&s.players.every(validPlayer);}
 function validState(s){return s&&Array.isArray(s.players)&&s.players.length===2&&s.players.every(validPlayer);}
 function fullWorld(){const w=g.getWorld();send({t:'world',w,stamp:Date.now()});lastRealm=w.realmIndex;snapshotAt=performance.now();}
 function onMessage(m){
@@ -70,7 +69,7 @@ function onMessage(m){
  else if(m.t==='regroup'&&g.isHost()){const now=performance.now();if(now-lastRegroupAt[1]<15000)return;if(g.regroup(1))lastRegroupAt[1]=now;}
  else if(m.t==='feedback'&&role==='guest'){g.setStatus(String(m.msg||'').slice(0,100));}
  else if(m.t==='state'&&role==='guest'&&ready){if(!validState(m.s))return;if(m.s.realmIndex!==lastRealm){if(performance.now()-lastResyncRequestAt>=1500){lastResyncRequestAt=performance.now();send({t:'resync'});}return;}g.useState(m.s);}
- else if(m.t==='edit'&&role==='guest'&&ready){if([m.x,m.y,m.id].every(Number.isInteger))g.useEdit(m.x,m.y,m.id);}
+ else if(m.t==='edit'&&role==='guest'&&ready){if([m.x,m.y,m.id].every(Number.isInteger)&&m.id>=0&&m.id<=MAX_TILE)g.useEdit(m.x,m.y,m.id);}
  else if(m.t==='resync'&&g.isHost())fullWorld();
 }
 function tryReconnect(){if(role!=='guest'||ready||connected()||!joiningCode)return;if(!peerReady){if(peer?.disconnected)try{peer.reconnect();}catch(_){}setStatus('Trying again…');return;}try{attach(peer.connect('jw2d-'+joiningCode,{reliable:true,serialization:'json'}));}catch(_){scheduleReconnect();}}
@@ -96,14 +95,6 @@ $('coop-share')?.addEventListener('click',async()=>{if(!invite||role!=='host')re
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&connected())lastPongAt=performance.now();});
 window.addEventListener('pagehide',()=>{if(role==='host')g.saveHost();});
 const incoming=extractCode(location.hash);
-if(incoming){
- $('coop-code').value=incoming;show();
- setStatus('Joining Daddy…');
- try{history.replaceState(null,'',location.pathname+location.search);}catch(_){}
- setTimeout(()=>{if(role==='solo')join();},600);
-}else{
- try{$('coop-code').value=familyRoom();}catch(_){}
- setStatus('Jozef: tap the green button');
-}
+if(incoming){$('coop-code').value=incoming;show();setStatus('Joining Daddy…');try{history.replaceState(null,'',location.pathname+location.search);}catch(_){}setTimeout(()=>{if(role==='solo')join();},600);}else{try{$('coop-code').value=familyRoom();}catch(_){}setStatus('Jozef: tap the green button');}
 window.BlockWorldCoop=Object.freeze({role:()=>role,connected,host:startHost,join,disconnect:()=>leave({reason:'Stopped'}),code:()=>invite});
 })();
