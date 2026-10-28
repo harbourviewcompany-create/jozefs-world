@@ -12,17 +12,18 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="stylesheet" href="./block-world.css">
 <style>
-#coop-panel{display:none;position:fixed;inset:0;background:#061c28ee;z-index:50;place-items:center;padding:16px;overflow-y:auto}
+#coop-panel{display:none;position:fixed;inset:0;background:#061c28f2;z-index:50;place-items:center;padding:16px}
 #coop-panel.open{display:grid}
-#coop-card{width:min(400px,100%);background:#0f3841;border:1px solid #7fe4be63;border-radius:18px;padding:22px 18px;text-align:center;color:#eefff2;font-family:system-ui;box-shadow:0 12px 45px #000c}
-#coop-card h3{margin:0 0 8px;font-size:22px}
-#coop-card .hint{font-size:14px;line-height:1.5;color:#c8e8da;margin:0 0 18px}
-#coop-card .big-row{display:grid;gap:12px;margin:0 0 14px}
-#coop-card button{padding:16px 14px;border-radius:14px;border:1px solid #83e5d6;background:#183d49;color:#fff;font-weight:900;font-size:16px;cursor:pointer}
-#coop-card button.primary{background:#1f6b4a;border-color:#7fe4be;font-size:18px}
-#coop-card button.secondary{background:#1a4558;font-size:14px;font-weight:700}
+#coop-card{width:min(420px,100%);background:#0f3841;border:2px solid #7fe4be88;border-radius:20px;padding:24px 18px;text-align:center;color:#eefff2;font-family:system-ui;box-shadow:0 16px 50px #000c}
+#coop-card h3{margin:0 0 6px;font-size:24px}
+#coop-card .hint{font-size:15px;line-height:1.45;color:#c8e8da;margin:0 0 16px}
+#coop-card .big-row{display:grid;gap:14px;margin:0 0 12px}
+#coop-card button{padding:18px 14px;border-radius:16px;border:2px solid #83e5d6;background:#183d49;color:#fff;font-weight:900;font-size:18px;cursor:pointer;min-height:56px}
+#coop-card button.jozef{background:#2a8f55;border-color:#9dffb8;font-size:22px;padding:22px 14px;box-shadow:0 6px 0 #145a35}
+#coop-card button.daddy{background:#1f4f7a;border-color:#8ec8ff;font-size:17px}
+#coop-card button.secondary{background:#1a4558;font-size:14px;font-weight:700;min-height:44px;padding:12px}
 #coop-card button:disabled{opacity:.4}
-#coop-status{margin-top:10px;font-size:14px;color:#d6ff7f;min-height:1.4em}
+#coop-status{margin-top:12px;font-size:16px;color:#d6ff7f;min-height:1.5em;font-weight:700}
 #coop-status.ok{color:#9dffb8}
 #coop-status.err{color:#ffb4a8}
 #coop-code,#coop-diagnostics,#coop-certify,#coop-certify-export,#coop-certify-status{display:none!important}
@@ -32,7 +33,7 @@
 .partner-tools[hidden]{display:none!important}.partner-tools button{margin:0;border:1px solid #96d9ed77;color:white;background:#184565;padding:6px 8px;border-radius:8px;font-size:10px}
 .partner-tools span{color:#d6f7ec}
 #bw-adventure{position:fixed;z-index:19;left:max(8px,env(safe-area-inset-left));top:calc(112px + env(safe-area-inset-top));width:min(260px,62vw);color:#f2ffef;background:#082b35e8;border:1px solid #7fe4be88;border-radius:14px;padding:10px 12px;font:600 12px system-ui}#bw-adventure summary{cursor:pointer;font-weight:900;font-size:13px}#bw-adventure progress{width:100%;accent-color:#baff79;height:8px}
-@media(max-width:530px){.coop-live{top:calc(104px + env(safe-area-inset-top))}#bw-adventure{top:auto;bottom:calc(86px + env(safe-area-inset-bottom));width:min(235px,58vw)}.partner-tools{top:calc(139px + env(safe-area-inset-top))}}
+@media(max-width:530px){.coop-live{top:calc(104px + env(safe-area-inset-top))}#bw-adventure{top:auto;bottom:calc(86px + env(safe-area-inset-bottom));width:min(235px,58vw)}.partner-tools{top:calc(139px + env(safe-area-inset-top))}#coop-card button.jozef{font-size:20px}}
 </style>
 <link rel="stylesheet" href="./block-world-premium-forest.css?v=20261013-forest3">
 </head>
@@ -92,17 +93,17 @@
 <div id="coop-panel" aria-label="Play together">
  <div id="coop-card">
   <h3>PLAY TOGETHER</h3>
-  <p class="hint">Just the two of you. Daddy starts the world. Jozef joins. Same Wi‑Fi works best.</p>
+  <p class="hint" id="coop-hint">Daddy starts first. Then Jozef taps the big green button.</p>
   <div class="big-row">
-   <button id="coop-host" class="primary" type="button">I’M DADDY · START</button>
-   <button id="coop-join" class="primary" type="button">I’M JOZEF · JOIN</button>
+   <button id="coop-join" class="jozef" type="button">🟢 JOZEF · PLAY!</button>
+   <button id="coop-host" class="daddy" type="button">🔵 DADDY · START</button>
   </div>
-  <button id="coop-share" class="secondary" type="button" disabled>SEND LINK TO OTHER PHONE</button>
+  <button id="coop-share" class="secondary" type="button" disabled>SEND TO JOZEF’S PHONE</button>
   <div style="margin-top:10px">
-   <button id="coop-disconnect" type="button" disabled>DISCONNECT</button>
+   <button id="coop-disconnect" type="button" disabled>STOP</button>
    <button id="coop-close" type="button">CLOSE</button>
   </div>
-  <div id="coop-status">Pick who you are</div>
+  <div id="coop-status">Jozef: tap the green button</div>
   <input id="coop-code" type="hidden" value="">
   <p id="coop-diagnostics" hidden></p>
   <button id="coop-certify" type="button" hidden></button>
@@ -116,7 +117,7 @@
 <script src="./block-world-art-forest.js?v=20261013-forest3" defer></script>
 <script src="./block-world.js?v=20261013-forest3" defer></script>
 <script src="./block-world-network.js?v=20261028-turn" defer></script>
-<script src="./block-world-coop.js?v=20261028-family" defer></script>
+<script src="./block-world-coop.js?v=20261028-jozef" defer></script>
 <script src="./block-world-ui.js?v=20261013-forest3" defer></script>
 <script src="./block-world-adventure.js?v=20261026-buildfix" defer></script>
 </body>
