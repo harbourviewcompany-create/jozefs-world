@@ -317,10 +317,9 @@ function join(isRetry){
  joinTimer=setTimeout(()=>{
   if(role==='guest'&&!ready){
    loader(false);
-   status('Could not connect. Ask Daddy to send a fresh link.');
+   status('Daddy is offline. Waiting and trying again automatically…');
    show();
-   destroyPeer();
-   role='solo';
+   scheduleGuestRetry();
   }
  },30000);
 }
