@@ -7,7 +7,12 @@ const g=window.BlockWorld2D,$=id=>document.getElementById(id);
 if(!g||!$('coop-panel'))return;
 
 const ROOM='dadd1e70cef2a7e0b10c4a9d3e5f6781';
-const HOST_ID='jw2d-'+ROOM;
+const HOST_KEY='jw2d-host-session-v3';
+function randomRoom(){const b=new Uint8Array(16);crypto.getRandomValues(b);return [...b].map(x=>x.toString(16).padStart(2,'0')).join('');}
+function newHostId(){const id='jw2d-'+randomRoom();try{sessionStorage.setItem(HOST_KEY,id);}catch(_){}return id;}
+let hostId='';
+let invitedHost='';
+try{const m=location.hash.match(/(?:^#|&)coop=(jw2d-[a-f0-9]{32})(?:&|$)/i);if(m)invitedHost=m[1];}catch(_){}
 const TAB_KEY='jozefs-block-2d-guest-v2';
 const MAX_TILE=62;
 const WORLD_SIZES=new Set(['280x110','180x72']);
@@ -197,6 +202,7 @@ function leave(opts={}){
 }
 
 function startHost(){
+ hostId=newHostId();
  if(!window.Peer){status('Not ready yet. Refresh the page.');return;}
  leave({skipReload:true,reason:'Starting…'});
  const gen=++hostGen;
@@ -211,15 +217,15 @@ function startHost(){
   destroyPeer();
   status(retryCount?'Reclaiming room…':'Starting…');
   try{
-   peer=new window.Peer(HOST_ID,opts());
+   peer=new window.Peer(hostId,opts());
   }catch(e){status('Could not start. Try again.');return;}
   const p=peer;
   p.on('open',()=>{
    if(gen!==hostGen||peer!==p)return;
    peerReady=true;retryCount=0;
-   if($('coop-code'))$('coop-code').value=ROOM;
+   if($('coop-code'))$('coop-code').value=hostId;
    if($('coop-share'))$('coop-share').disabled=false;
-   status('Waiting for Jozef… Keep this open.');
+   status('Ready! Tap SEND TO JOZEF’S PHONE, then keep this open.');
    const hint=$('coop-hint');
    if(hint)hint.textContent='Now Jozef taps the big green button on his phone.';
   });
@@ -241,7 +247,8 @@ function startHost(){
    if(type==='unavailable-id'||type==='network'||type==='server-error'||type==='socket-error'||type==='socket-closed'){
     if(retryCount>=8){status('Could not start. Close other tabs of this game, wait 10s, try again.');show();return;}
     retryCount++;
-    status('Reclaiming room… ('+retryCount+'/8)');
+    if(type==='unavailable-id')hostId=newHostId();
+    status('Connecting… ('+retryCount+'/8)');
     setTimeout(()=>{if(gen===hostGen&&role==='host'&&!peerReady)attempt();},1000+retryCount*400);
     return;
    }
@@ -262,6 +269,7 @@ function scheduleGuestRetry(){
 }
 
 function join(isRetry){
+ if(!invitedHost){status('Ask Daddy to tap SEND TO JOZEF’S PHONE and open his link.');show();return;}
  if(!window.Peer){status('Not ready yet. Refresh the page.');return;}
  if(role==='host'){status('Stop first, then join.');return;}
  if(role==='guest'&&!isRetry&&(connected()||ready))return;
@@ -287,7 +295,7 @@ function join(isRetry){
   peerReady=true;
   status('Connecting to Daddy…');
   try{
-   const c=p.connect(HOST_ID,{reliable:true,serialization:'json'});
+   const c=p.connect(invitedHost,{reliable:true,serialization:'json'});
    attach(c);
   }catch(_){scheduleGuestRetry();}
  });
@@ -305,7 +313,7 @@ function join(isRetry){
  joinTimer=setTimeout(()=>{
   if(role==='guest'&&!ready){
    loader(false);
-   status('Daddy needs to press START first, then you tap green.');
+   status('Could not connect. Ask Daddy to send a fresh link.');
    show();
    destroyPeer();
    role='solo';
@@ -352,7 +360,7 @@ $('coop-join')?.addEventListener('click',()=>join(false));
 $('coop-disconnect')?.addEventListener('click',()=>leave({reason:'Stopped'}));
 $('coop-share')?.addEventListener('click',async()=>{
  if(role!=='host')return;
- const url=new URL(location.href);url.hash='coop='+ROOM;
+ const url=new URL(location.href);url.hash='coop='+hostId;
  try{
   if(navigator.share)await navigator.share({title:'Block World',text:'Tap the green button to play with Daddy!',url:url.href});
   else if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(url.href);status('Link copied — send to Jozef');}
@@ -363,13 +371,13 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&connected
 window.addEventListener('pagehide',()=>{if(role==='host')try{g.saveHost();}catch(_){}});
 
 // Shared link auto-join
-if(/coop=/.test(location.hash)){
+if(invitedHost){
  show();status('Joining Daddy…');
  try{history.replaceState(null,'',location.pathname+location.search);}catch(_){}
  setTimeout(()=>{if(role==='solo')join(false);},500);
 }else{
  if($('coop-code'))$('coop-code').value=ROOM;
- status('Jozef: tap the green button');
+ status('Daddy: tap START, then SEND TO JOZEF’S PHONE');
 }
 
 window.BlockWorldCoop=Object.freeze({
