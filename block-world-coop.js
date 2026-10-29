@@ -266,7 +266,7 @@ function startHost(){
 function scheduleGuestRetry(){
  if(role!=='guest'||ready)return;
  clearTimeout(retryTimer);
- if(retryCount>=10){loader(false);status('Ask Daddy to press START, then tap green again.');show();return;}
+ if(retryCount>=10){retryCount=0;loader(false);status('Still looking for Daddy. Retrying automatically…');}
  retryCount++;
  status('Trying again…');
  retryTimer=setTimeout(()=>{if(role==='guest'&&!ready)join(true);},800+retryCount*500);
