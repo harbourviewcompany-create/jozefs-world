@@ -1,115 +1,377 @@
-/* Daddy + Jozef co-op. Fixed family room. Kid-friendly join + loading animation. */
+/* Daddy + Jozef two-phone co-op — reliable rewrite.
+   Daddy hosts with fixed family room. Jozef joins same room.
+   One public PeerJS broker + TURN. */
 (()=>{
 'use strict';
 const g=window.BlockWorld2D,$=id=>document.getElementById(id);
 if(!g||!$('coop-panel'))return;
-let peer=null,conn=null,role='solo',invite='',ready=false;
-let stateAt=0,inputAt=0,snapshotAt=0,lastRealm=-1,lastInput={left:false,right:false,jump:false};
-let lastPacketAt=0,editCount=0,lastActionAt=0,joinTimeout=0,lastGiveAt=0,lastRegroupAt=[-15000,-15000];
-let hostRetryTimer=0,hostRetryCount=0,heartbeatTimer=0,lastPongAt=0,heartbeatNonce=0,heartbeatSentAt=0,heartbeatRttMs=null;
-let hostGeneration=0,lastResyncRequestAt=0,peerReady=false,useFallback=false;
-let retryTimer=0,retryCount=0,joiningCode='';
-const WORLD_W=280,WORLD_H=110,MAX_TILE=62;
+
+const ROOM='dadd1e70cef2a7e0b10c4a9d3e5f6781';
+const HOST_ID='jw2d-'+ROOM;
+const TAB_KEY='jozefs-block-2d-guest-v2';
+const MAX_TILE=62;
+
+let peer=null,conn=null,role='solo',ready=false,peerReady=false;
+let hostGen=0,joinTimer=0,retryTimer=0,retryCount=0,hbTimer=0;
+let lastPong=0,hbNonce=0,hbSent=0;
+let lastInput={left:false,right:false,jump:false};
+let inputAt=0,stateAt=0,snapshotAt=0,lastRealm=-1,editCount=0;
+let lastActionAt=0,lastGiveAt=0,lastRegroupAt=[-15000,-15000],lastResync=0;
+
 const cfg=window.BLOCK_WORLD_NETWORK||{};
-const iceServers=Array.isArray(cfg.iceServers)&&cfg.iceServers.length?cfg.iceServers:[{urls:'stun:stun.l.google.com:19302'}];
-function activeEndpoint(){
- const primary=cfg.peerServer||{};
- const fallback=cfg.peerServerFallback||{host:'0.peerjs.com',port:443,path:'/',secure:true};
- return useFallback?fallback:primary;
-}
-function peerOptions(){
- const endpoint=activeEndpoint();
- return {host:endpoint.host||'0.peerjs.com',port:endpoint.port||443,path:endpoint.path||'/',secure:endpoint.secure!==false,debug:0,config:{iceServers,iceTransportPolicy:'all'}};
-}
-const TAB_KEY='jozefs-block-2d-guest-tab-v1';
-const COOP_RE=/^[0-9a-f]{32}$/i;
-function familyRoom(){return 'dadd1e70cef2a7e0b10c4a9d3e5f6781';}
-const rejoin=()=>{try{const s=JSON.parse(sessionStorage.getItem(TAB_KEY)||'null');return s&&Date.now()-s.at<3600000&&COOP_RE.test(s.room||'')?s:null;}catch(_){return null;}};
-const bookmark=s=>{try{sessionStorage.setItem(TAB_KEY,JSON.stringify({...s,at:Date.now()}));}catch(_){}};
-const clearBookmark=()=>{try{sessionStorage.removeItem(TAB_KEY);}catch(_){}};
-function ownPeerId(room){const saved=rejoin();if(saved?.room===room&&saved.peerId)return saved.peerId;const bytes=new Uint8Array(16);window.crypto.getRandomValues(bytes);return 'jw2d-guest-'+[...bytes].map(n=>n.toString(16).padStart(2,'0')).join('');}
-const copyInput=s=>({left:!!s?.left,right:!!s?.right,jump:!!s?.jump});
+const ep=cfg.peerServer||{host:'0.peerjs.com',port:443,path:'/',secure:true};
+const ice=Array.isArray(cfg.iceServers)&&cfg.iceServers.length?cfg.iceServers:[
+ {urls:'stun:stun.l.google.com:19302'},
+ {urls:'turn:openrelay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},
+ {urls:'turn:openrelay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'}
+];
+function opts(){return{host:ep.host,port:ep.port||443,path:ep.path||'/',secure:ep.secure!==false,debug:0,config:{iceServers:ice,iceTransportPolicy:'all'}}}
+
 const connected=()=>!!conn?.open;
 g.isHost=()=>role==='host'&&connected()&&ready;
 g.isGuest=()=>role==='guest';
 g.connected=()=>role!=='solo'&&connected()&&ready;
 g.remoteInput=lastInput;
-g.requestCraft=recipe=>{if(role==='guest'&&ready&&Number.isInteger(recipe))send({t:'craft',recipe});};
+g.requestCraft=r=>{if(role==='guest'&&ready&&Number.isInteger(r))send({t:'craft',recipe:r});};
 g.requestAttack=()=>{if(role==='guest'&&ready)send({t:'attack'});};
-g.requestAction=(kind,a,tile)=>{if(role!=='guest'||!connected()||!ready)return;if(!['mine','place'].includes(kind)||!a)return;send({t:'action',kind,x:a.x,y:a.y,tile,seq:++editCount});};
+g.requestAction=(kind,a,tile)=>{if(role!=='guest'||!ready||!a)return;send({t:'action',kind,x:a.x,y:a.y,tile,seq:++editCount});};
 g.onBlockChanged=(x,y,id)=>{if(g.isHost())send({t:'edit',x,y,id});};
-function showLoader(on){const el=$('jozef-loading');if(!el)return;el.classList.toggle('show',!!on);}
-function setStatus(msg){
- const e=$('coop-status');if(e){e.textContent=msg;e.className=/fail|error|unable|timed|lost|Could not/i.test(msg)?'err':/in!|Waiting|Connected|playing|Here we go|Yay/i.test(msg)?'ok':'';}
- const bar=$('coop-live');if(bar){bar.textContent=role==='host'?(ready?'● DADDY + JO · CONNECTED':'● DADDY · WAITING'):role==='guest'?(ready?'● JO · CONNECTED':'● JO · CONNECTING'):'● 2D SOLO';bar.className=ready?'coop-live online':'coop-live';}
- if(role==='guest'&&!ready)showLoader(true);else showLoader(false);
+
+function loader(on){const el=$('jozef-loading');if(el)el.classList.toggle('show',!!on);}
+function status(msg){
+ const e=$('coop-status');
+ if(e){e.textContent=msg;e.className=/fail|error|Could not|lost|timeout|not ready/i.test(msg)?'err':/Waiting|Yay|here|in!|Connected/i.test(msg)?'ok':'';}
+ const bar=$('coop-live');
+ if(bar){
+  bar.textContent=role==='host'?(ready?'● DADDY + JO · CONNECTED':'● DADDY · WAITING'):role==='guest'?(ready?'● JO · CONNECTED':'● JO · CONNECTING'):'● 2D SOLO';
+  bar.className=ready?'coop-live online':'coop-live';
+ }
+ loader(role==='guest'&&!ready);
 }
 function show(){$('coop-panel').classList.add('open');}
 function hide(){$('coop-panel').classList.remove('open');}
-function send(value){try{if(connected())conn.send(value);}catch(_){setStatus('Connection interrupted');}}
-function validPlayer(p){return p&&['x','y','health','facing'].every(k=>Number.isFinite(p[k]))&&p.inventory&&typeof p.inventory==='object';}
-function validWorld(s){return s&&((s.w===WORLD_W&&s.h===WORLD_H)||(s.w===180&&s.h===72))&&Array.isArray(s.world)&&Array.isArray(s.players)&&s.players.length===2&&s.players.every(validPlayer);}
+function send(v){try{if(connected())conn.send(v);}catch(_){}}
+
+function guestId(){
+ try{
+  const s=JSON.parse(sessionStorage.getItem(TAB_KEY)||'null');
+  if(s&&s.id&&Date.now()-s.at<3600000)return s.id;
+ }catch(_){}
+ const b=new Uint8Array(8);crypto.getRandomValues(b);
+ const id='jw2d-g-'+[...b].map(n=>n.toString(16).padStart(2,'0')).join('');
+ try{sessionStorage.setItem(TAB_KEY,JSON.stringify({id,at:Date.now()}));}catch(_){}
+ return id;
+}
+
+function validPlayer(p){return p&&Number.isFinite(p.x)&&Number.isFinite(p.y)&&p.inventory&&typeof p.inventory==='object';}
+function validWorld(s){return s&&Array.isArray(s.world)&&Array.isArray(s.players)&&s.players.length===2&&s.players.every(validPlayer);}
 function validState(s){return s&&Array.isArray(s.players)&&s.players.length===2&&s.players.every(validPlayer);}
-function fullWorld(){const w=g.getWorld();send({t:'world',w,stamp:Date.now()});lastRealm=w.realmIndex;snapshotAt=performance.now();}
-function onMessage(m){
- if(!m||typeof m!=='object')return;lastPacketAt=performance.now();
+
+function fullWorld(){
+ try{
+  const w=g.getWorld();
+  send({t:'world',w,stamp:Date.now()});
+  lastRealm=w.realmIndex;snapshotAt=performance.now();
+ }catch(_){}
+}
+
+function onMsg(m){
+ if(!m||typeof m!=='object')return;
  if(m.t==='heartbeat'){send({t:'heartbeat-ack',nonce:m.nonce});return;}
- if(m.t==='heartbeat-ack'){lastPongAt=performance.now();if(m.nonce===heartbeatNonce)heartbeatRttMs=Math.round(lastPongAt-heartbeatSentAt);return;}
+ if(m.t==='heartbeat-ack'){lastPong=performance.now();return;}
  if(m.t==='world'&&role==='guest'){
-  if(!validWorld(m.w)){setStatus('Something went wrong. Try again.');return;}
+  if(!validWorld(m.w)){status('Bad world data. Try again.');return;}
   g.useWorld(m.w);g.role(1);ready=true;retryCount=0;lastRealm=m.w.realmIndex;
-  bookmark({room:joiningCode,peerId:peer?.id,active:true});
-  clearTimeout(retryTimer);clearTimeout(joinTimeout);
-  send({t:'ready'});showLoader(false);setStatus('Yay! You are Jozef. Let’s play!');
+  clearTimeout(joinTimer);clearTimeout(retryTimer);
+  send({t:'ready'});loader(false);status('Yay! You are Jozef. Let’s play!');
   if($('btn-switch'))$('btn-switch').style.display='none';
   ['reset','mode','save'].forEach(id=>{if($(id))$(id).disabled=true;});
   if($('partner-tools'))$('partner-tools').hidden=false;hide();
- }else if(m.t==='ready'&&role==='host'){
-  ready=true;g.role(0);setStatus('Jozef is here! Let’s play!');
+  return;
+ }
+ if(m.t==='ready'&&role==='host'){
+  ready=true;g.role(0);status('Jozef is here! Let’s play!');
   if($('btn-switch'))$('btn-switch').style.display='none';
   if($('partner-tools'))$('partner-tools').hidden=false;hide();
- }else if(m.t==='input'&&g.isHost()){g.remoteInput=copyInput(m.input);}
- else if(m.t==='action'&&g.isHost()){const now=performance.now();if(now-lastActionAt<90)return;lastActionAt=now;if(!['mine','place'].includes(m.kind))return;g.action(1,m.kind,{x:m.x,y:m.y},m.tile);}
- else if(m.t==='attack'&&g.isHost()){const now=performance.now();if(now-lastActionAt<350)return;lastActionAt=now;g.attack(1);}
- else if(m.t==='craft'&&g.isHost()){const now=performance.now();if(now-lastActionAt<90)return;lastActionAt=now;g.craftFor(1,m.recipe);}
- else if(m.t==='give'&&g.isHost()){const now=performance.now();if(now-lastGiveAt<220)return;lastGiveAt=now;g.giveTo(1,m.tile);}
- else if(m.t==='regroup'&&g.isHost()){const now=performance.now();if(now-lastRegroupAt[1]<15000)return;if(g.regroup(1))lastRegroupAt[1]=now;}
- else if(m.t==='feedback'&&role==='guest'){g.setStatus(String(m.msg||'').slice(0,100));}
- else if(m.t==='state'&&role==='guest'&&ready){if(!validState(m.s))return;if(m.s.realmIndex!==lastRealm){if(performance.now()-lastResyncRequestAt>=1500){lastResyncRequestAt=performance.now();send({t:'resync'});}return;}g.useState(m.s);}
- else if(m.t==='edit'&&role==='guest'&&ready){if([m.x,m.y,m.id].every(Number.isInteger)&&m.id>=0&&m.id<=MAX_TILE)g.useEdit(m.x,m.y,m.id);}
- else if(m.t==='resync'&&g.isHost())fullWorld();
+  return;
+ }
+ if(m.t==='input'&&g.isHost()){g.remoteInput={left:!!m.input?.left,right:!!m.input?.right,jump:!!m.input?.jump};return;}
+ if(m.t==='action'&&g.isHost()){
+  const now=performance.now();if(now-lastActionAt<80)return;lastActionAt=now;
+  if(['mine','place'].includes(m.kind))g.action(1,m.kind,{x:m.x,y:m.y},m.tile);
+  return;
+ }
+ if(m.t==='attack'&&g.isHost()){const now=performance.now();if(now-lastActionAt<300)return;lastActionAt=now;g.attack(1);return;}
+ if(m.t==='craft'&&g.isHost()){const now=performance.now();if(now-lastActionAt<80)return;lastActionAt=now;g.craftFor(1,m.recipe);return;}
+ if(m.t==='give'&&g.isHost()){const now=performance.now();if(now-lastGiveAt<200)return;lastGiveAt=now;g.giveTo(1,m.tile);return;}
+ if(m.t==='regroup'&&g.isHost()){const now=performance.now();if(now-lastRegroupAt[1]<15000)return;if(g.regroup(1))lastRegroupAt[1]=now;return;}
+ if(m.t==='feedback'&&role==='guest'){g.setStatus(String(m.msg||'').slice(0,100));return;}
+ if(m.t==='state'&&role==='guest'&&ready){
+  if(!validState(m.s))return;
+  if(m.s.realmIndex!==lastRealm){if(performance.now()-lastResync>1500){lastResync=performance.now();send({t:'resync'});}return;}
+  g.useState(m.s);return;
+ }
+ if(m.t==='edit'&&role==='guest'&&ready){
+  if([m.x,m.y,m.id].every(Number.isInteger)&&m.id>=0&&m.id<=MAX_TILE)g.useEdit(m.x,m.y,m.id);
+  return;
+ }
+ if(m.t==='resync'&&g.isHost())fullWorld();
 }
-function tryReconnect(){if(role!=='guest'||ready||connected()||!joiningCode)return;if(!peerReady){if(peer?.disconnected)try{peer.reconnect();}catch(_){}setStatus('Trying again…');return;}try{attach(peer.connect('jw2d-'+joiningCode,{reliable:true,serialization:'json'}));}catch(_){scheduleReconnect();}}
-function scheduleReconnect(){if(role!=='guest'||ready)return;clearTimeout(retryTimer);if(retryCount>=8){showLoader(false);setStatus('Ask Daddy to press START, then tap green again.');show();return;}retryCount++;setStatus('Trying again…');retryTimer=setTimeout(()=>{if(role==='guest'&&!ready){if(peerReady)tryReconnect();else scheduleReconnect();}},[800,1500,2500,4000,6000,8000,10000,12000][retryCount-1]||3000);}
-function stopHeartbeat(){clearInterval(heartbeatTimer);heartbeatTimer=0;}
-function startHeartbeat(){stopHeartbeat();lastPongAt=performance.now();heartbeatTimer=setInterval(()=>{if(!connected()||document.hidden)return;if(performance.now()-lastPongAt>22000){const s=conn;stopHeartbeat();try{s?.close();}catch(_){}if(conn===s)onConnectionLost('Daddy left');return;}heartbeatSentAt=performance.now();send({t:'heartbeat',nonce:++heartbeatNonce});},5000);}
-function onConnectionLost(reason){stopHeartbeat();conn=null;ready=false;g.remoteInput={left:false,right:false,jump:false};if($('partner-tools'))$('partner-tools').hidden=true;if(role==='host'){setStatus(reason+' · waiting for Jozef');$('coop-disconnect').disabled=false;}else if(role==='guest'){showLoader(false);show();setStatus('Lost Daddy. Tap green to try again.');scheduleReconnect();}}
-function attach(connection){if(conn?.open){connection.close();return;}if(conn&&conn!==connection)try{conn.close();}catch(_){}conn=connection;connection.on('open',()=>{if(conn!==connection)return;lastPacketAt=performance.now();startHeartbeat();retryCount=0;clearTimeout(retryTimer);$('coop-disconnect').disabled=false;if(role==='host'){ready=false;g.role(0);setStatus('Jozef is joining…');fullWorld();}else{ready=false;g.role(1);setStatus('Almost there…');}});connection.on('data',m=>{if(conn===connection)onMessage(m);});connection.on('close',()=>{if(conn===connection)onConnectionLost('Disconnected');});connection.on('error',()=>{if(conn===connection)onConnectionLost('Connection failed');});}
-function leave(options={}){showLoader(false);stopHeartbeat();++hostGeneration;clearTimeout(hostRetryTimer);clearTimeout(joinTimeout);clearTimeout(retryTimer);clearBookmark();retryCount=0;joiningCode='';peerReady=false;const guest=role==='guest',c=conn,p=peer;conn=null;peer=null;ready=false;role='solo';invite='';lastRealm=-1;g.remoteInput={left:false,right:false,jump:false};$('coop-share').disabled=true;$('coop-disconnect').disabled=true;if($('btn-switch'))$('btn-switch').style.display='';['reset','mode','save'].forEach(id=>{if($(id))$(id).disabled=false;});if($('partner-tools'))$('partner-tools').hidden=true;try{c?.close();}catch(_){}try{p?.destroy();}catch(_){}setStatus(options.reason||'Solo play');if(guest&&!options.skipReload)location.reload();else if(!guest){g.role(0);}}
-function startHost(recover=false){if(!window.Peer){setStatus('Not ready yet. Try again.');return;}if(role!=='solo'&&!recover)leave({skipReload:true});const generation=++hostGeneration;try{if(!recover)hostRetryCount=0;invite=familyRoom();role='host';g.saveHost();g.role(0);setStatus(useFallback?'Starting (backup server)…':'Starting…');if(generation!==hostGeneration)return;try{peer?.destroy();}catch(_){}peer=new window.Peer('jw2d-'+invite,peerOptions());peer.on('open',()=>{if(generation!==hostGeneration)return;peerReady=true;hostRetryCount=0;$('coop-code').value=invite;$('coop-share').disabled=false;$('coop-disconnect').disabled=false;setStatus('Waiting for Jozef… Keep this open.');const hint=$('coop-hint');if(hint)hint.textContent='Now Jozef taps the big green button on his phone.';});peer.on('connection',c=>{if(generation!==hostGeneration){c.close();return;}if(conn?.open||ready){c.close();return;}attach(c);});peer.on('disconnected',()=>{if(generation!==hostGeneration)return;peerReady=false;if(peer.reconnect)try{peer.reconnect();}catch(_){}});peer.on('error',e=>{if(generation!==hostGeneration)return;if(connected())return;const type=e?.type||'network';// Taken ID from a previous session — wait and reclaim
- if(type==='unavailable-id'&&hostRetryCount<6){hostRetryCount++;setStatus('Reclaiming room… ('+hostRetryCount+'/6)');clearTimeout(hostRetryTimer);hostRetryTimer=setTimeout(()=>{if(role!=='host'||peerReady)return;try{peer?.destroy();}catch(_){}peer=null;startHost(true);},1500+hostRetryCount*500);return;}
- if(['network','server-error','socket-error','socket-closed','disconnected','peer-unavailable'].includes(type)&&hostRetryCount<6){hostRetryCount++;
-  // After a few primary failures, switch to public PeerJS
-  if(hostRetryCount>=3&&!useFallback){useFallback=true;setStatus('Switching server…');}
-  else setStatus('Retrying… ('+hostRetryCount+'/6)');
-  clearTimeout(hostRetryTimer);hostRetryTimer=setTimeout(()=>{if(role==='host'&&!peerReady){try{peer?.destroy();}catch(_){}peer=null;startHost(true);}},1200+hostRetryCount*400);return;}
- leave({reason:'Could not start. Close other tabs, then try again.',skipReload:true});show();});}catch(e){leave({reason:e.message,skipReload:true});}}
-function extractCode(input){const s=String(input||'').trim();const raw=s.match(/(?:^|[=#\/])(jw2d-)?([a-f0-9]{32})(?:$|[&#])/i);return raw?raw[2].toLowerCase():(COOP_RE.test(s)?s.toLowerCase():null);}
-function join(){if(!window.Peer){setStatus('Not ready yet. Try again.');return;}let code=extractCode($('coop-code').value)||familyRoom();$('coop-code').value=code;if(role==='host'){setStatus('Stop first, then join.');return;}if(role==='guest'){if(!connected()&&!ready)tryReconnect();return;}g.saveHost();role='guest';ready=false;joiningCode=code;retryCount=0;peerReady=false;$('coop-disconnect').disabled=false;showLoader(true);try{const peerId=ownPeerId(code);bookmark({room:code,peerId});setStatus('Finding Daddy…');try{peer?.destroy();}catch(_){}peer=new window.Peer(peerId,peerOptions());const current=peer;peer.on('open',()=>{if(peer!==current||role!=='guest')return;peerReady=true;attach(peer.connect('jw2d-'+code,{reliable:true,serialization:'json'}));});peer.on('error',e=>{if(peer!==current||role!=='guest')return;const type=e?.type||'';if(type==='network'||type==='server-error'||type==='socket-error'){if(!useFallback){useFallback=true;setStatus('Trying backup server…');try{peer?.destroy();}catch(_){}peer=null;role='solo';join();return;}}if(!ready){setStatus('Is Daddy waiting? Tap green again.');scheduleReconnect();}});peer.on('disconnected',()=>{if(peer===current&&role==='guest'){peerReady=false;if(!ready)scheduleReconnect();}});joinTimeout=setTimeout(()=>{if(role==='guest'&&!ready){// Try fallback once if still stuck
- if(!useFallback){useFallback=true;showLoader(true);setStatus('Trying backup server…');try{peer?.destroy();}catch(_){}peer=null;role='solo';join();return;}showLoader(false);leave({reason:'Daddy needs to press START first.',skipReload:true});show();}},20000);}catch(e){showLoader(false);setStatus(e.message||'Try again');}}
-function tick(){if(!g.connected())return;const now=performance.now();if(role==='guest'&&now-inputAt>50){inputAt=now;const left=!!g.touch?.left,right=!!g.touch?.right,jump=!!g.touch?.jump;if(left!==lastInput.left||right!==lastInput.right||jump!==lastInput.jump||now-stateAt>200){lastInput={left,right,jump};send({t:'input',input:lastInput});stateAt=now;}}if(role==='host'&&ready&&now-snapshotAt>100){snapshotAt=now;try{const s=g.getState();if(s)send({t:'state',s});}catch(_){}}}
+
+function stopHb(){clearInterval(hbTimer);hbTimer=0;}
+function startHb(){
+ stopHb();lastPong=performance.now();
+ hbTimer=setInterval(()=>{
+  if(!connected()||document.hidden)return;
+  if(performance.now()-lastPong>20000){
+   const c=conn;stopHb();try{c?.close();}catch(_){}
+   if(conn===c)lost('Connection timed out');
+   return;
+  }
+  hbSent=performance.now();send({t:'heartbeat',nonce:++hbNonce});
+ },4000);
+}
+
+function lost(reason){
+ stopHb();conn=null;ready=false;
+ g.remoteInput={left:false,right:false,jump:false};
+ if($('partner-tools'))$('partner-tools').hidden=true;
+ if(role==='host'){
+  status(reason+' · still waiting for Jozef');
+  if($('coop-disconnect'))$('coop-disconnect').disabled=false;
+ }else if(role==='guest'){
+  loader(false);show();
+  status('Lost Daddy. Tap green to try again.');
+  scheduleGuestRetry();
+ }
+}
+
+function attach(c){
+ if(conn?.open){try{c.close();}catch(_){}return;}
+ if(conn&&conn!==c)try{conn.close();}catch(_){}
+ conn=c;
+ c.on('open',()=>{
+  if(conn!==c)return;
+  startHb();retryCount=0;clearTimeout(retryTimer);clearTimeout(joinTimer);
+  if($('coop-disconnect'))$('coop-disconnect').disabled=false;
+  if(role==='host'){
+   ready=false;g.role(0);status('Jozef is joining…');
+   // Send world a few times to beat flaky first packet
+   fullWorld();
+   setTimeout(fullWorld,400);
+   setTimeout(fullWorld,1200);
+  }else{
+   ready=false;g.role(1);status('Almost there…');
+  }
+ });
+ c.on('data',m=>{if(conn===c)onMsg(m);});
+ c.on('close',()=>{if(conn===c)lost('Disconnected');});
+ c.on('error',()=>{if(conn===c)lost('Connection failed');});
+}
+
+function destroyPeer(){
+ stopHb();
+ try{conn?.close();}catch(_){}
+ try{peer?.destroy();}catch(_){}
+ conn=null;peer=null;peerReady=false;
+}
+
+function leave(opts={}){
+ const gen=++hostGen;
+ clearTimeout(joinTimer);clearTimeout(retryTimer);clearTimeout(hbTimer);
+ const wasGuest=role==='guest';
+ destroyPeer();
+ ready=false;role='solo';retryCount=0;lastRealm=-1;
+ g.remoteInput={left:false,right:false,jump:false};
+ if($('coop-share'))$('coop-share').disabled=true;
+ if($('coop-disconnect'))$('coop-disconnect').disabled=true;
+ if($('btn-switch'))$('btn-switch').style.display='';
+ ['reset','mode','save'].forEach(id=>{if($(id))$(id).disabled=false;});
+ if($('partner-tools'))$('partner-tools').hidden=true;
+ loader(false);
+ status(opts.reason||'Solo play');
+ if(wasGuest&&!opts.skipReload)location.reload();
+ else if(!wasGuest)g.role(0);
+}
+
+function startHost(){
+ if(!window.Peer){status('Not ready yet. Refresh the page.');return;}
+ leave({skipReload:true,reason:'Starting…'});
+ const gen=++hostGen;
+ role='host';ready=false;retryCount=0;
+ try{g.saveHost();}catch(_){}
+ g.role(0);
+ status('Starting…');
+ if($('coop-disconnect'))$('coop-disconnect').disabled=false;
+
+ function attempt(){
+  if(gen!==hostGen||role!=='host')return;
+  destroyPeer();
+  status(retryCount?'Reclaiming room…':'Starting…');
+  try{
+   peer=new window.Peer(HOST_ID,opts());
+  }catch(e){status('Could not start. Try again.');return;}
+  const p=peer;
+  p.on('open',()=>{
+   if(gen!==hostGen||peer!==p)return;
+   peerReady=true;retryCount=0;
+   if($('coop-code'))$('coop-code').value=ROOM;
+   if($('coop-share'))$('coop-share').disabled=false;
+   status('Waiting for Jozef… Keep this open.');
+   const hint=$('coop-hint');
+   if(hint)hint.textContent='Now Jozef taps the big green button on his phone.';
+  });
+  p.on('connection',c=>{
+   if(gen!==hostGen){try{c.close();}catch(_){}return;}
+   if(conn?.open||ready){try{c.close();}catch(_){}return;}
+   attach(c);
+  });
+  p.on('disconnected',()=>{
+   if(gen!==hostGen||peer!==p)return;
+   peerReady=false;
+   try{p.reconnect();}catch(_){}
+  });
+  p.on('error',e=>{
+   if(gen!==hostGen||peer!==p)return;
+   if(connected())return;
+   const type=e?.type||'';
+   // ID still held from a previous tab/session — reclaim
+   if(type==='unavailable-id'||type==='network'||type==='server-error'||type==='socket-error'||type==='socket-closed'){
+    if(retryCount>=8){status('Could not start. Close other tabs of this game, wait 10s, try again.');show();return;}
+    retryCount++;
+    status('Reclaiming room… ('+retryCount+'/8)');
+    setTimeout(()=>{if(gen===hostGen&&role==='host'&&!peerReady)attempt();},1000+retryCount*400);
+    return;
+   }
+   status('Could not start. Check internet and try again.');
+   show();
+  });
+ }
+ attempt();
+}
+
+function scheduleGuestRetry(){
+ if(role!=='guest'||ready)return;
+ clearTimeout(retryTimer);
+ if(retryCount>=10){loader(false);status('Ask Daddy to press START, then tap green again.');show();return;}
+ retryCount++;
+ status('Trying again…');
+ retryTimer=setTimeout(()=>{if(role==='guest'&&!ready)join(true);},800+retryCount*500);
+}
+
+function join(isRetry){
+ if(!window.Peer){status('Not ready yet. Refresh the page.');return;}
+ if(role==='host'){status('Stop first, then join.');return;}
+ if(role==='guest'&&!isRetry&&(connected()||ready))return;
+
+ // Clean previous guest attempt
+ clearTimeout(joinTimer);clearTimeout(retryTimer);
+ destroyPeer();
+ role='guest';ready=false;peerReady=false;
+ if(!isRetry)retryCount=0;
+ try{g.saveHost();}catch(_){}
+ if($('coop-disconnect'))$('coop-disconnect').disabled=false;
+ loader(true);
+ status('Finding Daddy…');
+
+ const id=guestId();
+ try{
+  peer=new window.Peer(id,opts());
+ }catch(e){loader(false);status('Could not join. Try again.');return;}
+ const p=peer;
+
+ p.on('open',()=>{
+  if(peer!==p||role!=='guest')return;
+  peerReady=true;
+  status('Connecting to Daddy…');
+  try{
+   const c=p.connect(HOST_ID,{reliable:true,serialization:'json'});
+   attach(c);
+  }catch(_){scheduleGuestRetry();}
+ });
+ p.on('error',e=>{
+  if(peer!==p||role!=='guest'||ready)return;
+  scheduleGuestRetry();
+ });
+ p.on('disconnected',()=>{
+  if(peer!==p||role!=='guest')return;
+  peerReady=false;
+  if(!ready)scheduleGuestRetry();
+ });
+
+ // Overall timeout
+ joinTimer=setTimeout(()=>{
+  if(role==='guest'&&!ready){
+   loader(false);
+   status('Daddy needs to press START first, then you tap green.');
+   show();
+   destroyPeer();
+   role='solo';
+  }
+ },30000);
+}
+
+function tick(){
+ if(!g.connected())return;
+ const now=performance.now();
+ if(role==='guest'&&now-inputAt>50){
+  inputAt=now;
+  const left=!!g.touch?.left,right=!!g.touch?.right,jump=!!g.touch?.jump;
+  if(left!==lastInput.left||right!==lastInput.right||jump!==lastInput.jump||now-stateAt>180){
+   lastInput={left,right,jump};
+   send({t:'input',input:lastInput});
+   stateAt=now;
+  }
+ }
+ if(role==='host'&&ready&&now-snapshotAt>100){
+  snapshotAt=now;
+  try{const s=g.getState();if(s)send({t:'state',s});}catch(_){}
+ }
+}
 setInterval(tick,40);
-$('coop-give')?.addEventListener('click',()=>{if(!g.connected())return;const now=performance.now();if(now-lastGiveAt<220)return;if(role==='guest'){send({t:'give',tile:g.selected});lastGiveAt=now;return;}g.giveTo(0,g.selected);lastGiveAt=now;});
-$('coop-regroup')?.addEventListener('click',()=>{if(!g.connected())return;const now=performance.now(),who=role==='guest'?1:0;if(now-lastRegroupAt[who]<15000)return;if(role==='guest'){send({t:'regroup'});lastRegroupAt[who]=now;return;}if(g.regroup(0))lastRegroupAt[0]=now;});
+
+$('coop-give')?.addEventListener('click',()=>{
+ if(!g.connected())return;
+ const now=performance.now();if(now-lastGiveAt<200)return;
+ if(role==='guest'){send({t:'give',tile:g.selected});lastGiveAt=now;return;}
+ g.giveTo(0,g.selected);lastGiveAt=now;
+});
+$('coop-regroup')?.addEventListener('click',()=>{
+ if(!g.connected())return;
+ const now=performance.now(),who=role==='guest'?1:0;
+ if(now-lastRegroupAt[who]<15000)return;
+ if(role==='guest'){send({t:'regroup'});lastRegroupAt[who]=now;return;}
+ if(g.regroup(0))lastRegroupAt[0]=now;
+});
 $('open-coop')?.addEventListener('click',show);
 $('coop-close')?.addEventListener('click',hide);
-$('coop-host')?.addEventListener('click',()=>startHost(false));
-$('coop-join')?.addEventListener('click',join);
+$('coop-host')?.addEventListener('click',startHost);
+$('coop-join')?.addEventListener('click',()=>join(false));
 $('coop-disconnect')?.addEventListener('click',()=>leave({reason:'Stopped'}));
-$('coop-share')?.addEventListener('click',async()=>{if(!invite||role!=='host')return;const url=new URL(location.href);url.hash='coop='+invite;try{if(navigator.share)await navigator.share({title:'Block World',text:'Tap the green button to play with Daddy!',url:url.href});else if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(url.href);setStatus('Link copied — send to Jozef');}}catch(_){setStatus('Waiting for Jozef…');}});
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&connected())lastPongAt=performance.now();});
-window.addEventListener('pagehide',()=>{if(role==='host')g.saveHost();});
-const incoming=extractCode(location.hash);
-if(incoming){$('coop-code').value=incoming;show();setStatus('Joining Daddy…');try{history.replaceState(null,'',location.pathname+location.search);}catch(_){}setTimeout(()=>{if(role==='solo')join();},600);}else{try{$('coop-code').value=familyRoom();}catch(_){}setStatus('Jozef: tap the green button');}
-window.BlockWorldCoop=Object.freeze({role:()=>role,connected,host:startHost,join,disconnect:()=>leave({reason:'Stopped'}),code:()=>invite});
+$('coop-share')?.addEventListener('click',async()=>{
+ if(role!=='host')return;
+ const url=new URL(location.href);url.hash='coop='+ROOM;
+ try{
+  if(navigator.share)await navigator.share({title:'Block World',text:'Tap the green button to play with Daddy!',url:url.href});
+  else if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(url.href);status('Link copied — send to Jozef');}
+ }catch(_){status('Waiting for Jozef…');}
+});
+
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&connected())lastPong=performance.now();});
+window.addEventListener('pagehide',()=>{if(role==='host')try{g.saveHost();}catch(_){}});
+
+// Shared link auto-join
+if(/coop=/.test(location.hash)){
+ show();status('Joining Daddy…');
+ try{history.replaceState(null,'',location.pathname+location.search);}catch(_){}
+ setTimeout(()=>{if(role==='solo')join(false);},500);
+}else{
+ if($('coop-code'))$('coop-code').value=ROOM;
+ status('Jozef: tap the green button');
+}
+
+window.BlockWorldCoop=Object.freeze({
+ role:()=>role,connected,host:startHost,join:()=>join(false),
+ disconnect:()=>leave({reason:'Stopped'}),code:()=>ROOM
+});
 })();
