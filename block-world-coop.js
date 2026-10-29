@@ -37,6 +37,9 @@ const ice=Array.isArray(cfg.iceServers)&&cfg.iceServers.length?cfg.iceServers:[
 ];
 function opts(){return{host:ep.host,port:ep.port||443,path:ep.path||'/',secure:ep.secure!==false,debug:0,config:{iceServers:ice,iceTransportPolicy:'all'}}}
 
+const myIndex=()=>localStorage.getItem(FAMILY_ROLE_KEY)==='Jozef'?1:0;
+const otherIndex=()=>1-myIndex();
+const otherName=()=>myIndex()===0?'Jozef':'Daddy';
 const connected=()=>!!conn?.open||(!!window.BlockWorldRelay?.connected?.()&&role!=='solo');
 g.isHost=()=>role==='host'&&connected()&&ready;
 g.isGuest=()=>role==='guest';
@@ -53,7 +56,7 @@ function status(msg){
  if(e){e.textContent=msg;e.className=/fail|error|Could not|lost|timeout|not ready/i.test(msg)?'err':/Waiting|Yay|here|in!|Connected/i.test(msg)?'ok':'';}
  const bar=$('coop-live');
  if(bar){
-  bar.textContent=role==='host'?(ready?'● DADDY + JO · CONNECTED':'● DADDY · WAITING'):role==='guest'?(ready?'● JO · CONNECTED':'● JO · CONNECTING'):'● 2D SOLO';
+  bar.textContent=role==='host'?(ready?'● '+(myIndex()===0?'DADDY':'JOZEF')+' + PARTNER':'● '+(myIndex()===0?'DADDY':'JOZEF')+' · WORLD OPEN'):role==='guest'?(ready?'● '+(myIndex()===0?'DADDY':'JOZEF')+' · CONNECTED':'● JOINING WORLD'):'● SOLO';
   bar.className=ready?'coop-live online':'coop-live';
  }
  loader(role==='guest'&&!ready);
@@ -91,16 +94,16 @@ function onMsg(m){
  if(m.t==='heartbeat-ack'){if(m.nonce===hbNonce)lastPong=performance.now();return;}
  if(m.t==='world'&&role==='guest'){
   if(!validWorld(m.w)){status('Bad world data. Try again.');return;}
-  g.useWorld(m.w);g.role(1);ready=true;retryCount=0;lastRealm=m.w.realmIndex;
+  g.useWorld(m.w);g.role(myIndex());ready=true;retryCount=0;lastRealm=m.w.realmIndex;
   clearTimeout(joinTimer);clearTimeout(retryTimer);
-  send({t:'ready'});loader(false);status('Yay! You are Jozef. Let’s play!');
+  send({t:'ready'});loader(false);status('Connected as '+(myIndex()===0?'Daddy':'Jozef')+'!');
   if($('btn-switch'))$('btn-switch').style.display='none';
   ['reset','mode','save'].forEach(id=>{if($(id))$(id).disabled=true;});
   if($('partner-tools'))$('partner-tools').hidden=false;hide();
   return;
  }
  if(m.t==='ready'&&role==='host'){
-  ready=true;g.role(0);status('Jozef is here! Let’s play!');
+  ready=true;g.role(myIndex());status(otherName()+' joined your world!');
   if($('btn-switch'))$('btn-switch').style.display='none';
   if($('partner-tools'))$('partner-tools').hidden=false;hide();
   return;
@@ -108,13 +111,13 @@ function onMsg(m){
  if(m.t==='input'&&g.isHost()){g.remoteInput={left:!!m.input?.left,right:!!m.input?.right,jump:!!m.input?.jump};return;}
  if(m.t==='action'&&g.isHost()){
   const now=performance.now();if(now-lastActionAt<80)return;lastActionAt=now;
-  if(['mine','place'].includes(m.kind))g.action(1,m.kind,{x:m.x,y:m.y},m.tile);
+  if(['mine','place'].includes(m.kind))g.action(otherIndex(),m.kind,{x:m.x,y:m.y},m.tile);
   return;
  }
- if(m.t==='attack'&&g.isHost()){const now=performance.now();if(now-lastActionAt<300)return;lastActionAt=now;g.attack(1);return;}
- if(m.t==='craft'&&g.isHost()){const now=performance.now();if(now-lastActionAt<80)return;lastActionAt=now;g.craftFor(1,m.recipe);return;}
- if(m.t==='give'&&g.isHost()){const now=performance.now();if(now-lastGiveAt<200)return;lastGiveAt=now;g.giveTo(1,m.tile);return;}
- if(m.t==='regroup'&&g.isHost()){const now=performance.now();if(now-lastRegroupAt[1]<15000)return;if(g.regroup(1))lastRegroupAt[1]=now;return;}
+ if(m.t==='attack'&&g.isHost()){const now=performance.now();if(now-lastActionAt<300)return;lastActionAt=now;g.attack(otherIndex());return;}
+ if(m.t==='craft'&&g.isHost()){const now=performance.now();if(now-lastActionAt<80)return;lastActionAt=now;g.craftFor(otherIndex(),m.recipe);return;}
+ if(m.t==='give'&&g.isHost()){const now=performance.now();if(now-lastGiveAt<200)return;lastGiveAt=now;g.giveTo(otherIndex(),m.tile);return;}
+ if(m.t==='regroup'&&g.isHost()){const now=performance.now();if(now-lastRegroupAt[otherIndex()]<15000)return;if(g.regroup(otherIndex()))lastRegroupAt[otherIndex()]=now;return;}
  if(m.t==='feedback'&&role==='guest'){g.setStatus(String(m.msg||'').slice(0,100));return;}
  if(m.t==='state'&&role==='guest'&&ready){
   if(!validState(m.s))return;
@@ -166,13 +169,13 @@ function attach(c){
   startHb();retryCount=0;clearTimeout(retryTimer);clearTimeout(joinTimer);
   if($('coop-disconnect'))$('coop-disconnect').disabled=false;
   if(role==='host'){
-   ready=false;g.role(0);status('Jozef is joining…');
+   ready=false;g.role(myIndex());status('Jozef is joining…');
    // Send world a few times to beat flaky first packet
    fullWorld();
    setTimeout(()=>{if(conn===c&&c.open&&role==='host')fullWorld();},400);
    setTimeout(()=>{if(conn===c&&c.open&&role==='host')fullWorld();},1200);
   }else{
-   ready=false;g.role(1);status('Almost there…');
+   ready=false;g.role(myIndex());status('Almost there…');
   }
  });
  c.on('data',m=>{if(conn===c)onMsg(m);});
@@ -202,7 +205,7 @@ function leave(opts={}){
  loader(false);
  status(opts.reason||'Solo play');
  if(wasGuest&&!opts.skipReload)location.reload();
- else if(!wasGuest)g.role(0);
+ else if(!wasGuest)g.role(myIndex());
 }
 
 function startHost(){
@@ -214,7 +217,7 @@ function startHost(){
  role='host';ready=false;retryCount=0;
  if(window.BlockWorldRelay?.connected?.())setTimeout(relayOnline,0);
  try{g.saveHost();}catch(_){}
- g.role(0);
+ g.role(myIndex());
  status('Starting…');
  if($('coop-disconnect'))$('coop-disconnect').disabled=false;
 
@@ -350,14 +353,14 @@ $('coop-give')?.addEventListener('click',()=>{
  if(!g.connected())return;
  const now=performance.now();if(now-lastGiveAt<200)return;
  if(role==='guest'){send({t:'give',tile:g.selected});lastGiveAt=now;return;}
- g.giveTo(0,g.selected);lastGiveAt=now;
+ g.giveTo(myIndex(),g.selected);lastGiveAt=now;
 });
 $('coop-regroup')?.addEventListener('click',()=>{
  if(!g.connected())return;
- const now=performance.now(),who=role==='guest'?1:0;
+ const now=performance.now(),who=myIndex();
  if(now-lastRegroupAt[who]<15000)return;
  if(role==='guest'){send({t:'regroup'});lastRegroupAt[who]=now;return;}
- if(g.regroup(0))lastRegroupAt[0]=now;
+ if(g.regroup(myIndex()))lastRegroupAt[myIndex()]=now;
 });
 $('open-coop')?.addEventListener('click',show);
 $('coop-close')?.addEventListener('click',hide);
@@ -394,18 +397,18 @@ function relayMessage(m){
 }
 function relayOnline(){
  if(!window.BlockWorldRelay?.connected?.()||conn?.open)return;
- if(role==='host'){ready=false;g.role(0);fullWorld();status('Family relay online · waiting for Jozef');}
- if(role==='guest'){ready=false;send({t:'resync'});status('Joining through family relay…');}
+ if(role==='host'){ready=false;g.role(myIndex());fullWorld();status('Shared world ready · waiting for '+otherName());}
+ if(role==='guest'){ready=false;send({t:'resync'});status('Joining '+otherName()+' through family relay…');}
 }
 function automaticHost(){
  if(role==='host')return;
  leave({skipReload:true,reason:'Shared world ready'});
- role='host';ready=false;g.role(0);hide();relayOnline();
+ role='host';ready=false;g.role(myIndex());hide();relayOnline();
 }
 function automaticJoin(){
  if(role==='guest')return;
  leave({skipReload:true,reason:'Joining shared world'});
- role='guest';ready=false;g.role(1);hide();relayOnline();
+ role='guest';ready=false;g.role(myIndex());hide();relayOnline();
 }
 window.BlockWorldCoop=Object.freeze({
  role:()=>role,connected,host:startHost,join:()=>join(false),
