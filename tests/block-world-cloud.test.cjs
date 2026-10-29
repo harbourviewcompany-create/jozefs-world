@@ -21,5 +21,23 @@ test('world saves with revision and broadcasts live actions',()=>{
  assert.match(cloud,/p_revision:revision/);
  assert.match(cloud,/event:'game-action'/);
  assert.match(cloud,/relayMessage\?\.\(payload\.message\)/);
- assert.match(html,/block-world-cloud\.js\?v=20261029-open-world-v6/);
+ assert.match(html,/block-world-cloud\.js\?v=20261029-chunked-v7/);
+});
+
+test('chosen player controls host and guest character regardless of join order',()=>{
+ assert.match(coop,/const myIndex=\(\)=>localStorage\.getItem\(FAMILY_ROLE_KEY\)==='Jozef'\?1:0/);
+ assert.match(coop,/const otherIndex=\(\)=>1-myIndex\(\)/);
+ assert.match(coop,/g\.action\(otherIndex\(\),m\.kind/);
+ assert.match(coop,/g\.role\(myIndex\(\)\)/);
+});
+test('large world relay is compressed, chunked, and reassembled completely',()=>{
+ assert.match(cloud,/new CompressionStream\('gzip'\)/);
+ assert.match(cloud,/new DecompressionStream\('gzip'\)/);
+ assert.match(cloud,/event:'game-chunk'/);
+ assert.match(cloud,/t\.parts\.filter\(part=>typeof part==='string'\)\.length===t\.total/);
+});
+test('building edits trigger cloud save and conflict checks remain active',()=>{
+ assert.match(cloud,/previousBlockChanged/);
+ assert.match(cloud,/setTimeout\(save,1800\)/);
+ assert.match(cloud,/p_revision:revision/);
 });
