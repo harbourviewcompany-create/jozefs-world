@@ -109,7 +109,7 @@ if(cfg?.url&&cfg?.publishableKey&&game&&el){
   channel.subscribe(async state=>{
    relay=state==='SUBSCRIBED';
    if(relay)await session();
-   else set('World connection interrupted. Reconnecting…');
+   else {owner=false;set('Offline · reconnecting to shared world…');const live=document.getElementById('coop-live');if(live){live.textContent='● OFFLINE · RECONNECTING';live.classList.remove('online');}}
   });
  }
  window.BlockWorldRelay=Object.freeze({
