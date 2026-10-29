@@ -10,6 +10,8 @@ const ROOM='dadd1e70cef2a7e0b10c4a9d3e5f6781';
 const HOST_ID='jw2d-'+ROOM;
 const TAB_KEY='jozefs-block-2d-guest-v2';
 const MAX_TILE=62;
+const WORLD_SIZES=new Set(['280x110','180x72']);
+const MAX_WORLD_CELLS=40000;
 
 let peer=null,conn=null,role='solo',ready=false,peerReady=false;
 let hostGen=0,joinTimer=0,retryTimer=0,retryCount=0,hbTimer=0;
@@ -63,8 +65,8 @@ function guestId(){
  return id;
 }
 
-function validPlayer(p){return p&&Number.isFinite(p.x)&&Number.isFinite(p.y)&&p.inventory&&typeof p.inventory==='object';}
-function validWorld(s){return s&&Array.isArray(s.world)&&Array.isArray(s.players)&&s.players.length===2&&s.players.every(validPlayer);}
+function validPlayer(p){return p&&Number.isFinite(p.x)&&Number.isFinite(p.y)&&Math.abs(p.x)<100000&&Math.abs(p.y)<100000&&Number.isFinite(p.health)&&Number.isFinite(p.facing)&&p.inventory&&typeof p.inventory==='object'&&!Array.isArray(p.inventory);}
+function validWorld(s){return s&&Number.isInteger(s.w)&&Number.isInteger(s.h)&&WORLD_SIZES.has(s.w+'x'+s.h)&&s.w*s.h<=MAX_WORLD_CELLS&&Array.isArray(s.world)&&s.world.length<=MAX_WORLD_CELLS&&Array.isArray(s.players)&&s.players.length===2&&s.players.every(validPlayer);}
 function validState(s){return s&&Array.isArray(s.players)&&s.players.length===2&&s.players.every(validPlayer);}
 
 function fullWorld(){
@@ -78,7 +80,7 @@ function fullWorld(){
 function onMsg(m){
  if(!m||typeof m!=='object')return;
  if(m.t==='heartbeat'){send({t:'heartbeat-ack',nonce:m.nonce});return;}
- if(m.t==='heartbeat-ack'){lastPong=performance.now();return;}
+ if(m.t==='heartbeat-ack'){if(m.nonce===hbNonce)lastPong=performance.now();return;}
  if(m.t==='world'&&role==='guest'){
   if(!validWorld(m.w)){status('Bad world data. Try again.');return;}
   g.useWorld(m.w);g.role(1);ready=true;retryCount=0;lastRealm=m.w.realmIndex;
@@ -158,8 +160,8 @@ function attach(c){
    ready=false;g.role(0);status('Jozef is joining…');
    // Send world a few times to beat flaky first packet
    fullWorld();
-   setTimeout(fullWorld,400);
-   setTimeout(fullWorld,1200);
+   setTimeout(()=>{if(conn===c&&c.open&&role==='host')fullWorld();},400);
+   setTimeout(()=>{if(conn===c&&c.open&&role==='host')fullWorld();},1200);
   }else{
    ready=false;g.role(1);status('Almost there…');
   }
