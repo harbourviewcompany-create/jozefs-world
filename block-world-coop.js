@@ -37,7 +37,7 @@ const ice=Array.isArray(cfg.iceServers)&&cfg.iceServers.length?cfg.iceServers:[
 ];
 function opts(){return{host:ep.host,port:ep.port||443,path:ep.path||'/',secure:ep.secure!==false,debug:0,config:{iceServers:ice,iceTransportPolicy:'all'}}}
 
-const connected=()=>!!conn?.open;
+const connected=()=>!!conn?.open||(!!window.BlockWorldRelay?.connected?.()&&role!=='solo');
 g.isHost=()=>role==='host'&&connected()&&ready;
 g.isGuest=()=>role==='guest';
 g.connected=()=>role!=='solo'&&connected()&&ready;
@@ -60,7 +60,7 @@ function status(msg){
 }
 function show(){$('coop-panel').classList.add('open');}
 function hide(){$('coop-panel').classList.remove('open');}
-function send(v){try{if(connected())conn.send(v);}catch(_){}}
+function send(v){try{if(conn?.open){conn.send(v);return;}if(window.BlockWorldRelay?.connected?.())window.BlockWorldRelay.send(v);}catch(_){}}
 
 function guestId(){
  try{
@@ -130,6 +130,7 @@ function onMsg(m){
 
 function stopHb(){clearInterval(hbTimer);hbTimer=0;}
 function startHb(){
+ if(!conn?.open)return;
  stopHb();lastPong=performance.now();
  hbTimer=setInterval(()=>{
   if(!connected()||document.hidden)return;
@@ -207,7 +208,7 @@ function leave(opts={}){
 function startHost(){
  hostId=savedHostId();
  try{localStorage.setItem(FAMILY_ROLE_KEY,'Daddy');}catch(_){}
- if(!window.Peer){status('Not ready yet. Refresh the page.');return;}
+ if(!window.Peer&&!window.BlockWorldRelay?.connected?.()){status('Not ready yet. Refresh the page.');return;}
  leave({skipReload:true,reason:'Starting…'});
  const gen=++hostGen;
  role='host';ready=false;retryCount=0;
@@ -274,7 +275,7 @@ function scheduleGuestRetry(){
 
 function join(isRetry){
  if(!invitedHost){status('First time only: Daddy sends one invite. After that just tap PLAY.');show();return;}
- if(!window.Peer){status('Not ready yet. Refresh the page.');return;}
+ if(!window.Peer&&!window.BlockWorldRelay?.connected?.()){status('Not ready yet. Refresh the page.');return;}
  if(role==='host'){status('Stop first, then join.');return;}
  if(role==='guest'&&!isRetry&&(connected()||ready))return;
 
@@ -384,8 +385,18 @@ if(invitedHost){
  if(localStorage.getItem(FAMILY_ROLE_KEY)==='Daddy')setTimeout(()=>{if(role==='solo')startHost();},600);
 }
 
+function relayMessage(m){
+ if(role==='solo'||conn?.open)return;
+ if(m?.t==='world'&&role==='guest')ready=false;
+ onMsg(m);
+}
+function relayOnline(){
+ if(!window.BlockWorldRelay?.connected?.()||conn?.open)return;
+ if(role==='host'){ready=true;g.role(0);fullWorld();status('Family relay online · waiting for Jozef');}
+ if(role==='guest'){ready=false;send({t:'resync'});status('Joining through family relay…');}
+}
 window.BlockWorldCoop=Object.freeze({
  role:()=>role,connected,host:startHost,join:()=>join(false),
- disconnect:()=>leave({reason:'Stopped'}),code:()=>hostId||invitedHost
+ disconnect:()=>leave({reason:'Stopped'}),code:()=>hostId||invitedHost,relayMessage,relayOnline
 });
 })();
