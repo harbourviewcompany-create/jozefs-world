@@ -9,27 +9,36 @@ if(cfg?.url&&cfg?.publishableKey&&game&&el){
  const set=t=>{el.textContent=t;};
  const transfers=new Map();
  const maxChunk=6000;
- function sendRelay(message){
+ async function pack(raw){
+  if(typeof CompressionStream==='undefined'||raw.length<12000)return {raw,encoding:'json'};
+  try{const stream=new Blob([raw]).stream().pipeThrough(new CompressionStream('gzip'));const bytes=new Uint8Array(await new Response(stream).arrayBuffer());let binary='';for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));return {raw:btoa(binary),encoding:'gzip'};}catch(_){return {raw,encoding:'json'};}
+ }
+ async function unpack(raw,encoding){
+  if(encoding!=='gzip')return raw;
+  const binary=atob(raw),bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
+  return await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+ }
+ async function sendRelay(message){
   if(!relay||!message||typeof message.t!=='string')return false;
-  const raw=JSON.stringify(message);
+  const packed=await pack(JSON.stringify(message));const raw=packed.raw;
   const id=player+'-'+Date.now()+'-'+(++transferSeq);
   if(raw.length>maxChunk){
    const total=Math.ceil(raw.length/maxChunk);
    if(total>320){set('World too large to synchronize.');return false;}
-   for(let i=0;i<total;i++)channel.send({type:'broadcast',event:'game-chunk',payload:{from:player,id,index:i,total,part:raw.slice(i*maxChunk,(i+1)*maxChunk)}});
+   for(let i=0;i<total;i++)channel.send({type:'broadcast',event:'game-chunk',payload:{from:player,id,index:i,total,part:raw.slice(i*maxChunk,(i+1)*maxChunk),encoding:packed.encoding}});
   }else channel.send({type:'broadcast',event:'game-action',payload:{from:player,message}});
   return true;
  }
- function acceptChunk(p){
-  if(!p||p.from===player||!['Daddy','Jozef'].includes(p.from)||typeof p.id!=='string'||p.id.length>100||!Number.isInteger(p.total)||p.total<1||p.total>320||!Number.isInteger(p.index)||p.index<0||p.index>=p.total||typeof p.part!=='string'||p.part.length>maxChunk)return;
+ async function acceptChunk(p){
+  if(!p||!['json','gzip'].includes(p.encoding)||p.from===player||!['Daddy','Jozef'].includes(p.from)||typeof p.id!=='string'||p.id.length>100||!Number.isInteger(p.total)||p.total<1||p.total>320||!Number.isInteger(p.index)||p.index<0||p.index>=p.total||typeof p.part!=='string'||p.part.length>maxChunk)return;
   for(const [id,t] of transfers)if(Date.now()-t.at>20000)transfers.delete(id);
   let t=transfers.get(p.id);
-  if(!t){t={at:Date.now(),total:p.total,parts:Array(p.total)};transfers.set(p.id,t);}
-  if(t.total!==p.total)return;
+  if(!t){t={at:Date.now(),total:p.total,encoding:p.encoding,parts:Array(p.total)};transfers.set(p.id,t);}
+  if(t.total!==p.total||t.encoding!==p.encoding)return;
   t.parts[p.index]=p.part;
   if(t.parts.every(part=>typeof part==='string')){
    transfers.delete(p.id);
-   try{const m=JSON.parse(t.parts.join(''));if(m&&typeof m.t==='string')window.BlockWorldCoop?.relayMessage?.(m);}catch(_){}
+   try{const m=JSON.parse(await unpack(t.parts.join(''),t.encoding));if(m&&typeof m.t==='string')window.BlockWorldCoop?.relayMessage?.(m);}catch(_){}
   }
  }
 
