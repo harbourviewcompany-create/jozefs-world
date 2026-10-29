@@ -21,7 +21,7 @@ test('world saves with revision and broadcasts live actions',()=>{
  assert.match(cloud,/p_revision:revision/);
  assert.match(cloud,/event:'game-action'/);
  assert.match(cloud,/relayMessage\?\.\(payload\.message\)/);
- assert.match(html,/block-world-cloud\.js\?v=20261029-chunked-v7/);
+ assert.match(html,/block-world-cloud\.js\?v=20261029-hudfix/);
 });
 
 test('chosen player controls host and guest character regardless of join order',()=>{
@@ -40,4 +40,17 @@ test('building edits trigger cloud save and conflict checks remain active',()=>{
  assert.match(cloud,/previousBlockChanged/);
  assert.match(cloud,/setTimeout\(save,1800\)/);
  assert.match(cloud,/p_revision:revision/);
+});
+
+test('mobile menu contains journal and cloud controls, away from touch HUD',()=>{
+ const ui=fs.readFileSync(path.join(root,'block-world-ui.js'),'utf8');
+ const css=fs.readFileSync(path.join(root,'block-world-premium-forest.css'),'utf8');
+ assert.match(ui,/\['bw-adventure','bw-cloud-panel'\]/);
+ assert.match(ui,/content\.appendChild\(panel\)/);
+ assert.match(css,/#toolbar-extra \.bw-menu-panel/);
+});
+test('connection status distinguishes solo, live, and reconnecting',()=>{
+ assert.match(coop,/PLAYING SOLO/);
+ assert.match(coop,/LIVE TOGETHER/);
+ assert.match(cloud,/OFFLINE · RECONNECTING/);
 });
