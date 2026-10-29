@@ -397,8 +397,18 @@ function relayOnline(){
  if(role==='host'){ready=false;g.role(0);fullWorld();status('Family relay online · waiting for Jozef');}
  if(role==='guest'){ready=false;send({t:'resync'});status('Joining through family relay…');}
 }
+function automaticHost(){
+ if(role==='host')return;
+ leave({skipReload:true,reason:'Shared world ready'});
+ role='host';ready=false;g.role(0);hide();relayOnline();
+}
+function automaticJoin(){
+ if(role==='guest')return;
+ leave({skipReload:true,reason:'Joining shared world'});
+ role='guest';ready=false;g.role(1);hide();relayOnline();
+}
 window.BlockWorldCoop=Object.freeze({
  role:()=>role,connected,host:startHost,join:()=>join(false),
- disconnect:()=>leave({reason:'Stopped'}),code:()=>hostId||invitedHost,relayMessage,relayOnline
+ disconnect:()=>leave({reason:'Stopped'}),code:()=>hostId||invitedHost,relayMessage,relayOnline,automaticHost,automaticJoin
 });
 })();
