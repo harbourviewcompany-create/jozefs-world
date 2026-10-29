@@ -40,6 +40,7 @@ function opts(){return{host:ep.host,port:ep.port||443,path:ep.path||'/',secure:e
 const myIndex=()=>localStorage.getItem(FAMILY_ROLE_KEY)==='Jozef'?1:0;
 const otherIndex=()=>1-myIndex();
 const otherName=()=>myIndex()===0?'Jozef':'Daddy';
+const playerName=()=>myIndex()===0?'Daddy':'Jozef';
 const connected=()=>!!conn?.open||(!!window.BlockWorldRelay?.connected?.()&&role!=='solo');
 g.isHost=()=>role==='host'&&connected()&&ready;
 g.isGuest=()=>role==='guest';
@@ -56,10 +57,10 @@ function status(msg){
  if(e){e.textContent=msg;e.className=/fail|error|Could not|lost|timeout|not ready/i.test(msg)?'err':/Waiting|Yay|here|in!|Connected/i.test(msg)?'ok':'';}
  const bar=$('coop-live');
  if(bar){
-  bar.textContent=role==='host'?(ready?'● '+(myIndex()===0?'DADDY':'JOZEF')+' + PARTNER':'● '+(myIndex()===0?'DADDY':'JOZEF')+' · WORLD OPEN'):role==='guest'?(ready?'● '+(myIndex()===0?'DADDY':'JOZEF')+' · CONNECTED':'● JOINING WORLD'):'● SOLO';
+  bar.textContent=role==='host'?(ready?'● '+playerName().toUpperCase()+' + '+otherName().toUpperCase()+' · LIVE':'● '+playerName().toUpperCase()+' · PLAYING SOLO'):role==='guest'?(ready?'● '+playerName().toUpperCase()+' · LIVE TOGETHER':'● '+playerName().toUpperCase()+' · JOINING…'):'● '+playerName().toUpperCase()+' · CONNECTING…';
   bar.className=ready?'coop-live online':'coop-live';
  }
- loader(role==='guest'&&!ready);
+ loader(false);
 }
 function show(){$('coop-panel').classList.add('open');}
 function hide(){$('coop-panel').classList.remove('open');}
@@ -397,7 +398,7 @@ function relayMessage(m){
 }
 function relayOnline(){
  if(!window.BlockWorldRelay?.connected?.()||conn?.open)return;
- if(role==='host'){ready=false;g.role(myIndex());fullWorld();status('Shared world ready · waiting for '+otherName());}
+ if(role==='host'){ready=false;g.role(myIndex());fullWorld();status('Shared world ready · playing as '+playerName());}
  if(role==='guest'){ready=false;send({t:'resync'});status('Joining '+otherName()+' through family relay…');}
 }
 function automaticHost(){
