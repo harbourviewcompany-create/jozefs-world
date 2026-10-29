@@ -4,9 +4,35 @@ const cfg=window.JW_FAMILY_CLOUD,game=window.BlockWorld2D,el=document.getElement
 if(cfg?.url&&cfg?.publishableKey&&game&&el){
  const db=createClient(cfg.url,cfg.publishableKey,{auth:{persistSession:false,autoRefreshToken:false}});
  const key='jw2d-family-role-v4',worldId='jozef-daddy';
- let player=localStorage.getItem(key),owner=false,revision=0,lastSaved='',loaded=false,saving=false,relay=false,channel=null,busy=false;
+ let player=localStorage.getItem(key),owner=false,revision=0,lastSaved='',loaded=false,saving=false,relay=false,channel=null,busy=false,transferSeq=0;
  const valid=w=>w&&['180x72','280x110'].includes(w.w+'x'+w.h)&&Array.isArray(w.world)&&w.world.length===w.h&&w.world.every(r=>Array.isArray(r)&&r.length===w.w)&&Array.isArray(w.players)&&w.players.length===2;
  const set=t=>{el.textContent=t;};
+ const transfers=new Map();
+ const maxChunk=6000;
+ function sendRelay(message){
+  if(!relay||!message||typeof message.t!=='string')return false;
+  const raw=JSON.stringify(message);
+  const id=player+'-'+Date.now()+'-'+(++transferSeq);
+  if(raw.length>maxChunk){
+   const total=Math.ceil(raw.length/maxChunk);
+   if(total>320){set('World too large to synchronize.');return false;}
+   for(let i=0;i<total;i++)channel.send({type:'broadcast',event:'game-chunk',payload:{from:player,id,index:i,total,part:raw.slice(i*maxChunk,(i+1)*maxChunk)}});
+  }else channel.send({type:'broadcast',event:'game-action',payload:{from:player,message}});
+  return true;
+ }
+ function acceptChunk(p){
+  if(!p||p.from===player||!['Daddy','Jozef'].includes(p.from)||typeof p.id!=='string'||p.id.length>100||!Number.isInteger(p.total)||p.total<1||p.total>320||!Number.isInteger(p.index)||p.index<0||p.index>=p.total||typeof p.part!=='string'||p.part.length>maxChunk)return;
+  for(const [id,t] of transfers)if(Date.now()-t.at>20000)transfers.delete(id);
+  let t=transfers.get(p.id);
+  if(!t){t={at:Date.now(),total:p.total,parts:Array(p.total)};transfers.set(p.id,t);}
+  if(t.total!==p.total)return;
+  t.parts[p.index]=p.part;
+  if(t.parts.every(part=>typeof part==='string')){
+   transfers.delete(p.id);
+   try{const m=JSON.parse(t.parts.join(''));if(m&&typeof m.t==='string')window.BlockWorldCoop?.relayMessage?.(m);}catch(_){}
+  }
+ }
+
  async function load(){
   const {data,error}=await db.from('block_world_open').select('world,revision').eq('id',worldId).single();
   if(error){set('World connection failed: '+error.message);return false;}
@@ -58,10 +84,11 @@ if(cfg?.url&&cfg?.publishableKey&&game&&el){
    if(!payload.message||typeof payload.message.t!=='string')return;
    window.BlockWorldCoop?.relayMessage?.(payload.message);
   });
+  channel.on('broadcast',{event:'game-chunk'},({payload})=>acceptChunk(payload));
   channel.on('broadcast',{event:'world-request'},async()=>{
    if(!owner)return;
    const world=game.getWorld?.();
-   if(valid(world))channel.send({type:'broadcast',event:'world-snapshot',payload:{world}});
+   if(valid(world))sendRelay({t:'world',w:world,stamp:Date.now()});
   });
   channel.on('broadcast',{event:'world-snapshot'},({payload})=>{
    if(owner||window.BlockWorldCoop?.role?.()!=='guest'||!valid(payload?.world))return;
@@ -75,11 +102,7 @@ if(cfg?.url&&cfg?.publishableKey&&game&&el){
  }
  window.BlockWorldRelay=Object.freeze({
   connected:()=>relay,
-  send:message=>{
-   if(!relay||!message||typeof message.t!=='string')return false;
-   channel.send({type:'broadcast',event:'game-action',payload:{from:player,message}});
-   return true;
-  }
+  send:sendRelay
  });
  window.BlockWorldCloud=Object.freeze({save,restore:load,status:()=>({player,owner,revision,connected:relay})});
  window.addEventListener('blockworld-player-selected',e=>{
