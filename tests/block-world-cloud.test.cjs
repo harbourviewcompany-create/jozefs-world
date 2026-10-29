@@ -12,7 +12,7 @@ test('cloud saves use approved membership and allow either player to save solo',
  assert.match(cloud,/from\('family_block_worlds'\)/);
 });
 test('cloud restore cannot overwrite an existing save before approval',()=>{
- assert.match(cloud,/if\(!force&&!confirm\(/);
+ assert.match(cloud,/if\(!force&&window\.BlockWorldCoop\?\.connected\?\.\(\)\)/);
  assert.match(cloud,/allowSave=true/);
  assert.match(cloud,/\.eq\('revision',lastRevision\)/);
 });
