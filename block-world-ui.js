@@ -7,6 +7,11 @@ const menu=$('menu-toggle'),content=$('toolbar-extra'),pad=$('movement-pad'),kno
 if(!menu||!content||!pad||!knob)return;
 // Consolidate the formerly floating WORLD MENU into the main HUD menu.
 // Keep the original action buttons and their handlers, rather than cloning them.
+// Keep optional panels in the menu rather than covering the joystick or inventory.
+for(const id of ['bw-adventure','bw-cloud-panel']){
+ const panel=$(id);
+ if(panel){content.appendChild(panel);panel.classList.add('bw-menu-panel');panel.open=false;}
+}
 const worldActions=$('bw-actions');
 if(worldActions){content.appendChild(worldActions);worldActions.classList.remove('closed');}
 const worldToggle=$('bw-menu-toggle');if(worldToggle)worldToggle.hidden=true;
