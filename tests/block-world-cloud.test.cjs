@@ -8,11 +8,11 @@ const cloud=fs.readFileSync(path.join(root,'block-world-cloud.js'),'utf8');
 const html=fs.readFileSync(path.join(root,'block-world.html'),'utf8');
 test('cloud saves use approved membership and allow either player to save solo',()=>{
  assert.match(cloud,/from\('family_members'\)/);
- assert.match(cloud,/if\(!familyId\|\|!loaded\|\|!allowSave\|\|saving\|\|liveGuest\(\)\)return/);
+ assert.match(cloud,/if\(!familyId\|\|!loaded\|\|!allowSave\|\|saving\|\|!sessionOwner\|\|liveGuest\(\)\)return/);
  assert.match(cloud,/from\('family_block_worlds'\)/);
 });
 test('cloud restore cannot overwrite an existing save before approval',()=>{
- assert.match(cloud,/if\(!force&&window\.BlockWorldCoop\?\.connected\?\.\(\)\)/);
+ assert.match(cloud,/if\(!force&&window\.BlockWorldCoop\?\.role\?\.\(\)!=='solo'\)/);
  assert.match(cloud,/allowSave=true/);
  assert.match(cloud,/\.eq\('revision',lastRevision\)/);
 });
