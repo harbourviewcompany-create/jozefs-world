@@ -212,6 +212,7 @@ function startHost(){
  leave({skipReload:true,reason:'Starting…'});
  const gen=++hostGen;
  role='host';ready=false;retryCount=0;
+ if(window.BlockWorldRelay?.connected?.())setTimeout(relayOnline,0);
  try{g.saveHost();}catch(_){}
  g.role(0);
  status('Starting…');
@@ -283,6 +284,7 @@ function join(isRetry){
  clearTimeout(joinTimer);clearTimeout(retryTimer);
  destroyPeer();
  role='guest';ready=false;peerReady=false;
+ if(window.BlockWorldRelay?.connected?.())setTimeout(relayOnline,0);
  if(!isRetry)retryCount=0;
  try{g.saveHost();}catch(_){}
  if($('coop-disconnect'))$('coop-disconnect').disabled=false;
