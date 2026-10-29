@@ -8,7 +8,7 @@ const button=document.getElementById('bw-cloud-login');
 const restore=document.getElementById('bw-cloud-restore');
 if(cfg?.url&&cfg?.publishableKey&&game&&status){
  const db=createClient(cfg.url,cfg.publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
- let familyId=null,role=null,userId=null,loaded=false,saving=false,lastSaved='',lastRemote='',lastRevision=0;
+ let familyId=null,role=null,userId=null,loaded=false,saving=false,allowSave=false,lastSaved='',lastRevision=0;
  const set=t=>{status.textContent=t;};
  const valid=w=>w&&['180x72','280x110'].includes(w.w+'x'+w.h)&&Array.isArray(w.world)&&w.world.length===w.h&&w.world.every(row=>Array.isArray(row)&&row.length===w.w)&&Array.isArray(w.players)&&w.players.length===2;
  const host=()=>window.BlockWorldCoop?.role?.()!=='guest'&&localStorage.getItem('jw2d-family-role-v4')==='Daddy';
@@ -18,16 +18,16 @@ if(cfg?.url&&cfg?.publishableKey&&game&&status){
   const {data,error}=await db.from('family_block_worlds').select('world,revision,updated_at').eq('family_id',familyId).maybeSingle();
   if(error){set('Cloud restore unavailable: '+error.message);return;}
   loaded=true;
-  if(!data){set('Cloud ready. Your first world will be saved from Daddy’s phone.');return;}
+  if(!data){allowSave=true;set('Cloud ready. Your first world will be saved from Daddy’s phone.');return;}
   if(!valid(data.world)){set('Cloud world has an unsupported format; local world kept.');return;}
   if(window.BlockWorldCoop?.connected?.()){set('Cloud save found. Disconnect before restoring.');return;}
   if(!host()){set('Cloud world available. Jozef receives it from Daddy when connected.');return;}
   if(!force&&!confirm('A shared cloud world exists. Load it on Daddy’s phone? Your local world will be backed up first.')){set('Local world retained. Tap Restore Cloud World to load later.');return;}
-  try{game.saveHost?.();if(game.useWorld(data.world)===false)throw Error('World rejected');game.saveHost?.();lastRevision=data.revision;lastRemote=JSON.stringify(data.world);lastSaved=lastRemote;set('Shared world restored from cloud.');}
+  try{game.saveHost?.();if(game.useWorld(data.world)===false)throw Error('World rejected');game.saveHost?.();lastRevision=data.revision;lastSaved=JSON.stringify(data.world);allowSave=true;set('Shared world restored from cloud.');}
   catch(e){set('Restore failed; local world retained: '+e.message);}
  }
  async function save(){
-  if(!familyId||!parent()||!host()||!loaded||saving)return;
+  if(!familyId||!parent()||!host()||!loaded||!allowSave||saving)return;
   const world=game.getWorld?.();
   if(!valid(world))return;
   const json=JSON.stringify(world);
