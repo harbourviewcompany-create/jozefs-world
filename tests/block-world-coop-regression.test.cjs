@@ -36,3 +36,8 @@ test('backup import accepts expanded world sizes', () => {
   assert.match(adventure, /280x110/);
   assert.match(adventure, /world\.world\.length!==world\.h/);
 });
+
+test('guest reconnect uses a new peer identity and bounded delay', () => {
+  assert.match(coop, /Generate a fresh guest PeerJS ID on every reconnect/);
+  assert.match(coop, /Math\.min\(15000,800\+retryCount\*500\)/);
+});
