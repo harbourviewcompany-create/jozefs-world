@@ -38,6 +38,6 @@ test('live gameplay messages have a relay sender and receiver',()=>{
  assert.match(cloud,/relayActive=state==='SUBSCRIBED'/);
 });
 test('cloud scripts have valid separate HTML script tags',()=>{
- assert.doesNotMatch(html,/<\\/script>\\n<script/);
+ assert.equal(html.includes(String.raw`\\n<script`),false);
  assert.match(html,/block-world-coop\.js\?v=20261029-relay-v8/);
 });
