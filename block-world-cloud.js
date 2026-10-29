@@ -104,5 +104,14 @@ if(cfg?.url&&cfg?.publishableKey&&game&&status){
  },25000);
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')save();});
  window.addEventListener('pagehide',()=>{save();});
+ window.BlockWorldRelay=Object.freeze({
+  connected:()=>relayActive,
+  send:message=>{
+   if(!relayActive||!message||typeof message.t!=='string')return false;
+   const from=window.BlockWorldCoop?.role?.()==='host'?'daddy':'jozef';
+   channel.send({type:'broadcast',event:'game-action',payload:{from,message}});
+   return true;
+  }
+ });
  window.BlockWorldCloud=Object.freeze({save,restore:()=>load(true),status:()=>({connected:!!familyId,role,lastRevision})});
 }
