@@ -68,10 +68,10 @@ if(cfg?.url&&cfg?.publishableKey&&game&&status){
  }
  async function init(){
   const {data:{user}}=await db.auth.getUser();
-  if(!user){set('Cloud backup: sign in once with your family email.');email.hidden=false;button.hidden=false;return;}
+  if(!user){set('Playing locally. Shared cloud sync is not connected on this device.');return;}
   userId=user.id;
   const {data,error}=await db.from('family_members').select('family_id,role').eq('user_id',user.id).maybeSingle();
-  if(error||!data){set('Signed in, but this account is not an approved family member.');return;}
+  if(error||!data){set('Playing locally. Shared cloud sync is not connected on this device.');return;}
   familyId=data.family_id;role=data.role;
   if(!channel){
    channel=db.channel('family-block-'+familyId,{config:{private:true}});
@@ -102,12 +102,14 @@ if(cfg?.url&&cfg?.publishableKey&&game&&status){
   await load();
   await syncSession();
  }
- button.onclick=async()=>{
+ /* Legacy email login disabled: player selection requires no sign-in. */
+ /* button.onclick=async()=>{
   const address=email.value.trim();if(!address)return set('Enter your family email.');
   button.disabled=true;
   const {error}=await db.auth.signInWithOtp({email:address,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:false}});
   button.disabled=false;set(error?'Sign-in failed: '+error.message:'Check your email for the sign-in link, then return here.');
  };
+ */
  restore.onclick=()=>load(true);
  db.auth.onAuthStateChange(()=>setTimeout(init,0));
  await init();
