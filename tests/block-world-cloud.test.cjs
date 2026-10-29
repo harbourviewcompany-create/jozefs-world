@@ -47,3 +47,14 @@ test('solo mode does not force hosting or joining on page load',()=>{
  assert.doesNotMatch(coop,/setTimeout\(\(\)=>\{if\(role==='solo'\)startHost\(\);\},600\)/);
  assert.doesNotMatch(coop,/setTimeout\(\(\)=>\{if\(role==='solo'\)join\(false\);\},500\)/);
 });
+
+test('first online player owns the live session and later player joins automatically',()=>{
+ const coop=fs.readFileSync(path.join(root,'block-world-coop.js'),'utf8');
+ assert.match(cloud,/claim_family_block_world_session/);
+ assert.match(cloud,/setInterval\(syncSession,10000\)/);
+ assert.match(cloud,/automaticHost\?\.\(\)/);
+ assert.match(cloud,/automaticJoin\?\.\(\)/);
+ assert.match(coop,/function automaticHost\(\)/);
+ assert.match(coop,/function automaticJoin\(\)/);
+ assert.match(html,/id="open-coop" hidden/);
+});
