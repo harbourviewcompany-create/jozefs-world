@@ -1,139 +1,96 @@
-/* Persistent family world: either member may play alone and save; revisions prevent silent overwrites. */
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.0';
-const cfg=window.JW_FAMILY_CLOUD;
-const game=window.BlockWorld2D;
-const status=document.getElementById('bw-cloud-status');
-const email=document.getElementById('bw-cloud-email');
-const button=document.getElementById('bw-cloud-login');
-const restore=document.getElementById('bw-cloud-restore');
-if(cfg?.url&&cfg?.publishableKey&&game&&status){
- const db=createClient(cfg.url,cfg.publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
- let familyId=null,role=null,userId=null,loaded=false,saving=false,allowSave=false,lastSaved='',lastRevision=0,channel=null,relayActive=false,sessionOwner=false,sessionBusy=false;
- const set=t=>{status.textContent=t;};
- const valid=w=>w&&['180x72','280x110'].includes(w.w+'x'+w.h)&&Array.isArray(w.world)&&w.world.length===w.h&&w.world.every(row=>Array.isArray(row)&&row.length===w.w)&&Array.isArray(w.players)&&w.players.length===2;
- const host=()=>window.BlockWorldCoop?.role?.()!=='guest'&&localStorage.getItem('jw2d-family-role-v4')==='Daddy';
- const liveGuest=()=>window.BlockWorldCoop?.role?.()==='guest'&&window.BlockWorldCoop?.connected?.();
- const parent=()=>['parent','dad','daddy','owner','admin'].includes(String(role).toLowerCase());
- async function load(force=false){
-  if(!familyId||(!force&&loaded))return;
-  const {data,error}=await db.from('family_block_worlds').select('world,revision,updated_at').eq('family_id',familyId).maybeSingle();
-  if(error){set('Cloud restore unavailable: '+error.message);return;}
-  loaded=true;
-  if(!data){allowSave=true;set('Cloud ready. Your first world will be saved from Daddy’s phone.');return;}
-  if(!valid(data.world)){set('Cloud world has an unsupported format; local world kept.');return;}
-  if(window.BlockWorldCoop?.connected?.()){set('Cloud save found. Disconnect before restoring.');return;}
-  
-  if(!force&&window.BlockWorldCoop?.role?.()!=='solo'){set('Live session active; cloud restore deferred.');return;}
-  try{game.saveHost?.();if(game.useWorld(data.world)===false)throw Error('World rejected');game.saveHost?.();lastRevision=data.revision;lastSaved=JSON.stringify(data.world);allowSave=true;set('Ongoing family world restored. Play anytime; changes save automatically.');}
-  catch(e){set('Restore failed; local world retained: '+e.message);}
+/* Open two-player world. No accounts: select Daddy or Jozef on any device. */
+import {createClient} from 'https://esm.sh/@supabase/supabase-js@2.57.0';
+const cfg=window.JW_FAMILY_CLOUD,game=window.BlockWorld2D,el=document.getElementById('bw-cloud-status');
+if(cfg?.url&&cfg?.publishableKey&&game&&el){
+ const db=createClient(cfg.url,cfg.publishableKey,{auth:{persistSession:false,autoRefreshToken:false}});
+ const key='jw2d-family-role-v4',worldId='jozef-daddy';
+ let player=localStorage.getItem(key),owner=false,revision=0,lastSaved='',loaded=false,saving=false,relay=false,channel=null,busy=false;
+ const valid=w=>w&&['180x72','280x110'].includes(w.w+'x'+w.h)&&Array.isArray(w.world)&&w.world.length===w.h&&w.world.every(r=>Array.isArray(r)&&r.length===w.w)&&Array.isArray(w.players)&&w.players.length===2;
+ const set=t=>{el.textContent=t;};
+ async function load(){
+  const {data,error}=await db.from('block_world_open').select('world,revision').eq('id',worldId).single();
+  if(error){set('World connection failed: '+error.message);return false;}
+  if(data.world&&valid(data.world)){
+   try{if(game.useWorld(data.world)===false)throw Error('World rejected');game.saveHost?.();}catch(e){set('Restore failed: '+e.message);return false;}
+  }
+  revision=data.revision;lastSaved=data.world?JSON.stringify(data.world):'';loaded=true;
+  set(data.world?'Shared world restored.':'New shared world ready.');
+  return true;
  }
  async function save(){
-  if(!familyId||!loaded||!allowSave||saving||!sessionOwner||liveGuest())return;
-  const world=game.getWorld?.();
-  if(!valid(world))return;
-  const json=JSON.stringify(world);
-  if(json===lastSaved)return;
+  if(!owner||!loaded||saving)return;
+  const world=game.getWorld?.();if(!valid(world))return;
+  const json=JSON.stringify(world);if(json===lastSaved)return;
   saving=true;
   try{
-   const payload={family_id:familyId,world,updated_by:userId,updated_at:new Date().toISOString()};
-   let result;
-   if(lastRevision){
-    result=await db.from('family_block_worlds').update(payload).eq('family_id',familyId).eq('revision',lastRevision).select('revision').maybeSingle();
-    if(!result.error&&!result.data){allowSave=false;set('Another device saved newer progress. Restore Cloud World to continue safely.');return;}
-   }else{
-    result=await db.from('family_block_worlds').insert({...payload,revision:1}).select('revision').single();
-   }
-   if(result.error){if(result.error.code==='23505'){allowSave=false;set('World already created on another device. Restore Cloud World.');return;}throw result.error;}
-   lastRevision=result.data?.revision||lastRevision;
-   lastSaved=json;set('Cloud saved · '+new Date().toLocaleTimeString());
-  }catch(e){set('Cloud save pending: '+e.message);}
+   const {data,error}=await db.rpc('block_world_open_save',{p_player:player,p_revision:revision,p_world:world});
+   if(error)throw error;
+   revision=data;lastSaved=json;set('World saved · '+new Date().toLocaleTimeString());
+  }catch(e){set('Save pending: '+e.message);}
   finally{saving=false;}
  }
- async function syncSession(){
-  if(!familyId||!loaded||!relayActive||sessionBusy||document.hidden)return;
-  sessionBusy=true;
+ async function session(){
+  if(!['Daddy','Jozef'].includes(player)||busy||document.hidden||!relay)return;
+  busy=true;
   try{
-   const {data,error}=await db.rpc('claim_family_block_world_session',{p_family:familyId});
+   const {data,error}=await db.rpc('block_world_open_claim',{p_player:player});
    if(error)throw error;
-   const wasOwner=sessionOwner;
-   sessionOwner=data===true;
-   if(sessionOwner){
-    if(!wasOwner)window.BlockWorldCoop?.automaticHost?.();
-   }else{
-    if(wasOwner){allowSave=false;await load(true);}
+   const previous=owner;owner=data===true;
+   if(owner&&!previous){
+    if(!await load())return;
+    window.BlockWorldCoop?.automaticHost?.();
+    set('Playing as '+player+' · shared world');
+   }else if(!owner){
+    if(previous)await load();
     window.BlockWorldCoop?.automaticJoin?.();
+    set('Joined '+(player==='Daddy'?'Jozef':'Daddy')+'’s world');
    }
-  }catch(e){set('Shared session reconnecting: '+e.message);}
-  finally{sessionBusy=false;}
+  }catch(e){set('Reconnecting: '+e.message);}
+  finally{busy=false;}
  }
- async function init(){
-  const {data:{user}}=await db.auth.getUser();
-  if(!user){set('Playing locally. Shared cloud sync is not connected on this device.');return;}
-  userId=user.id;
-  const {data,error}=await db.from('family_members').select('family_id,role').eq('user_id',user.id).maybeSingle();
-  if(error||!data){set('Playing locally. Shared cloud sync is not connected on this device.');return;}
-  familyId=data.family_id;role=data.role;
-  if(!channel){
-   channel=db.channel('family-block-'+familyId,{config:{private:true}});
-   channel.on('broadcast',{event:'game-action'},({payload})=>{
-    const r=window.BlockWorldCoop?.role?.();
-    if(!relayActive||!payload||!((r==='host'&&payload.from==='jozef')||(r==='guest'&&payload.from==='daddy')))return;
-    window.BlockWorldCoop?.relayMessage?.(payload.message);
-   });
-   channel.on('broadcast',{event:'world-request'},async()=>{
-    if(!host())return;
-    const world=game.getWorld?.();
-    if(valid(world))await channel.send({type:'broadcast',event:'world-snapshot',payload:{world}});
-   });
-   channel.on('broadcast',{event:'world-snapshot'},({payload})=>{
-    if(window.BlockWorldCoop?.role?.()!=='guest'||window.BlockWorldCoop?.connected?.()||!valid(payload?.world))return;
-    try{game.useWorld(payload.world);set('World synchronized through family relay.');}catch(_){}
-   });
-   channel.subscribe(state=>{
-    relayActive=state==='SUBSCRIBED';
-    if(relayActive){
-     window.BlockWorldCoop?.relayOnline?.();
-     if(window.BlockWorldCoop?.role?.()==='guest')channel.send({type:'broadcast',event:'world-request',payload:{}});
-    }
-   });
-  }
-  email.hidden=true;button.hidden=true;restore.hidden=false;
-  set('Family cloud connected. Checking for saved world…');
-  await load();
-  await syncSession();
- }
- /* Legacy email login disabled: player selection requires no sign-in. */
- /* button.onclick=async()=>{
-  const address=email.value.trim();if(!address)return set('Enter your family email.');
-  button.disabled=true;
-  const {error}=await db.auth.signInWithOtp({email:address,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:false}});
-  button.disabled=false;set(error?'Sign-in failed: '+error.message:'Check your email for the sign-in link, then return here.');
- };
- */
- restore.onclick=()=>load(true);
- db.auth.onAuthStateChange(()=>setTimeout(init,0));
- await init();
- setInterval(save,30000);
- setInterval(syncSession,10000);
- setInterval(()=>{
-  if(!channel||!familyId||window.BlockWorldCoop?.connected?.()||window.BlockWorldCoop?.role?.()==='solo')return;
-  if(host()){
+ async function start(){
+  if(!['Daddy','Jozef'].includes(player))return;
+  if(channel)return;
+  set('Connecting as '+player+'…');
+  channel=db.channel('block-world-open-'+worldId,{config:{broadcast:{self:false}}});
+  channel.on('broadcast',{event:'game-action'},({payload})=>{
+   if(!payload||payload.from===player||!['Daddy','Jozef'].includes(payload.from))return;
+   if(!payload.message||typeof payload.message.t!=='string')return;
+   window.BlockWorldCoop?.relayMessage?.(payload.message);
+  });
+  channel.on('broadcast',{event:'world-request'},async()=>{
+   if(!owner)return;
    const world=game.getWorld?.();
    if(valid(world))channel.send({type:'broadcast',event:'world-snapshot',payload:{world}});
-  }else{
-   channel.send({type:'broadcast',event:'world-request',payload:{}});
-  }
- },25000);
- document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')save();});
- window.addEventListener('pagehide',()=>{save();});
+  });
+  channel.on('broadcast',{event:'world-snapshot'},({payload})=>{
+   if(owner||window.BlockWorldCoop?.role?.()!=='guest'||!valid(payload?.world))return;
+   try{game.useWorld(payload.world);set('Live world synchronized.');}catch(_){}
+  });
+  channel.subscribe(async state=>{
+   relay=state==='SUBSCRIBED';
+   if(relay)await session();
+   else set('World connection interrupted. Reconnecting…');
+  });
+ }
  window.BlockWorldRelay=Object.freeze({
-  connected:()=>relayActive,
+  connected:()=>relay,
   send:message=>{
-   if(!relayActive||!message||typeof message.t!=='string')return false;
-   const from=window.BlockWorldCoop?.role?.()==='host'?'daddy':'jozef';
-   channel.send({type:'broadcast',event:'game-action',payload:{from,message}});
+   if(!relay||!message||typeof message.t!=='string')return false;
+   channel.send({type:'broadcast',event:'game-action',payload:{from:player,message}});
    return true;
   }
  });
- window.BlockWorldCloud=Object.freeze({save,restore:()=>load(true),status:()=>({connected:!!familyId,role,lastRevision})});
+ window.BlockWorldCloud=Object.freeze({save,restore:load,status:()=>({player,owner,revision,connected:relay})});
+ window.addEventListener('blockworld-player-selected',e=>{
+  const next=e.detail?.player;
+  if(!['Daddy','Jozef'].includes(next))return;
+  if(player&&player!==next){location.reload();return;}
+  player=next;start();
+ });
+ if(['Daddy','Jozef'].includes(player))start();
+ setInterval(session,10000);
+ setInterval(save,15000);
+ document.addEventListener('visibilitychange',()=>{if(document.hidden)save();else session();});
+ window.addEventListener('pagehide',()=>{save();});
 }
