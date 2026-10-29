@@ -27,3 +27,17 @@ test('block world loads cloud integration and exposes status',()=>{
  assert.match(html,/family-cloud-config\.js/);
  assert.match(html,/id="bw-cloud-status"/);
 });
+
+test('live gameplay messages have a relay sender and receiver',()=>{
+ const coop=fs.readFileSync(path.join(root,'block-world-coop.js'),'utf8');
+ assert.match(coop,/function relayMessage\(m\)/);
+ assert.match(coop,/function relayOnline\(\)/);
+ assert.match(coop,/BlockWorldRelay\?\.send\(v\)/);
+ assert.match(cloud,/event:'game-action'/);
+ assert.match(cloud,/relayMessage\?\.\(payload\.message\)/);
+ assert.match(cloud,/relayActive=state==='SUBSCRIBED'/);
+});
+test('cloud scripts have valid separate HTML script tags',()=>{
+ assert.doesNotMatch(html,/<\\/script>\\n<script/);
+ assert.match(html,/block-world-coop\.js\?v=20261029-relay-v8/);
+});
