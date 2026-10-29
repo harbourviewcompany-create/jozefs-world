@@ -78,7 +78,7 @@ function fullWorld(){
 }
 
 function onMsg(m){
- if(!m||typeof m!=='object')return;
+ if(!m||typeof m!=='object'||Array.isArray(m)||typeof m.t!=='string'||m.t.length>32)return;
  if(m.t==='heartbeat'){send({t:'heartbeat-ack',nonce:m.nonce});return;}
  if(m.t==='heartbeat-ack'){if(m.nonce===hbNonce)lastPong=performance.now();return;}
  if(m.t==='world'&&role==='guest'){
