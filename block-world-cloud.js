@@ -8,7 +8,7 @@ const button=document.getElementById('bw-cloud-login');
 const restore=document.getElementById('bw-cloud-restore');
 if(cfg?.url&&cfg?.publishableKey&&game&&status){
  const db=createClient(cfg.url,cfg.publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
- let familyId=null,role=null,userId=null,loaded=false,saving=false,allowSave=false,lastSaved='',lastRevision=0;
+ let familyId=null,role=null,userId=null,loaded=false,saving=false,allowSave=false,lastSaved='',lastRevision=0,channel=null;
  const set=t=>{status.textContent=t;};
  const valid=w=>w&&['180x72','280x110'].includes(w.w+'x'+w.h)&&Array.isArray(w.world)&&w.world.length===w.h&&w.world.every(row=>Array.isArray(row)&&row.length===w.w)&&Array.isArray(w.players)&&w.players.length===2;
  const host=()=>window.BlockWorldCoop?.role?.()!=='guest'&&localStorage.getItem('jw2d-family-role-v4')==='Daddy';
@@ -55,6 +55,21 @@ if(cfg?.url&&cfg?.publishableKey&&game&&status){
   const {data,error}=await db.from('family_members').select('family_id,role').eq('user_id',user.id).maybeSingle();
   if(error||!data){set('Signed in, but this account is not an approved family member.');return;}
   familyId=data.family_id;role=data.role;
+  if(!channel){
+   channel=db.channel('family-block-'+familyId,{config:{private:true}});
+   channel.on('broadcast',{event:'world-request'},async()=>{
+    if(!host()||!parent())return;
+    const world=game.getWorld?.();
+    if(valid(world))await channel.send({type:'broadcast',event:'world-snapshot',payload:{world}});
+   });
+   channel.on('broadcast',{event:'world-snapshot'},({payload})=>{
+    if(host()||window.BlockWorldCoop?.connected?.()||!valid(payload?.world))return;
+    try{game.useWorld(payload.world);set('World synchronized through family relay.');}catch(_){}
+   });
+   channel.subscribe(state=>{
+    if(state==='SUBSCRIBED'&&!host())channel.send({type:'broadcast',event:'world-request',payload:{}});
+   });
+  }
   email.hidden=true;button.hidden=true;restore.hidden=!parent();
   set('Family cloud connected. Checking for saved world…');
   await load();
