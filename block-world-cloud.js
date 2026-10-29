@@ -21,7 +21,7 @@ if(cfg?.url&&cfg?.publishableKey&&game&&status){
   if(!data){allowSave=true;set('Cloud ready. Your first world will be saved from Daddy’s phone.');return;}
   if(!valid(data.world)){set('Cloud world has an unsupported format; local world kept.');return;}
   if(window.BlockWorldCoop?.connected?.()){set('Cloud save found. Disconnect before restoring.');return;}
-  if(!host()){set('Cloud world available. Jozef receives it from Daddy when connected.');return;}
+  if(!host()){try{if(game.useWorld(data.world)===false)throw Error('World rejected');set('Shared world loaded on this phone. Live multiplayer starts when Daddy connects.');}catch(e){set('Cloud world could not load: '+e.message);}return;}
   if(!force&&!confirm('A shared cloud world exists. Load it on Daddy’s phone? Your local world will be backed up first.')){set('Local world retained. Tap Restore Cloud World to load later.');return;}
   try{game.saveHost?.();if(game.useWorld(data.world)===false)throw Error('World rejected');game.saveHost?.();lastRevision=data.revision;lastSaved=JSON.stringify(data.world);allowSave=true;set('Shared world restored from cloud.');}
   catch(e){set('Restore failed; local world retained: '+e.message);}
