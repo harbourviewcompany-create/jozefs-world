@@ -7,12 +7,15 @@ const g=window.BlockWorld2D,$=id=>document.getElementById(id);
 if(!g||!$('coop-panel'))return;
 
 const ROOM='dadd1e70cef2a7e0b10c4a9d3e5f6781';
-const HOST_KEY='jw2d-host-session-v3';
+const HOST_KEY='jw2d-family-host-v4';
+const FAMILY_GUEST_KEY='jw2d-family-daddy-peer-v4';
+const FAMILY_ROLE_KEY='jw2d-family-role-v4';
 function randomRoom(){const b=new Uint8Array(16);crypto.getRandomValues(b);return [...b].map(x=>x.toString(16).padStart(2,'0')).join('');}
-function newHostId(){const id='jw2d-'+randomRoom();try{sessionStorage.setItem(HOST_KEY,id);}catch(_){}return id;}
+function newHostId(){const id='jw2d-'+randomRoom();try{localStorage.setItem(HOST_KEY,id);}catch(_){}return id;}
+function savedHostId(){try{const id=localStorage.getItem(HOST_KEY);if(/^jw2d-[a-f0-9]{32}$/i.test(id||''))return id;}catch(_){}return newHostId();}
 let hostId='';
 let invitedHost='';
-try{const m=location.hash.match(/(?:^#|&)coop=(jw2d-[a-f0-9]{32})(?:&|$)/i);if(m)invitedHost=m[1];}catch(_){}
+try{const m=location.hash.match(/(?:^#|&)coop=(jw2d-[a-f0-9]{32})(?:&|$)/i);if(m){invitedHost=m[1];localStorage.setItem(FAMILY_GUEST_KEY,invitedHost);localStorage.setItem(FAMILY_ROLE_KEY,'Jozef');}else{const saved=localStorage.getItem(FAMILY_GUEST_KEY);if(/^jw2d-[a-f0-9]{32}$/i.test(saved||''))invitedHost=saved;}}catch(_){}
 const TAB_KEY='jozefs-block-2d-guest-v2';
 const MAX_TILE=62;
 const WORLD_SIZES=new Set(['280x110','180x72']);
@@ -202,7 +205,8 @@ function leave(opts={}){
 }
 
 function startHost(){
- hostId=newHostId();
+ hostId=savedHostId();
+ try{localStorage.setItem(FAMILY_ROLE_KEY,'Daddy');}catch(_){}
  if(!window.Peer){status('Not ready yet. Refresh the page.');return;}
  leave({skipReload:true,reason:'Starting…'});
  const gen=++hostGen;
@@ -247,7 +251,7 @@ function startHost(){
    if(type==='unavailable-id'||type==='network'||type==='server-error'||type==='socket-error'||type==='socket-closed'){
     if(retryCount>=8){status('Could not start. Close other tabs of this game, wait 10s, try again.');show();return;}
     retryCount++;
-    if(type==='unavailable-id')hostId=newHostId();
+    if(type==='unavailable-id'){status('Daddy’s room is already open on another tab. Close the other tab and try again.');show();return;}
     status('Connecting… ('+retryCount+'/8)');
     setTimeout(()=>{if(gen===hostGen&&role==='host'&&!peerReady)attempt();},1000+retryCount*400);
     return;
@@ -269,7 +273,7 @@ function scheduleGuestRetry(){
 }
 
 function join(isRetry){
- if(!invitedHost){status('Ask Daddy to tap SEND TO JOZEF’S PHONE and open his link.');show();return;}
+ if(!invitedHost){status('First time only: Daddy sends one invite. After that just tap PLAY.');show();return;}
  if(!window.Peer){status('Not ready yet. Refresh the page.');return;}
  if(role==='host'){status('Stop first, then join.');return;}
  if(role==='guest'&&!isRetry&&(connected()||ready))return;
@@ -377,7 +381,7 @@ if(invitedHost){
  setTimeout(()=>{if(role==='solo')join(false);},500);
 }else{
  if($('coop-code'))$('coop-code').value=ROOM;
- status('Daddy: tap START, then SEND TO JOZEF’S PHONE');
+ status('Daddy: tap START. First time only, send Jozef the invite.');
 }
 
 window.BlockWorldCoop=Object.freeze({
