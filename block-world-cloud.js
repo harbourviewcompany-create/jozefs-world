@@ -1,4 +1,4 @@
-/* Authenticated shared-world persistence. Daddy is the authoritative writer. */
+/* Persistent family world: either member may play alone and save; revisions prevent silent overwrites. */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.0';
 const cfg=window.JW_FAMILY_CLOUD;
 const game=window.BlockWorld2D;
@@ -12,6 +12,7 @@ if(cfg?.url&&cfg?.publishableKey&&game&&status){
  const set=t=>{status.textContent=t;};
  const valid=w=>w&&['180x72','280x110'].includes(w.w+'x'+w.h)&&Array.isArray(w.world)&&w.world.length===w.h&&w.world.every(row=>Array.isArray(row)&&row.length===w.w)&&Array.isArray(w.players)&&w.players.length===2;
  const host=()=>window.BlockWorldCoop?.role?.()!=='guest'&&localStorage.getItem('jw2d-family-role-v4')==='Daddy';
+ const liveGuest=()=>window.BlockWorldCoop?.role?.()==='guest'&&window.BlockWorldCoop?.connected?.();
  const parent=()=>['parent','dad','daddy','owner','admin'].includes(String(role).toLowerCase());
  async function load(force=false){
   if(!familyId||(!force&&loaded))return;
@@ -21,13 +22,13 @@ if(cfg?.url&&cfg?.publishableKey&&game&&status){
   if(!data){allowSave=true;set('Cloud ready. Your first world will be saved from Daddy’s phone.');return;}
   if(!valid(data.world)){set('Cloud world has an unsupported format; local world kept.');return;}
   if(window.BlockWorldCoop?.connected?.()){set('Cloud save found. Disconnect before restoring.');return;}
-  if(!host()){try{if(game.useWorld(data.world)===false)throw Error('World rejected');set('Shared world loaded on this phone. Live multiplayer starts when Daddy connects.');}catch(e){set('Cloud world could not load: '+e.message);}return;}
-  if(!force&&!confirm('A shared cloud world exists. Load it on Daddy’s phone? Your local world will be backed up first.')){set('Local world retained. Tap Restore Cloud World to load later.');return;}
-  try{game.saveHost?.();if(game.useWorld(data.world)===false)throw Error('World rejected');game.saveHost?.();lastRevision=data.revision;lastSaved=JSON.stringify(data.world);allowSave=true;set('Shared world restored from cloud.');}
+  
+  if(!force&&window.BlockWorldCoop?.connected?.()){set('Live co-op active; cloud restore deferred.');return;}
+  try{game.saveHost?.();if(game.useWorld(data.world)===false)throw Error('World rejected');game.saveHost?.();lastRevision=data.revision;lastSaved=JSON.stringify(data.world);allowSave=true;set('Ongoing family world restored. Play anytime; changes save automatically.');}
   catch(e){set('Restore failed; local world retained: '+e.message);}
  }
  async function save(){
-  if(!familyId||!parent()||!host()||!loaded||!allowSave||saving)return;
+  if(!familyId||!loaded||!allowSave||saving||liveGuest())return;
   const world=game.getWorld?.();
   if(!valid(world))return;
   const json=JSON.stringify(world);
@@ -38,11 +39,11 @@ if(cfg?.url&&cfg?.publishableKey&&game&&status){
    let result;
    if(lastRevision){
     result=await db.from('family_block_worlds').update(payload).eq('family_id',familyId).eq('revision',lastRevision).select('revision').maybeSingle();
-    if(!result.error&&!result.data){set('Cloud save changed on another device. Restore before saving again.');return;}
+    if(!result.error&&!result.data){allowSave=false;set('Another device saved newer progress. Restore Cloud World to continue safely.');return;}
    }else{
-    result=await db.from('family_block_worlds').upsert(payload,{onConflict:'family_id'}).select('revision').single();
+    result=await db.from('family_block_worlds').insert({...payload,revision:1}).select('revision').single();
    }
-   if(result.error)throw result.error;
+   if(result.error){if(result.error.code==='23505'){allowSave=false;set('World already created on another device. Restore Cloud World.');return;}throw result.error;}
    lastRevision=result.data?.revision||lastRevision;
    lastSaved=json;set('Cloud saved · '+new Date().toLocaleTimeString());
   }catch(e){set('Cloud save pending: '+e.message);}
@@ -63,7 +64,7 @@ if(cfg?.url&&cfg?.publishableKey&&game&&status){
     window.BlockWorldCoop?.relayMessage?.(payload.message);
    });
    channel.on('broadcast',{event:'world-request'},async()=>{
-    if(!host()||!parent())return;
+    if(!host())return;
     const world=game.getWorld?.();
     if(valid(world))await channel.send({type:'broadcast',event:'world-snapshot',payload:{world}});
    });
@@ -79,7 +80,7 @@ if(cfg?.url&&cfg?.publishableKey&&game&&status){
     }
    });
   }
-  email.hidden=true;button.hidden=true;restore.hidden=!parent();
+  email.hidden=true;button.hidden=true;restore.hidden=false;
   set('Family cloud connected. Checking for saved world…');
   await load();
  }
@@ -95,7 +96,7 @@ if(cfg?.url&&cfg?.publishableKey&&game&&status){
  setInterval(save,30000);
  setInterval(()=>{
   if(!channel||!familyId||window.BlockWorldCoop?.connected?.())return;
-  if(host()&&parent()){
+  if(host()){
    const world=game.getWorld?.();
    if(valid(world))channel.send({type:'broadcast',event:'world-snapshot',payload:{world}});
   }else{
