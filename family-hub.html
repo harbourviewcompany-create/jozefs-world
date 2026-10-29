@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071b2c"><title>Play Together | Jozef's World</title>
+<style>
+:root{font-family:system-ui,-apple-system,sans-serif;color-scheme:dark;background:#071b2c;color:#f0f9ff}
+*{box-sizing:border-box}body{margin:0;min-height:100dvh;background:radial-gradient(circle at 50% 0%,#1b4965,#071b2c 68%);padding:calc(env(safe-area-inset-top) + 18px) 16px calc(env(safe-area-inset-bottom) + 28px)}
+main{max-width:620px;margin:auto}header{display:flex;align-items:center;justify-content:space-between;gap:12px}header a{color:#c8e5f8;text-decoration:none;font-weight:700}
+h1{font-size:clamp(30px,8vw,48px);line-height:1.05;margin:28px 0 10px}p{color:#c1d6e3;line-height:1.45}
+.panel{background:#102e43;border:1px solid #37647a;border-radius:24px;padding:20px;margin:18px 0;box-shadow:0 12px 30px #0003}
+.roles{display:grid;grid-template-columns:1fr 1fr;gap:12px}.role{border:2px solid #4a7890;border-radius:17px;background:#193d56;color:#fff;padding:20px 8px;min-height:94px;font-size:19px;font-weight:800;cursor:pointer}.role[aria-pressed=true]{border-color:#b8ff89;background:#285d4e}.role small{display:block;font-size:12px;font-weight:500;margin-top:6px}
+.action{display:flex;align-items:center;justify-content:center;text-decoration:none;background:#a8f36d;color:#092c25;border:0;border-radius:18px;padding:21px 12px;font-size:21px;font-weight:900;min-height:68px;width:100%;cursor:pointer}.secondary{background:#1d4861;color:white;border:1px solid #72acc6}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid a{font-size:16px;min-height:80px;text-align:center}
+.note{font-size:13px;color:#b4cfde}#role-note{min-height:20px}button:focus-visible,a:focus-visible{outline:3px solid #fff;outline-offset:3px}
+</style></head><body><main>
+<header><strong>JOZEF'S WORLD</strong><a href="./">← HQ</a></header>
+<h1>PLAY TOGETHER</h1><p>Just Daddy and Jozef. Pick your phone once, then jump into your games.</p>
+<section class="panel" aria-label="Choose this phone"><strong>WHOSE PHONE IS THIS?</strong><div class="roles" style="margin-top:12px">
+<button id="dad" class="role" type="button" aria-pressed="false">DADDY<small>My phone</small></button>
+<button id="jo" class="role" type="button" aria-pressed="false">JOZEF<small>My phone</small></button>
+</div><p id="role-note" class="note" role="status"></p></section>
+<section class="panel"><h2>Our Block World</h2><p>Build, explore and play in the same world. Daddy's room opens automatically; Jozef joins using his saved invitation.</p><a id="play" class="action" href="block-world.html">PLAY TOGETHER</a><p id="pair-note" class="note"></p></section>
+<div class="grid"><a class="action secondary" href="family-video.html">VIDEO CALL</a><a class="action secondary" href="family-photos.html">OUR PHOTOS</a></div>
+<p class="note">First-time setup: Daddy starts Block World and shares the invitation once. Jozef opens that invitation on his phone. Browser data must be retained for automatic reconnect. Both phones need internet.</p>
+</main><script>
+(()=>{'use strict';
+const KEY='jw2d-family-role-v4',INVITE='jw2d-family-daddy-peer-v4';
+const dad=document.getElementById('dad'),jo=document.getElementById('jo'),note=document.getElementById('role-note'),pair=document.getElementById('pair-note');
+function render(){const role=localStorage.getItem(KEY);dad.setAttribute('aria-pressed',String(role==='Daddy'));jo.setAttribute('aria-pressed',String(role==='Jozef'));note.textContent=role?'This phone is '+role+'’s. You can change it here.':'Choose Daddy or Jozef to remember this phone.';pair.textContent=role==='Jozef'&&!localStorage.getItem(INVITE)?'Jozef needs Daddy’s invitation the first time.':'Your device choice is remembered on this phone.';}
+dad.onclick=()=>{localStorage.setItem(KEY,'Daddy');render()};jo.onclick=()=>{localStorage.setItem(KEY,'Jozef');render()};render();
+})();
+</script></body></html>
