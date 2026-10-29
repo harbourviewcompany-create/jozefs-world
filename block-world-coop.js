@@ -266,10 +266,10 @@ function startHost(){
 function scheduleGuestRetry(){
  if(role!=='guest'||ready)return;
  clearTimeout(retryTimer);
- if(retryCount>=10){retryCount=0;loader(false);status('Still looking for Daddy. Retrying automatically…');}
+ if(retryCount>=10){loader(false);status('Still looking for Daddy. Retrying automatically…');}
  retryCount++;
  status('Trying again…');
- retryTimer=setTimeout(()=>{if(role==='guest'&&!ready)join(true);},800+retryCount*500);
+ retryTimer=setTimeout(()=>{if(role==='guest'&&!ready)join(true);},Math.min(15000,800+retryCount*500));
 }
 
 function join(isRetry){
