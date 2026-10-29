@@ -84,6 +84,15 @@ if(cfg?.url&&cfg?.publishableKey&&game&&status){
  db.auth.onAuthStateChange(()=>setTimeout(init,0));
  await init();
  setInterval(save,30000);
+ setInterval(()=>{
+  if(!channel||!familyId||window.BlockWorldCoop?.connected?.())return;
+  if(host()&&parent()){
+   const world=game.getWorld?.();
+   if(valid(world))channel.send({type:'broadcast',event:'world-snapshot',payload:{world}});
+  }else{
+   channel.send({type:'broadcast',event:'world-request',payload:{}});
+  }
+ },25000);
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')save();});
  window.addEventListener('pagehide',()=>{save();});
  window.BlockWorldCloud=Object.freeze({save,restore:()=>load(true),status:()=>({connected:!!familyId,role,lastRevision})});
