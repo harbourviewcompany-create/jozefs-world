@@ -65,7 +65,7 @@ function send(v){try{if(connected())conn.send(v);}catch(_){}}
 function guestId(){
  try{
   const s=JSON.parse(sessionStorage.getItem(TAB_KEY)||'null');
-  if(s&&s.id&&Date.now()-s.at<3600000)return s.id;
+  // Generate a fresh guest PeerJS ID on every reconnect to avoid stale ID collisions.
  }catch(_){}
  const b=new Uint8Array(8);crypto.getRandomValues(b);
  const id='jw2d-g-'+[...b].map(n=>n.toString(16).padStart(2,'0')).join('');
