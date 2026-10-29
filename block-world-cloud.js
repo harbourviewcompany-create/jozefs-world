@@ -8,7 +8,7 @@ const button=document.getElementById('bw-cloud-login');
 const restore=document.getElementById('bw-cloud-restore');
 if(cfg?.url&&cfg?.publishableKey&&game&&status){
  const db=createClient(cfg.url,cfg.publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
- let familyId=null,role=null,userId=null,loaded=false,saving=false,allowSave=false,lastSaved='',lastRevision=0,channel=null,relayActive=false;
+ let familyId=null,role=null,userId=null,loaded=false,saving=false,allowSave=false,lastSaved='',lastRevision=0,channel=null,relayActive=false,sessionOwner=false,sessionBusy=false;
  const set=t=>{status.textContent=t;};
  const valid=w=>w&&['180x72','280x110'].includes(w.w+'x'+w.h)&&Array.isArray(w.world)&&w.world.length===w.h&&w.world.every(row=>Array.isArray(row)&&row.length===w.w)&&Array.isArray(w.players)&&w.players.length===2;
  const host=()=>window.BlockWorldCoop?.role?.()!=='guest'&&localStorage.getItem('jw2d-family-role-v4')==='Daddy';
@@ -23,12 +23,12 @@ if(cfg?.url&&cfg?.publishableKey&&game&&status){
   if(!valid(data.world)){set('Cloud world has an unsupported format; local world kept.');return;}
   if(window.BlockWorldCoop?.connected?.()){set('Cloud save found. Disconnect before restoring.');return;}
   
-  if(!force&&window.BlockWorldCoop?.connected?.()){set('Live co-op active; cloud restore deferred.');return;}
+  if(!force&&window.BlockWorldCoop?.role?.()!=='solo'){set('Live session active; cloud restore deferred.');return;}
   try{game.saveHost?.();if(game.useWorld(data.world)===false)throw Error('World rejected');game.saveHost?.();lastRevision=data.revision;lastSaved=JSON.stringify(data.world);allowSave=true;set('Ongoing family world restored. Play anytime; changes save automatically.');}
   catch(e){set('Restore failed; local world retained: '+e.message);}
  }
  async function save(){
-  if(!familyId||!loaded||!allowSave||saving||liveGuest())return;
+  if(!familyId||!loaded||!allowSave||saving||!sessionOwner||liveGuest())return;
   const world=game.getWorld?.();
   if(!valid(world))return;
   const json=JSON.stringify(world);
@@ -48,6 +48,23 @@ if(cfg?.url&&cfg?.publishableKey&&game&&status){
    lastSaved=json;set('Cloud saved · '+new Date().toLocaleTimeString());
   }catch(e){set('Cloud save pending: '+e.message);}
   finally{saving=false;}
+ }
+ async function syncSession(){
+  if(!familyId||!loaded||!relayActive||sessionBusy||document.hidden)return;
+  sessionBusy=true;
+  try{
+   const {data,error}=await db.rpc('claim_family_block_world_session',{p_family:familyId});
+   if(error)throw error;
+   const wasOwner=sessionOwner;
+   sessionOwner=data===true;
+   if(sessionOwner){
+    if(!wasOwner)window.BlockWorldCoop?.automaticHost?.();
+   }else{
+    if(wasOwner){allowSave=false;await load(true);}
+    window.BlockWorldCoop?.automaticJoin?.();
+   }
+  }catch(e){set('Shared session reconnecting: '+e.message);}
+  finally{sessionBusy=false;}
  }
  async function init(){
   const {data:{user}}=await db.auth.getUser();
@@ -83,6 +100,7 @@ if(cfg?.url&&cfg?.publishableKey&&game&&status){
   email.hidden=true;button.hidden=true;restore.hidden=false;
   set('Family cloud connected. Checking for saved world…');
   await load();
+  await syncSession();
  }
  button.onclick=async()=>{
   const address=email.value.trim();if(!address)return set('Enter your family email.');
@@ -94,6 +112,7 @@ if(cfg?.url&&cfg?.publishableKey&&game&&status){
  db.auth.onAuthStateChange(()=>setTimeout(init,0));
  await init();
  setInterval(save,30000);
+ setInterval(syncSession,10000);
  setInterval(()=>{
   if(!channel||!familyId||window.BlockWorldCoop?.connected?.()||window.BlockWorldCoop?.role?.()==='solo')return;
   if(host()){
