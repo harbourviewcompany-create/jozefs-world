@@ -378,13 +378,13 @@ window.addEventListener('pagehide',()=>{if(role==='host')try{g.saveHost();}catch
 
 // Shared link auto-join
 if(invitedHost){
- show();status('Joining Daddy…');
+ status('Family invite saved. Play alone now or choose PLAY TOGETHER.');
  try{history.replaceState(null,'',location.pathname+location.search);}catch(_){}
- setTimeout(()=>{if(role==='solo')join(false);},500);
+ // Solo play is the default; joining Daddy is an explicit choice.
 }else{
  if($('coop-code'))$('coop-code').value=ROOM;
  status('Daddy: tap START. First time only, send Jozef the invite.');
- if(localStorage.getItem(FAMILY_ROLE_KEY)==='Daddy')setTimeout(()=>{if(role==='solo')startHost();},600);
+ // Daddy can play alone; hosting starts only when PLAY TOGETHER is chosen.
 }
 
 function relayMessage(m){
