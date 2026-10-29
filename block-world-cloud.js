@@ -8,7 +8,7 @@ const button=document.getElementById('bw-cloud-login');
 const restore=document.getElementById('bw-cloud-restore');
 if(cfg?.url&&cfg?.publishableKey&&game&&status){
  const db=createClient(cfg.url,cfg.publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
- let familyId=null,role=null,userId=null,loaded=false,saving=false,allowSave=false,lastSaved='',lastRevision=0,channel=null;
+ let familyId=null,role=null,userId=null,loaded=false,saving=false,allowSave=false,lastSaved='',lastRevision=0,channel=null,relayActive=false;
  const set=t=>{status.textContent=t;};
  const valid=w=>w&&['180x72','280x110'].includes(w.w+'x'+w.h)&&Array.isArray(w.world)&&w.world.length===w.h&&w.world.every(row=>Array.isArray(row)&&row.length===w.w)&&Array.isArray(w.players)&&w.players.length===2;
  const host=()=>window.BlockWorldCoop?.role?.()!=='guest'&&localStorage.getItem('jw2d-family-role-v4')==='Daddy';
@@ -57,6 +57,11 @@ if(cfg?.url&&cfg?.publishableKey&&game&&status){
   familyId=data.family_id;role=data.role;
   if(!channel){
    channel=db.channel('family-block-'+familyId,{config:{private:true}});
+   channel.on('broadcast',{event:'game-action'},({payload})=>{
+    const r=window.BlockWorldCoop?.role?.();
+    if(!relayActive||!payload||!((r==='host'&&payload.from==='jozef')||(r==='guest'&&payload.from==='daddy')))return;
+    window.BlockWorldCoop?.relayMessage?.(payload.message);
+   });
    channel.on('broadcast',{event:'world-request'},async()=>{
     if(!host()||!parent())return;
     const world=game.getWorld?.();
