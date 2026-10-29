@@ -7,6 +7,9 @@ if(cfg?.url&&cfg?.publishableKey&&game&&el){
  let player=localStorage.getItem(key),owner=false,revision=0,lastSaved='',loaded=false,saving=false,relay=false,channel=null,busy=false,transferSeq=0;
  const valid=w=>w&&['180x72','280x110'].includes(w.w+'x'+w.h)&&Array.isArray(w.world)&&w.world.length===w.h&&w.world.every(r=>Array.isArray(r)&&r.length===w.w)&&Array.isArray(w.players)&&w.players.length===2;
  const set=t=>{el.textContent=t;};
+ let editSaveTimer=0;
+ const previousBlockChanged=game.onBlockChanged;
+ game.onBlockChanged=(...args)=>{previousBlockChanged?.(...args);if(owner){clearTimeout(editSaveTimer);editSaveTimer=setTimeout(save,1800);}};
  const transfers=new Map();
  const maxChunk=6000;
  async function pack(raw){
