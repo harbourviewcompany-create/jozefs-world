@@ -1,5 +1,5 @@
 /* Daddy + Jozef two-phone co-op — reliable rewrite.
-   Daddy hosts with fixed family room. Jozef joins same room.
+   Daddy hosts a remembered private session. Jozef rejoins using the one-time invitation.
    One public PeerJS broker + TURN. */
 (()=>{
 'use strict';
@@ -363,7 +363,7 @@ $('coop-host')?.addEventListener('click',startHost);
 $('coop-join')?.addEventListener('click',()=>join(false));
 $('coop-disconnect')?.addEventListener('click',()=>leave({reason:'Stopped'}));
 $('coop-share')?.addEventListener('click',async()=>{
- if(role!=='host')return;
+ if(role!=='host'||!peerReady){status('Wait for Daddy’s room to be ready.');return;}
  const url=new URL(location.href);url.hash='coop='+hostId;
  try{
   if(navigator.share)await navigator.share({title:'Block World',text:'Tap the green button to play with Daddy!',url:url.href});
@@ -382,10 +382,11 @@ if(invitedHost){
 }else{
  if($('coop-code'))$('coop-code').value=ROOM;
  status('Daddy: tap START. First time only, send Jozef the invite.');
+ if(localStorage.getItem(FAMILY_ROLE_KEY)==='Daddy')setTimeout(()=>{if(role==='solo')startHost();},600);
 }
 
 window.BlockWorldCoop=Object.freeze({
  role:()=>role,connected,host:startHost,join:()=>join(false),
- disconnect:()=>leave({reason:'Stopped'}),code:()=>ROOM
+ disconnect:()=>leave({reason:'Stopped'}),code:()=>hostId||invitedHost
 });
 })();
