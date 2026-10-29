@@ -125,7 +125,7 @@ function onMsg(m){
   if([m.x,m.y,m.id].every(Number.isInteger)&&m.id>=0&&m.id<=MAX_TILE)g.useEdit(m.x,m.y,m.id);
   return;
  }
- if(m.t==='resync'&&g.isHost())fullWorld();
+ if(m.t==='resync'&&role==='host')fullWorld();
 }
 
 function stopHb(){clearInterval(hbTimer);hbTimer=0;}
@@ -394,7 +394,7 @@ function relayMessage(m){
 }
 function relayOnline(){
  if(!window.BlockWorldRelay?.connected?.()||conn?.open)return;
- if(role==='host'){ready=true;g.role(0);fullWorld();status('Family relay online · waiting for Jozef');}
+ if(role==='host'){ready=false;g.role(0);fullWorld();status('Family relay online · waiting for Jozef');}
  if(role==='guest'){ready=false;send({t:'resync'});status('Joining through family relay…');}
 }
 window.BlockWorldCoop=Object.freeze({
