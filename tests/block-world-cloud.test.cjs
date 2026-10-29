@@ -6,9 +6,9 @@ const path=require('node:path');
 const root=path.join(__dirname,'..');
 const cloud=fs.readFileSync(path.join(root,'block-world-cloud.js'),'utf8');
 const html=fs.readFileSync(path.join(root,'block-world.html'),'utf8');
-test('cloud saves use approved membership and parent-owned writes',()=>{
+test('cloud saves use approved membership and allow either player to save solo',()=>{
  assert.match(cloud,/from\('family_members'\)/);
- assert.match(cloud,/if\(!familyId\|\|!parent\(\)\|\|!host\(\)\|\|!loaded\|\|!allowSave/);
+ assert.match(cloud,/if\(!familyId\|\|!loaded\|\|!allowSave\|\|saving\|\|liveGuest\(\)\)return/);
  assert.match(cloud,/from\('family_block_worlds'\)/);
 });
 test('cloud restore cannot overwrite an existing save before approval',()=>{
@@ -40,4 +40,10 @@ test('live gameplay messages have a relay sender and receiver',()=>{
 test('cloud scripts have valid separate HTML script tags',()=>{
  assert.equal(html.includes(String.raw`\\n<script`),false);
  assert.match(html,/block-world-coop\.js\?v=20261029-relay-v8/);
+});
+
+test('solo mode does not force hosting or joining on page load',()=>{
+ const coop=fs.readFileSync(path.join(root,'block-world-coop.js'),'utf8');
+ assert.doesNotMatch(coop,/setTimeout\(\(\)=>\{if\(role==='solo'\)startHost\(\);\},600\)/);
+ assert.doesNotMatch(coop,/setTimeout\(\(\)=>\{if\(role==='solo'\)join\(false\);\},500\)/);
 });
