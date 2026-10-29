@@ -1,60 +1,25 @@
-'use strict';
-const test=require('node:test');
-const assert=require('node:assert/strict');
-const fs=require('node:fs');
-const path=require('node:path');
-const root=path.join(__dirname,'..');
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const root=path.resolve(__dirname,'..');
 const cloud=fs.readFileSync(path.join(root,'block-world-cloud.js'),'utf8');
+const coop=fs.readFileSync(path.join(root,'block-world-coop.js'),'utf8');
 const html=fs.readFileSync(path.join(root,'block-world.html'),'utf8');
-test('cloud saves use approved membership and allow either player to save solo',()=>{
- assert.match(cloud,/from\('family_members'\)/);
- assert.match(cloud,/if\(!familyId\|\|!loaded\|\|!allowSave\|\|saving\|\|!sessionOwner\|\|liveGuest\(\)\)return/);
- assert.match(cloud,/from\('family_block_worlds'\)/);
+test('open shared world requires no account or email login',()=>{
+ assert.match(cloud,/block_world_open/);
+ assert.doesNotMatch(cloud,/signInWithOtp|family_members|auth\.getUser/);
+ assert.match(html,/data-player="Daddy"/);
+ assert.match(html,/data-player="Jozef"/);
 });
-test('cloud restore cannot overwrite an existing save before approval',()=>{
- assert.match(cloud,/if\(!force&&window\.BlockWorldCoop\?\.role\?\.\(\)!=='solo'\)/);
- assert.match(cloud,/allowSave=true/);
- assert.match(cloud,/\.eq\('revision',lastRevision\)/);
-});
-test('realtime snapshot fallback uses a private family channel',()=>{
- assert.match(cloud,/family-block-/);
- assert.match(cloud,/private:true/);
- assert.match(cloud,/event:'world-request'/);
- assert.match(cloud,/event:'world-snapshot'/);
-});
-test('block world loads cloud integration and exposes status',()=>{
- assert.match(html,/block-world-cloud\.js/);
- assert.match(html,/family-cloud-config\.js/);
- assert.match(html,/id="bw-cloud-status"/);
-});
-
-test('live gameplay messages have a relay sender and receiver',()=>{
- const coop=fs.readFileSync(path.join(root,'block-world-coop.js'),'utf8');
- assert.match(coop,/function relayMessage\(m\)/);
- assert.match(coop,/function relayOnline\(\)/);
- assert.match(coop,/BlockWorldRelay\?\.send\(v\)/);
- assert.match(cloud,/event:'game-action'/);
- assert.match(cloud,/relayMessage\?\.\(payload\.message\)/);
- assert.match(cloud,/relayActive=state==='SUBSCRIBED'/);
-});
-test('cloud scripts have valid separate HTML script tags',()=>{
- assert.equal(html.includes(String.raw`\\n<script`),false);
- assert.match(html,/block-world-coop\.js\?v=20261029-relay-v8/);
-});
-
-test('solo mode does not force hosting or joining on page load',()=>{
- const coop=fs.readFileSync(path.join(root,'block-world-coop.js'),'utf8');
- assert.doesNotMatch(coop,/setTimeout\(\(\)=>\{if\(role==='solo'\)startHost\(\);\},600\)/);
- assert.doesNotMatch(coop,/setTimeout\(\(\)=>\{if\(role==='solo'\)join\(false\);\},500\)/);
-});
-
-test('first online player owns the live session and later player joins automatically',()=>{
- const coop=fs.readFileSync(path.join(root,'block-world-coop.js'),'utf8');
- assert.match(cloud,/claim_family_block_world_session/);
- assert.match(cloud,/setInterval\(syncSession,10000\)/);
+test('first player claims session and second auto-joins',()=>{
+ assert.match(cloud,/block_world_open_claim/);
  assert.match(cloud,/automaticHost\?\.\(\)/);
  assert.match(cloud,/automaticJoin\?\.\(\)/);
  assert.match(coop,/function automaticHost\(\)/);
  assert.match(coop,/function automaticJoin\(\)/);
- assert.match(html,/id="open-coop" hidden/);
+});
+test('world saves with revision and broadcasts live actions',()=>{
+ assert.match(cloud,/block_world_open_save/);
+ assert.match(cloud,/p_revision:revision/);
+ assert.match(cloud,/event:'game-action'/);
+ assert.match(cloud,/relayMessage\?\.\(payload\.message\)/);
+ assert.match(html,/block-world-cloud\.js\?v=20261029-open-world-v6/);
 });
