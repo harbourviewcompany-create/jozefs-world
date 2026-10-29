@@ -69,14 +69,14 @@ if(cfg?.url&&cfg?.publishableKey&&game&&status){
     if(valid(world))await channel.send({type:'broadcast',event:'world-snapshot',payload:{world}});
    });
    channel.on('broadcast',{event:'world-snapshot'},({payload})=>{
-    if(host()||window.BlockWorldCoop?.connected?.()||!valid(payload?.world))return;
+    if(window.BlockWorldCoop?.role?.()!=='guest'||window.BlockWorldCoop?.connected?.()||!valid(payload?.world))return;
     try{game.useWorld(payload.world);set('World synchronized through family relay.');}catch(_){}
    });
    channel.subscribe(state=>{
     relayActive=state==='SUBSCRIBED';
     if(relayActive){
      window.BlockWorldCoop?.relayOnline?.();
-     if(!host())channel.send({type:'broadcast',event:'world-request',payload:{}});
+     if(window.BlockWorldCoop?.role?.()==='guest')channel.send({type:'broadcast',event:'world-request',payload:{}});
     }
    });
   }
@@ -95,7 +95,7 @@ if(cfg?.url&&cfg?.publishableKey&&game&&status){
  await init();
  setInterval(save,30000);
  setInterval(()=>{
-  if(!channel||!familyId||window.BlockWorldCoop?.connected?.())return;
+  if(!channel||!familyId||window.BlockWorldCoop?.connected?.()||window.BlockWorldCoop?.role?.()==='solo')return;
   if(host()){
    const world=game.getWorld?.();
    if(valid(world))channel.send({type:'broadcast',event:'world-snapshot',payload:{world}});
