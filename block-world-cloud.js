@@ -72,7 +72,11 @@ if(cfg?.url&&cfg?.publishableKey&&game&&status){
     try{game.useWorld(payload.world);set('World synchronized through family relay.');}catch(_){}
    });
    channel.subscribe(state=>{
-    if(state==='SUBSCRIBED'&&!host())channel.send({type:'broadcast',event:'world-request',payload:{}});
+    relayActive=state==='SUBSCRIBED';
+    if(relayActive){
+     window.BlockWorldCoop?.relayOnline?.();
+     if(!host())channel.send({type:'broadcast',event:'world-request',payload:{}});
+    }
    });
   }
   email.hidden=true;button.hidden=true;restore.hidden=!parent();
