@@ -36,7 +36,7 @@ if(cfg?.url&&cfg?.publishableKey&&game&&el){
   if(!t){t={at:Date.now(),total:p.total,encoding:p.encoding,parts:Array(p.total)};transfers.set(p.id,t);}
   if(t.total!==p.total||t.encoding!==p.encoding)return;
   t.parts[p.index]=p.part;
-  if(t.parts.every(part=>typeof part==='string')){
+  if(t.parts.filter(part=>typeof part==='string').length===t.total){
    transfers.delete(p.id);
    try{const m=JSON.parse(await unpack(t.parts.join(''),t.encoding));if(m&&typeof m.t==='string')window.BlockWorldCoop?.relayMessage?.(m);}catch(_){}
   }
