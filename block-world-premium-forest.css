@@ -156,3 +156,33 @@ html,body{overscroll-behavior:none;background:#087cde!important;touch-action:non
 @media(prefers-reduced-motion:reduce){
  .action-controls .ctrl-btn,.movement-pad,.pad-knob{transition:none!important}
 }
+
+/* 2026-10-29: mobile HUD clearance. Secondary panels live inside MENU. */
+#toolbar-extra .bw-menu-panel,
+#toolbar-extra #bw-cloud-panel,
+#toolbar-extra #bw-adventure{
+ position:relative!important;inset:auto!important;top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;
+ width:100%!important;max-width:100%!important;margin:5px 0!important;
+ z-index:auto!important;box-sizing:border-box!important;transform:none!important;
+ background:#092d49f5!important;border:1px solid #5eaccb88!important;border-radius:12px!important;
+ padding:9px!important;color:#fff!important;font:600 12px system-ui!important;
+}
+#toolbar-extra .bw-menu-panel summary{min-height:36px;display:flex;align-items:center;cursor:pointer;font:900 12px system-ui;list-style:none}
+#toolbar-extra .bw-menu-panel summary::-webkit-details-marker{display:none}
+#toolbar-extra .bw-menu-panel summary:before{content:'▸';margin-right:8px}
+#toolbar-extra .bw-menu-panel[open] summary:before{content:'▾'}
+#toolbar-extra .bw-menu-panel p{line-height:1.35;overflow-wrap:anywhere}
+#toolbar-extra .bw-menu-panel button{min-height:38px;margin:4px 2px}
+#toolbar-extra{max-height:min(72dvh,620px)!important;overflow-y:auto!important}
+@media(max-width:530px){
+ #controls{bottom:calc(env(safe-area-inset-bottom) + 91px)!important}
+ .hotbar{bottom:calc(env(safe-area-inset-bottom) + 7px)!important}
+ .coop-live{top:calc(env(safe-area-inset-top) + 105px)!important;max-width:47vw!important;white-space:normal}
+ #bw-mission.compact{max-width:48vw!important}
+ #toolbar-extra{max-height:62dvh!important}
+}
+@media(max-height:680px){
+ #controls{bottom:calc(env(safe-area-inset-bottom) + 75px)!important}
+ .action-controls{grid-template-rows:repeat(2,48px)!important;gap:5px!important}
+ .movement-pad{width:102px!important;height:102px!important}
+}
