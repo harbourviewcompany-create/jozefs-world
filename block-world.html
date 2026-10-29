@@ -132,6 +132,26 @@
 </div>
 <details id="bw-cloud-panel" style="position:fixed;bottom:10px;right:10px;z-index:45;max-width:min(340px,90vw);background:#102b3d;color:white;border:1px solid #5d9cb4;border-radius:12px;padding:9px;font:12px system-ui"><summary>FAMILY CLOUD SAVE</summary><p id="bw-cloud-status" role="status">Connecting to family cloud…</p><input id="bw-cloud-email" type="email" autocomplete="email" placeholder="Family email" hidden style="width:100%;padding:9px;margin:5px 0"><button id="bw-cloud-login" type="button" hidden>EMAIL SIGN-IN LINK</button><button id="bw-cloud-restore" type="button" hidden>RESTORE CLOUD WORLD</button></details>
 <details id="bw-adventure"><summary>ADVENTURE JOURNAL</summary><div class="bw-mission"><p id="bw-adventure-mission">Loading your adventure…</p><progress id="bw-adventure-progress" max="5" value="0"></progress><p id="bw-adventure-team">Team status loading…</p><p id="bw-adventure-health"></p><p id="bw-adventure-goals"></p><button type="button" id="bw-adventure-regroup">REGROUP WITH PARTNER</button><hr><strong>TEAM BUILD CHALLENGE</strong><p id="bw-build-progress">Choose a blueprint to begin.</p><select id="bw-build-blueprint" aria-label="Choose building challenge"><option value="cabin">Forest Cabin</option><option value="bridge">River Bridge</option><option value="tower">Lookout Tower</option></select><button type="button" id="bw-build-start">START CHALLENGE</button><p id="bw-backup-status">Shared-world backups: waiting</p><button type="button" id="bw-backup-now">BACK UP WORLD</button><button type="button" id="bw-backup-export">EXPORT BACKUP</button><input id="bw-backup-import-file" type="file" accept="application/json,.json" hidden><button type="button" id="bw-backup-import">IMPORT BACKUP</button></div></details>
+<div id="bw-role-chooser" role="dialog" aria-modal="true" aria-label="Choose your player" style="position:fixed;inset:0;z-index:100;background:#061a2ff5;display:none;place-items:center;padding:24px">
+ <div style="width:min(420px,100%);padding:28px;border-radius:22px;background:#10364c;color:white;text-align:center;font:600 18px system-ui;border:1px solid #6b9cb2">
+  <h2 style="font-size:28px;margin:0 0 12px">Who's playing?</h2>
+  <p style="font-size:14px;opacity:.8">Choose your player. This phone will remember.</p>
+  <button type="button" data-player="Daddy" style="display:block;width:100%;padding:20px;margin:14px 0;border-radius:14px;background:#2878b9;color:white;font-size:22px;font-weight:800;border:0">DADDY</button>
+  <button type="button" data-player="Jozef" style="display:block;width:100%;padding:20px;margin:14px 0;border-radius:14px;background:#2b995d;color:white;font-size:22px;font-weight:800;border:0">JOZEF</button>
+ </div>
+</div>
+<script>
+(function(){
+ const key='jw2d-family-role-v4',chooser=document.getElementById('bw-role-chooser');
+ const show=()=>{chooser.style.display='grid';};
+ if(!['Daddy','Jozef'].includes(localStorage.getItem(key)))show();
+ chooser.querySelectorAll('[data-player]').forEach(b=>b.addEventListener('click',()=>{
+  localStorage.setItem(key,b.dataset.player);chooser.style.display='none';
+  window.dispatchEvent(new CustomEvent('blockworld-player-selected',{detail:{player:b.dataset.player}}));
+ }));
+ window.BlockWorldChoosePlayer=show;
+})();
+</script>
 <script src="./peerjs.min.js" defer></script>
 <script src="./block-world-art-forest.js?v=20261013-forest3" defer></script>
 <script src="./block-world.js?v=20261013-forest3" defer></script>
