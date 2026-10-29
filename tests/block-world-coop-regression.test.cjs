@@ -23,3 +23,16 @@ test('resend is scoped to its original open connection', () => {
 test('Block World permits user zoom', () => {
   assert.doesNotMatch(html, /user-scalable=no/);
 });
+
+test('guest reconnect attempts do not stop permanently', () => {
+  assert.doesNotMatch(coop, /if\(retryCount>=10\)\{loader\(false\);status\('Ask Daddy/);
+  assert.match(coop, /Still looking for Daddy\. Retrying automatically/);
+});
+test('join timeout retains guest mode for retry', () => {
+  assert.match(coop, /Daddy is offline\. Waiting and trying again automatically/);
+});
+test('backup import accepts expanded world sizes', () => {
+  const adventure = fs.readFileSync(path.join(__dirname, '..', 'block-world-adventure.js'), 'utf8');
+  assert.match(adventure, /280x110/);
+  assert.match(adventure, /world\.world\.length!==world\.h/);
+});
