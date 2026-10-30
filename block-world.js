@@ -1,4 +1,4 @@
-/* Daddy & Jozef Block World gameplay — 2026 */
+/* Daddy & Jozef JozefWorld gameplay — 2026 */
 
 (function(){
 'use strict';
@@ -97,7 +97,7 @@ function readSave(){
   creative=!!s.creative;active=s.active===1?1:0;selected=blockable.includes(s.selected)?s.selected:2;
   players.forEach((p,i)=>{const data=s.players?.[i];if(!data)return;p.x=Number.isFinite(data.x)?Math.max(0,Math.min(W*TILE-p.w,data.x)):p.x;p.y=Number.isFinite(data.y)?Math.max(0,Math.min(H*TILE-p.h,data.y)):p.y;p.inventory=data.inventory&&typeof data.inventory==='object'?data.inventory:p.inventory;p.facing=data.facing===-1?-1:1;p.vx=p.vy=0;});
   return true;
- }catch(err){console.warn('Block World save unavailable',err);return false;}
+ }catch(err){console.warn('JozefWorld save unavailable',err);return false;}
 }
 function save(){
  if(!dirty)return;
@@ -352,7 +352,7 @@ function createAdventureUi(){
   const b=document.createElement('button');b.textContent='Close map';b.onclick=()=>panel.hidden=true;panel.appendChild(b);
  }
  function showHelp(){
-  panel.hidden=false;panel.innerHTML='<h3>DADDY & JOZEF · QUICK GUIDE</h3><p>Mobile: move, jump, tap any nearby tile to mine/place, and switch heroes. Follow keeps your companion nearby. Desktop: Daddy uses WASD and Jozef uses arrows simultaneously. E mines, R places, I opens inventory.</p><p>Complete five shared missions, explore five biomes, build together, and use TEAM PORTAL when both characters reach the glowing gate.</p><p>Backup: EXPORT creates a file. IMPORT restores a compatible Block World save. Your older world is kept unless you choose New World.</p>';
+  panel.hidden=false;panel.innerHTML='<h3>DADDY & JOZEF · QUICK GUIDE</h3><p>Mobile: move, jump, tap any nearby tile to mine/place, and switch heroes. Follow keeps your companion nearby. Desktop: Daddy uses WASD and Jozef uses arrows simultaneously. E mines, R places, I opens inventory.</p><p>Complete five shared missions, explore five biomes, build together, and use TEAM PORTAL when both characters reach the glowing gate.</p><p>Backup: EXPORT creates a file. IMPORT restores a compatible JozefWorld save. Your older world is kept unless you choose New World.</p>';
   const b=document.createElement('button');b.textContent='Close';b.onclick=()=>panel.hidden=true;panel.appendChild(b);
  }
  function showImport(){
@@ -985,7 +985,7 @@ $('mode').addEventListener('click',()=>chooseGameMode(creative?'survival':'creat
 $('bw-mode-choice')?.addEventListener('change',e=>chooseGameMode(e.target.value));
 $('reset').addEventListener('click',()=>{
  if(window.BlockWorld2D?.connected?.()){say('Leave co-op before starting a new world');return;}
- if(!confirm('Start a new Block World? This permanently replaces the saved world on this device.'))return;
+ if(!confirm('Start a new JozefWorld adventure? This permanently replaces the saved world on this device.'))return;
  try{const previous=localStorage.getItem(KEY);if(previous)localStorage.setItem(KEY+'-backup',previous);localStorage.removeItem(KEY);localStorage.removeItem(advSaveKey);}catch(_){}
  adventureSeed=Math.floor(Math.random()*999999)+1;generate();initPlayers();creative=true;active=0;selected=2;focus=null;camX=camY=0;queueSave();renderHotbar();say('Fresh new world created');
 });
