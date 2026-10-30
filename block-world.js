@@ -355,6 +355,10 @@ function restoreCameraZoom(v){
  return Math.max(1,Math.min(2,n));
 }
 
+const sportsEntrances=[{x:68,sport:'soccer',name:'SOCCER FIELD',color:'#34d8a4'},{x:92,sport:'hockey',name:'ICE ARENA',color:'#8cdafa'},{x:117,sport:'football',name:'FOOTBALL STADIUM',color:'#ffd77c'},{x:140,sport:'baseball',name:'BASEBALL PARK',color:'#f9a777'}];
+function nearbySportsEntrance(){const p=players[active],x=(p.x+p.w/2)/TILE;return sportsEntrances.find(e=>Math.abs(x-e.x)<3.4);}
+function enterSportsEntrance(){const e=nearbySportsEntrance();if(!e){say('Walk up to a stadium entrance first');return;}try{localStorage.setItem('jozefworld-sports-return',JSON.stringify({x:players[active].x,y:players[active].y}));}catch(_){}window.location.href='./jozefworld-sports.html?sport='+encodeURIComponent(e.sport);}
+function drawSportsEntrances(){for(const e of sportsEntrances){const y=surface[e.x]*TILE,px=e.x*TILE-camX,py=y-camY;if(px< -110||px>cssW/cameraZoom+110)continue;ctx.save();ctx.fillStyle='#172f48';ctx.fillRect(px-35,py-91,110,91);ctx.fillStyle=e.color;ctx.fillRect(px-39,py-97,118,13);ctx.fillStyle='#061d30';ctx.fillRect(px+1,py-65,42,65);ctx.fillStyle='#a8e5f7';ctx.fillRect(px+8,py-59,28,52);ctx.fillStyle='#0e3753';ctx.fillRect(px+13,py-52,18,45);ctx.font='bold 10px system-ui';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#0a1e32';ctx.fillStyle='#fff';ctx.strokeText(e.name,px+20,py-106);ctx.fillText(e.name,px+20,py-106);ctx.restore();}}
 function draw(){
  ctx.setTransform(dpr*cameraZoom,0,0,dpr*cameraZoom,0,0);ctx.imageSmoothingEnabled=false;
  const viewW=cssW/cameraZoom,viewH=cssH/cameraZoom;
@@ -376,6 +380,7 @@ function draw(){
   const texture=window.BlockWorldArt?.terrain?.(world,id,x,y)||tex(id);
   ctx.drawImage(texture,Math.round(x*TILE-camX),Math.round(y*TILE-camY),TILE+1,TILE+1);
  }
+ drawSportsEntrances();
  if(window.BlockWorldArt)window.BlockWorldArt.embellish(ctx,{world,surface,camX,camY,tileSize:TILE,w:viewW,h:viewH,time:clock});
  if(window.BlockWorldArt)players.forEach((q,i)=>window.BlockWorldArt.character(ctx,q,i,{camX,camY,w:viewW,h:viewH,active,time:clock}));
  else players.forEach((q,i)=>{
@@ -397,6 +402,7 @@ function frame(now){
  const dt=Math.min(.05,(now-lastTime)/1000);lastTime=now;acc+=dt;
  let n=0;while(acc>=1/60&&n<4){if(!window.BlockWorld2D?.isGuest?.())update(1/60);acc-=1/60;n++;}
  if(window.BlockWorld2D?.isGuest?.())for(const hero of players)hero.actionT=Math.max(0,(hero.actionT||0)-dt);
+ const sportsNear=nearbySportsEntrance(),sportsBtn=$('jw-enter-sports');if(sportsBtn){sportsBtn.hidden=!sportsNear;if(sportsNear)sportsBtn.textContent='ENTER '+sportsNear.name;}
  draw();window.BlockWorld2D?.onFrame?.(now);window.BlockWorldVisuals?.onFrame?.(now);requestAnimationFrame(frame);
 }
 function bindButton(id,key,once){
@@ -1243,6 +1249,7 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
  window.BlockWorld2D=API;
 })();
 
+$('jw-enter-sports')?.addEventListener('click',enterSportsEntrance);addEventListener('keydown',e=>{if(e.code==='KeyE'&&!e.repeat&&nearbySportsEntrance()){e.preventDefault();enterSportsEntrance();}});
 generate();initPlayers();const restored=readSave();renderHotbar();say(restored?'Welcome back to your saved world!':'Daddy & Jozef: explore, mine and build!',3600);
 requestAnimationFrame(frame);
 })();
