@@ -9,6 +9,7 @@ if(cfg?.url&&cfg?.publishableKey&&game&&el){
  const set=t=>{el.textContent=t;};
  const localKey='jw-block-open-offline-'+player;
  const cacheLocal=()=>{try{const w=game.getWorld?.();if(valid(w))localStorage.setItem(localKey,JSON.stringify({world:w,revision,at:Date.now()}));}catch(_){}};
+ const mergePending=(base,edited)=>{if(!valid(base)||!valid(edited))return 0;const live=game.getWorld?.();if(!valid(live)||live.w!==base.w||live.h!==base.h)return 0;let changed=0;for(let y=0;y<live.h;y++)for(let x=0;x<live.w;x++){if(base.world[y][x]!==edited.world[y][x]){live.world[y][x]=edited.world[y][x];changed++;}}if(changed)game.useWorld(live);return changed;};
  const restoreLocal=()=>{try{const v=JSON.parse(localStorage.getItem(localKey)||'null');if(valid(v?.world)){game.useWorld(v.world);revision=v.revision||0;loaded=true;set('Local world restored · connecting…');return true;}}catch(_){}return false;};
 
  let editSaveTimer=0;
@@ -52,10 +53,12 @@ if(cfg?.url&&cfg?.publishableKey&&game&&el){
  async function load(){
   const {data,error}=await db.from('block_world_open').select('world,revision').eq('id',worldId).single();
   if(error){restoreLocal();set('Cloud temporarily unavailable · playing locally');return false;}
+  const pending=offlineEdits?game.getWorld?.():null;
   if(data.world&&valid(data.world)){
    try{if(game.useWorld(data.world)===false)throw Error('World rejected');game.saveHost?.();}catch(e){set('Restore failed: '+e.message);return false;}
+   if(pending&&offlineBase){const edits=mergePending(offlineBase,pending);if(edits)set('Reapplying '+edits+' offline block changes…');}
   }
-  revision=data.revision;lastSaved=data.world?JSON.stringify(data.world):'';loaded=true;cacheLocal();
+  revision=data.revision;lastSaved=data.world?JSON.stringify(data.world):'';loaded=true;offlineBase=data.world?structuredClone(data.world):null;cacheLocal();
   set(data.world?'Shared world restored.':'New shared world ready.');
   return true;
  }
@@ -67,7 +70,7 @@ if(cfg?.url&&cfg?.publishableKey&&game&&el){
   try{
    const {data,error}=await db.rpc('block_world_open_save',{p_player:player,p_revision:revision,p_world:world});
    if(error)throw error;
-   revision=data;lastSaved=json;offlineEdits=false;cacheLocal();set('World saved · '+new Date().toLocaleTimeString());
+   revision=data;lastSaved=json;offlineEdits=false;offlineBase=structuredClone(world);cacheLocal();set('World saved · '+new Date().toLocaleTimeString());
   }catch(e){set('Save pending: '+e.message);}
   finally{saving=false;}
  }
@@ -81,6 +84,7 @@ if(cfg?.url&&cfg?.publishableKey&&game&&el){
    if(owner&&!previous){
     if(!await load())return;
     window.BlockWorldCoop?.automaticHost?.();
+    if(offlineEdits)await save();
     set('Playing as '+player+' · shared world');
    }else if(!owner){
     if(previous)await load();
