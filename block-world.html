@@ -48,6 +48,15 @@
 .partner-tools span{color:#d6f7ec}
 #bw-adventure{position:fixed;z-index:19;left:max(8px,env(safe-area-inset-left));top:calc(112px + env(safe-area-inset-top));width:min(260px,62vw);color:#f2ffef;background:#082b35e8;border:1px solid #7fe4be88;border-radius:14px;padding:10px 12px;font:600 12px system-ui}#bw-adventure summary{cursor:pointer;font-weight:900;font-size:13px}#bw-adventure progress{width:100%;accent-color:#baff79;height:8px}
 @media(max-width:530px){.coop-live{top:calc(104px + env(safe-area-inset-top))}#bw-adventure{top:auto;bottom:calc(86px + env(safe-area-inset-bottom));width:min(235px,58vw)}.partner-tools{top:calc(139px + env(safe-area-inset-top))}#coop-card button.jozef{font-size:20px}}
+@media(max-width:600px){
+ #ui h2{font-size:clamp(18px,5vw,26px)!important;letter-spacing:-.03em!important}
+ #ui .subtitle{font-size:9px!important;letter-spacing:.06em!important}
+ #bw-adventure:not([open]){padding:6px 9px!important;width:auto!important;max-width:49vw!important;bottom:calc(99px + env(safe-area-inset-bottom))!important}
+ #bw-adventure:not([open]) summary{font-size:10px!important;white-space:nowrap}
+ #bw-adventure[open]{max-height:42dvh;overflow:auto}
+ #toolbar-extra{max-height:65dvh;overflow-y:auto}
+ #bw-flight,#bw-forage{min-height:40px}
+}
 </style>
 <link rel="stylesheet" href="./block-world-premium-forest.css?v=20261029-hudfix">
 </head>
@@ -94,6 +103,8 @@
  </select>
  <p id="bw-mode-description" style="font:600 12px system-ui;color:#d7efff;margin:5px 0">Choose how you want to play.</p>
  <button id="mode" type="button" aria-label="Switch Survival or Creative mode">CREATIVE</button>
+ <button id="bw-flight" type="button">FLY: OFF</button>
+ <button id="bw-forage" type="button">FORAGE FOOD</button>
  <button id="inventory" type="button">🎒 Inventory</button>
  <button id="save" type="button">Save</button>
  <button id="reset" type="button">New World</button>
@@ -159,7 +170,7 @@
 </script>
 <script src="./peerjs.min.js" defer></script>
 <script src="./block-world-art-forest.js?v=20261029-terrain-v4" defer></script>
-<script src="./block-world.js?v=20261030-jozefworld-v8" defer></script>
+<script src="./block-world.js?v=20261030-survival-v9" defer></script>
 <script src="./block-world-network.js?v=20261029-v3" defer></script>
 <script src="./block-world-coop.js?v=20261030-jozefworld-v13" defer></script>
 <script src="./block-world-ui.js?v=20261029-hudfix" defer></script>
