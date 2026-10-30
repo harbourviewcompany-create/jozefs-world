@@ -4,12 +4,16 @@ const cfg=window.JW_FAMILY_CLOUD,game=window.BlockWorld2D,el=document.getElement
 if(cfg?.url&&cfg?.publishableKey&&game&&el){
  const db=createClient(cfg.url,cfg.publishableKey,{auth:{persistSession:false,autoRefreshToken:false}});
  const key='jw2d-family-role-v4',worldId='jozef-daddy';
- let player=localStorage.getItem(key),owner=false,revision=0,lastSaved='',loaded=false,saving=false,relay=false,channel=null,busy=false,transferSeq=0;
+ let player=localStorage.getItem(key),owner=false,revision=0,lastSaved='',loaded=false,saving=false,relay=false,channel=null,busy=false,transferSeq=0,offlineEdits=false,offlineBase=null,lastPoll=0;
  const valid=w=>w&&['180x72','280x110'].includes(w.w+'x'+w.h)&&Array.isArray(w.world)&&w.world.length===w.h&&w.world.every(r=>Array.isArray(r)&&r.length===w.w)&&Array.isArray(w.players)&&w.players.length===2;
  const set=t=>{el.textContent=t;};
+ const localKey='jw-block-open-offline-'+player;
+ const cacheLocal=()=>{try{const w=game.getWorld?.();if(valid(w))localStorage.setItem(localKey,JSON.stringify({world:w,revision,at:Date.now()}));}catch(_){}};
+ const restoreLocal=()=>{try{const v=JSON.parse(localStorage.getItem(localKey)||'null');if(valid(v?.world)){game.useWorld(v.world);revision=v.revision||0;loaded=true;set('Local world restored · connecting…');return true;}}catch(_){}return false;};
+
  let editSaveTimer=0;
  const previousBlockChanged=game.onBlockChanged;
- game.onBlockChanged=(...args)=>{previousBlockChanged?.(...args);if(owner){clearTimeout(editSaveTimer);editSaveTimer=setTimeout(save,1800);}};
+ game.onBlockChanged=(...args)=>{previousBlockChanged?.(...args);cacheLocal();if(!relay)offlineEdits=true;if(owner){clearTimeout(editSaveTimer);editSaveTimer=setTimeout(save,1800);}};
  const transfers=new Map();
  const maxChunk=6000;
  async function pack(raw){
@@ -47,28 +51,28 @@ if(cfg?.url&&cfg?.publishableKey&&game&&el){
 
  async function load(){
   const {data,error}=await db.from('block_world_open').select('world,revision').eq('id',worldId).single();
-  if(error){set('World connection failed: '+error.message);return false;}
+  if(error){restoreLocal();set('Cloud temporarily unavailable · playing locally');return false;}
   if(data.world&&valid(data.world)){
    try{if(game.useWorld(data.world)===false)throw Error('World rejected');game.saveHost?.();}catch(e){set('Restore failed: '+e.message);return false;}
   }
-  revision=data.revision;lastSaved=data.world?JSON.stringify(data.world):'';loaded=true;
+  revision=data.revision;lastSaved=data.world?JSON.stringify(data.world):'';loaded=true;cacheLocal();
   set(data.world?'Shared world restored.':'New shared world ready.');
   return true;
  }
  async function save(){
-  if(!owner||!loaded||saving)return;
+  cacheLocal();if(!owner||!loaded||saving)return;
   const world=game.getWorld?.();if(!valid(world))return;
   const json=JSON.stringify(world);if(json===lastSaved)return;
   saving=true;
   try{
    const {data,error}=await db.rpc('block_world_open_save',{p_player:player,p_revision:revision,p_world:world});
    if(error)throw error;
-   revision=data;lastSaved=json;set('World saved · '+new Date().toLocaleTimeString());
+   revision=data;lastSaved=json;offlineEdits=false;cacheLocal();set('World saved · '+new Date().toLocaleTimeString());
   }catch(e){set('Save pending: '+e.message);}
   finally{saving=false;}
  }
  async function session(){
-  if(!['Daddy','Jozef'].includes(player)||busy||document.hidden||!relay)return;
+  if(!['Daddy','Jozef'].includes(player)||busy||document.hidden)return;
   busy=true;
   try{
    const {data,error}=await db.rpc('block_world_open_claim',{p_player:player});
@@ -80,8 +84,8 @@ if(cfg?.url&&cfg?.publishableKey&&game&&el){
     set('Playing as '+player+' · shared world');
    }else if(!owner){
     if(previous)await load();
-    window.BlockWorldCoop?.automaticJoin?.();
-    set('Joined '+(player==='Daddy'?'Jozef':'Daddy')+'’s world');
+    if(relay)window.BlockWorldCoop?.automaticJoin?.();
+    set(relay?'Joined '+(player==='Daddy'?'Jozef':'Daddy')+'’s world':'Shared world online · live connection retrying');
    }
   }catch(e){set('Reconnecting: '+e.message);}
   finally{busy=false;}
@@ -89,6 +93,7 @@ if(cfg?.url&&cfg?.publishableKey&&game&&el){
  async function start(){
   if(!['Daddy','Jozef'].includes(player))return;
   if(channel)return;
+  restoreLocal();
   set('Connecting as '+player+'…');
   channel=db.channel('block-world-open-'+worldId,{config:{broadcast:{self:false}}});
   channel.on('broadcast',{event:'game-action'},({payload})=>{
@@ -109,7 +114,7 @@ if(cfg?.url&&cfg?.publishableKey&&game&&el){
   channel.subscribe(async state=>{
    relay=state==='SUBSCRIBED';
    if(relay)await session();
-   else {owner=false;set('Offline · reconnecting to shared world…');const live=document.getElementById('coop-live');if(live){live.textContent='● OFFLINE · RECONNECTING';live.classList.remove('online');}}
+   else {set('Live connection retrying · cloud saves still available');const live=document.getElementById('coop-live');if(live){live.textContent='● SHARED WORLD · CONNECTING';live.classList.remove('online');}}
   });
  }
  window.BlockWorldRelay=Object.freeze({
@@ -125,7 +130,8 @@ if(cfg?.url&&cfg?.publishableKey&&game&&el){
  });
  if(['Daddy','Jozef'].includes(player))start();
  setInterval(session,10000);
+ setInterval(async()=>{if(relay||owner||!loaded||document.hidden||Date.now()-lastPoll<4500)return;lastPoll=Date.now();try{const {data,error}=await db.from('block_world_open').select('world,revision').eq('id',worldId).single();if(!error&&data?.revision>revision&&valid(data.world)){game.useWorld(data.world);revision=data.revision;lastSaved=JSON.stringify(data.world);set('Shared world updated · reconnecting live play');}}catch(_){}},5000);
  setInterval(save,15000);
- document.addEventListener('visibilitychange',()=>{if(document.hidden)save();else session();});
- window.addEventListener('pagehide',()=>{save();});
+ document.addEventListener('visibilitychange',()=>{if(document.hidden){cacheLocal();save();}else session();});
+ window.addEventListener('pagehide',()=>{cacheLocal();save();});
 }
