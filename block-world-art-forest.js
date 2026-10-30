@@ -87,6 +87,14 @@ function terrain(world,id,x,y){
   if(joins&1&&id!==1)rect(g,2,0,28,2,main);
   if(joins&4)rect(g,2,30,28,2,main);
  }
+ // Coordinate-based soil variation avoids identical-looking blocks without changing collision.
+ if(id===1||id===2||id===3||id===6){
+  const specks=id===3?['#aeb7bf','#445767','#81929c']:id===6?['#f5dfa0','#b58f56','#d7b46e']:['#b98b5e','#67422c','#d1a075'];
+  for(let i=0;i<9;i++){
+   const px=Math.floor(hash(x*13+i,y*7,id+21)*29),py=7+Math.floor(hash(x*3+i,y*11,id+42)*22);
+   rect(g,px,py,2+Math.floor(hash(i,x,y)*3),2,specks[Math.floor(hash(x+i,y,id+70)*3)]);
+  }
+ }
  if(id===1){
   // Grass fringe follows open cliff edges but never changes block collision.
   if(!(joins&8)){rect(g,0,3,3,8,'#48912d');rect(g,2,9,2,5,'#3e812d');}
@@ -222,11 +230,11 @@ function forestAtmosphere(g,w,h,pan,t){
  const layers=quality==='balanced'?1:3;
  for(let layer=0;layer<layers;layer++){
   const speed=[.14,.27,.43][layer],spacing=[112,83,64][layer];
-  const baseline=h*(.80+layer*.055);
+  const baseline=h*(.60+layer*.045);
   const offset=((pan*speed)%spacing+spacing)%spacing;
   const count=Math.ceil(w/spacing)+3;
   g.save();
-  g.globalAlpha=[.18,.20,.16][layer];
+  g.globalAlpha=[.27,.30,.26][layer];
   for(let i=-1;i<count;i++){
    const index=Math.floor(pan*speed/spacing)+i;
    const x=i*spacing-offset;
@@ -241,7 +249,7 @@ function forestAtmosphere(g,w,h,pan,t){
     g.fillStyle='#b7f7d0';
     g.globalAlpha=.045;
     g.beginPath();g.ellipse(x+spacing*.35,top+height*.2,spacing*.17,height*.14,0,0,twopi);g.fill();
-    g.globalAlpha=[.18,.20,.16][layer];
+    g.globalAlpha=[.27,.30,.26][layer];
    }
   }
   g.restore();
