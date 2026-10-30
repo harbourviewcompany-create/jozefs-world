@@ -99,7 +99,7 @@ function onMsg(m){
   clearTimeout(joinTimer);clearTimeout(retryTimer);
   send({t:'ready'});loader(false);status('Connected as '+(myIndex()===0?'Daddy':'Jozef')+'!');
   if($('btn-switch'))$('btn-switch').style.display='none';
-  ['reset','mode','save'].forEach(id=>{if($(id))$(id).disabled=true;});
+  ['reset','save'].forEach(id=>{if($(id))$(id).disabled=true;});
   if($('partner-tools'))$('partner-tools').hidden=false;hide();
   return;
  }
@@ -109,6 +109,8 @@ function onMsg(m){
   if($('partner-tools'))$('partner-tools').hidden=false;hide();
   return;
  }
+ if(m.t==='mode-request'&&role==='host'&&['creative','survival'].includes(m.mode)){g.setMode?.(m.mode);send({t:'mode-changed',mode:m.mode});return;}
+ if(m.t==='mode-changed'&&role==='guest'&&['creative','survival'].includes(m.mode)){g.useState?.({...g.getState(),creative:m.mode==='creative'});return;}
  if(m.t==='input'&&g.isHost()){g.remoteInput={left:!!m.input?.left,right:!!m.input?.right,jump:!!m.input?.jump};return;}
  if(m.t==='action'&&g.isHost()){
   const now=performance.now();if(now-lastActionAt<80)return;lastActionAt=now;
@@ -413,6 +415,6 @@ function automaticJoin(){
 }
 window.BlockWorldCoop=Object.freeze({
  role:()=>role,connected,host:startHost,join:()=>join(false),
- disconnect:()=>leave({reason:'Stopped'}),code:()=>hostId||invitedHost,relayMessage,relayOnline,automaticHost,automaticJoin
+ disconnect:()=>leave({reason:'Stopped'}),requestMode:mode=>{if(['creative','survival'].includes(mode))send({t:'mode-request',mode});},code:()=>hostId||invitedHost,relayMessage,relayOnline,automaticHost,automaticJoin
 });
 })();
