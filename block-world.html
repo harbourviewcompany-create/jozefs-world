@@ -55,7 +55,7 @@
  #bw-adventure:not([open]) summary{font-size:10px!important;white-space:nowrap}
  #bw-adventure[open]{max-height:42dvh;overflow:auto}
  #toolbar-extra{max-height:65dvh;overflow-y:auto}
- #bw-flight,#bw-forage{min-height:40px}
+ #bw-flight,#bw-forage{min-height:40px}.jw-game-tools{padding:7px;border:1px solid #548da0;border-radius:9px;margin:5px 0}.jw-game-tools summary{font-weight:800;cursor:pointer}.jw-game-tools button{min-height:40px;margin:3px}.jw-game-tools p,.jw-game-tools small{font-size:12px;color:#d4eff4}
 }
 </style>
 <link rel="stylesheet" href="./block-world-premium-forest.css?v=20261029-hudfix">
@@ -105,6 +105,16 @@
  <button id="mode" type="button" aria-label="Switch Survival or Creative mode">CREATIVE</button>
  <button id="bw-flight" type="button">FLY: OFF</button>
  <button id="bw-forage" type="button">FORAGE FOOD</button>
+ <details class="jw-game-tools"><summary>CREATIVE BUILDING TOOLS</summary>
+ <label for="bw-brush">Brush size</label><select id="bw-brush"><option value="1">1 × 1</option><option value="2">3 × 3</option><option value="3">5 × 5</option><option value="4">7 × 7</option></select>
+ <button id="bw-fill" type="button">FILL</button><button id="bw-erase" type="button">ERASE</button><button id="bw-replace" type="button">REPLACE</button>
+ <small>Tap a nearby block to aim. Choose a material in your hotbar, then use a tool.</small>
+ </details>
+ <details class="jw-game-tools"><summary>EXPLORATION & TREASURE</summary>
+ <p>Find the Old Camp, Crystal Ridge and Far Outpost to collect unique rewards. In Survival, prepare equipment to challenge the Outpost Guardian.</p>
+ <button id="bw-treasure" type="button">OPEN NEARBY TREASURE</button>
+ <button id="bw-boss" type="button">CHALLENGE GUARDIAN</button>
+ </details>
  <button id="inventory" type="button">🎒 Inventory</button>
  <button id="save" type="button">Save</button>
  <button id="reset" type="button">New World</button>
@@ -170,7 +180,7 @@
 </script>
 <script src="./peerjs.min.js" defer></script>
 <script src="./block-world-art-forest.js?v=20261030-landmarks-v5" defer></script>
-<script src="./block-world.js?v=20261030-survival-v9" defer></script>
+<script src="./block-world.js?v=20261030-crafting-treasure-v10" defer></script>
 <script src="./block-world-network.js?v=20261029-v3" defer></script>
 <script src="./block-world-coop.js?v=20261030-jozefworld-v13" defer></script>
 <script src="./block-world-ui.js?v=20261029-hudfix" defer></script>
