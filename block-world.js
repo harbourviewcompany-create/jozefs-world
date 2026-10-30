@@ -185,6 +185,8 @@ function renderHotbar(){
   bar.appendChild(slot);
  });
  $('mode').textContent=creative?'CREATIVE':'SURVIVAL';
+ const modeChoice=$('bw-mode-choice');if(modeChoice)modeChoice.value=creative?'creative':'survival';
+ const modeDescription=$('bw-mode-description');if(modeDescription)modeDescription.textContent=creative?'Unlimited building materials. Explore and build freely.':'Mine resources, craft supplies and survive environmental hazards.';
  $('health').textContent=players[active].name.toUpperCase()+'  ♥ '+Math.round(players[active].health)+'   LVL '+(1+Math.floor((goals.wood+goals.build+goals.diamond*4+goals.portal*10)/15));
 }
 function ingredientLabel(need){return Object.entries(need).map(([id,n])=>n+' '+names[id]).join(', ');}
@@ -972,7 +974,15 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)save();});
 addEventListener('pagehide',save);
 $('inventory').addEventListener('click',()=>craftingOpen?closeCrafting():openCrafting());
 $('save').addEventListener('click',()=>{dirty=true;save();say('World saved on this device');});
-$('mode').addEventListener('click',()=>{creative=!creative;queueSave();renderHotbar();say(creative?'Creative: unlimited building':'Survival: collect and spend materials');});
+function chooseGameMode(next){
+ if(window.BlockWorldCoop?.role?.()==='guest'){say('The current world owner controls the shared game mode');renderHotbar();return;}
+ const wanted=next==='creative';if(creative===wanted){renderHotbar();return;}
+ creative=wanted;queueSave();renderHotbar();
+ window.BlockWorldCloud?.save?.();
+ say(creative?'Creative mode: unlimited building':'Survival mode: gather, craft and survive');
+}
+$('mode').addEventListener('click',()=>chooseGameMode(creative?'survival':'creative'));
+$('bw-mode-choice')?.addEventListener('change',e=>chooseGameMode(e.target.value));
 $('reset').addEventListener('click',()=>{
  if(window.BlockWorld2D?.connected?.()){say('Leave co-op before starting a new world');return;}
  if(!confirm('Start a new Block World? This permanently replaces the saved world on this device.'))return;
@@ -1008,7 +1018,7 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
     if(['mine','attack','idle'].includes(q.action))p.action=q.action;
     p.ground=!!q.ground;p.inventory={...q.inventory};
    });
-   active=1;creative=!!s.creative;adventureSeed=s.adventureSeed;
+   active=localStorage.getItem('jw2d-family-role-v4')==='Jozef'?1:0;creative=!!s.creative;adventureSeed=s.adventureSeed;
    window.__bw2dRealm?.setGuest(s.realmIndex);questStage=s.questStage;goals={...s.goals};
    achievements=Array.isArray(s.achievements)?s.achievements.slice():[];
    explored={...s.explored};portalUnlocked=!!s.portalUnlocked;
