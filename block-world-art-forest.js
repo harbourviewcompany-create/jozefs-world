@@ -215,6 +215,49 @@ function cliff(g,w,h,cam,t){
  for(let i=0;i<3;i++)g.fillRect(wx+3+i*6,cliffY+((t*14+i*28)%70),2,12);
  g.restore();
 }
+
+/* Forest atmosphere: depth layers are deterministic and follow the camera,
+   while cinematic effects can be disabled by the existing graphics preset. */
+function forestAtmosphere(g,w,h,pan,t){
+ const layers=quality==='balanced'?1:3;
+ for(let layer=0;layer<layers;layer++){
+  const speed=[.14,.27,.43][layer],spacing=[112,83,64][layer];
+  const baseline=h*(.80+layer*.055);
+  const offset=((pan*speed)%spacing+spacing)%spacing;
+  const count=Math.ceil(w/spacing)+3;
+  g.save();
+  g.globalAlpha=[.18,.20,.16][layer];
+  for(let i=-1;i<count;i++){
+   const index=Math.floor(pan*speed/spacing)+i;
+   const x=i*spacing-offset;
+   const height=(.14+hash(index,layer,62)*.16)*h;
+   const top=baseline-height;
+   g.fillStyle=['#2d7b89','#196d79','#14586b'][layer];
+   g.fillRect(x+spacing*.44,top+height*.38,Math.max(4,spacing*.11),height*.64);
+   g.beginPath();
+   g.ellipse(x+spacing*.5,top+height*.3,spacing*(.36+hash(index,4,31)*.11),height*.35,0,0,twopi);
+   g.fill();
+   if(quality==='cinematic'){
+    g.fillStyle='#b7f7d0';
+    g.globalAlpha=.045;
+    g.beginPath();g.ellipse(x+spacing*.35,top+height*.2,spacing*.17,height*.14,0,0,twopi);g.fill();
+    g.globalAlpha=[.18,.20,.16][layer];
+   }
+  }
+  g.restore();
+ }
+ if(quality!=='cinematic')return;
+ // Low-opacity sunlight shafts behind terrain, not over characters or controls.
+ g.save();g.globalCompositeOperation='screen';
+ for(let i=0;i<3;i++){
+  const x=w*(.18+i*.34)+Math.sin(t*.10+i)*12;
+  const ray=g.createLinearGradient(x-75,0,x+105,h*.85);
+  ray.addColorStop(0,'#fff8b900');ray.addColorStop(.5,'#fff2af12');ray.addColorStop(1,'#f3eaa000');
+  g.fillStyle=ray;g.beginPath();g.moveTo(x-9,h*.12);g.lineTo(x+16,h*.12);g.lineTo(x+110,h*.88);g.lineTo(x-88,h*.88);g.closePath();g.fill();
+ }
+ g.restore();
+}
+
 function background(g,o){
  const w=o.w,h=o.h,t=o.time||0,pan=o.camX||0;
  g.save();g.setTransform(o.dpr*o.zoom,0,0,o.dpr*o.zoom,0,0);
@@ -225,6 +268,7 @@ function background(g,o){
  if(o.biome===1){forestBackdrop(g,w,h,pan,t);distantTrees(g,w,h,pan,t);}
  else distantTrees(g,w,h,pan,t);
  cliff(g,w,h,pan,t);
+ forestAtmosphere(g,w,h,pan,t);
  const haze=g.createLinearGradient(0,h*.56,0,h);haze.addColorStop(0,'#daebff00');haze.addColorStop(1,'#9fd3e550');g.fillStyle=haze;g.fillRect(0,h*.55,w,h*.45);
  g.restore();
 }
@@ -271,6 +315,11 @@ function embellish(g,o){
    rect(g,fx-2,fy-2,5,5,'#ffcb49');
   }
   // Glowing warm torches are environmental decorations only; the tile below remains editable.
+  if(quality==='cinematic'&&k>.54&&k<.69&&id===1){
+   const bx=wx+10,by=wy-3;
+   g.fillStyle='#275b36';g.fillRect(bx-5,by-4,3,5);g.fillRect(bx+4,by-7,3,8);
+   g.fillStyle='#76cf64';g.fillRect(bx-7+Math.sin(time+x)*1.5,by-9,5,6);g.fillRect(bx+2-Math.sin(time*.8+x)*1.5,by-12,6,6);
+  }
   if(hash(x,6,9)>.986&&id===1){
    rect(g,wx+19,wy-30,4,29,'#6c4025');rect(g,wx+17,wy-32,9,12,'#f48c25');rect(g,wx+20,wy-35,5,9,'#fff7aa');
    const light=g.createRadialGradient(wx+22,wy-28,3,wx+22,wy-28,42);
