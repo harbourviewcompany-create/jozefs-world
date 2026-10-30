@@ -374,7 +374,7 @@ $('coop-share')?.addEventListener('click',async()=>{
  if(role!=='host'||!peerReady){status('Wait for Daddy’s room to be ready.');return;}
  const url=new URL(location.href);url.hash='coop='+hostId;
  try{
-  if(navigator.share)await navigator.share({title:'Block World',text:'Tap the green button to play with Daddy!',url:url.href});
+  if(navigator.share)await navigator.share({title:'JozefWorld',text:'Tap the green button to play with Daddy!',url:url.href});
   else if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(url.href);status('Link copied — send to Jozef');}
  }catch(_){status('Waiting for Jozef…');}
 });
