@@ -14,6 +14,7 @@ const hotItems=[2,3,4,7,8,6,12,20];
 let cssW=0,cssH=0,dpr=1,world=[],surface=[],creative=true,active=0,selected=2;
 let focus=null,camX=0,camY=0,clock=0,ticks=0,dirty=false,saveTimer=0;
 let creativeFlight=false,flightDown=false,survivalTimer=0,discoveredBiomes=new Set();
+let treasureClaims={},bossDefeated=false,creativeBrush=1,creativeMaterial=2;
 let noticeEnd=0,recipeIndex=0,craftingOpen=false,actionCooldown=0,lastTime=performance.now(),acc=0;
 const touch={left:false,right:false,jump:false};
 const down=new Set();
@@ -29,7 +30,12 @@ const recipes=[
  {name:'Glass ×2',needs:{6:2,25:1},makes:{12:2}},
  {name:'Iron Ingot',needs:{11:1,25:1},makes:{26:1}},
  {name:'Gold Ingot',needs:{17:1,25:1},makes:{27:1}},
- {name:'Copper Ingot',needs:{21:1,25:1},makes:{28:1}}
+ {name:'Copper Ingot',needs:{21:1,25:1},makes:{28:1}},
+ {name:'Stone Bricks ×4',needs:{8:4},makes:{3:4}},
+ {name:'Window Panels ×4',needs:{12:2,7:2},makes:{12:4}},
+ {name:'Camp Supplies',needs:{4:3,7:3,19:2},makes:{20:1,7:2}},
+ {name:'Explorer Lantern',needs:{21:1,12:1,25:1},makes:{20:1}},
+ {name:'Treasure Display',needs:{17:1,7:3},makes:{12:2}}
 ];
 function resize(){
  cssW=window.innerWidth||800;cssH=window.innerHeight||600;dpr=Math.min(window.devicePixelRatio||1,2);
@@ -95,14 +101,14 @@ function readSave(){
    for(let y=0;y<H;y++){const id=world[y][x];if(id===1||id===6||id===16||id===3){found=y;break;}}
    surface[x]=found;
   }
-  creative=!!s.creative;creativeFlight=false;active=s.active===1?1:0;selected=blockable.includes(s.selected)?s.selected:2;
+  creative=!!s.creative;creativeFlight=false;treasureClaims=s.treasureClaims&&typeof s.treasureClaims==='object'?s.treasureClaims:{};bossDefeated=!!s.bossDefeated;active=s.active===1?1:0;selected=blockable.includes(s.selected)?s.selected:2;
   players.forEach((p,i)=>{const data=s.players?.[i];if(!data)return;p.x=Number.isFinite(data.x)?Math.max(0,Math.min(W*TILE-p.w,data.x)):p.x;p.y=Number.isFinite(data.y)?Math.max(0,Math.min(H*TILE-p.h,data.y)):p.y;p.inventory=data.inventory&&typeof data.inventory==='object'?data.inventory:p.inventory;p.hunger=Number.isFinite(data.hunger)?Math.max(0,Math.min(100,data.hunger)):100;p.facing=data.facing===-1?-1:1;p.vx=p.vy=0;});
   return true;
  }catch(err){console.warn('JozefWorld save unavailable',err);return false;}
 }
 function save(){
  if(!dirty)return;
- try{localStorage.setItem(KEY,JSON.stringify({version:3,world,creative,selected,active,players:players.map(p=>({x:p.x,y:p.y,facing:p.facing,inventory:p.inventory,hunger:p.hunger}))}));dirty=false;$('save').textContent='Saved ✓';setTimeout(()=>$('save').textContent='Save',1100);}
+ try{localStorage.setItem(KEY,JSON.stringify({version:3,world,creative,selected,active,treasureClaims,bossDefeated,players:players.map(p=>({x:p.x,y:p.y,facing:p.facing,inventory:p.inventory,hunger:p.hunger}))}));dirty=false;$('save').textContent='Saved ✓';setTimeout(()=>$('save').textContent='Save',1100);}
  catch(err){say('Storage full: progress could not be saved',4000);}
 }
 function queueSave(){dirty=true;clearTimeout(saveTimer);saveTimer=setTimeout(save,1700);}
@@ -176,6 +182,39 @@ function place(){
   if(!creative)p.inventory[selected]--;
   focus=null;renderHotbar();say('Placed '+names[selected],800);
  }
+}
+function creativeEdit(kind){
+ if(!creative){say('Creative building tools require Creative mode');return;}
+ if(window.BlockWorld2D?.isGuest?.()){say('Advanced building tools are currently host-only');return;}
+ const a=aim(),radius=creativeBrush,changes=[];
+ for(let dy=-radius+1;dy<radius;dy++)for(let dx=-radius+1;dx<radius;dx++){
+  const x=a.x+dx,y=a.y+dy;if(x<1||x>=W-1||y<1||y>=H-1)continue;
+  const before=get(x,y),id=kind==='erase'?0:kind==='replace'?(before?selected:before):selected;
+  if(before===14||before===id)continue;
+  if(id!==0&&players.some(q=>x*TILE<q.x+q.w&&x*TILE+TILE>q.x&&y*TILE<q.y+q.h&&y*TILE+TILE>q.y))continue;
+  if(set(x,y,id))changes.push({x,y,before});
+ }
+ if(changes.length){gain('build',changes.length);renderHotbar();say(kind.toUpperCase()+' · '+changes.length+' blocks');}
+ else say('Aim at an editable nearby area');
+}
+function claimTreasure(){
+ const p=players[active],px=Math.floor(p.x/TILE),landmarks=[{x:24,name:'Old Camp',loot:{4:12,7:12,25:3}},{x:111,name:'Crystal Ridge',loot:{18:2,22:2,11:5}},{x:157,name:'Far Outpost',loot:{17:3,21:6,12:8}}];
+ const l=landmarks.find(v=>Math.abs(v.x-px)<=5);
+ if(!l){say('Find Old Camp, Crystal Ridge or Far Outpost to open treasure');return;}
+ if(treasureClaims[l.x]){say(l.name+' treasure already collected');return;}
+ treasureClaims[l.x]=true;
+ for(const [id,n] of Object.entries(l.loot))p.inventory[id]=(p.inventory[id]||0)+n;
+ spark(p.x,p.y,32);chime();queueSave();renderHotbar();say(l.name+' TREASURE FOUND!',3500);
+}
+function challengeBoss(){
+ const p=players[active],px=Math.floor(p.x/TILE);
+ if(Math.abs(px-157)>8){say('Travel to the Far Outpost to challenge its guardian');return;}
+ if(bossDefeated){say('The outpost guardian has already been defeated');return;}
+ if(creative){say('Switch to Survival to challenge the guardian');return;}
+ const strength=(p.inventory[26]||0)+(p.inventory[27]||0)*2+(p.inventory[18]||0)*4;
+ if(strength<3){say('Guardian requires 3 equipment power: smelt iron, gold or mine diamonds');return;}
+ bossDefeated=true;p.inventory[18]=(p.inventory[18]||0)+3;p.inventory[22]=(p.inventory[22]||0)+5;
+ p.health=Math.min(100,p.health+30);spark(p.x,p.y,60);chime();queueSave();renderHotbar();say('GUARDIAN DEFEATED · rare treasure unlocked!',4000);
 }
 function playerSwitch(){if(['Daddy','Jozef'].includes(localStorage.getItem('jw2d-family-role-v4'))){say('You are playing as '+localStorage.getItem('jw2d-family-role-v4')+' · change player from Menu');return;}if(window.BlockWorld2D?.connected?.()){say('Each device has its own player');return;}active=1-active;focus=null;dirty=true;renderHotbar();queueSave();say('Playing as '+players[active].name);}
 function renderHotbar(){
@@ -987,6 +1026,10 @@ function chooseGameMode(next){
 }
 $('mode').addEventListener('click',()=>chooseGameMode(creative?'survival':'creative'));
 $('bw-mode-choice')?.addEventListener('change',e=>chooseGameMode(e.target.value));
+$('bw-brush')?.addEventListener('change',e=>{creativeBrush=Math.max(1,Math.min(4,Number(e.target.value)||1));});
+for(const kind of ['fill','erase','replace'])$('bw-'+kind)?.addEventListener('click',()=>creativeEdit(kind));
+$('bw-treasure')?.addEventListener('click',claimTreasure);
+$('bw-boss')?.addEventListener('click',challengeBoss);
 $('bw-flight')?.addEventListener('click',()=>{if(!creative){say('Flying is available in Creative mode');return;}creativeFlight=!creativeFlight;$('bw-flight').textContent='FLY: '+(creativeFlight?'ON':'OFF');say(creativeFlight?'Flying enabled · hold JUMP to rise':'Flying disabled');});
 $('bw-forage')?.addEventListener('click',()=>{if(creative){say('Food is only needed in Survival');return;}const p=players[active],x=Math.floor(p.x/TILE);if(![1,4].includes(get(x,Math.floor((p.y+p.h+3)/TILE)))&&get(x,Math.floor(p.y/TILE)-1)!==5){say('Find a grassy forest to forage for berries');return;}if(p.hunger>=100){say('Already full');return;}p.hunger=Math.min(100,(p.hunger??100)+22);p.health=Math.min(100,p.health+4);renderHotbar();queueSave();say('Foraged berries · food restored');});
 addEventListener('keydown',e=>{if(e.code==='KeyS'||e.code==='ArrowDown')flightDown=true;});
@@ -995,7 +1038,7 @@ $('reset').addEventListener('click',()=>{
  if(window.BlockWorld2D?.connected?.()){say('Leave co-op before starting a new world');return;}
  if(!confirm('Start a new JozefWorld adventure? This permanently replaces the saved world on this device.'))return;
  try{const previous=localStorage.getItem(KEY);if(previous)localStorage.setItem(KEY+'-backup',previous);localStorage.removeItem(KEY);localStorage.removeItem(advSaveKey);}catch(_){}
- adventureSeed=Math.floor(Math.random()*999999)+1;generate();initPlayers();creative=true;active=0;selected=2;focus=null;camX=camY=0;queueSave();renderHotbar();say('Fresh new world created');
+ adventureSeed=Math.floor(Math.random()*999999)+1;generate();initPlayers();creative=true;treasureClaims={};bossDefeated=false;active=0;selected=2;focus=null;camX=camY=0;queueSave();renderHotbar();say('Fresh new world created');
 });
 $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-modal','true');$('crafting').setAttribute('aria-hidden','true');
 
@@ -1008,7 +1051,7 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
   getWorld:()=>({
    w:W,h:H,world:world.map(r=>r.slice()),surface:surface.slice(),
    players:players.map(p=>({x:p.x,y:p.y,vx:p.vx,vy:p.vy,facing:p.facing,ground:p.ground,health:p.health,hunger:p.hunger,action:p.action,actionT:p.actionT||0,inventory:{...p.inventory}})),
-   creative,adventureSeed,realmIndex:window.__bw2dRealm?.get()??0,questStage,goals:{...goals},
+   creative,treasureClaims:{...treasureClaims},bossDefeated,adventureSeed,realmIndex:window.__bw2dRealm?.get()??0,questStage,goals:{...goals},
    friends:friends.map(c=>({...c})),nightClock,weatherType,
    achievements:achievements.slice(),explored:{...explored},portalUnlocked
   }),
@@ -1027,7 +1070,7 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
     if(['mine','attack','idle'].includes(q.action))p.action=q.action;
     p.ground=!!q.ground;p.inventory={...q.inventory};
    });
-   active=localStorage.getItem('jw2d-family-role-v4')==='Jozef'?1:0;creative=!!s.creative;creativeFlight=false;adventureSeed=s.adventureSeed;
+   active=localStorage.getItem('jw2d-family-role-v4')==='Jozef'?1:0;creative=!!s.creative;treasureClaims=s.treasureClaims&&typeof s.treasureClaims==='object'?{...s.treasureClaims}:{};bossDefeated=!!s.bossDefeated;creativeFlight=false;adventureSeed=s.adventureSeed;
    window.__bw2dRealm?.setGuest(s.realmIndex);questStage=s.questStage;goals={...s.goals};
    achievements=Array.isArray(s.achievements)?s.achievements.slice():[];
    explored={...s.explored};portalUnlocked=!!s.portalUnlocked;
