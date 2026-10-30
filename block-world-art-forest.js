@@ -368,6 +368,24 @@ function embellish(g,o){
   g.fillText('OUR FOREST',sx+15,sy-43);
   rect(g,sx-11,sy-38,18,2,'#ecd397');
  }
+ // Discoverable world landmarks are visual cues; their underlying blocks remain editable.
+ for(const landmark of [{x:24,name:'OLD CAMP',tone:'#c98b57'},{x:111,name:'CRYSTAL RIDGE',tone:'#7ed9f4'},{x:157,name:'FAR OUTPOST',tone:'#d9bd8c'}]){
+  const x=landmark.x;if(x<start||x>stop)continue;
+  const y=surface[x];if(!Number.isFinite(y))continue;
+  const px=x*T-camX,py=y*T-camY;
+  if(py< -110||py>h+80)continue;
+  g.save();
+  if(landmark.x===111){
+   g.fillStyle='#5ca4c4';g.beginPath();g.moveTo(px-21,py);g.lineTo(px-5,py-78);g.lineTo(px+15,py-12);g.lineTo(px+27,py);g.fill();
+   g.fillStyle='#c9faff';g.beginPath();g.moveTo(px-5,py-78);g.lineTo(px+5,py-40);g.lineTo(px-12,py-37);g.fill();
+  }else{
+   rect(g,px-20,py-44,40,42,'#6a482e');rect(g,px-24,py-48,48,8,landmark.tone);
+   rect(g,px-6,py-24,12,22,'#292c37');rect(g,px-17,py-34,7,9,'#f4df98');rect(g,px+10,py-34,7,9,'#f4df98');
+  }
+  g.font='bold 10px system-ui';g.textAlign='center';g.lineWidth=3;g.strokeStyle='#102938';g.fillStyle='#fff6cc';
+  g.strokeText(landmark.name,px,py-91);g.fillText(landmark.name,px,py-91);
+  g.restore();
+ }
  // Real, mineable ore deposits emit soft coloured light in deep cave layers.
  const firstY=clamp(Math.floor(camY/T)-1,0,world.length-1),lastY=clamp(Math.ceil((camY+h)/T)+1,0,world.length-1);
  for(let y=firstY;y<=lastY;y++)for(let x=start;x<=stop;x++){
