@@ -15,7 +15,8 @@ let cssW=0,cssH=0,dpr=1,world=[],surface=[],creative=true,active=0,selected=2;
 let focus=null,camX=0,camY=0,clock=0,ticks=0,dirty=false,saveTimer=0;
 let creativeFlight=false,flightDown=false,survivalTimer=0,discoveredBiomes=new Set();
 let treasureClaims={},bossDefeated=false,creativeBrush=1,creativeMaterial=2;
-let guardian=null,combatTick=0;
+let guardian=null,combatTick=0,damageNumbers=[];
+function showDamage(x,y,amount,kind='hit'){damageNumbers.push({x,y,amount,kind,life:.8});if(damageNumbers.length>32)damageNumbers.shift();}
 let noticeEnd=0,recipeIndex=0,craftingOpen=false,actionCooldown=0,lastTime=performance.now(),acc=0;
 const touch={left:false,right:false,jump:false};
 const down=new Set();
@@ -230,6 +231,7 @@ function craftEquipment(kind){
 function combatUpdate(dt){
  if(creative)return;
  combatTick+=dt;
+ for(let i=damageNumbers.length-1;i>=0;i--){damageNumbers[i].life-=dt;damageNumbers[i].y-=30*dt;if(damageNumbers[i].life<=0)damageNumbers.splice(i,1);}
  for(const c of friends){
   if(c.c!==3)continue;
   c.hp=Number.isFinite(c.hp)?c.hp:45;
@@ -238,7 +240,7 @@ function combatUpdate(dt){
   const distance=Math.abs(target.x-c.x);
   if(distance<220){c.vx=Math.sign(target.x-c.x)*42;}
   if(distance<25&&Math.abs(target.y-c.y)<35&&c.hitTimer<=0){
-   c.hitTimer=1.7;target.health=Math.max(0,target.health-(target.armor?Math.max(2,9-target.armor*2):9));
+   c.hitTimer=1.7;const damage=target.armor?Math.max(2,9-target.armor*2):9;target.health=Math.max(0,target.health-damage);showDamage(target.x,target.y-16,damage,'hurt');
    spark(target.x,target.y,9);
   }
  }
@@ -252,7 +254,7 @@ function combatUpdate(dt){
  if(distance<100&&guardian.cooldown<=0){
   guardian.cooldown=1.35;
   for(const p of players)if(Math.abs(p.x-guardian.x)<110&&Math.abs(p.y-guardian.y)<95){
-   p.health=Math.max(0,p.health-Math.max(4,20-(p.armor||0)*5));spark(p.x,p.y,16);
+   const damage=Math.max(4,20-(p.armor||0)*5);p.health=Math.max(0,p.health-damage);showDamage(p.x,p.y-20,damage,'hurt');spark(p.x,p.y,16);
   }
   say('GUARDIAN SHOCKWAVE · jump back!',1200);
  }
@@ -263,6 +265,8 @@ function combatUpdate(dt){
 }
 function combatDraw(){
  ctx.save();
+ for(const c of friends){if(!Number.isFinite(c.hp)||c.hp<=0)continue;const x=c.x-camX,y=c.y-camY-12;if(x< -30||x>cssW/cameraZoom+30||y< -30||y>cssH/cameraZoom+30)continue;ctx.fillStyle='#102a35';ctx.fillRect(x-2,y,24,5);ctx.fillStyle=c.c===3?'#ff789a':'#7feaa2';ctx.fillRect(x-1,y+1,22*Math.min(1,c.hp/45),3);}
+ for(const d of damageNumbers){const x=d.x-camX,y=d.y-camY;if(x<0||x>cssW/cameraZoom||y<0||y>cssH/cameraZoom)continue;ctx.globalAlpha=Math.min(1,d.life*2);ctx.font='900 16px system-ui';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#1b223e';ctx.strokeText('-'+d.amount,x,y);ctx.fillStyle=d.kind==='hurt'?'#ff8c9c':'#ffe18b';ctx.fillText('-'+d.amount,x,y);}ctx.globalAlpha=1;
  if(guardian&&guardian.hp>0){
   const x=guardian.x-camX,y=guardian.y-camY;
   if(x>-100&&x<cssW/cameraZoom+100&&y>-120&&y<cssH/cameraZoom+120){
@@ -564,7 +568,7 @@ function attackEnemy(){
  const now=performance.now();
  if(now<nextAttackAt)return false;
  const p=players[active],px=p.x+p.w/2,py=p.y+p.h/2;
- if(guardian?.hp>0&&Math.hypot(guardian.x+15-px,guardian.y+20-py)<100){nextAttackAt=now+400;p.action='attack';p.actionT=.42;guardian.hp=Math.max(0,guardian.hp-(18+(p.weapon||0)*13));spark(guardian.x,guardian.y,18);if(!guardian.hp){bossDefeated=true;guardian=null;for(const hero of players){hero.inventory[18]=(hero.inventory[18]||0)+3;hero.inventory[22]=(hero.inventory[22]||0)+5;}say('GUARDIAN DEFEATED TOGETHER · RARE LOOT!',4000);}queueSave();renderHotbar();return true;}
+ if(guardian?.hp>0&&Math.hypot(guardian.x+15-px,guardian.y+20-py)<100){nextAttackAt=now+400;p.action='attack';p.actionT=.42;const damage=18+(p.weapon||0)*13;guardian.hp=Math.max(0,guardian.hp-damage);showDamage(guardian.x,guardian.y-30,damage);spark(guardian.x,guardian.y,18);if(!guardian.hp){bossDefeated=true;guardian=null;for(const hero of players){hero.inventory[18]=(hero.inventory[18]||0)+3;hero.inventory[22]=(hero.inventory[22]||0)+5;}say('GUARDIAN DEFEATED TOGETHER · RARE LOOT!',4000);}queueSave();renderHotbar();return true;}
  let victim=null,best=72;
  for(const c of friends){
   const dx=c.x+9-px,dy=c.y+8-py,d=Math.hypot(dx,dy);
@@ -573,7 +577,7 @@ function attackEnemy(){
  if(!victim){say('Move closer to a creature to attack',1150);return false;}
  nextAttackAt=now+360;
  p.action='attack';p.actionT=.42;
- victim.hp=(Number.isFinite(victim.hp)?victim.hp:active===0?40:35)-(18+(p.weapon||0)*12);
+ const damage=18+(p.weapon||0)*12;victim.hp=(Number.isFinite(victim.hp)?victim.hp:active===0?40:35)-damage;showDamage(victim.x,victim.y-18,damage);
  spark(victim.x+8,victim.y+7,15);chime();
  if(victim.hp<=0){
   friends.splice(friends.indexOf(victim),1);
