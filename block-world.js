@@ -975,7 +975,7 @@ addEventListener('pagehide',save);
 $('inventory').addEventListener('click',()=>craftingOpen?closeCrafting():openCrafting());
 $('save').addEventListener('click',()=>{dirty=true;save();say('World saved on this device');});
 function chooseGameMode(next){
- if(window.BlockWorldCoop?.role?.()==='guest'){say('The current world owner controls the shared game mode');renderHotbar();return;}
+ if(window.BlockWorldCoop?.role?.()==='guest'){window.BlockWorldCoop?.requestMode?.(next);say('Switching to '+next+' mode…');return;}
  const wanted=next==='creative';if(creative===wanted){renderHotbar();return;}
  creative=wanted;queueSave();renderHotbar();
  window.BlockWorldCloud?.save?.();
@@ -1004,6 +1004,7 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
    friends:friends.map(c=>({...c})),nightClock,weatherType,
    achievements:achievements.slice(),explored:{...explored},portalUnlocked
   }),
+  setMode:next=>chooseGameMode(next),
   getState:()=>({
    players:players.map(p=>({x:p.x,y:p.y,vx:p.vx,vy:p.vy,facing:p.facing,ground:p.ground,health:p.health,action:p.action,actionT:p.actionT||0,inventory:{...p.inventory}})),
    creative,realmIndex:window.__bw2dRealm?.get()??0,questStage,goals:{...goals},portalUnlocked,
