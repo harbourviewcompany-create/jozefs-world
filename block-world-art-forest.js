@@ -112,7 +112,7 @@ function terrain(world,id,x,y){
   if(variant===1){rect(g,5,8,6,2,'#54382880');rect(g,11,9,2,7,'#54382860');}
   if(variant===2){rect(g,20,18,7,2,'#c7986580');}
  }
- if(terrainCache.size>600)terrainCache.clear();
+ if(terrainCache.size>1200)terrainCache.clear();
  terrainCache.set(k,c);return c;
 }
 function setQuality(v){
