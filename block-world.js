@@ -132,7 +132,7 @@ function update(dt){
   if(dir){p.facing=dir;p.walk+=dt*12;}
   const wantsJump=(remote?!!remote.jump:(i===0?down.has('KeyW'):down.has('ArrowUp')))||(i===active&&!remote&&touch.jump);
   if(wantsJump){
-   if(p.ground){p.vy=-430;p.ground=false;if(remote)p.doubleUsed=false;}
+   if(p.ground){p.vy=-430;p.ground=false;if(remote)p.doubleUsed=false;if(i===active)spark(p.x+p.w/2,p.y+p.h,5);}
    else if(remote&&i===1&&!p.remoteJumpPrev&&!p.doubleUsed&&p.vy> -290){p.vy=-370;p.doubleUsed=true;spark(p.x+p.w/2,p.y+p.h,9);}
   }
   if(remote)p.remoteJumpPrev=!!remote.jump;
@@ -173,7 +173,7 @@ function place(){
   focus=null;renderHotbar();say('Placed '+names[selected],800);
  }
 }
-function playerSwitch(){if(window.BlockWorld2D?.connected?.()){say('Each device has its own player');return;}active=1-active;focus=null;dirty=true;renderHotbar();queueSave();say('Playing as '+players[active].name);}
+function playerSwitch(){if(['Daddy','Jozef'].includes(localStorage.getItem('jw2d-family-role-v4'))){say('You are playing as '+localStorage.getItem('jw2d-family-role-v4')+' · change player from Menu');return;}if(window.BlockWorld2D?.connected?.()){say('Each device has its own player');return;}active=1-active;focus=null;dirty=true;renderHotbar();queueSave();say('Playing as '+players[active].name);}
 function renderHotbar(){
  const bar=$('hotbar');bar.replaceChildren();const ids=hotItems.includes(selected)?hotItems:[selected,...hotItems.slice(0,7)];
  ids.forEach((id,k)=>{
