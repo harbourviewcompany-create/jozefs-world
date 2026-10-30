@@ -15,12 +15,13 @@ let cssW=0,cssH=0,dpr=1,world=[],surface=[],creative=true,active=0,selected=2;
 let focus=null,camX=0,camY=0,clock=0,ticks=0,dirty=false,saveTimer=0;
 let creativeFlight=false,flightDown=false,survivalTimer=0,discoveredBiomes=new Set();
 let treasureClaims={},bossDefeated=false,creativeBrush=1,creativeMaterial=2;
+let guardian=null,combatTick=0;
 let noticeEnd=0,recipeIndex=0,craftingOpen=false,actionCooldown=0,lastTime=performance.now(),acc=0;
 const touch={left:false,right:false,jump:false};
 const down=new Set();
 const textures={};
 const players=[
- {name:'Daddy',x:0,y:0,vx:0,vy:0,w:22,h:39,ground:false,facing:1,health:100,hunger:100,inventory:{},walk:0},
+ {name:'Daddy',x:0,y:0,vx:0,vy:0,w:22,h:39,ground:false,facing:1,health:100,hunger:100,weapon:0,armor:0,inventory:{},walk:0},
  {name:'Jozef',x:0,y:0,vx:0,vy:0,w:21,h:35,ground:false,facing:1,health:100,inventory:{},walk:0}
 ];
 const recipes=[
@@ -88,7 +89,7 @@ function generate(){
  for(let x=65;x<81;x++)for(let y=surface[x]-4;y<surface[x];y++)world[y][x]=0;
 }
 function initPlayers(){
- [58,61].forEach((x,i)=>{const p=players[i];p.x=x*TILE;p.y=surface[x]*TILE-p.h-.1;p.vx=p.vy=0;p.ground=true;p.facing=1;p.walk=0;p.inventory={};p.hunger=100;});
+ [58,61].forEach((x,i)=>{const p=players[i];p.x=x*TILE;p.y=surface[x]*TILE-p.h-.1;p.vx=p.vy=0;p.ground=true;p.facing=1;p.walk=0;p.inventory={};p.hunger=100;p.weapon=0;p.armor=0;});
  players[0].inventory={2:24,4:12,7:24,6:10,8:15};
  players[1].inventory={2:24,4:12,7:24,6:10,8:15};
 }
@@ -101,14 +102,14 @@ function readSave(){
    for(let y=0;y<H;y++){const id=world[y][x];if(id===1||id===6||id===16||id===3){found=y;break;}}
    surface[x]=found;
   }
-  creative=!!s.creative;creativeFlight=false;treasureClaims=s.treasureClaims&&typeof s.treasureClaims==='object'?s.treasureClaims:{};bossDefeated=!!s.bossDefeated;active=s.active===1?1:0;selected=blockable.includes(s.selected)?s.selected:2;
-  players.forEach((p,i)=>{const data=s.players?.[i];if(!data)return;p.x=Number.isFinite(data.x)?Math.max(0,Math.min(W*TILE-p.w,data.x)):p.x;p.y=Number.isFinite(data.y)?Math.max(0,Math.min(H*TILE-p.h,data.y)):p.y;p.inventory=data.inventory&&typeof data.inventory==='object'?data.inventory:p.inventory;p.hunger=Number.isFinite(data.hunger)?Math.max(0,Math.min(100,data.hunger)):100;p.facing=data.facing===-1?-1:1;p.vx=p.vy=0;});
+  creative=!!s.creative;creativeFlight=false;treasureClaims=s.treasureClaims&&typeof s.treasureClaims==='object'?s.treasureClaims:{};bossDefeated=!!s.bossDefeated;guardian=s.guardian&&Number.isFinite(s.guardian.hp)?{...s.guardian}:null;active=s.active===1?1:0;selected=blockable.includes(s.selected)?s.selected:2;
+  players.forEach((p,i)=>{const data=s.players?.[i];if(!data)return;p.x=Number.isFinite(data.x)?Math.max(0,Math.min(W*TILE-p.w,data.x)):p.x;p.y=Number.isFinite(data.y)?Math.max(0,Math.min(H*TILE-p.h,data.y)):p.y;p.inventory=data.inventory&&typeof data.inventory==='object'?data.inventory:p.inventory;p.hunger=Number.isFinite(data.hunger)?Math.max(0,Math.min(100,data.hunger)):100;p.weapon=Math.max(0,Math.min(3,Number(data.weapon)||0));p.armor=Math.max(0,Math.min(3,Number(data.armor)||0));p.facing=data.facing===-1?-1:1;p.vx=p.vy=0;});
   return true;
  }catch(err){console.warn('JozefWorld save unavailable',err);return false;}
 }
 function save(){
  if(!dirty)return;
- try{localStorage.setItem(KEY,JSON.stringify({version:3,world,creative,selected,active,treasureClaims,bossDefeated,players:players.map(p=>({x:p.x,y:p.y,facing:p.facing,inventory:p.inventory,hunger:p.hunger}))}));dirty=false;$('save').textContent='Saved ✓';setTimeout(()=>$('save').textContent='Save',1100);}
+ try{localStorage.setItem(KEY,JSON.stringify({version:3,world,creative,selected,active,treasureClaims,bossDefeated,guardian,players:players.map(p=>({x:p.x,y:p.y,facing:p.facing,inventory:p.inventory,hunger:p.hunger,weapon:p.weapon,armor:p.armor}))}));dirty=false;$('save').textContent='Saved ✓';setTimeout(()=>$('save').textContent='Save',1100);}
  catch(err){say('Storage full: progress could not be saved',4000);}
 }
 function queueSave(){dirty=true;clearTimeout(saveTimer);saveTimer=setTimeout(save,1700);}
@@ -207,14 +208,74 @@ function claimTreasure(){
  spark(p.x,p.y,32);chime();queueSave();renderHotbar();say(l.name+' TREASURE FOUND!',3500);
 }
 function challengeBoss(){
+ if(window.BlockWorld2D?.isGuest?.()){say('Ask the hosting player to summon the guardian');return;}
  const p=players[active],px=Math.floor(p.x/TILE);
- if(Math.abs(px-157)>8){say('Travel to the Far Outpost to challenge its guardian');return;}
- if(bossDefeated){say('The outpost guardian has already been defeated');return;}
- if(creative){say('Switch to Survival to challenge the guardian');return;}
- const strength=(p.inventory[26]||0)+(p.inventory[27]||0)*2+(p.inventory[18]||0)*4;
- if(strength<3){say('Guardian requires 3 equipment power: smelt iron, gold or mine diamonds');return;}
- bossDefeated=true;p.inventory[18]=(p.inventory[18]||0)+3;p.inventory[22]=(p.inventory[22]||0)+5;
- p.health=Math.min(100,p.health+30);spark(p.x,p.y,60);chime();queueSave();renderHotbar();say('GUARDIAN DEFEATED · rare treasure unlocked!',4000);
+ if(Math.abs(px-157)>9){say('Travel to Far Outpost to summon the guardian');return;}
+ if(bossDefeated){say('The guardian has already been defeated');return;}
+ if(creative){say('Switch to Survival for the guardian battle');return;}
+ if(guardian?.hp>0){say('Guardian already active · attack to defeat it!');return;}
+ const x=157*TILE,y=(surface[157]-2)*TILE;
+ guardian={x,y,hp:240,maxHp:240,cooldown:1.3,phase:0,vx:0};
+ queueSave();say('OUTPOST GUARDIAN AWAKENED · FIGHT TOGETHER!',3500);
+}
+function craftEquipment(kind){
+ const p=players[active],levels={wood:{id:4,n:6,level:1},iron:{id:26,n:4,level:2},diamond:{id:18,n:2,level:3}};
+ const grade=levels[kind.split('-')[0]],slot=kind.endsWith('armor')?'armor':'weapon';
+ if(!grade)return;
+ if((p[slot]||0)>=grade.level){say('You already have this or better equipment');return;}
+ if(!creative&&(p.inventory[grade.id]||0)<grade.n){say('Requires '+grade.n+' '+names[grade.id]);return;}
+ if(!creative)p.inventory[grade.id]-=grade.n;
+ p[slot]=grade.level;queueSave();renderHotbar();renderCrafting();say('Equipped '+kind.replace('-',' ')+' · level '+grade.level);
+}
+function combatUpdate(dt){
+ if(creative)return;
+ combatTick+=dt;
+ for(const c of friends){
+  if(c.c!==3)continue;
+  c.hp=Number.isFinite(c.hp)?c.hp:45;
+  c.hitTimer=Math.max(0,(c.hitTimer||0)-dt);
+  const target=players.reduce((a,b)=>Math.abs(a.x-c.x)<Math.abs(b.x-c.x)?a:b);
+  const distance=Math.abs(target.x-c.x);
+  if(distance<220){c.vx=Math.sign(target.x-c.x)*42;}
+  if(distance<25&&Math.abs(target.y-c.y)<35&&c.hitTimer<=0){
+   c.hitTimer=1.7;target.health=Math.max(0,target.health-(target.armor?Math.max(2,9-target.armor*2):9));
+   spark(target.x,target.y,9);
+  }
+ }
+ if(!guardian||guardian.hp<=0)return;
+ guardian.phase+=dt;guardian.cooldown-=dt;
+ const target=players.reduce((a,b)=>Math.abs(a.x-guardian.x)<Math.abs(b.x-guardian.x)?a:b);
+ const distance=Math.abs(target.x-guardian.x);
+ if(distance<440&&distance>42)guardian.x+=Math.sign(target.x-guardian.x)*Math.min(62*dt,distance-42);
+ const gx=Math.max(1,Math.min(W-2,Math.floor(guardian.x/TILE)));
+ guardian.y=(surface[gx]-2)*TILE;
+ if(distance<100&&guardian.cooldown<=0){
+  guardian.cooldown=1.35;
+  for(const p of players)if(Math.abs(p.x-guardian.x)<110&&Math.abs(p.y-guardian.y)<95){
+   p.health=Math.max(0,p.health-Math.max(4,20-(p.armor||0)*5));spark(p.x,p.y,16);
+  }
+  say('GUARDIAN SHOCKWAVE · jump back!',1200);
+ }
+ for(const p of players)if(p.health<=0){
+  const spawn=players.indexOf(p)?74:71;p.x=spawn*TILE;p.y=surface[spawn]*TILE-p.h;p.vx=p.vy=0;p.health=100;p.hunger=75;
+  say(p.name+' respawned at camp',1700);
+ }
+}
+function combatDraw(){
+ ctx.save();
+ if(guardian&&guardian.hp>0){
+  const x=guardian.x-camX,y=guardian.y-camY;
+  if(x>-100&&x<cssW/cameraZoom+100&&y>-120&&y<cssH/cameraZoom+120){
+   const pulse=Math.sin(guardian.phase*4)*4;
+   ctx.fillStyle='#3d365f';ctx.fillRect(x-13,y-10+pulse,60,69);
+   ctx.fillStyle='#a276eb';ctx.fillRect(x-8,y-17+pulse,50,23);
+   ctx.fillStyle='#ffe6a4';ctx.fillRect(x+2,y-6+pulse,8,8);ctx.fillRect(x+25,y-6+pulse,8,8);
+   ctx.fillStyle='#251a3b';ctx.fillRect(x-21,y-33,78,9);
+   ctx.fillStyle='#f05279';ctx.fillRect(x-20,y-32,76*Math.max(0,guardian.hp)/guardian.maxHp,7);
+   ctx.fillStyle='#fff';ctx.font='bold 11px system-ui';ctx.textAlign='center';ctx.fillText('OUTPOST GUARDIAN',x+17,y-41);
+  }
+ }
+ ctx.restore();
 }
 function playerSwitch(){if(['Daddy','Jozef'].includes(localStorage.getItem('jw2d-family-role-v4'))){say('You are playing as '+localStorage.getItem('jw2d-family-role-v4')+' · change player from Menu');return;}if(window.BlockWorld2D?.connected?.()){say('Each device has its own player');return;}active=1-active;focus=null;dirty=true;renderHotbar();queueSave();say('Playing as '+players[active].name);}
 function renderHotbar(){
@@ -503,6 +564,7 @@ function attackEnemy(){
  const now=performance.now();
  if(now<nextAttackAt)return false;
  const p=players[active],px=p.x+p.w/2,py=p.y+p.h/2;
+ if(guardian?.hp>0&&Math.hypot(guardian.x+15-px,guardian.y+20-py)<100){nextAttackAt=now+400;p.action='attack';p.actionT=.42;guardian.hp=Math.max(0,guardian.hp-(18+(p.weapon||0)*13));spark(guardian.x,guardian.y,18);if(!guardian.hp){bossDefeated=true;guardian=null;for(const hero of players){hero.inventory[18]=(hero.inventory[18]||0)+3;hero.inventory[22]=(hero.inventory[22]||0)+5;}say('GUARDIAN DEFEATED TOGETHER · RARE LOOT!',4000);}queueSave();renderHotbar();return true;}
  let victim=null,best=72;
  for(const c of friends){
   const dx=c.x+9-px,dy=c.y+8-py,d=Math.hypot(dx,dy);
@@ -511,7 +573,7 @@ function attackEnemy(){
  if(!victim){say('Move closer to a creature to attack',1150);return false;}
  nextAttackAt=now+360;
  p.action='attack';p.actionT=.42;
- victim.hp=(Number.isFinite(victim.hp)?victim.hp:active===0?40:35)-(active===0?20:16);
+ victim.hp=(Number.isFinite(victim.hp)?victim.hp:active===0?40:35)-(18+(p.weapon||0)*12);
  spark(victim.x+8,victim.y+7,15);chime();
  if(victim.hp<=0){
   friends.splice(friends.indexOf(victim),1);
@@ -594,11 +656,12 @@ update=function(dt){
  for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=250*dt;p.ttl-=dt;if(p.ttl<0)particles.splice(i,1);}
  const x=Math.floor(players[active].x/TILE),z=biome(x);
  if(z>=2&&!explored[z]){explored[z]=1;gain('explore');say('DISCOVERED · '+zoneNames[z],2200);}
+ combatUpdate(dt);
  if(ticks%90===0){questHud();lastWorldX=x;}
 };
 const baseDraw=draw;
 draw=function(){
- baseDraw();ctx.save();
+ baseDraw();combatDraw();ctx.save();
  for(const c of friends){if(window.BlockWorldArt){window.BlockWorldArt.creature(ctx,c,{camX,camY,w:cssW/cameraZoom,h:cssH/cameraZoom});continue;}const x=c.x-camX,y=c.y-camY+Math.sin(c.phase)*2;if(x<0||x>cssW||y<0||y>cssH)continue;
    ctx.fillStyle=['#a4db87','#e4bd84','#86d9cf','#b2a1ed'][c.c];ctx.fillRect(x,y+4,18,11);ctx.fillRect(x+3,y,12,6);
    ctx.fillStyle='#203442';ctx.fillRect(x+5,y+5,2,2);ctx.fillRect(x+12,y+5,2,2);}
@@ -1030,6 +1093,7 @@ $('bw-brush')?.addEventListener('change',e=>{creativeBrush=Math.max(1,Math.min(4
 for(const kind of ['fill','erase','replace'])$('bw-'+kind)?.addEventListener('click',()=>creativeEdit(kind));
 $('bw-treasure')?.addEventListener('click',claimTreasure);
 $('bw-boss')?.addEventListener('click',challengeBoss);
+$('bw-equipment')?.addEventListener('change',e=>{if(e.target.value)craftEquipment(e.target.value);e.target.value='';});
 $('bw-flight')?.addEventListener('click',()=>{if(!creative){say('Flying is available in Creative mode');return;}creativeFlight=!creativeFlight;$('bw-flight').textContent='FLY: '+(creativeFlight?'ON':'OFF');say(creativeFlight?'Flying enabled · hold JUMP to rise':'Flying disabled');});
 $('bw-forage')?.addEventListener('click',()=>{if(creative){say('Food is only needed in Survival');return;}const p=players[active],x=Math.floor(p.x/TILE);if(![1,4].includes(get(x,Math.floor((p.y+p.h+3)/TILE)))&&get(x,Math.floor(p.y/TILE)-1)!==5){say('Find a grassy forest to forage for berries');return;}if(p.hunger>=100){say('Already full');return;}p.hunger=Math.min(100,(p.hunger??100)+22);p.health=Math.min(100,p.health+4);renderHotbar();queueSave();say('Foraged berries · food restored');});
 addEventListener('keydown',e=>{if(e.code==='KeyS'||e.code==='ArrowDown')flightDown=true;});
@@ -1038,7 +1102,7 @@ $('reset').addEventListener('click',()=>{
  if(window.BlockWorld2D?.connected?.()){say('Leave co-op before starting a new world');return;}
  if(!confirm('Start a new JozefWorld adventure? This permanently replaces the saved world on this device.'))return;
  try{const previous=localStorage.getItem(KEY);if(previous)localStorage.setItem(KEY+'-backup',previous);localStorage.removeItem(KEY);localStorage.removeItem(advSaveKey);}catch(_){}
- adventureSeed=Math.floor(Math.random()*999999)+1;generate();initPlayers();creative=true;treasureClaims={};bossDefeated=false;active=0;selected=2;focus=null;camX=camY=0;queueSave();renderHotbar();say('Fresh new world created');
+ adventureSeed=Math.floor(Math.random()*999999)+1;generate();initPlayers();creative=true;treasureClaims={};bossDefeated=false;guardian=null;active=0;selected=2;focus=null;camX=camY=0;queueSave();renderHotbar();say('Fresh new world created');
 });
 $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-modal','true');$('crafting').setAttribute('aria-hidden','true');
 
@@ -1052,12 +1116,12 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
    w:W,h:H,world:world.map(r=>r.slice()),surface:surface.slice(),
    players:players.map(p=>({x:p.x,y:p.y,vx:p.vx,vy:p.vy,facing:p.facing,ground:p.ground,health:p.health,hunger:p.hunger,action:p.action,actionT:p.actionT||0,inventory:{...p.inventory}})),
    creative,treasureClaims:{...treasureClaims},bossDefeated,adventureSeed,realmIndex:window.__bw2dRealm?.get()??0,questStage,goals:{...goals},
-   friends:friends.map(c=>({...c})),nightClock,weatherType,
+   friends:friends.map(c=>({...c})),guardian:guardian?{...guardian}:null,bossDefeated,nightClock,weatherType,
    achievements:achievements.slice(),explored:{...explored},portalUnlocked
   }),
   setMode:next=>chooseGameMode(next),
   getState:()=>({
-   players:players.map(p=>({x:p.x,y:p.y,vx:p.vx,vy:p.vy,facing:p.facing,ground:p.ground,health:p.health,action:p.action,actionT:p.actionT||0,inventory:{...p.inventory}})),
+   players:players.map(p=>({x:p.x,y:p.y,vx:p.vx,vy:p.vy,facing:p.facing,ground:p.ground,health:p.health,hunger:p.hunger,weapon:p.weapon,armor:p.armor,action:p.action,actionT:p.actionT||0,inventory:{...p.inventory}})),
    creative,realmIndex:window.__bw2dRealm?.get()??0,questStage,goals:{...goals},portalUnlocked,
    friends:friends.map(c=>({...c})),nightClock,weatherType
   }),
@@ -1066,15 +1130,17 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
    world=s.world.map(r=>r.slice());surface=s.surface.slice();
    players.forEach((p,i)=>{
     const q=s.players[i];if(!q)return;
-    for(const k of ['x','y','vx','vy','facing','health','hunger','actionT'])if(Number.isFinite(q[k]))p[k]=q[k];
+    for(const k of ['x','y','vx','vy','facing','health','hunger','weapon','armor','actionT'])if(Number.isFinite(q[k]))p[k]=q[k];
     if(['mine','attack','idle'].includes(q.action))p.action=q.action;
     p.ground=!!q.ground;p.inventory={...q.inventory};
    });
-   active=localStorage.getItem('jw2d-family-role-v4')==='Jozef'?1:0;creative=!!s.creative;treasureClaims=s.treasureClaims&&typeof s.treasureClaims==='object'?{...s.treasureClaims}:{};bossDefeated=!!s.bossDefeated;creativeFlight=false;adventureSeed=s.adventureSeed;
+   active=localStorage.getItem('jw2d-family-role-v4')==='Jozef'?1:0;creative=!!s.creative;treasureClaims=s.treasureClaims&&typeof s.treasureClaims==='object'?{...s.treasureClaims}:{};bossDefeated=!!s.bossDefeated;guardian=s.guardian&&Number.isFinite(s.guardian.hp)?{...s.guardian}:null;creativeFlight=false;adventureSeed=s.adventureSeed;
    window.__bw2dRealm?.setGuest(s.realmIndex);questStage=s.questStage;goals={...s.goals};
    achievements=Array.isArray(s.achievements)?s.achievements.slice():[];
    explored={...s.explored};portalUnlocked=!!s.portalUnlocked;
    if(Array.isArray(s.friends)&&s.friends.length<=40)friends=s.friends.map(c=>({...c}));
+   if('guardian' in s)guardian=s.guardian&&Number.isFinite(s.guardian.hp)?{...s.guardian}:null;
+   if(typeof s.bossDefeated==='boolean')bossDefeated=s.bossDefeated;
    if(Number.isFinite(s.nightClock))nightClock=s.nightClock;
    if(['clear','rain','snow'].includes(s.weatherType))weatherType=s.weatherType;
    teamFollow=false;focus=null;dirty=false;renderHotbar();questHud();return true;
@@ -1084,7 +1150,7 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
    const oldInventory=JSON.stringify(players[1].inventory),oldCreative=creative;
    players.forEach((p,i)=>{
     const q=s.players[i];if(!q)return;
-    for(const k of ['x','y','vx','vy','facing','health','actionT'])if(Number.isFinite(q[k]))p[k]=q[k];
+    for(const k of ['x','y','vx','vy','facing','health','hunger','weapon','armor','actionT'])if(Number.isFinite(q[k]))p[k]=q[k];
     if(['mine','attack','idle'].includes(q.action))p.action=q.action;
     p.ground=!!q.ground;
     if(q.inventory&&typeof q.inventory==='object')p.inventory={...q.inventory};
