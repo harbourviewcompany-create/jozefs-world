@@ -88,7 +88,12 @@
  <a class="bw-hq-link" href="./block-world-select.html" aria-label="Choose 2D or 3D mode">MODE</a>
  <button type="button" class="bw-hq-link" id="open-coop" hidden aria-label="Automatic shared world connection">PLAY TOGETHER</button>
  <a class="bw-hq-link" href="./block-world-3d.html" aria-label="Play Block World in full 3D">▣ PLAY 3D</a>
- <button id="mode" type="button" aria-label="Toggle creative or survival mode">CREATIVE</button>
+ <label for="bw-mode-choice" style="display:block;color:#e9faff;font:800 12px system-ui;margin:8px 0 4px">GAME MODE</label>
+ <select id="bw-mode-choice" aria-label="Choose Survival or Creative" style="width:100%;background:#103e61;color:#fff;border:1px solid #71c9ef;border-radius:10px;padding:10px;font:800 13px system-ui">
+ <option value="survival">SURVIVAL</option><option value="creative">CREATIVE</option>
+ </select>
+ <p id="bw-mode-description" style="font:600 12px system-ui;color:#d7efff;margin:5px 0">Choose how you want to play.</p>
+ <button id="mode" type="button" aria-label="Switch Survival or Creative mode">CREATIVE</button>
  <button id="inventory" type="button">🎒 Inventory</button>
  <button id="save" type="button">Save</button>
  <button id="reset" type="button">New World</button>
