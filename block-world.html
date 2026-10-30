@@ -113,7 +113,12 @@
  <details class="jw-game-tools"><summary>EXPLORATION & TREASURE</summary>
  <p>Find the Old Camp, Crystal Ridge and Far Outpost to collect unique rewards. In Survival, prepare equipment to challenge the Outpost Guardian.</p>
  <button id="bw-treasure" type="button">OPEN NEARBY TREASURE</button>
- <button id="bw-boss" type="button">CHALLENGE GUARDIAN</button>
+ <button id="bw-boss" type="button">SUMMON GUARDIAN BOSS</button>
+ <p>Battle in real time using ATTACK. Both players can contribute damage and share the reward.</p>
+ <label for="bw-equipment">Craft equipment</label>
+ <select id="bw-equipment" aria-label="Craft weapon or armor"><option value="">Choose equipment…</option>
+ <option value="wood-weapon">Wood Sword · 6 Wood</option><option value="iron-weapon">Iron Sword · 4 Iron Ingots</option><option value="diamond-weapon">Diamond Sword · 2 Diamonds</option>
+ <option value="wood-armor">Wood Armor · 6 Wood</option><option value="iron-armor">Iron Armor · 4 Iron Ingots</option><option value="diamond-armor">Diamond Armor · 2 Diamonds</option></select>
  </details>
  <button id="inventory" type="button">🎒 Inventory</button>
  <button id="save" type="button">Save</button>
@@ -180,7 +185,7 @@
 </script>
 <script src="./peerjs.min.js" defer></script>
 <script src="./block-world-art-forest.js?v=20261030-landmarks-v5" defer></script>
-<script src="./block-world.js?v=20261030-crafting-treasure-v10" defer></script>
+<script src="./block-world.js?v=20261030-combat-v11" defer></script>
 <script src="./block-world-network.js?v=20261029-v3" defer></script>
 <script src="./block-world-coop.js?v=20261030-jozefworld-v13" defer></script>
 <script src="./block-world-ui.js?v=20261029-hudfix" defer></script>
