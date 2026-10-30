@@ -13,12 +13,13 @@ const blockable=[1,2,3,4,5,6,7,8,9,10,11,12,15,16,17,18,20,21,22,23,24];
 const hotItems=[2,3,4,7,8,6,12,20];
 let cssW=0,cssH=0,dpr=1,world=[],surface=[],creative=true,active=0,selected=2;
 let focus=null,camX=0,camY=0,clock=0,ticks=0,dirty=false,saveTimer=0;
+let creativeFlight=false,flightDown=false,survivalTimer=0,discoveredBiomes=new Set();
 let noticeEnd=0,recipeIndex=0,craftingOpen=false,actionCooldown=0,lastTime=performance.now(),acc=0;
 const touch={left:false,right:false,jump:false};
 const down=new Set();
 const textures={};
 const players=[
- {name:'Daddy',x:0,y:0,vx:0,vy:0,w:22,h:39,ground:false,facing:1,health:100,inventory:{},walk:0},
+ {name:'Daddy',x:0,y:0,vx:0,vy:0,w:22,h:39,ground:false,facing:1,health:100,hunger:100,inventory:{},walk:0},
  {name:'Jozef',x:0,y:0,vx:0,vy:0,w:21,h:35,ground:false,facing:1,health:100,inventory:{},walk:0}
 ];
 const recipes=[
@@ -81,7 +82,7 @@ function generate(){
  for(let x=65;x<81;x++)for(let y=surface[x]-4;y<surface[x];y++)world[y][x]=0;
 }
 function initPlayers(){
- [58,61].forEach((x,i)=>{const p=players[i];p.x=x*TILE;p.y=surface[x]*TILE-p.h-.1;p.vx=p.vy=0;p.ground=true;p.facing=1;p.walk=0;p.inventory={};});
+ [58,61].forEach((x,i)=>{const p=players[i];p.x=x*TILE;p.y=surface[x]*TILE-p.h-.1;p.vx=p.vy=0;p.ground=true;p.facing=1;p.walk=0;p.inventory={};p.hunger=100;});
  players[0].inventory={2:24,4:12,7:24,6:10,8:15};
  players[1].inventory={2:24,4:12,7:24,6:10,8:15};
 }
@@ -94,14 +95,14 @@ function readSave(){
    for(let y=0;y<H;y++){const id=world[y][x];if(id===1||id===6||id===16||id===3){found=y;break;}}
    surface[x]=found;
   }
-  creative=!!s.creative;active=s.active===1?1:0;selected=blockable.includes(s.selected)?s.selected:2;
-  players.forEach((p,i)=>{const data=s.players?.[i];if(!data)return;p.x=Number.isFinite(data.x)?Math.max(0,Math.min(W*TILE-p.w,data.x)):p.x;p.y=Number.isFinite(data.y)?Math.max(0,Math.min(H*TILE-p.h,data.y)):p.y;p.inventory=data.inventory&&typeof data.inventory==='object'?data.inventory:p.inventory;p.facing=data.facing===-1?-1:1;p.vx=p.vy=0;});
+  creative=!!s.creative;creativeFlight=false;active=s.active===1?1:0;selected=blockable.includes(s.selected)?s.selected:2;
+  players.forEach((p,i)=>{const data=s.players?.[i];if(!data)return;p.x=Number.isFinite(data.x)?Math.max(0,Math.min(W*TILE-p.w,data.x)):p.x;p.y=Number.isFinite(data.y)?Math.max(0,Math.min(H*TILE-p.h,data.y)):p.y;p.inventory=data.inventory&&typeof data.inventory==='object'?data.inventory:p.inventory;p.hunger=Number.isFinite(data.hunger)?Math.max(0,Math.min(100,data.hunger)):100;p.facing=data.facing===-1?-1:1;p.vx=p.vy=0;});
   return true;
  }catch(err){console.warn('JozefWorld save unavailable',err);return false;}
 }
 function save(){
  if(!dirty)return;
- try{localStorage.setItem(KEY,JSON.stringify({version:3,world,creative,selected,active,players:players.map(p=>({x:p.x,y:p.y,facing:p.facing,inventory:p.inventory}))}));dirty=false;$('save').textContent='Saved ✓';setTimeout(()=>$('save').textContent='Save',1100);}
+ try{localStorage.setItem(KEY,JSON.stringify({version:3,world,creative,selected,active,players:players.map(p=>({x:p.x,y:p.y,facing:p.facing,inventory:p.inventory,hunger:p.hunger}))}));dirty=false;$('save').textContent='Saved ✓';setTimeout(()=>$('save').textContent='Save',1100);}
  catch(err){say('Storage full: progress could not be saved',4000);}
 }
 function queueSave(){dirty=true;clearTimeout(saveTimer);saveTimer=setTimeout(save,1700);}
@@ -131,6 +132,7 @@ function update(dt){
   p.vx=dir*205;
   if(dir){p.facing=dir;p.walk+=dt*12;}
   const wantsJump=(remote?!!remote.jump:(i===0?down.has('KeyW'):down.has('ArrowUp')))||(i===active&&!remote&&touch.jump);
+  if(creative&&creativeFlight){p.vy=wantsJump?-250:(flightDown&&i===active?250:0);p.ground=false;moveAxis(p,p.vx*dt,'x');moveAxis(p,p.vy*dt,'y');return;}
   if(wantsJump){
    if(p.ground){p.vy=-430;p.ground=false;if(remote)p.doubleUsed=false;if(i===active)spark(p.x+p.w/2,p.y+p.h,5);}
    else if(remote&&i===1&&!p.remoteJumpPrev&&!p.doubleUsed&&p.vy> -290){p.vy=-370;p.doubleUsed=true;spark(p.x+p.w/2,p.y+p.h,9);}
@@ -140,6 +142,8 @@ function update(dt){
   moveAxis(p,p.vx*dt,'x');moveAxis(p,p.vy*dt,'y');
   if(!p.ground&&collision(p,p.x,p.y+1)){p.ground=true;p.vy=0;if(remote)p.doubleUsed=false;}
  });
+ if(!creative){survivalTimer+=dt;if(survivalTimer>=9){survivalTimer=0;for(const p of players){p.hunger=Math.max(0,(p.hunger??100)-1);if(p.hunger===0)p.health=Math.max(1,p.health-2);}queueSave();if(ticks%2===0)renderHotbar();}}
+ const region=Math.floor(players[active].x/TILE/36);if(!discoveredBiomes.has(region)){discoveredBiomes.add(region);if(discoveredBiomes.size>1)say('New region discovered! Explore for hidden caves and resources.',2400);}
  ticks++;
  if(ticks%150===0&&players.some(p=>Math.abs(p.vx)>1||Math.abs(p.vy)>1))queueSave();
 }
@@ -187,7 +191,7 @@ function renderHotbar(){
  $('mode').textContent=creative?'CREATIVE':'SURVIVAL';
  const modeChoice=$('bw-mode-choice');if(modeChoice)modeChoice.value=creative?'creative':'survival';
  const modeDescription=$('bw-mode-description');if(modeDescription)modeDescription.textContent=creative?'Unlimited building materials. Explore and build freely.':'Mine resources, craft supplies and survive environmental hazards.';
- $('health').textContent=players[active].name.toUpperCase()+'  ♥ '+Math.round(players[active].health)+'   LVL '+(1+Math.floor((goals.wood+goals.build+goals.diamond*4+goals.portal*10)/15));
+ $('health').textContent=players[active].name.toUpperCase()+'  ♥ '+Math.round(players[active].health)+(creative?'  ✦ CREATIVE':'  ● FOOD '+Math.round(players[active].hunger??100))+'   LVL '+(1+Math.floor((goals.wood+goals.build+goals.diamond*4+goals.portal*10)/15));
 }
 function ingredientLabel(need){return Object.entries(need).map(([id,n])=>n+' '+names[id]).join(', ');}
 function renderCrafting(){
@@ -977,12 +981,16 @@ $('save').addEventListener('click',()=>{dirty=true;save();say('World saved on th
 function chooseGameMode(next){
  if(window.BlockWorldCoop?.role?.()==='guest'){window.BlockWorldCoop?.requestMode?.(next);say('Switching to '+next+' mode…');return;}
  const wanted=next==='creative';if(creative===wanted){renderHotbar();return;}
- creative=wanted;queueSave();renderHotbar();
+ creative=wanted;if(!creative)creativeFlight=false;queueSave();renderHotbar();const flightButton=$('bw-flight');if(flightButton){flightButton.hidden=!creative;flightButton.textContent='FLY: OFF';}
  window.BlockWorldCloud?.save?.();
  say(creative?'Creative mode: unlimited building':'Survival mode: gather, craft and survive');
 }
 $('mode').addEventListener('click',()=>chooseGameMode(creative?'survival':'creative'));
 $('bw-mode-choice')?.addEventListener('change',e=>chooseGameMode(e.target.value));
+$('bw-flight')?.addEventListener('click',()=>{if(!creative){say('Flying is available in Creative mode');return;}creativeFlight=!creativeFlight;$('bw-flight').textContent='FLY: '+(creativeFlight?'ON':'OFF');say(creativeFlight?'Flying enabled · hold JUMP to rise':'Flying disabled');});
+$('bw-forage')?.addEventListener('click',()=>{if(creative){say('Food is only needed in Survival');return;}const p=players[active],x=Math.floor(p.x/TILE);if(![1,4].includes(get(x,Math.floor((p.y+p.h+3)/TILE)))&&get(x,Math.floor(p.y/TILE)-1)!==5){say('Find a grassy forest to forage for berries');return;}if(p.hunger>=100){say('Already full');return;}p.hunger=Math.min(100,(p.hunger??100)+22);p.health=Math.min(100,p.health+4);renderHotbar();queueSave();say('Foraged berries · food restored');});
+addEventListener('keydown',e=>{if(e.code==='KeyS'||e.code==='ArrowDown')flightDown=true;});
+addEventListener('keyup',e=>{if(e.code==='KeyS'||e.code==='ArrowDown')flightDown=false;});
 $('reset').addEventListener('click',()=>{
  if(window.BlockWorld2D?.connected?.()){say('Leave co-op before starting a new world');return;}
  if(!confirm('Start a new JozefWorld adventure? This permanently replaces the saved world on this device.'))return;
@@ -999,7 +1007,7 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
   onBlockChanged:null,onFrame:null,requestAction:null,
   getWorld:()=>({
    w:W,h:H,world:world.map(r=>r.slice()),surface:surface.slice(),
-   players:players.map(p=>({x:p.x,y:p.y,vx:p.vx,vy:p.vy,facing:p.facing,ground:p.ground,health:p.health,action:p.action,actionT:p.actionT||0,inventory:{...p.inventory}})),
+   players:players.map(p=>({x:p.x,y:p.y,vx:p.vx,vy:p.vy,facing:p.facing,ground:p.ground,health:p.health,hunger:p.hunger,action:p.action,actionT:p.actionT||0,inventory:{...p.inventory}})),
    creative,adventureSeed,realmIndex:window.__bw2dRealm?.get()??0,questStage,goals:{...goals},
    friends:friends.map(c=>({...c})),nightClock,weatherType,
    achievements:achievements.slice(),explored:{...explored},portalUnlocked
@@ -1015,11 +1023,11 @@ $('crafting').setAttribute('role','dialog');$('crafting').setAttribute('aria-mod
    world=s.world.map(r=>r.slice());surface=s.surface.slice();
    players.forEach((p,i)=>{
     const q=s.players[i];if(!q)return;
-    for(const k of ['x','y','vx','vy','facing','health','actionT'])if(Number.isFinite(q[k]))p[k]=q[k];
+    for(const k of ['x','y','vx','vy','facing','health','hunger','actionT'])if(Number.isFinite(q[k]))p[k]=q[k];
     if(['mine','attack','idle'].includes(q.action))p.action=q.action;
     p.ground=!!q.ground;p.inventory={...q.inventory};
    });
-   active=localStorage.getItem('jw2d-family-role-v4')==='Jozef'?1:0;creative=!!s.creative;adventureSeed=s.adventureSeed;
+   active=localStorage.getItem('jw2d-family-role-v4')==='Jozef'?1:0;creative=!!s.creative;creativeFlight=false;adventureSeed=s.adventureSeed;
    window.__bw2dRealm?.setGuest(s.realmIndex);questStage=s.questStage;goals={...s.goals};
    achievements=Array.isArray(s.achievements)?s.achievements.slice():[];
    explored={...s.explored};portalUnlocked=!!s.portalUnlocked;
