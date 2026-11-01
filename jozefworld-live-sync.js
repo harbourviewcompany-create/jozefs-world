@@ -9,7 +9,7 @@ let world=url.searchParams.get('world');
 if(!valid(world))world=localStorage.getItem('jw-world-code');
 if(!valid(world)){world=crypto.randomUUID().replaceAll('-','');localStorage.setItem('jw-world-code',world)}
 else localStorage.setItem('jw-world-code',world);
-url.searchParams.set('world',world);history.replaceState(null,'',url);
+url.searchParams.set('world',world);history.replaceState(null,'',url);window.JWWorldId=world;
 document.querySelectorAll('[data-world-game]').forEach(a=>{const target=new URL(a.href);target.searchParams.set('world',world);a.href=target.href});
 const share=document.getElementById('share-world');
 if(share)share.onclick=async()=>{try{await navigator.share({title:'JozefWorld',url:url.href})}catch(e){if(e.name==='AbortError')return;try{await navigator.clipboard.writeText(url.href);say('Family link copied · open on the other phone')}catch{prompt('Copy family link',url.href)}}};
