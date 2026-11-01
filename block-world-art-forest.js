@@ -63,6 +63,15 @@ function tile(id){
    are cached by material, exposed edges, and deterministic position variants. */
 const terrainCache=new Map();
 let quality='cinematic';
+const reducedMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+let qualitySamples=0,slowSamples=0,fastSamples=0,lastFrame=0;
+function adaptFrame(t){
+ if(!Number.isFinite(t))return;
+ if(lastFrame){const dt=t-lastFrame;if(dt>0&&dt<250){qualitySamples++;if(dt>27)slowSamples++;if(dt<19)fastSamples++;}}
+ lastFrame=t;
+ if(qualitySamples>=120){if(slowSamples>45)quality='balanced';else if(fastSamples>108&&!reducedMotion)quality='cinematic';qualitySamples=slowSamples=fastSamples=0;}
+}
+if(reducedMotion)quality='balanced';
 const sameMaterial=(a,b)=>{
  if(!a||!b)return false;
  const group=n=>[1,2].includes(n)?1:([3,8,9,10,11,14,17,18,21,22,23,24].includes(n)?3:n);
@@ -267,6 +276,7 @@ function forestAtmosphere(g,w,h,pan,t){
 }
 
 function background(g,o){
+ adaptFrame(o.time*1000);
  const w=o.w,h=o.h,t=o.time||0,pan=o.camX||0;
  g.save();g.setTransform(o.dpr*o.zoom,0,0,o.dpr*o.zoom,0,0);
  const sky=g.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#0678dd');sky.addColorStop(.42,'#5cc7f8');sky.addColorStop(.78,'#c2f4fe');sky.addColorStop(1,'#f4e6b8');g.fillStyle=sky;g.fillRect(0,0,w,h);
