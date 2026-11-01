@@ -23,6 +23,10 @@ c.addEventListener('pointerdown',e=>{pointer={x:e.clientX,y:e.clientY,cx:camera.
 c.addEventListener('pointermove',e=>{if(!pointer)return;const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;if(Math.abs(dx)+Math.abs(dy)>8)pointer.moved=true;if(pointer.moved){camera.x=Math.max(0,Math.min(W*S,pointer.cx-dx/camera.z));camera.y=Math.max(0,Math.min(H*S,pointer.cy-dy/camera.z));scheduleDraw()}});
 c.addEventListener('pointerup',e=>{if(!pointer)return;if(!pointer.moved){const t=screenTile(e.clientX,e.clientY);build(t.x,t.y)}else save();pointer=null});
 c.addEventListener('pointercancel',()=>{pointer=null});
+c.addEventListener('wheel',e=>{e.preventDefault();const factor=e.deltaY<0?1.08:1/1.08;camera.z=Math.max(.5,Math.min(2,camera.z*factor));scheduleDraw();save()},{passive:false});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});
+window.addEventListener('pagehide',save);
+
 document.getElementById('zoom-in').onclick=()=>{camera.z=Math.min(2,camera.z*1.2);save();scheduleDraw()};
 document.getElementById('zoom-out').onclick=()=>{camera.z=Math.max(.5,camera.z/1.2);save();scheduleDraw()};
 document.getElementById('year').onclick=advance;const researchButton=document.getElementById('research');if(researchButton)researchButton.onclick=()=>{const cost=25+research*25;if(research>=10)return say('Maximum research level reached.');if(stock.coins<cost)return say('Research requires '+cost+' coins.');stock.coins-=cost;research++;say('Research completed! Industries will produce more each year.');stats();save()};
