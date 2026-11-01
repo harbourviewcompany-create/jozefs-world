@@ -1,0 +1,7 @@
+import {createClient} from 'https://esm.sh/@supabase/supabase-js@2.57.0';
+const cfg=window.JW_FAMILY_CLOUD,form=document.getElementById('family-login'),email=document.getElementById('family-email'),password=document.getElementById('family-password'),msg=document.getElementById('family-auth-status'),signout=document.getElementById('family-signout');
+const say=s=>msg.textContent=s;
+if(!cfg?.url||!cfg?.publishableKey){say('Family cloud configuration unavailable');}
+else{const db=createClient(cfg.url,cfg.publishableKey);async function refresh(){const {data:{user},error}=await db.auth.getUser();if(error||!user){say('Sign in with your existing family account.');form.hidden=false;signout.hidden=true;return}const {data:membership,error:me}=await db.from('family_members').select('family_id,role').eq('user_id',user.id).maybeSingle();if(me||!membership){say('Signed in, but this account is not yet part of the family. A parent must authorize membership.');form.hidden=true;signout.hidden=false;return}say('Signed in · '+membership.role+' · family membership verified');form.hidden=true;signout.hidden=false;window.dispatchEvent(new CustomEvent('jw:family-ready',{detail:{familyId:membership.family_id}}))}
+form.addEventListener('submit',async e=>{e.preventDefault();say('Signing in…');const {error}=await db.auth.signInWithPassword({email:email.value.trim(),password:password.value});password.value='';if(error)say('Sign-in failed: '+error.message);else await refresh()});
+signout.onclick=async()=>{await db.auth.signOut();await refresh()};await refresh();}
