@@ -8,11 +8,14 @@
     say('Loading bigger world…');
     const base = (document.currentScript && document.currentScript.src || location.href).replace(/[^/]+$/, '');
     const n = 11;
+    if(!window.DecompressionStream) throw new Error('Browser lacks gzip decompression');
     let b64 = '';
     for (let i = 0; i < n; i++) {
       const r = await fetch(base + 'block-world-up-' + i + '.txt?v=20261101-final', { cache: 'no-cache' });
       if (!r.ok) throw new Error('missing part ' + i);
-      b64 += await r.text();
+      const part=(await r.text()).trim();
+      if(!/^[A-Za-z0-9+/=]+$/.test(part))throw new Error('Corrupt world part '+i);
+      b64 += part;
       say('Loading world… ' + (i + 1) + '/' + n);
     }
     say('Unpacking…');
@@ -20,19 +23,20 @@
     if (typeof DecompressionStream === 'undefined') throw new Error('Need a modern browser');
     const stream = new Response(binary).body.pipeThrough(new DecompressionStream('gzip'));
     const code = await new Response(stream).text();
+    if(code.length<1000||!code.includes('BlockWorld'))throw new Error('World payload validation failed');
     say('Starting…');
     await run(code);
   } catch (err) {
     console.error(err);
     say('Loading fallback…');
     try {
-      const cdn = 'https://cdn.jsdelivr.net/gh/harbourviewcompany-create/jozefs-world@e6bd3db/block-world.js';
+      const cdn = './block-world-stable.js';
       const res = await fetch(cdn, { cache: 'no-cache' });
       if (!res.ok) throw new Error('CDN failed');
       await run(await res.text());
     } catch (e2) {
       console.error(e2);
-      say('World load failed. Hard-refresh.');
+      say('World load failed. Check connection and reload.');
     }
   }
 })();
