@@ -200,9 +200,9 @@
 (function(){
  const key='jw2d-family-role-v4',chooser=document.getElementById('bw-role-chooser');
  const show=()=>{chooser.style.display='grid';};
- if(!['Daddy','Jozef'].includes(localStorage.getItem(key)))show();
+ const preferred=localStorage.getItem('jw-player-role');if(!['Daddy','Jozef'].includes(localStorage.getItem(key))&&['daddy','jozef'].includes(preferred))localStorage.setItem(key,preferred==='daddy'?'Daddy':'Jozef');if(!['Daddy','Jozef'].includes(localStorage.getItem(key)))show();
  chooser.querySelectorAll('[data-player]').forEach(b=>b.addEventListener('click',()=>{
-  localStorage.setItem(key,b.dataset.player);chooser.style.display='none';
+  localStorage.setItem(key,b.dataset.player);localStorage.setItem('jw-player-role',b.dataset.player.toLowerCase());chooser.style.display='none';
   window.dispatchEvent(new CustomEvent('blockworld-player-selected',{detail:{player:b.dataset.player}}));
  }));
  window.BlockWorldChoosePlayer=show;
@@ -217,5 +217,5 @@
 <script src="./block-world-adventure.js?v=20261029-backup-v2" defer></script>
 <script src="./family-cloud-config.js?v=20261029" defer></script>
 <script type="module" src="./block-world-cloud.js?v=20261029-recovery-v8"></script>
-<button id="jw-enter-sports" type="button" hidden style="position:fixed;left:50%;transform:translateX(-50%);bottom:calc(172px + env(safe-area-inset-bottom));z-index:70;background:#147c65;border:2px solid #b2ffe6;border-radius:16px;color:white;padding:12px 18px;font:900 13px system-ui;box-shadow:0 4px 18px #001a30">ENTER STADIUM</button><script src="./jozefworld-universe.js?v=1"></script></body>
+<button id="jw-enter-sports" type="button" hidden style="position:fixed;left:50%;transform:translateX(-50%);bottom:calc(172px + env(safe-area-inset-bottom));z-index:70;background:#147c65;border:2px solid #b2ffe6;border-radius:16px;color:white;padding:12px 18px;font:900 13px system-ui;box-shadow:0 4px 18px #001a30">ENTER STADIUM</button><script src="./jozefworld-universe.js?v=4"></script><script type="module" src="./jozefworld-live-sync.js?v=3"></script></body>
 </html>
