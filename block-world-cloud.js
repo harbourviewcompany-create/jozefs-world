@@ -121,11 +121,31 @@ if(cfg?.url&&cfg?.publishableKey&&game&&el){
    else {set('Live connection retrying · cloud saves still available');const live=document.getElementById('coop-live');if(live){live.textContent='● SHARED WORLD · CONNECTING';live.classList.remove('online');}}
   });
  }
+ const versions=async()=>{const {data,error}=await db.rpc('jw_block_world_versions',{p_world:worldId});if(error)throw error;return data||[]};
+ const restoreVersion=async id=>{
+  if(!Number.isSafeInteger(Number(id))||Number(id)<=0)throw Error('Invalid backup');
+  if(!owner)throw Error('Only the active world host can restore a backup. Select the host device and try again.');
+  const {data,error}=await db.rpc('jw_block_world_version',{p_id:Number(id),p_world:worldId});
+  if(error||!valid(data))throw Error('Backup unavailable or invalid');
+  const current=game.getWorld?.();
+  if(!valid(current))throw Error('Current world is unavailable');
+  const {data:server,error:serverError}=await db.from('block_world_open').select('revision').eq('id',worldId).single();
+  if(serverError||server.revision!==revision)throw Error('World changed on another device. Reconnect before restoring.');
+  const {data:newRevision,error:saveError}=await db.rpc('block_world_open_save',{p_player:player,p_revision:revision,p_world:data});
+  if(saveError)throw saveError;
+  revision=newRevision;
+  game.useWorld(data);
+  game.saveHost?.();
+  lastSaved=JSON.stringify(data);offlineBase=structuredClone(data);offlineEdits=false;
+  cacheLocal();set('Historical world restored and saved to cloud');
+  await sendRelay({t:'world',w:data,stamp:Date.now()});
+  return true;
+ };
  window.BlockWorldRelay=Object.freeze({
   connected:()=>relay,
   send:sendRelay
  });
- window.BlockWorldCloud=Object.freeze({save,restore:load,status:()=>({player,owner,revision,connected:relay})});
+ window.BlockWorldCloud=Object.freeze({save,restore:load,versions,restoreVersion,status:()=>({player,owner,revision,connected:relay})});
  window.addEventListener('blockworld-player-selected',e=>{
   const next=e.detail?.player;
   if(!['Daddy','Jozef'].includes(next))return;
