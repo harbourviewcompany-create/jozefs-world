@@ -275,6 +275,19 @@ function forestAtmosphere(g,w,h,pan,t){
  g.restore();
 }
 
+function scenicLandmarks(g,w,h,pan,t){
+ const shift=pan*.045,fx=((w*.83-shift)%(w*2)+w*2)%(w*2);
+ const fy=h*.40;
+ g.save();g.globalAlpha=.75;
+ // Distant floating forest island, kept behind playable terrain.
+ g.fillStyle='#416a70';g.beginPath();g.moveTo(fx-68,fy);g.lineTo(fx+68,fy);g.lineTo(fx+30,fy+33);g.lineTo(fx+9,fy+58);g.lineTo(fx-28,fy+29);g.closePath();g.fill();
+ g.fillStyle='#4eac5a';rect(g,fx-69,fy-9,138,12,'#4eac5a');rect(g,fx-60,fy-13,120,5,'#a2e478');
+ for(let j=0;j<5;j++){const x=fx-47+j*24,top=fy-19-hash(j,5)*23;g.fillStyle='#265d46';g.beginPath();g.moveTo(x,top-22);g.lineTo(x-15,fy-10);g.lineTo(x+15,fy-10);g.closePath();g.fill();rect(g,x-2,fy-13,4,7,'#75543b')}
+ const fall=g.createLinearGradient(fx,fy,fx,fy+h*.42);fall.addColorStop(0,'#b5faffc9');fall.addColorStop(.6,'#47c8f6a0');fall.addColorStop(1,'#77dff100');
+ g.fillStyle=fall;g.beginPath();g.moveTo(fx+17,fy+5);g.lineTo(fx+35,fy+5);g.lineTo(fx+31+Math.sin(t*2)*2,fy+h*.40);g.lineTo(fx+19,fy+h*.40);g.closePath();g.fill();
+ if(quality==='cinematic')for(let j=0;j<7;j++){const y=fy+12+j*h*.048;rect(g,fx+20+Math.sin(t*3+j)*3,y,2,8,'#e6ffff88')}
+ g.restore();
+}
 function background(g,o){
  adaptFrame(o.time*1000);
  const w=o.w,h=o.h,t=o.time||0,pan=o.camX||0;
@@ -286,6 +299,7 @@ function background(g,o){
  if(o.biome===1){forestBackdrop(g,w,h,pan,t);distantTrees(g,w,h,pan,t);}
  else distantTrees(g,w,h,pan,t);
  cliff(g,w,h,pan,t);
+ if(o.biome===1)scenicLandmarks(g,w,h,pan,t);
  forestAtmosphere(g,w,h,pan,t);
  const haze=g.createLinearGradient(0,h*.56,0,h);haze.addColorStop(0,'#daebff00');haze.addColorStop(1,'#9fd3e550');g.fillStyle=haze;g.fillRect(0,h*.55,w,h*.45);
  g.restore();
