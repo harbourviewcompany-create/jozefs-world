@@ -1,0 +1,24 @@
+/* Frontier mobile game-first layout */
+@media(max-width:700px){
+body{padding:env(safe-area-inset-top) 6px env(safe-area-inset-bottom)}
+main{padding:0 0 28px}
+header{padding:5px 4px!important}
+header h1{font-size:22px!important;margin:4px 0!important}
+header p{font-size:11px!important;margin:2px 0 5px!important}
+header a{padding:7px!important;font-size:11px!important}
+#hud{font-size:12px!important;margin:5px 0!important;padding:7px 10px!important;line-height:1.5!important}
+#citizens{font-size:11px!important;margin:5px 0 9px!important;padding:6px 9px!important}
+.game{gap:8px!important}
+.viewport{border-radius:14px!important}
+.viewport canvas{height:min(65dvh,650px)!important;min-height:330px!important}
+.panel{padding:10px!important}
+.game>.panel{position:sticky;bottom:env(safe-area-inset-bottom);z-index:4;background:#102b3bea!important;border-color:#63998c!important;backdrop-filter:blur(16px)}
+.game>.panel h2{font-size:14px!important;margin:0 0 6px!important}
+.game>.panel p{display:none}
+.buttons{display:flex!important;overflow-x:auto;scroll-snap-type:x mandatory;gap:7px!important;padding:2px 2px 6px;scrollbar-width:none}
+.buttons::-webkit-scrollbar{display:none}
+.buttons button{flex:0 0 90px;min-height:52px!important;scroll-snap-align:start;font-size:11px!important;white-space:normal}
+.tools{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.tools button{font-size:11px!important}
+}
+#world{user-select:none;-webkit-user-select:none}
