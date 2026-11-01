@@ -1,0 +1,15 @@
+/* JozefWorld 2D visual upgrade - gameplay HUD */
+#ui{background:linear-gradient(145deg,#072744f5,#0b4e7de9)!important;border:2px solid #50dfff!important;border-radius:19px!important;box-shadow:0 0 16px #00caff66,0 8px 25px #001a3fa9!important;color:#f5ffff!important}
+#ui h2{color:#ffdf6a!important;text-shadow:0 2px 5px #0009}
+.health{border:2px solid #5ee8ff!important;background:linear-gradient(155deg,#07345af0,#0d5479eb)!important;box-shadow:0 0 17px #00baff70!important;border-radius:17px!important}
+#toolbar button,#toolbar .bw-hq-link{background:linear-gradient(180deg,#157ac0,#073c70)!important;border:2px solid #75eaff!important;border-radius:15px!important;color:#fff!important;box-shadow:inset 0 1px #b7f8ff99,0 4px 0 #04264b,0 0 12px #0acfff66!important}
+.hotbar{background:linear-gradient(180deg,#0b5682f2,#061f41f6)!important;border:2px solid #45ddff!important;border-radius:20px!important;box-shadow:inset 0 1px #aaf6ff88,0 0 18px #00cfff66,0 8px 25px #001c41b9!important}
+.slot{border:2px solid #7cc6e9!important;border-radius:12px!important;background:linear-gradient(150deg,#236a9a,#0d2d55)!important;box-shadow:inset 0 2px #ffffff2b,0 3px 8px #001a38!important}
+.slot.selected{border-color:#ffe168!important;box-shadow:0 0 0 2px #ffc833,0 0 18px #ffe04dba!important}
+.slot .count{font:900 12px system-ui!important;text-shadow:0 2px 4px #000!important}
+.ctrl-btn{border:2px solid #75e8ff!important;border-radius:19px!important;background:linear-gradient(145deg,#178fd4,#06478d)!important;box-shadow:inset 0 2px #d5faff88,0 4px 0 #052d60,0 0 13px #00c8ff80!important;font-weight:900!important}
+#btn-attack{background:linear-gradient(145deg,#f27a91,#98254c)!important;border-color:#ffb8c3!important;box-shadow:inset 0 2px #ffe5e5aa,0 4px 0 #5b1432,0 0 15px #ff577b8a!important}
+#movement-pad{border:3px solid #72e8ff!important;background:radial-gradient(circle,#4c9fc377,#042e55bd)!important;box-shadow:inset 0 0 20px #1ba8f766,0 0 18px #00cfff77!important}
+#pad-knob{background:radial-gradient(circle at 32% 25%,#e5ffff,#7fc1e5 50%,#1a588e)!important;border:3px solid #ddfaff!important;box-shadow:0 0 14px #99eaff99!important}
+@media(max-width:390px){.hotbar{padding:4px!important;gap:3px!important}.slot{width:clamp(31px,10vw,43px)!important;height:clamp(35px,11vw,47px)!important}#ui{max-width:51vw!important}}
+@media(prefers-reduced-motion:reduce){.ctrl-btn{transition:none!important}}
