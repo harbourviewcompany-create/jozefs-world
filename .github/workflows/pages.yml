@@ -33,7 +33,15 @@ jobs:
           node scripts/build-site-css.cjs --check
           node scripts/build-site-js.cjs --check
       - name: Validate interactive games before publishing
-        run: node --test tests/*.test.cjs
+        run: |
+          node --test tests/*.test.cjs tests/*.test.mjs
+          node --check jozefworld-frontier.js
+          node --check jozefworld-frontier-backups.js
+          node --check jozefworld-frontier-path.js
+          node --check jozefworld-frontier-3d-life.js
+          node --check jozefworld-frontier-3d-systems.js
+          node --check jozefworld-frontier-3d-performance.js
+          node --check jozefworld-frontier-3d.js
       - name: Build PRIME ARENA (Phaser 4, TypeScript 7, Vite 8)
         run: |
           npm ci --prefix prime --no-audit --no-fund
