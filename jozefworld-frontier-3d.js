@@ -1,5 +1,5 @@
 import {createLandscape,createController} from './jozefworld-frontier-3d-systems.js?v=1';
-import {makeHumanoid,populate,addAtmosphere} from './jozefworld-frontier-3d-life.js?v=1';
+import {makeHumanoid,populate,addAtmosphere} from './jozefworld-frontier-3d-life.js?v=2';
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 const canvas=document.getElementById('scene'),hud=document.getElementById('hud'),status=document.getElementById('status');
 const W=48,H=48,seed=72631;let saved={};try{saved=JSON.parse(localStorage.getItem('jw-frontier-v1'))||{}}catch{}
@@ -16,7 +16,7 @@ function box(x,y,z,w,h,d,mat){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,
 const treeTrunks=new THREE.InstancedMesh(new THREE.CylinderGeometry(.065,.1,.48,5),trunkMat,700),treeLeaves=new THREE.InstancedMesh(new THREE.ConeGeometry(.38,.95,6),leafMat,700);let treeCount=0;
 for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(terrain(x,y)!=='forest'||rand(x,y,11)<.36||treeCount>=700)continue;const px=x-W/2,pz=y-H/2;dummy.position.set(px,landscape.height(x,y)+.24,pz);dummy.scale.set(1,1,1);dummy.updateMatrix();treeTrunks.setMatrixAt(treeCount,dummy.matrix);dummy.position.set(px,landscape.height(x,y)+.9,pz);dummy.updateMatrix();treeLeaves.setMatrixAt(treeCount,dummy.matrix);treeCount++}
 treeTrunks.count=treeLeaves.count=treeCount;treeTrunks.instanceMatrix.needsUpdate=treeLeaves.instanceMatrix.needsUpdate=true;scene.add(treeTrunks,treeLeaves);
-const living=populate(scene,terrain,buildings,rand,{height:landscape.height,year:saved.year||1});addAtmosphere(scene);const count=living.structures.length;const avatarRig=makeHumanoid(scene,{shirt:0xd97740,pants:0x263e65});const avatar=avatarRig.root;
+const living=populate(scene,terrain,buildings,rand,{height:landscape.height,year:saved.year||1,roster:Array.isArray(saved.citizenRoster)?saved.citizenRoster:[]});addAtmosphere(scene);const count=living.structures.length;const avatarRig=makeHumanoid(scene,{shirt:0xd97740,pants:0x263e65});const avatar=avatarRig.root;
 let pos={x:18,y:22};try{const a=JSON.parse(localStorage.getItem('jw-frontier-avatar-v1'));if(Number.isInteger(a?.x)&&Number.isInteger(a?.y)&&a.x>=0&&a.x<48&&a.y>=0&&a.y<48)pos=a}catch{}
 if(terrain(pos.x,pos.y)==='water'){outer:for(let r=1;r<20;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const x=pos.x+dx,y=pos.y+dy;if(x>=0&&x<W&&y>=0&&y<H&&terrain(x,y)!=='water'){pos={x,y};break outer}}}
 const controller=createController({terrain,buildings,rig:avatarRig,camera,status,initial:pos,save:p=>{try{localStorage.setItem('jw-frontier-avatar-v1',JSON.stringify(p))}catch{}}});const held=new Set();for(const button of document.querySelectorAll('[data-dir]')){const d=button.dataset.dir;button.addEventListener('pointerdown',e=>{e.preventDefault();held.add(d);button.setPointerCapture(e.pointerId)});for(const name of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(name,()=>held.delete(d))}
@@ -26,4 +26,4 @@ const interact=document.createElement('button');interact.textContent='Interact';
 function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}window.addEventListener('resize',resize);resize();
 let last=0;function animate(time){requestAnimationFrame(animate);if(document.hidden){last=time;return}const dt=Math.min((time-last)/1000||0,.05);last=time;controller.update(dt,held,landscape.height,time);controller.cameraUpdate(dt);living.update(time,dt,saved.year||1);landscape.update(time);renderer.render(scene,camera)}
 
-hud.textContent='3D World · '+W+'×'+H+' terrain · '+count+' buildings · '+living.characters.length+' citizens · Year '+(saved.year||1);requestAnimationFrame(animate);
+hud.textContent='3D World · '+W+'×'+H+' terrain · '+count+' buildings · '+living.characters.length+' citizens · Year '+(saved.year||1);window.__jw3dReady=true;requestAnimationFrame(animate);
