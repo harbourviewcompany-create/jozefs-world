@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {frontierYearProduction} from '../jozefworld-frontier-economy.js';
 import {findFrontierPath} from '../jozefworld-frontier-path.js';
 import {createAdaptiveResolution} from '../jozefworld-frontier-3d-performance.js';
 
@@ -50,4 +51,27 @@ test('Backup guard validates, deduplicates, bounds and restores local worlds',as
  assert.equal(localStorage.getItem('jw-frontier-v1'),'{corrupt');
  localStorage.setItem('jw-frontier-v1',before);
  delete globalThis.window;delete globalThis.localStorage;
+});
+
+test('Economy is deterministic, does not mutate input, and connects roads from homes',()=>{
+ const buildings={'0,0':'home','1,0':'road','2,0':'road','3,0':'farm','6,6':'mill'};
+ const stock={wood:10,stone:10,food:10,coins:10};
+ const before=JSON.stringify({buildings,stock});
+ const a=frontierYearProduction(buildings,stock,0);
+ assert.deepEqual(a,frontierYearProduction(buildings,stock,0));
+ assert.equal(JSON.stringify({buildings,stock}),before);
+ assert.equal(a.residents,4);
+ assert.equal(a.employed,4);
+ assert.equal(a.connectedIndustries,1);
+ assert.equal(a.stock.food,20);
+ assert.equal(a.stock.wood,22);
+ assert.equal(a.stock.coins,19);
+});
+test('Economy clamps shortages and avoids bonuses for disconnected roads',()=>{
+ const b={'0,0':'home','5,5':'road','6,5':'farm'};
+ const result=frontierYearProduction(b,{wood:0,stone:0,food:0,coins:0});
+ assert.equal(result.connectedIndustries,0);
+ assert.equal(result.stock.food,6);
+ assert.equal(result.stock.coins,8);
+ assert.equal(frontierYearProduction({'0,0':'home'},{wood:0,stone:0,food:0,coins:0}).stock.food,0);
 });
