@@ -50,6 +50,13 @@ test('Backup guard validates, deduplicates, bounds and restores local worlds',as
  assert.equal(api.restore(0),false);
  assert.equal(localStorage.getItem('jw-frontier-v1'),'{corrupt');
  localStorage.setItem('jw-frontier-v1',before);
+ const originalSet=localStorage.setItem;
+ localStorage.setItem=(k,v)=>{if(k==='jw-frontier-backups-v1')throw Error('QuotaExceededError');return originalSet(k,v)};
+ const intact=localStorage.getItem('jw-frontier-v1');
+ assert.equal(api.restore(0),false,'Restore must abort if the current world cannot be backed up');
+ assert.equal(localStorage.getItem('jw-frontier-v1'),intact);
+ assert.equal(api.capture(world(20)),false,'Backup writes must report quota failure');
+ localStorage.setItem=originalSet;
  delete globalThis.window;delete globalThis.localStorage;
 });
 
