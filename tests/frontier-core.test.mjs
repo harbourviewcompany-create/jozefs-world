@@ -75,3 +75,20 @@ test('Economy clamps shortages and avoids bonuses for disconnected roads',()=>{
  assert.equal(result.stock.coins,8);
  assert.equal(frontierYearProduction({'0,0':'home'},{wood:0,stone:0,food:0,coins:0}).stock.food,0);
 });
+
+test('Economy only awards road bonuses to industries reachable from housing',()=>{
+ const base={'0,0':'home','1,0':'road','2,0':'road','3,0':'mill','8,8':'quarry'};
+ const first=frontierYearProduction(base,{wood:0,stone:0,food:0,coins:0});
+ assert.equal(first.connectedIndustries,1);
+ assert.equal(first.stock.wood,16);
+ assert.equal(first.stock.stone,8);
+ const isolated=frontierYearProduction({'0,0':'home','7,7':'road','8,7':'mill'},{wood:0,stone:0,food:0,coins:0});
+ assert.equal(isolated.connectedIndustries,0);
+ assert.equal(isolated.stock.wood,12);
+});
+test('Economy caps resources and does not create employment without homes',()=>{
+ const noHomes=frontierYearProduction({'1,1':'market'},{wood:999999,stone:999999,food:999999,coins:999999});
+ assert.equal(noHomes.residents,0);
+ assert.equal(noHomes.employed,0);
+ assert.deepEqual(noHomes.stock,{wood:999999,stone:999999,food:999999,coins:999999});
+});
