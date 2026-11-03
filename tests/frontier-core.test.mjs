@@ -32,6 +32,9 @@ test('Backup guard validates, deduplicates, bounds and restores local worlds',as
  const api=window.JWFrontierBackups;
  const world=(year,buildings={})=>JSON.stringify({version:1,seed:72631,year,buildings,stock:{wood:10,stone:10,food:10,coins:10}});
  assert.equal(api.valid(world(1,{'99,0':'home'})),false);
+ assert.equal(api.valid(JSON.stringify({version:1,seed:1,year:1,buildings:{},stock:{wood:'10',stone:10,food:10,coins:10}})),false);
+ assert.equal(api.valid(JSON.stringify({version:1,seed:1,year:1,buildings:{},stock:[10,10,10,10]})),false);
+ assert.equal(api.restore(-1),false);
  assert.equal(api.capture(world(1)),true);
  assert.equal(api.capture(world(1)),true);
  assert.equal(api.read().length,1);
@@ -41,5 +44,10 @@ test('Backup guard validates, deduplicates, bounds and restores local worlds',as
  assert.equal(api.restore(2),true);
  assert.equal(JSON.parse(localStorage.getItem('jw-frontier-v1')).year,5);
  assert.ok(api.read().some(x=>JSON.parse(x.raw).year===8));
+ const before=localStorage.getItem('jw-frontier-v1');
+ localStorage.setItem('jw-frontier-v1','{corrupt');
+ assert.equal(api.restore(0),false);
+ assert.equal(localStorage.getItem('jw-frontier-v1'),'{corrupt');
+ localStorage.setItem('jw-frontier-v1',before);
  delete globalThis.window;delete globalThis.localStorage;
 });
