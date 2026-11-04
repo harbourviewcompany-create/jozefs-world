@@ -1,21 +1,28 @@
 /* Daddy + Jozef two-phone co-op — reliable rewrite.
-   Daddy hosts a remembered private session. Jozef rejoins using the one-time invitation.
+   Fixed family room for only the two of you. No invite link required.
    One public PeerJS broker + TURN. */
 (()=>{
 'use strict';
 const g=window.BlockWorld2D,$=id=>document.getElementById(id);
 if(!g||!$('coop-panel'))return;
 
-const ROOM='dadd1e70cef2a7e0b10c4a9d3e5f6781';
-const HOST_KEY='jw2d-family-host-v4';
-const FAMILY_GUEST_KEY='jw2d-family-daddy-peer-v4';
+/* Fixed family room — only Daddy & Jozef. No invite link required. */
+const FIXED_HOST_ID='jw2d-dadd1e70cef2a7e0b10c4a9d3e5f6781';
+const ROOM=FIXED_HOST_ID;
+const HOST_KEY='jw2d-family-host-v5';
+const FAMILY_GUEST_KEY='jw2d-family-daddy-peer-v5';
 const FAMILY_ROLE_KEY='jw2d-family-role-v4';
-function randomRoom(){const b=new Uint8Array(16);crypto.getRandomValues(b);return [...b].map(x=>x.toString(16).padStart(2,'0')).join('');}
-function newHostId(){const id='jw2d-'+randomRoom();try{localStorage.setItem(HOST_KEY,id);}catch(_){}return id;}
-function savedHostId(){try{const id=localStorage.getItem(HOST_KEY);if(/^jw2d-[a-f0-9]{32}$/i.test(id||''))return id;}catch(_){}return newHostId();}
-let hostId='';
-let invitedHost='';
-try{const m=location.hash.match(/(?:^#|&)coop=(jw2d-[a-f0-9]{32})(?:&|$)/i);if(m){invitedHost=m[1];localStorage.setItem(FAMILY_GUEST_KEY,invitedHost);localStorage.setItem(FAMILY_ROLE_KEY,'Jozef');}else{const saved=localStorage.getItem(FAMILY_GUEST_KEY);if(/^jw2d-[a-f0-9]{32}$/i.test(saved||''))invitedHost=saved;}}catch(_){}
+function savedHostId(){
+  try{localStorage.setItem(HOST_KEY,FIXED_HOST_ID);localStorage.setItem(FAMILY_GUEST_KEY,FIXED_HOST_ID);}catch(_){}
+  return FIXED_HOST_ID;
+}
+let hostId=FIXED_HOST_ID;
+let invitedHost=FIXED_HOST_ID;
+try{
+  const m=location.hash.match(/(?:^#|&)coop=(jw2d-[a-f0-9]{32})(?:&|$)/i);
+  if(m){localStorage.setItem(FAMILY_ROLE_KEY,'Jozef');}
+  localStorage.setItem(FAMILY_GUEST_KEY,FIXED_HOST_ID);
+}catch(_){}
 const TAB_KEY='jozefs-block-2d-guest-v2';
 const MAX_TILE=62;
 const WORLD_SIZES=new Set(['280x110','180x72']);
@@ -52,15 +59,18 @@ g.requestAction=(kind,a,tile)=>{if(role!=='guest'||!ready||!a)return;send({t:'ac
 g.onBlockChanged=(x,y,id)=>{if(g.isHost())send({t:'edit',x,y,id});};
 
 function loader(on){const el=$('jozef-loading');if(el)el.classList.toggle('show',!!on);}
-function status(msg){
+function status(msg, keepLoader){
  const e=$('coop-status');
- if(e){e.textContent=msg;e.className=/fail|error|Could not|lost|timeout|not ready/i.test(msg)?'err':/Waiting|Yay|here|in!|Connected/i.test(msg)?'ok':'';}
+ if(e){e.textContent=msg;e.className=/fail|error|Could not|lost|timeout|not ready|offline/i.test(msg)?'err':/Waiting|Yay|here|in!|Connected|LIVE|joined|Ready/i.test(msg)?'ok':'';}
  const bar=$('coop-live');
  if(bar){
-  bar.textContent=role==='host'?(ready?'● '+playerName().toUpperCase()+' + '+otherName().toUpperCase()+' · LIVE':'● '+playerName().toUpperCase()+' · PLAYING SOLO'):role==='guest'?(ready?'● '+playerName().toUpperCase()+' · LIVE TOGETHER':'● '+playerName().toUpperCase()+' · JOINING…'):'● '+playerName().toUpperCase()+' · CONNECTING…';
-  bar.className=ready?'coop-live online':'coop-live';
+  const live=ready&&connected();
+  bar.textContent=role==='host'?(live?'● DADDY + JOZEF · LIVE':'● DADDY · WAITING FOR JOZEF'):role==='guest'?(live?'● JOZEF · LIVE WITH DADDY':'● JOZEF · FINDING DADDY'):'● SOLO';
+  bar.className=live?'coop-live online':'coop-live';
  }
- loader(false);
+ // Keep the kid-friendly loader up until we are fully connected
+ if(!keepLoader && !(role==='guest' && !ready)) loader(false);
+ if(keepLoader) loader(true);
 }
 function show(){$('coop-panel').classList.add('open');}
 function hide(){$('coop-panel').classList.remove('open');}
@@ -157,8 +167,7 @@ function lost(reason){
   status(reason+' · still waiting for Jozef');
   if($('coop-disconnect'))$('coop-disconnect').disabled=false;
  }else if(role==='guest'){
-  loader(false);show();
-  status('Lost Daddy. Tap green to try again.');
+  status('Lost Daddy. Trying again…', true);
   scheduleGuestRetry();
  }
 }
@@ -173,12 +182,11 @@ function attach(c){
   if($('coop-disconnect'))$('coop-disconnect').disabled=false;
   if(role==='host'){
    ready=false;g.role(myIndex());status('Jozef is joining…');
-   // Send world a few times to beat flaky first packet
    fullWorld();
    setTimeout(()=>{if(conn===c&&c.open&&role==='host')fullWorld();},400);
    setTimeout(()=>{if(conn===c&&c.open&&role==='host')fullWorld();},1200);
   }else{
-   ready=false;g.role(myIndex());status('Almost there…');
+   ready=false;g.role(myIndex());status('Almost there…', true);
   }
  });
  c.on('data',m=>{if(conn===c)onMsg(m);});
@@ -212,7 +220,7 @@ function leave(opts={}){
 }
 
 function startHost(){
- hostId=savedHostId();
+ hostId=savedHostId();invitedHost=FIXED_HOST_ID;
  try{localStorage.setItem(FAMILY_ROLE_KEY,'Daddy');}catch(_){}
  if(!window.Peer&&!window.BlockWorldRelay?.connected?.()){status('Not ready yet. Refresh the page.');return;}
  leave({skipReload:true,reason:'Starting…'});
@@ -237,9 +245,9 @@ function startHost(){
    peerReady=true;retryCount=0;
    if($('coop-code'))$('coop-code').value=hostId;
    if($('coop-share'))$('coop-share').disabled=false;
-   status('Ready! Tap SEND TO JOZEF’S PHONE, then keep this open.');
+   status('Ready! Keep this open. Jozef taps the green PLAY TOGETHER button.');
    const hint=$('coop-hint');
-   if(hint)hint.textContent='Now Jozef taps the big green button on his phone.';
+   if(hint)hint.textContent='Jozef: open the same game and tap the big green button.';
   });
   p.on('connection',c=>{
    if(gen!==hostGen){try{c.close();}catch(_){}return;}
@@ -255,7 +263,6 @@ function startHost(){
    if(gen!==hostGen||peer!==p)return;
    if(connected())return;
    const type=e?.type||'';
-   // ID still held from a previous tab/session — reclaim
    if(type==='unavailable-id'||type==='network'||type==='server-error'||type==='socket-error'||type==='socket-closed'){
     if(retryCount>=8){status('Could not start. Close other tabs of this game, wait 10s, try again.');show();return;}
     retryCount++;
@@ -274,19 +281,18 @@ function startHost(){
 function scheduleGuestRetry(){
  if(role!=='guest'||ready)return;
  clearTimeout(retryTimer);
- if(retryCount>=10){loader(false);status('Still looking for Daddy. Retrying automatically…');}
  retryCount++;
- status('Trying again…');
- retryTimer=setTimeout(()=>{if(role==='guest'&&!ready)join(true);},Math.min(15000,800+retryCount*500));
+ status('Still looking for Daddy… ('+retryCount+')', true);
+ retryTimer=setTimeout(()=>{if(role==='guest'&&!ready)join(true);},Math.min(12000,600+retryCount*400));
 }
 
 function join(isRetry){
- if(!invitedHost){status('First time only: Daddy sends one invite. After that just tap PLAY.');show();return;}
+ invitedHost=FIXED_HOST_ID;
+ try{localStorage.setItem(FAMILY_ROLE_KEY,'Jozef');localStorage.setItem(FAMILY_GUEST_KEY,FIXED_HOST_ID);}catch(_){}
  if(!window.Peer&&!window.BlockWorldRelay?.connected?.()){status('Not ready yet. Refresh the page.');return;}
  if(role==='host'){status('Stop first, then join.');return;}
  if(role==='guest'&&!isRetry&&(connected()||ready))return;
 
- // Clean previous guest attempt
  clearTimeout(joinTimer);clearTimeout(retryTimer);
  destroyPeer();
  role='guest';ready=false;peerReady=false;
@@ -295,7 +301,7 @@ function join(isRetry){
  try{g.saveHost();}catch(_){}
  if($('coop-disconnect'))$('coop-disconnect').disabled=false;
  loader(true);
- status('Finding Daddy…');
+ status('Finding Daddy…', true);
 
  const id=guestId();
  try{
@@ -306,14 +312,15 @@ function join(isRetry){
  p.on('open',()=>{
   if(peer!==p||role!=='guest')return;
   peerReady=true;
-  status('Connecting to Daddy…');
+  status('Connecting to Daddy…', true);
   try{
-   const c=p.connect(invitedHost,{reliable:true,serialization:'json'});
+   const c=p.connect(FIXED_HOST_ID,{reliable:true,serialization:'json'});
    attach(c);
   }catch(_){scheduleGuestRetry();}
  });
  p.on('error',e=>{
   if(peer!==p||role!=='guest'||ready)return;
+  status('Still looking for Daddy…', true);
   scheduleGuestRetry();
  });
  p.on('disconnected',()=>{
@@ -322,15 +329,12 @@ function join(isRetry){
   if(!ready)scheduleGuestRetry();
  });
 
- // Overall timeout
  joinTimer=setTimeout(()=>{
   if(role==='guest'&&!ready){
-   loader(false);
-   status('Daddy is offline. Waiting and trying again automatically…');
-   show();
+   status('Daddy is offline. Keep this open — trying again…', true);
    scheduleGuestRetry();
   }
- },30000);
+ },20000);
 }
 
 function tick(){
@@ -372,26 +376,15 @@ $('coop-join')?.addEventListener('click',()=>join(false));
 $('coop-disconnect')?.addEventListener('click',()=>leave({reason:'Stopped'}));
 $('coop-share')?.addEventListener('click',async()=>{
  if(role!=='host'||!peerReady){status('Wait for Daddy’s room to be ready.');return;}
- const url=new URL(location.href);url.hash='coop='+hostId;
- try{
-  if(navigator.share)await navigator.share({title:'JozefWorld',text:'Tap the green button to play with Daddy!',url:url.href});
-  else if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(url.href);status('Link copied — send to Jozef');}
- }catch(_){status('Waiting for Jozef…');}
+ status('No link needed — Jozef just taps the green button on his phone.');
 });
 
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&connected())lastPong=performance.now();});
 window.addEventListener('pagehide',()=>{if(role==='host')try{g.saveHost();}catch(_){}});
 
-// Shared link auto-join
-if(invitedHost){
- status('Family invite saved. Play alone now or choose PLAY TOGETHER.');
- try{history.replaceState(null,'',location.pathname+location.search);}catch(_){}
- // Solo play is the default; joining Daddy is an explicit choice.
-}else{
- if($('coop-code'))$('coop-code').value=ROOM;
- status('Daddy: tap START. First time only, send Jozef the invite.');
- // Daddy can play alone; hosting starts only when PLAY TOGETHER is chosen.
-}
+if($('coop-code'))$('coop-code').value=FIXED_HOST_ID;
+try{history.replaceState(null,'',location.pathname+location.search);}catch(_){}
+status('Daddy starts the room. Jozef taps the green button. Same game, two phones.');
 
 function relayMessage(m){
  if(role==='solo'||conn?.open)return;
