@@ -1,3 +1,4 @@
+import {liveProduction} from '../jozefworld-frontier-3d-live-economy.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {buildInWorld} from '../jozefworld-frontier-3d-build.js';
@@ -147,3 +148,6 @@ test('workplace descriptions distinguish production and homes without changing r
 
 test('3D construction pays costs, persists a house and creates four citizens',()=>{const original={stock:{wood:10,stone:4,coins:10,food:35},buildings:{},citizenRoster:[]};const result=buildInWorld(original,'home',4,5,()=> 'grass',100);assert.equal(result.ok,true);assert.equal(result.world.buildings['4,5'],'home');assert.equal(result.world.stock.wood,2);assert.equal(result.world.stock.stone,2);assert.equal(result.world.stock.coins,5);assert.equal(result.world.citizenRoster.length,4);assert.equal(result.world.constructionTimes['4,5'],100);assert.equal(original.buildings['4,5'],undefined)});
 test('3D construction rejects water, occupied tiles and missing resources',()=>{const world={stock:{wood:0,stone:0,coins:0},buildings:{'2,2':'home'}};assert.equal(buildInWorld(world,'home',2,2,()=> 'grass').ok,false);assert.equal(buildInWorld(world,'home',3,3,()=> 'water').ok,false);assert.match(buildInWorld(world,'home',3,3,()=> 'grass').reason,/Need/)});
+
+test('continuous economy produces baseline materials for first house',()=>{const r=liveProduction({}, {wood:4,stone:6,food:35,coins:13},0);assert.equal(r.stock.wood,5);assert.equal(r.stock.stone,7)});
+test('continuous economy only staffs available jobs with residents',()=>{const buildings={'1,1':'home','2,2':'mill','3,3':'farm'};const r=liveProduction(buildings,{wood:0,stone:0,food:0,coins:0},2);assert.equal(r.stock.wood,4);assert.equal(r.stock.food,0);assert.equal(r.stock.coins,0)});
