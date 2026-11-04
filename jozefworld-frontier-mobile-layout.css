@@ -11,8 +11,12 @@
  .frontier-mission strong{grid-column:1;font-size:11px!important}
  .frontier-mission span{grid-column:1;line-height:1.35}
  .frontier-mission progress{grid-column:2;grid-row:1/span 2;width:100%!important;align-self:center}
+ .frontier-mission #quick-house,.frontier-mission #quick-year{grid-column:span 1;min-height:42px;padding:7px 8px;font-size:11px;font-weight:750;background:#a97432;color:#fff;border:1px solid #f3ce82}
+ .frontier-mission #quick-year{background:#24576a;border-color:#76b9c0}
+ .frontier-mission button[hidden]{display:none}
+
  .game{display:flex!important;flex-direction:column!important;gap:7px!important}
- .viewport canvas{height:clamp(300px,54dvh,600px)!important;min-height:300px!important}
+ .viewport canvas{height:clamp(300px,44dvh,480px)!important;min-height:300px!important}
  .game>.panel{position:static!important}
  .game>.panel p{display:none}
  .game>.panel h2{margin:0 0 6px!important}
