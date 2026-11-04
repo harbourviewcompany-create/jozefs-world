@@ -42,3 +42,6 @@
 #production-hud{top:calc(100px + env(safe-area-inset-top))}
 #activity-hud{top:calc(141px + env(safe-area-inset-top))}
 }
+
+#settlement-tip button{justify-self:start;min-height:32px;font-size:11px;padding:5px 12px;border-radius:8px;background:#28566a}
+@media(max-height:720px){#settlement-tip{top:calc(170px + env(safe-area-inset-top));padding:8px}#activity-hud{display:none}#build-panel{max-height:120px}}
