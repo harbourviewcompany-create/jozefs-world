@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {describeWorkplace} from '../jozefworld-frontier-workplaces.js';
 import {citizenRoutine,citizenDestination} from '../jozefworld-frontier-npc-routines.js';
 import {contributeToProject} from '../jozefworld-frontier-project.js';
 import {applyFrontierTrade} from '../jozefworld-frontier-trade.js';
@@ -140,3 +141,5 @@ test('NPC schedules are deterministic, staggered and route to work or home',()=>
  assert.equal(citizenDestination('Commuting home'),'home');
  assert.equal(citizenRoutine(0,1,0,false),'At home');
 });
+
+test('workplace descriptions distinguish production and homes without changing resources',()=>{assert.match(describeWorkplace('farm').detail,/Food production/);assert.match(describeWorkplace('quarry').detail,/Stone production/);assert.match(describeWorkplace('mill').detail,/Wood production/);assert.match(describeWorkplace('market').detail,/Coins/);assert.equal(describeWorkplace('unknown').label,'Building')});
