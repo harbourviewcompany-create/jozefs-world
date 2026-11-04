@@ -46,6 +46,7 @@ jobs:
           node --check jozefworld-frontier-workplaces.js
           node --check jozefworld-frontier-3d-build.js
           node --check jozefworld-frontier-3d-build-ui.js
+          node --check jozefworld-frontier-3d-live-economy.js
           node --check jozefworld-frontier-3d-life.js
           node --check jozefworld-frontier-3d-systems.js
           node --check jozefworld-frontier-3d-performance.js
