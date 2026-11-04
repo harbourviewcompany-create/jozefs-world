@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {citizenRoutine,citizenDestination} from '../jozefworld-frontier-npc-routines.js';
 import {contributeToProject} from '../jozefworld-frontier-project.js';
 import {applyFrontierTrade} from '../jozefworld-frontier-trade.js';
 import {frontierYearProduction} from '../jozefworld-frontier-economy.js';
@@ -129,4 +130,13 @@ test('Community Hall ignores invalid and fractional resource offers',()=>{
  const a=contributeToProject(null,{wood:10,stone:10,coins:10},{wood:'10',stone:Infinity,coins:.2});
  assert.equal(a.changed,false);
  assert.deepEqual(a.project.progress,{wood:0,stone:0,coins:0});
+});
+
+test('NPC schedules are deterministic, staggered and route to work or home',()=>{
+ assert.equal(citizenRoutine(1000,1,0,true),citizenRoutine(1000,1,0,true));
+ assert.notEqual(citizenRoutine(10000,1,0,true),citizenRoutine(10000,1,2,true));
+ assert.equal(citizenDestination('Working'),'work');
+ assert.equal(citizenDestination('Commuting to work'),'work');
+ assert.equal(citizenDestination('Commuting home'),'home');
+ assert.equal(citizenRoutine(0,1,0,false),'At home');
 });
