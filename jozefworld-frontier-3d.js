@@ -1,7 +1,7 @@
 import {describeWorkplace} from './jozefworld-frontier-workplaces.js?v=1';
 import {createAdaptiveResolution} from './jozefworld-frontier-3d-performance.js?v=1';
 import {createLandscape,createController} from './jozefworld-frontier-3d-systems.js?v=2';
-import {makeHumanoid,populate,addAtmosphere} from './jozefworld-frontier-3d-life.js?v=7';
+import {makeHumanoid,populate,addAtmosphere} from './jozefworld-frontier-3d-life.js?v=8';
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 const canvas=document.getElementById('scene'),hud=document.getElementById('hud'),status=document.getElementById('status');
 const W=48,H=48,seed=72631;let saved={};try{saved=JSON.parse(localStorage.getItem('jw-frontier-v1'))||{}}catch{}
@@ -28,4 +28,5 @@ const interact=document.createElement('button');interact.textContent='Interact';
 function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;resolution.resize();camera.aspect=w/h;camera.updateProjectionMatrix()}window.addEventListener('resize',resize);resize();
 let last=0;function animate(time){requestAnimationFrame(animate);if(document.hidden){last=time;return}const dt=Math.min((time-last)/1000||0,.05);last=time;resolution.tick(dt);controller.update(dt,held,landscape.height,time);controller.cameraUpdate(dt);living.update(time,dt,saved.year||1);landscape.update(time);renderer.render(scene,camera)}
 
+document.getElementById('settlement-tip').hidden=living.characters.length>0;
 hud.textContent='3D World · '+W+'×'+H+' terrain · '+count+' buildings · '+living.characters.length+' citizens · Year '+(saved.year||1);window.__jw3dReady=true;requestAnimationFrame(animate);
