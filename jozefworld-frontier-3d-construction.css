@@ -15,3 +15,30 @@
 #build-confirm[hidden]{display:none}
 #build-confirm button{font-size:12px;min-height:42px;padding:8px 14px;background:#a87534}
 @media(max-width:420px){#build-panel{bottom:calc(236px + env(safe-area-inset-bottom))}#build-confirm{bottom:calc(410px + env(safe-area-inset-bottom))}#build-info{bottom:calc(370px + env(safe-area-inset-bottom))!important}#production-hud{top:108px}#activity-hud{top:147px}}
+
+/* Mobile HUD: never cover movement, camera actions, or the game world. */
+#hud{top:calc(58px + env(safe-area-inset-top));left:10px;right:10px;max-width:none;padding:8px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#production-hud{top:calc(100px + env(safe-area-inset-top));left:10px;right:10px;max-width:none;z-index:3;gap:5px}
+#production-hud span{padding:6px 7px;font-size:10px}
+#activity-hud{top:calc(141px + env(safe-area-inset-top));left:10px;max-width:calc(100vw - 20px);font-size:10px;pointer-events:none}
+#settlement-tip{top:calc(177px + env(safe-area-inset-top));left:10px;right:10px;max-width:none;padding:10px 12px;box-shadow:0 5px 18px #0005}
+#settlement-tip strong{font-size:12px}
+#settlement-tip span{font-size:11px}
+#settlement-tip a{padding:7px 10px;font-size:11px}
+#build-toggle{bottom:calc(183px + env(safe-area-inset-bottom));right:10px;min-height:44px;font-size:12px;padding:0 12px}
+#build-panel{bottom:calc(238px + env(safe-area-inset-bottom));left:10px;right:10px;max-height:142px;padding:7px}
+#build-panel button{min-height:82px;flex-basis:135px;padding:9px}
+#build-info{bottom:calc(391px + env(safe-area-inset-bottom))!important;left:10px;right:10px;max-width:none;font-size:11px}
+#build-confirm{bottom:calc(391px + env(safe-area-inset-bottom));left:10px;right:10px;max-width:none}
+#status{bottom:calc(185px + env(safe-area-inset-bottom));left:10px;right:auto;max-width:175px;pointer-events:none}
+#actions{bottom:calc(14px + env(safe-area-inset-bottom));right:10px;gap:6px}
+#actions button{min-height:38px;padding:7px 9px;font-size:11px}
+#controls{bottom:calc(14px + env(safe-area-inset-bottom));left:10px}
+@media(max-width:420px){
+#build-toggle{bottom:calc(184px + env(safe-area-inset-bottom))}
+#build-panel{bottom:calc(237px + env(safe-area-inset-bottom))}
+#build-info{bottom:calc(391px + env(safe-area-inset-bottom))!important}
+#build-confirm{bottom:calc(391px + env(safe-area-inset-bottom))}
+#production-hud{top:calc(100px + env(safe-area-inset-top))}
+#activity-hud{top:calc(141px + env(safe-area-inset-top))}
+}
