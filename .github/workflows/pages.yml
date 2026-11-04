@@ -43,6 +43,7 @@ jobs:
           node --check jozefworld-frontier-project.js
           node --check jozefworld-frontier-mobile-nav.js
           node --check jozefworld-frontier-npc-routines.js
+          node --check jozefworld-frontier-workplaces.js
           node --check jozefworld-frontier-3d-life.js
           node --check jozefworld-frontier-3d-systems.js
           node --check jozefworld-frontier-3d-performance.js
