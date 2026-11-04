@@ -1,0 +1,29 @@
+/* iPhone-first game layout. Desktop sections remain fully visible. */
+@media(max-width:700px){
+ body{padding-bottom:calc(70px + env(safe-area-inset-bottom))!important;overflow-x:hidden}
+ main{padding-bottom:12px!important}
+ header{padding:6px 5px!important}
+ header h1{font-size:20px!important}
+ header p{display:none}
+ #hud{font-size:11px!important;line-height:1.3!important;margin:4px 0!important}
+ #citizens{font-size:11px!important;margin:4px 0!important}
+ .frontier-mission{display:grid!important;grid-template-columns:minmax(0,1fr) 70px;gap:3px 8px!important;padding:8px 10px!important;margin:5px 0 8px!important}
+ .frontier-mission strong{grid-column:1;font-size:11px!important}
+ .frontier-mission span{grid-column:1;line-height:1.35}
+ .frontier-mission progress{grid-column:2;grid-row:1/span 2;width:100%!important;align-self:center}
+ .game{display:flex!important;flex-direction:column!important;gap:7px!important}
+ .viewport canvas{height:clamp(300px,54dvh,600px)!important;min-height:300px!important}
+ .game>.panel{position:static!important}
+ .game>.panel p{display:none}
+ .game>.panel h2{margin:0 0 6px!important}
+ .buttons button{flex:0 0 104px!important;min-height:52px!important}
+ #expedition,#strategy,#community-project,#research-panel,#people-panel,.game>.panel{display:none!important}
+ #expedition.frontier-mobile-active,#strategy.frontier-mobile-active,#community-project.frontier-mobile-active,#research-panel.frontier-mobile-active,#people-panel.frontier-mobile-active,.game>.panel.frontier-mobile-active{display:block!important}
+ #frontier-mobile-nav{position:fixed;z-index:30;bottom:0;left:0;right:0;display:flex;gap:3px;overflow-x:auto;padding:7px 7px calc(7px + env(safe-area-inset-bottom));background:#071b2cf5;border-top:1px solid #568f9b;box-shadow:0 -8px 24px #0008;scrollbar-width:none}
+ #frontier-mobile-nav button{flex:1 0 auto;min-width:64px;min-height:44px;padding:7px 9px;border-radius:10px;background:#173a4d;color:#c4e5e7;border:1px solid #3d6675;font-size:11px;font-weight:750}
+ #frontier-mobile-nav button[aria-selected=true]{background:#a97432;color:#fff8e6;border-color:#f3ce82}
+ #journal{max-height:64px;overflow:auto}
+ .tools{gap:6px!important}
+ .tools button,.tools a{min-height:44px}
+}
+@media(min-width:701px){#frontier-mobile-nav{display:none}}
