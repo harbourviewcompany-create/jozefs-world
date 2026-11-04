@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {applyFrontierTrade} from '../jozefworld-frontier-trade.js';
 import {frontierYearProduction} from '../jozefworld-frontier-economy.js';
 import {findFrontierPath} from '../jozefworld-frontier-path.js';
 import {createAdaptiveResolution} from '../jozefworld-frontier-3d-performance.js';
@@ -98,4 +99,14 @@ test('Economy caps resources and does not create employment without homes',()=>{
  assert.equal(noHomes.residents,0);
  assert.equal(noHomes.employed,0);
  assert.deepEqual(noHomes.stock,{wood:999999,stone:999999,food:999999,coins:999999});
+});
+
+test('Cooperative trades reject malformed values and preserve inputs',()=>{
+ const stock={wood:10,stone:20,food:30,coins:7};
+ const result=applyFrontierTrade(stock,{wood:5,stone:'500',food:Infinity,coins:99});
+ assert.deepEqual(result.stock,{wood:15,stone:20,food:30,coins:7});
+ assert.deepEqual(stock,{wood:10,stone:20,food:30,coins:7});
+ assert.equal(result.changed,true);
+ assert.equal(applyFrontierTrade(stock,{wood:-1,food:0,stone:NaN}).changed,false);
+ assert.equal(applyFrontierTrade({wood:999998,stone:0,food:0},{wood:30,stone:100,food:.5}).stock.wood,999999);
 });
