@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {contributeToProject} from '../jozefworld-frontier-project.js';
 import {applyFrontierTrade} from '../jozefworld-frontier-trade.js';
 import {frontierYearProduction} from '../jozefworld-frontier-economy.js';
 import {findFrontierPath} from '../jozefworld-frontier-path.js';
@@ -109,4 +110,23 @@ test('Cooperative trades reject malformed values and preserve inputs',()=>{
  assert.equal(result.changed,true);
  assert.equal(applyFrontierTrade(stock,{wood:-1,food:0,stone:NaN}).changed,false);
  assert.equal(applyFrontierTrade({wood:999998,stone:0,food:0},{wood:30,stone:100,food:.5}).stock.wood,999999);
+});
+
+test('Community Hall contributions are bounded and conserve resources',()=>{
+ const stock={wood:100,stone:40,coins:45,food:7};
+ const a=contributeToProject(null,stock,{wood:999,stone:8,coins:10},'Dad');
+ assert.deepEqual(a.accepted,{wood:60,stone:8,coins:10});
+ assert.deepEqual(a.stock,{wood:40,stone:32,coins:35,food:7});
+ assert.equal(a.project.complete,false);
+ const b=contributeToProject(a.project,a.stock,{wood:99,stone:99,coins:99},'Jozef');
+ assert.equal(b.project.complete,true);
+ assert.deepEqual(b.project.progress,{wood:60,stone:35,coins:40});
+ assert.deepEqual(b.stock,{wood:40,stone:5,coins:5,food:7});
+ assert.equal(contributeToProject(b.project,b.stock,{wood:10},'Dad').changed,false);
+ assert.deepEqual(stock,{wood:100,stone:40,coins:45,food:7});
+});
+test('Community Hall ignores invalid and fractional resource offers',()=>{
+ const a=contributeToProject(null,{wood:10,stone:10,coins:10},{wood:'10',stone:Infinity,coins:.2});
+ assert.equal(a.changed,false);
+ assert.deepEqual(a.project.progress,{wood:0,stone:0,coins:0});
 });
