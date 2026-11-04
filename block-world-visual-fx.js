@@ -1,6 +1,17 @@
-/* JozefWorld visual FX — camera feel, screen shake, torch glow, particle polish */
+/* JozefWorld visual FX — HUD CSS inject, screen shake, warm ground light */
 (() => {
   'use strict';
+  // Self-inject boost stylesheet (no HTML edit required)
+  try {
+    if (!document.querySelector('link[data-jw-visual-boost]')) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = './block-world-visual-boost.css?v=20261104';
+      link.setAttribute('data-jw-visual-boost', '1');
+      document.head.appendChild(link);
+    }
+  } catch (_) {}
+
   let shake = 0;
   let shakeX = 0, shakeY = 0;
 
@@ -22,7 +33,7 @@
         shakeX = (Math.random() - 0.5) * shake;
         shakeY = (Math.random() - 0.5) * shake;
         shake *= 0.82;
-        canvas.style.transform = `translate(${shakeX.toFixed(1)}px,${shakeY.toFixed(1)}px)`;
+        canvas.style.transform = 'translate(' + shakeX.toFixed(1) + 'px,' + shakeY.toFixed(1) + 'px)';
       } else if (shakeX || shakeY) {
         shakeX = shakeY = 0;
         canvas.style.transform = '';
@@ -40,7 +51,7 @@
   }
 
   document.addEventListener('pointerdown', (e) => {
-    const id = e.target?.id || '';
+    const id = e.target && e.target.id || '';
     if (id === 'btn-mine' || id === 'btn-place' || id === 'btn-attack' || id === 'btn-jump') {
       pulseShake(id === 'btn-attack' ? 6 : 2.5);
     }
