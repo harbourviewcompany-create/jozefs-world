@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {buildInWorld} from '../jozefworld-frontier-3d-build.js';
 import {describeWorkplace} from '../jozefworld-frontier-workplaces.js';
 import {citizenRoutine,citizenDestination} from '../jozefworld-frontier-npc-routines.js';
 import {contributeToProject} from '../jozefworld-frontier-project.js';
@@ -143,3 +144,6 @@ test('NPC schedules are deterministic, staggered and route to work or home',()=>
 });
 
 test('workplace descriptions distinguish production and homes without changing resources',()=>{assert.match(describeWorkplace('farm').detail,/Food production/);assert.match(describeWorkplace('quarry').detail,/Stone production/);assert.match(describeWorkplace('mill').detail,/Wood production/);assert.match(describeWorkplace('market').detail,/Coins/);assert.equal(describeWorkplace('unknown').label,'Building')});
+
+test('3D construction pays costs, persists a house and creates four citizens',()=>{const original={stock:{wood:10,stone:4,coins:10,food:35},buildings:{},citizenRoster:[]};const result=buildInWorld(original,'home',4,5,()=> 'grass',100);assert.equal(result.ok,true);assert.equal(result.world.buildings['4,5'],'home');assert.equal(result.world.stock.wood,2);assert.equal(result.world.stock.stone,2);assert.equal(result.world.stock.coins,5);assert.equal(result.world.citizenRoster.length,4);assert.equal(result.world.constructionTimes['4,5'],100);assert.equal(original.buildings['4,5'],undefined)});
+test('3D construction rejects water, occupied tiles and missing resources',()=>{const world={stock:{wood:0,stone:0,coins:0},buildings:{'2,2':'home'}};assert.equal(buildInWorld(world,'home',2,2,()=> 'grass').ok,false);assert.equal(buildInWorld(world,'home',3,3,()=> 'water').ok,false);assert.match(buildInWorld(world,'home',3,3,()=> 'grass').reason,/Need/)});
