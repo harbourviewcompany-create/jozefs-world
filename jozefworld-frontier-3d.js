@@ -2,7 +2,7 @@ import {frontierYearProduction} from './jozefworld-frontier-economy.js?v=1';
 import {install3DBuild} from './jozefworld-frontier-3d-build-ui.js?v=2';
 import {describeWorkplace} from './jozefworld-frontier-workplaces.js?v=1';
 import {createAdaptiveResolution} from './jozefworld-frontier-3d-performance.js?v=1';
-import {createLandscape,createController} from './jozefworld-frontier-3d-systems.js?v=3';
+import {createLandscape,createController} from './jozefworld-frontier-3d-systems.js?v=4';
 import {makeHumanoid,populate,addAtmosphere} from './jozefworld-frontier-3d-life.js?v=10';
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 const canvas=document.getElementById('scene'),hud=document.getElementById('hud'),status=document.getElementById('status');
