@@ -1,5 +1,5 @@
 import {createAdaptiveResolution} from './jozefworld-frontier-3d-performance.js?v=1';
-import {createLandscape,createController} from './jozefworld-frontier-3d-systems.js?v=1';
+import {createLandscape,createController} from './jozefworld-frontier-3d-systems.js?v=2';
 import {makeHumanoid,populate,addAtmosphere} from './jozefworld-frontier-3d-life.js?v=3';
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 const canvas=document.getElementById('scene'),hud=document.getElementById('hud'),status=document.getElementById('status');
