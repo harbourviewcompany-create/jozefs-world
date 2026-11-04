@@ -1,3 +1,4 @@
+import {commitFrontierWorld} from '../jozefworld-frontier-3d-persistence.js';
 import {liveProduction} from '../jozefworld-frontier-3d-live-economy.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -151,3 +152,25 @@ test('3D construction rejects water, occupied tiles and missing resources',()=>{
 
 test('continuous economy produces baseline materials for first house',()=>{const r=liveProduction({}, {wood:4,stone:6,food:35,coins:13},0);assert.equal(r.stock.wood,5);assert.equal(r.stock.stone,7)});
 test('continuous economy only staffs available jobs with residents',()=>{const buildings={'1,1':'home','2,2':'mill','3,3':'farm'};const r=liveProduction(buildings,{wood:0,stone:0,food:0,coins:0},2);assert.equal(r.stock.wood,4);assert.equal(r.stock.food,0);assert.equal(r.stock.coins,0)});
+
+test('3D persistence preserves the old save when recovery backup fails',()=>{
+ const state=new Map([['jw-frontier-v1','old-world']]);
+ const storage={getItem:k=>state.get(k)??null,setItem:(k,v)=>state.set(k,v)};
+ const backups={valid:()=>true,capture:()=>false};
+ const result=commitFrontierWorld({year:2},{storage,backups});
+ assert.equal(result.ok,false);
+ assert.equal(state.get('jw-frontier-v1'),'old-world');
+});
+test('3D persistence saves after successful recovery and rejects invalid writes',()=>{
+ const state=new Map([['jw-frontier-v1','old-world']]),events=[];
+ const storage={getItem:k=>state.get(k)??null,setItem:(k,v)=>{events.push(k);state.set(k,v)}};
+ const backups={valid:raw=>raw!=='bad',capture:()=>{events.push('backup');return true}};
+ const result=commitFrontierWorld({version:1,year:2},{storage,backups});
+ assert.equal(result.ok,true);
+ assert.deepEqual(events,['backup','jw-frontier-v1']);
+ assert.equal(JSON.parse(state.get('jw-frontier-v1')).year,2);
+});
+test('3D persistence never overwrites an unbacked legacy save when storage is full',()=>{
+ const storage={getItem:()=>'{legacy}',setItem:()=>{throw Error('quota')}};
+ assert.equal(commitFrontierWorld({year:3},{storage,backups:{valid:()=>false}}).ok,false);
+});
