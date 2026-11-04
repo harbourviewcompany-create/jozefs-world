@@ -1,10 +1,16 @@
-/* Temporary art bootstrap — loads last known-good scenic renderer, then tries local enhanced payload */
+/* Art bootstrap — scenic renderer + visual FX */
 (async function () {
   'use strict';
   async function run(code) { (0, eval)(code); }
+  // Load visual FX early (HUD glow, shake, warm light)
+  try {
+    const fx = document.createElement('script');
+    fx.src = './block-world-visual-fx.js?v=20261104';
+    fx.defer = true;
+    document.head.appendChild(fx);
+  } catch (_) {}
   try {
     const base = (document.currentScript && document.currentScript.src || location.href).replace(/[^/]+$/, '');
-    // Prefer enhanced art chunks if present
     let b64 = '';
     let ok = true;
     for (let i = 0; i < 5; i++) {
