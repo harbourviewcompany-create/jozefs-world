@@ -174,3 +174,6 @@ test('3D persistence never overwrites an unbacked legacy save when storage is fu
  const storage={getItem:()=>'{legacy}',setItem:()=>{throw Error('quota')}};
  assert.equal(commitFrontierWorld({year:3},{storage,backups:{valid:()=>false}}).ok,false);
 });
+
+test('job-aware production respects each workplace and excludes idle citizens',()=>{const buildings={'1,1':'home','2,2':'mill','3,3':'farm'};const workers=[{job:'Farmer',activity:'Working at farm'},{job:'Carpenter',activity:'Working at mill'},{job:'Mason',activity:'At home'}];const r=liveProduction(buildings,{wood:2,stone:2,food:3,coins:4},workers);assert.equal(r.stock.wood,4);assert.equal(r.stock.food,6);assert.equal(r.stock.stone,2);assert.equal(r.working,2)});
+test('workers cannot produce resources without matching buildings',()=>{const r=liveProduction({'1,1':'home'},{wood:0,stone:0,food:0,coins:0},[{job:'Farmer',activity:'Working at farm'}]);assert.equal(r.stock.food,0)});
