@@ -45,3 +45,8 @@
 
 #settlement-tip button{justify-self:start;min-height:32px;font-size:11px;padding:5px 12px;border-radius:8px;background:#28566a}
 @media(max-height:720px){#settlement-tip{top:calc(170px + env(safe-area-inset-top));padding:8px}#activity-hud{display:none}#build-panel{max-height:120px}}
+
+#resource-events{position:absolute;inset:0;pointer-events:none;z-index:3;overflow:hidden}
+.resource-pop{position:absolute;transform:translate(-50%,-50%);padding:7px 11px;border-radius:16px;background:#173d31e8;border:1px solid #b3e4a2;color:#e2ffcf;font-size:12px;font-weight:850;white-space:nowrap;animation:resource-rise 2.2s ease-out forwards;box-shadow:0 4px 18px #0006}
+@keyframes resource-rise{0%{opacity:0;transform:translate(-50%,8px) scale(.8)}15%{opacity:1;transform:translate(-50%,-8px) scale(1)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-64px) scale(1.05)}}
+@media(prefers-reduced-motion:reduce){.resource-pop{animation:none;opacity:1}}
