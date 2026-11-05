@@ -10,8 +10,22 @@
     if (!citizen || typeof citizen !== 'object') return null;
     const home = citizen.home, work = citizen.work;
     if (!home || !work) return null;
-    const path = roads.route(roadTiles, home, work, options);
-    return path ? { citizenId: citizen.id == null ? null : String(citizen.id), path, steps: path.length - 1 } : null;
+    // Houses and workplaces normally occupy non-road tiles. Find road entrances
+    // without requiring the building itself to be a road.
+    const valid = p => p && Number.isSafeInteger(p.x) && Number.isSafeInteger(p.z);
+    if (!valid(home) || !valid(work) || !Array.isArray(roadTiles)) return null;
+    const entries = point => [point, {x:point.x+1,z:point.z}, {x:point.x-1,z:point.z},
+      {x:point.x,z:point.z+1}, {x:point.x,z:point.z-1}];
+    const network = roads.build(roadTiles, options);
+    const candidates = point => entries(point).filter(p => network.has(p.x+','+p.z));
+    let best = null;
+    for (const entrance of candidates(home)) for (const exit of candidates(work)) {
+      const roadPath = roads.route(roadTiles, entrance, exit, options);
+      if (!roadPath) continue;
+      const path = [home, ...roadPath, work].filter((p,i,a) => i===0 || p.x!==a[i-1].x || p.z!==a[i-1].z);
+      if (!best || path.length < best.length) best = path;
+    }
+    return best ? { citizenId: citizen.id == null ? null : String(citizen.id), path: best, steps: best.length - 1 } : null;
   }
   function positionAt(commute, progress) {
     if (!commute || !Array.isArray(commute.path) || !commute.path.length || !Number.isFinite(progress)) return null;
