@@ -22,3 +22,18 @@ test('progress clamps and does not mutate the citizen or route', () => {
   assert.equal(positionAt(commute, NaN), null);
   assert.equal(citizen.id, 2);
 });
+
+test('houses and workplaces connect through adjacent road entrances', () => {
+  const network=[{x:1,z:0},{x:2,z:0},{x:3,z:0}];
+  const commute=plan({id:'builder',home:{x:0,z:0},work:{x:4,z:0}},network);
+  assert.deepEqual(commute.path,[{x:0,z:0},...network,{x:4,z:0}]);
+  assert.equal(commute.steps,4);
+});
+test('building beside an isolated road cannot reach a different component', () => {
+  const network=[{x:1,z:0},{x:8,z:0}];
+  assert.equal(plan({home:{x:0,z:0},work:{x:9,z:0}},network),null);
+});
+test('invalid building coordinates are rejected without changing road data', () => {
+  const network=Object.freeze([{x:1,z:0}]);
+  assert.equal(plan({home:{x:0.25,z:0},work:{x:1,z:0}},network),null);
+});
