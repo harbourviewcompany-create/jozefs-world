@@ -31,7 +31,11 @@
     if(local.seed!==incoming.seed)return {status:'different-world'};
     const oldRevision=local.simulationCheckpoint?.revision??0;
     const newRevision=incoming.simulationCheckpoint?.revision??0;
-    if(newRevision<=oldRevision)return {status:'stale'};
+    if(newRevision===oldRevision){
+      // Same revision with different content is a conflict, not proof of convergence.
+      return JSON.stringify(local)===JSON.stringify(incoming)?{status:'already-current'}:{status:'conflict'};
+    }
+    if(newRevision<oldRevision)return {status:'stale'};
     if(incoming.year<local.year)return {status:'stale'};
     if(incoming.year>local.year+1)return {status:'conflict'};
     return {status:'requires-confirmation-and-backup',revision:newRevision};
