@@ -3,7 +3,7 @@
   'use strict';
   const health = document.getElementById('health');
   const say = (m) => { if (health) health.textContent = m; };
-  async function run(code) { (0, eval)(code); }
+  async function run(code) { (0, eval)(code); }\n  const scriptBase = new URL('.', document.currentScript?.src || location.href).href;\n  const booted = () => Boolean(window.BlockWorld || window.blockWorld || window.__blockWorldReady);
 
   async function loadExpanded(base, label) {
     const n = 11;
@@ -27,7 +27,7 @@
 
   try {
     say('Loading bigger world…');
-    const base = (document.currentScript && document.currentScript.src || location.href).replace(/[^/]+$/, '');
+    const base = scriptBase
     const code = await loadExpanded(base, 'Loading world…');
     say('Starting…');
     await run(code);
@@ -48,7 +48,7 @@
         await run(await res.text());
       } catch (e3) {
         console.error(e3);
-        say('World load failed. Check connection and reload.');
+        const detail = String(e3?.message || e2?.message || err?.message || 'unknown error').slice(0,110);\n        say('2D load failed: ' + detail + '. Tap reload to retry.');\n        window.__jw2dLoadFailure = {primary:String(err),retry:String(e2),fallback:String(e3)};
       }
     }
   }
