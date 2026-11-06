@@ -45,3 +45,10 @@ test('malformed world payload cannot reach persistence',async()=>{
   assert.equal(result.status,'invalid');
   assert.equal(writes,0);
 });
+
+test('equal revision divergent worlds require conflict recovery',()=>{
+  const local=world(4),remote=world(4);
+  remote.stock.wood=9;
+  assert.equal(assess(local,remote,{authorized:true}).status,'conflict');
+  assert.equal(assess(local,world(4),{authorized:true}).status,'already-current');
+});
