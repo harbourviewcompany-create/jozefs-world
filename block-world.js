@@ -5,6 +5,12 @@
   const say = (m) => { if (health) health.textContent = m; };
   async function run(code) { (0, eval)(code); }
   const scriptBase = new URL('.', document.currentScript?.src || location.href).href;
+  const diagnostics = document.createElement('div');
+  diagnostics.id = 'jw2d-startup-error'; diagnostics.setAttribute('role','alert');
+  diagnostics.style.cssText='display:none;position:fixed;top:180px;left:12px;right:12px;z-index:200;padding:16px;background:#102b3d;color:#fff;border:2px solid #f7c86e;border-radius:14px;font:14px system-ui;white-space:pre-wrap';
+  document.body.appendChild(diagnostics);
+  const fail = (message) => { diagnostics.style.display='block';diagnostics.textContent=message; };
+  const sourceBase = scriptBase;
   const booted = () => Boolean(window.BlockWorld || window.blockWorld || window.__blockWorldReady);
 
   async function loadExpanded(base, label) {
@@ -51,7 +57,8 @@
       } catch (e3) {
         console.error(e3);
         const detail = String(e3?.message || e2?.message || err?.message || 'unknown error').slice(0,110);
-        say('2D load failed: ' + detail + '. Tap reload to retry.');
+        say('2D load failed');
+        fail('2D world could not start. ' + detail + '\\nPlease reload. Your saved world has not been reset.');
         window.__jw2dLoadFailure = {primary:String(err),retry:String(e2),fallback:String(e3)};
       }
     }
