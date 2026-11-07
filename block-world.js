@@ -3,7 +3,9 @@
   'use strict';
   const health = document.getElementById('health');
   const say = (m) => { if (health) health.textContent = m; };
-  async function run(code) { (0, eval)(code); }\n  const scriptBase = new URL('.', document.currentScript?.src || location.href).href;\n  const booted = () => Boolean(window.BlockWorld || window.blockWorld || window.__blockWorldReady);
+  async function run(code) { (0, eval)(code); }
+  const scriptBase = new URL('.', document.currentScript?.src || location.href).href;
+  const booted = () => Boolean(window.BlockWorld || window.blockWorld || window.__blockWorldReady);
 
   async function loadExpanded(base, label) {
     const n = 11;
@@ -27,7 +29,7 @@
 
   try {
     say('Loading bigger world…');
-    const base = scriptBase
+    const base = scriptBase;
     const code = await loadExpanded(base, 'Loading world…');
     say('Starting…');
     await run(code);
@@ -35,7 +37,7 @@
     console.error(err);
     say('Retrying bigger world…');
     try {
-      const base = (document.currentScript && document.currentScript.src || location.href).replace(/[^/]+$/, '');
+      const base = scriptBase;
       const code = await loadExpanded(base, 'Retry…');
       say('Starting…');
       await run(code);
@@ -43,12 +45,14 @@
       console.error(e2);
       say('Loading backup…');
       try {
-        const res = await fetch('./block-world-stable.js?v=20261103-expanded', { cache: 'no-cache' });
+        const res = await fetch(scriptBase + 'block-world-stable.js?v=20261106-fallback', { cache: 'no-cache' });
         if (!res.ok) throw new Error('stable missing');
         await run(await res.text());
       } catch (e3) {
         console.error(e3);
-        const detail = String(e3?.message || e2?.message || err?.message || 'unknown error').slice(0,110);\n        say('2D load failed: ' + detail + '. Tap reload to retry.');\n        window.__jw2dLoadFailure = {primary:String(err),retry:String(e2),fallback:String(e3)};
+        const detail = String(err?.message || e2?.message || e3?.message || 'unknown error').slice(0,110);
+        say('2D load failed: ' + detail + '. Tap reload to retry.');
+        window.__jw2dLoadFailure = {primary:String(err),retry:String(e2),fallback:String(e3)};
       }
     }
   }
