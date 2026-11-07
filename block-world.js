@@ -50,7 +50,7 @@
         await run(await res.text());
       } catch (e3) {
         console.error(e3);
-        const detail = String(err?.message || e2?.message || e3?.message || 'unknown error').slice(0,110);
+        const detail = String(e3?.message || e2?.message || err?.message || 'unknown error').slice(0,110);
         say('2D load failed: ' + detail + '. Tap reload to retry.');
         window.__jw2dLoadFailure = {primary:String(err),retry:String(e2),fallback:String(e3)};
       }
