@@ -57,11 +57,9 @@
  #toolbar-extra{max-height:65dvh;overflow-y:auto}
  #bw-flight,#bw-forage{min-height:40px}.jw-game-tools{padding:7px;border:1px solid #548da0;border-radius:9px;margin:5px 0}.jw-game-tools summary{font-weight:800;cursor:pointer}.jw-game-tools button{min-height:40px;margin:3px}.jw-game-tools p,.jw-game-tools small{font-size:12px;color:#d4eff4}
 }
-
 </style>
 <link rel="stylesheet" href="./block-world-premium-forest.css?v=20261029-hudfix">
 <style>
-/* JozefWorld compact mobile HUD: maximize unobstructed gameplay space. */
 @media(max-width:650px){
  #ui{top:calc(env(safe-area-inset-top) + 5px)!important;left:10px!important;max-width:49vw!important}
  #ui h2{font-size:clamp(14px,3.9vw,19px)!important;letter-spacing:0!important;margin-bottom:1px!important}
@@ -187,7 +185,7 @@
  </div>
 </div>
 <details id="bw-cloud-panel" style="position:fixed;bottom:10px;right:10px;z-index:45;max-width:min(340px,90vw);background:#102b3d;color:white;border:1px solid #5d9cb4;border-radius:12px;padding:9px;font:12px system-ui"><summary>SHARED WORLD</summary><p id="bw-cloud-status" role="status">Connecting to family cloud…</p><input id="bw-cloud-email" type="hidden"><button id="bw-cloud-login" type="button" hidden></button><button type="button" onclick="window.BlockWorldChoosePlayer?.()" style="padding:7px;margin:5px 0">CHANGE PLAYER</button><button id="bw-cloud-restore" type="button" hidden>RESTORE CLOUD WORLD</button></details>
-<details id="bw-adventure"><summary>ADVENTURE JOURNAL</summary><div class="bw-mission"><p id="bw-adventure-mission">Loading your adventure…</p><progress id="bw-adventure-progress" max="5" value="0"></progress><p id="bw-adventure-team">Team status loading…</p><p id="bw-adventure-health"></p><p id="bw-adventure-goals"></p><button type="button" id="bw-adventure-regroup">REGROUP WITH PARTNER</button><hr><strong>TEAM BUILD CHALLENGE</strong><p id="bw-build-progress">Choose a blueprint to begin.</p><select id="bw-build-blueprint" aria-label="Choose building challenge"><option value="cabin">Forest Cabin</option><option value="bridge">River Bridge</option><option value="tower">Lookout Tower</option></select><button type="button" id="bw-build-start">START CHALLENGE</button><p id="bw-backup-status">Shared-world backups: waiting</p><button type="button" id="bw-backup-now">BACK UP WORLD</button><button type="button" id="bw-backup-export">EXPORT BACKUP</button><button type="button" id="bw-history-show">VIEW CLOUD SAVE HISTORY</button><div id="bw-history-list" aria-live="polite"></div><input id="bw-backup-import-file" type="file" accept="application/json,.json" hidden><button type="button" id="bw-backup-import">IMPORT BACKUP</button></div></details>
+<details id="bw-adventure"><summary>ADVENTURE JOURNAL</summary><div class="bw-mission"><p id="bw-adventure-mission">Loading your adventure…</p><progress id="bw-adventure-progress" max="5" value="0"></progress><p id="bw-adventure-team">Team status loading…</p><p id="bw-adventure-health"></p><p id="bw-adventure-goals"></p><button type="button" id="bw-adventure-regroup">REGROUP WITH PARTNER</button></div></details>
 <div id="bw-role-chooser" role="dialog" aria-modal="true" aria-label="Choose your player" style="position:fixed;inset:0;z-index:100;background:#061a2ff5;display:none;place-items:center;padding:24px">
  <div style="width:min(420px,100%);padding:28px;border-radius:22px;background:#10364c;color:white;text-align:center;font:600 18px system-ui;border:1px solid #6b9cb2">
   <h2 style="font-size:28px;margin:0 0 12px">Who's playing?</h2>
@@ -209,43 +207,14 @@
 })();
 </script>
 <script src="./peerjs.min.js" defer></script>
-<script src="./block-world-art-forest.js?v=20261101-waterfall-v7" defer></script>
+<script src="./block-world-art-forest.js?v=20261108-iosfix" defer></script>
 <script src="./block-world-network.js?v=20261029-v3" defer></script>
-<script>
-(function(){
-  const health=document.getElementById('health');
-  let failed=false;
-  function fail(message){
-    if(failed)return;
-    failed=true;
-    if(health)health.textContent='2D STARTUP ERROR';
-    let panel=document.getElementById('jw2d-startup-error');
-    if(!panel){
-      panel=document.createElement('div');
-      panel.id='jw2d-startup-error';
-      panel.setAttribute('role','alert');
-      panel.style.cssText='position:fixed;left:12px;right:12px;top:calc(170px + env(safe-area-inset-top));z-index:200;max-width:640px;margin:auto;padding:16px;background:#102b3d;color:white;border:2px solid #f7c86e;border-radius:14px;font:14px/1.5 system-ui;white-space:pre-wrap';
-      document.body.appendChild(panel);
-    }
-    panel.textContent='2D world could not start. '+message+' Reload the page to retry. Saved worlds have not been reset.';
-    window.__jw2dLoadFailure=message;
-  }
-  window.Jozef2DStartup={fail};
-  window.addEventListener('error',event=>{
-    if(event.filename?.includes('block-world.js'))fail(event.message||'Game engine script error.');
-  });
-  window.addEventListener('load',()=>{
-    setTimeout(()=>{
-      if(!window.BlockWorld2D&&!window.BlockWorld&&!window.blockWorld&&!window.__blockWorldReady&&!window.__jw2dLoadFailure)fail('The game engine did not initialize.');
-    },30000);
-  },{once:true});
-})();
-</script>
-<script src="./block-world.js?v=20261108-original-restored-v2" defer onerror="window.Jozef2DStartup.fail('Original game loader could not load.')"></script>
+<script src="./block-world.js?v=20261108-iosfix-v5" defer></script>
 <script src="./block-world-coop.js?v=20261030-jozefworld-v13" defer></script>
 <script src="./block-world-ui.js?v=20261029-hudfix" defer></script>
 <script src="./block-world-adventure.js?v=20261101-coop-xp-v3" defer></script>
 <script src="./family-cloud-config.js?v=20261029" defer></script>
 <script type="module" src="./block-world-cloud.js?v=20261101-history-v9"></script>
-<button id="jw-enter-sports" type="button" hidden style="position:fixed;left:50%;transform:translateX(-50%);bottom:calc(172px + env(safe-area-inset-bottom));z-index:70;background:#147c65;border:2px solid #b2ffe6;border-radius:16px;color:white;padding:12px 18px;font:900 13px system-ui;box-shadow:0 4px 18px #001a30">ENTER STADIUM</button><script src="./jozefworld-universe.js?v=4"></script><script defer src="./block-world-history-ui.js?v=1"></script><script type="module" src="./jozefworld-live-sync.js?v=3"></script></body>
+<button id="jw-enter-sports" type="button" hidden style="position:fixed;left:50%;transform:translateX(-50%);bottom:calc(172px + env(safe-area-inset-bottom));z-index:70;background:#147c65;border:2px solid #b2ffe6;border-radius:16px;color:white;padding:12px 18px;font:900 13px system-ui;box-shadow:0 4px 18px #001a30">ENTER STADIUM</button>
+</body>
 </html>
