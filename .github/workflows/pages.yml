@@ -75,6 +75,7 @@ jobs:
           VERSUS_VIEWPORTS: 390x844
         run: |
           npm install --no-save playwright@1.56.1
+          node tests/block-world-2d-mobile-smoke.cjs
           node tests/arena-mobile-smoke.cjs
           node tests/hq-mobile-smoke.cjs
           node tests/versus-mobile-smoke.cjs
