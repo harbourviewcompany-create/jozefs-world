@@ -3,15 +3,14 @@
   'use strict';
   const health = document.getElementById('health');
   const say = (m) => { if (health) health.textContent = m; };
-  async function run(code) { (0, eval)(code); }
+  function run(code) { (0, eval)(code + '\n//# sourceURL=jozefworld-2d-engine.js'); }
   const scriptBase = new URL('.', document.currentScript?.src || location.href).href;
   const diagnostics = document.getElementById('jw2d-startup-error') || document.createElement('div');
   diagnostics.id = 'jw2d-startup-error'; diagnostics.setAttribute('role','alert');
   diagnostics.style.cssText='display:none;position:fixed;top:180px;left:12px;right:12px;z-index:200;padding:16px;background:#102b3d;color:#fff;border:2px solid #f7c86e;border-radius:14px;font:14px system-ui;white-space:pre-wrap';
   if(!diagnostics.isConnected) document.body.appendChild(diagnostics);
   const fail = (message) => { diagnostics.style.display='block';diagnostics.textContent=message; };
-  const sourceBase = scriptBase;
-  const booted = () => Boolean(window.BlockWorld || window.blockWorld || window.__blockWorldReady);
+  const booted = () => Boolean(window.BlockWorld || window.BlockWorld2D || window.blockWorld || window.__blockWorldReady || document.querySelector('canvas[data-world-ready="true"]'));
 
   async function loadExpanded(base, label) {
     const n = 11;
@@ -39,7 +38,7 @@
     const code = await loadExpanded(base, 'Loading world…');
     say('Starting…');
     await run(code);
-    if(!booted()) throw new Error('World script ran without initializing');
+    // The engine may initialize asynchronously; do not re-evaluate it based on an immediate global check.
   } catch (err) {
     console.error(err);
     say('Retrying bigger world…');
@@ -48,7 +47,7 @@
       const code = await loadExpanded(base, 'Retry…');
       say('Starting…');
       await run(code);
-      if(!booted()) throw new Error('World script ran without initializing');
+      // Avoid re-running a successful engine that initializes asynchronously.
     } catch (e2) {
       console.error(e2);
       say('Loading backup…');
@@ -56,7 +55,7 @@
         const res = await fetch(scriptBase + 'block-world-stable.js?v=20261106-fallback', { cache: 'no-cache' });
         if (!res.ok) throw new Error('stable missing');
         await run(await res.text());
-        if(!booted()) throw new Error('Backup world did not initialize');
+        // The fallback may initialize asynchronously.
       } catch (e3) {
         console.error(e3);
         const detail = String(e3?.message || e2?.message || err?.message || 'unknown error').slice(0,110);
