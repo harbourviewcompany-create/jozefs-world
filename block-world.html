@@ -232,16 +232,16 @@
   }
   window.Jozef2DStartup={fail};
   window.addEventListener('error',event=>{
-    if(event.filename?.includes('block-world-engine.js'))fail(event.message||'Game engine script error.');
+    if(event.filename?.includes('block-world.js'))fail(event.message||'Game engine script error.');
   });
   window.addEventListener('load',()=>{
     setTimeout(()=>{
-      if(!window.BlockWorld2D&&!window.__blockWorldReady)fail('The game engine did not initialize.');
-    },10000);
+      if(!window.BlockWorld2D&&!window.BlockWorld&&!window.blockWorld&&!window.__blockWorldReady&&!window.__jw2dLoadFailure)fail('The game engine did not initialize.');
+    },30000);
   },{once:true});
 })();
 </script>
-<script src="./block-world-engine.js?v=20261107-compiled-v1" defer onerror="window.Jozef2DStartup.fail('Game engine asset is missing or unavailable.')"></script>
+<script src="./block-world.js?v=20261108-restored-loader" defer onerror="window.Jozef2DStartup.fail('Game loader asset is missing or unavailable.')"></script>
 <script src="./block-world-coop.js?v=20261030-jozefworld-v13" defer></script>
 <script src="./block-world-ui.js?v=20261029-hudfix" defer></script>
 <script src="./block-world-adventure.js?v=20261101-coop-xp-v3" defer></script>
