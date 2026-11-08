@@ -210,8 +210,38 @@
 </script>
 <script src="./peerjs.min.js" defer></script>
 <script src="./block-world-art-forest.js?v=20261101-waterfall-v7" defer></script>
-<script src="./block-world.js?v=20261107-startup-visible-v5" defer></script>
 <script src="./block-world-network.js?v=20261029-v3" defer></script>
+<script>
+(function(){
+  const health=document.getElementById('health');
+  let failed=false;
+  function fail(message){
+    if(failed)return;
+    failed=true;
+    if(health)health.textContent='2D STARTUP ERROR';
+    let panel=document.getElementById('jw2d-startup-error');
+    if(!panel){
+      panel=document.createElement('div');
+      panel.id='jw2d-startup-error';
+      panel.setAttribute('role','alert');
+      panel.style.cssText='position:fixed;left:12px;right:12px;top:calc(170px + env(safe-area-inset-top));z-index:200;max-width:640px;margin:auto;padding:16px;background:#102b3d;color:white;border:2px solid #f7c86e;border-radius:14px;font:14px/1.5 system-ui;white-space:pre-wrap';
+      document.body.appendChild(panel);
+    }
+    panel.textContent='2D world could not start. '+message+' Reload the page to retry. Saved worlds have not been reset.';
+    window.__jw2dLoadFailure=message;
+  }
+  window.Jozef2DStartup={fail};
+  window.addEventListener('error',event=>{
+    if(event.filename?.includes('block-world-engine.js'))fail(event.message||'Game engine script error.');
+  });
+  window.addEventListener('load',()=>{
+    setTimeout(()=>{
+      if(!window.BlockWorld2D&&!window.__blockWorldReady)fail('The game engine did not initialize.');
+    },10000);
+  },{once:true});
+})();
+</script>
+<script src="./block-world-engine.js?v=20261107-compiled-v1" defer onerror="window.Jozef2DStartup.fail('Game engine asset is missing or unavailable.')"></script>
 <script src="./block-world-coop.js?v=20261030-jozefworld-v13" defer></script>
 <script src="./block-world-ui.js?v=20261029-hudfix" defer></script>
 <script src="./block-world-adventure.js?v=20261101-coop-xp-v3" defer></script>
