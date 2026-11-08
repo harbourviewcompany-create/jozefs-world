@@ -24,6 +24,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Compile and syntax-check the 2D world before publishing
+        run: |
+          node scripts/build-2d-engine.cjs
+          node --check block-world-engine.js
       - name: Verify identical published homepage and world entrypoints
         run: |
           cmp -s index.html world.html || { echo "::error::index.html and world.html have diverged. Synchronize both before publishing."; exit 1; }
