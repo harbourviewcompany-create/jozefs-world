@@ -5,6 +5,7 @@
   const say = (m) => { if (health) health.textContent = m; };
   function run(code) { (0, eval)(code + '\n//# sourceURL=jozefworld-2d-engine.js'); }
   const scriptBase = new URL('.', document.currentScript?.src || location.href).href;
+  const startedAt=Date.now();
   const diagnostics = document.getElementById('jw2d-startup-error') || document.createElement('div');
   diagnostics.id = 'jw2d-startup-error'; diagnostics.setAttribute('role','alert');
   diagnostics.style.cssText='display:none;position:fixed;top:180px;left:12px;right:12px;z-index:200;padding:16px;background:#102b3d;color:#fff;border:2px solid #f7c86e;border-radius:14px;font:14px system-ui;white-space:pre-wrap';
@@ -32,12 +33,14 @@
     return code;
   }
 
+  const watchdog=setTimeout(()=>{if(!booted()){say('World startup taking too long');fail('The original 2D world has not started after 20 seconds. Check the connection, then reload.');}},20000);
   try {
     say('Loading bigger world…');
     const base = scriptBase;
     const code = await loadExpanded(base, 'Loading world…');
     say('Starting…');
     await run(code);
+    clearTimeout(watchdog);
     // The engine may initialize asynchronously; do not re-evaluate it based on an immediate global check.
   } catch (err) {
     console.error(err);
@@ -47,6 +50,7 @@
       const code = await loadExpanded(base, 'Retry…');
       say('Starting…');
       await run(code);
+      clearTimeout(watchdog);
       // Avoid re-running a successful engine that initializes asynchronously.
     } catch (e2) {
       console.error(e2);
@@ -55,9 +59,11 @@
         const res = await fetch(scriptBase + 'block-world-stable.js?v=20261106-fallback', { cache: 'no-cache' });
         if (!res.ok) throw new Error('stable missing');
         await run(await res.text());
+        clearTimeout(watchdog);
         // The fallback may initialize asynchronously.
       } catch (e3) {
         console.error(e3);
+        clearTimeout(watchdog);
         const detail = String(e3?.message || e2?.message || err?.message || 'unknown error').slice(0,110);
         say('2D load failed');
         fail('2D world could not start. ' + detail + '\nPlease reload to retry.');
