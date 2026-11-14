@@ -14,7 +14,7 @@ for(const id of ['bw-adventure','bw-cloud-panel']){
 }
 const worldActions=$('bw-actions');
 if(worldActions){content.appendChild(worldActions);worldActions.classList.remove('closed');}
-const worldToggle=$('bw-menu-toggle');if(worldToggle)worldToggle.hidden=true;
+const worldToggle=$('bw-menu-toggle');if(worldToggle){worldToggle.hidden=true;worldToggle.setAttribute('aria-hidden','true');}
 // Graphics preset is entirely client-side and doesn't touch player/world saves.
 const QUALKEY='jozefs-block-visual-quality-v1';
 let qualityPref='auto',qualityFrames=0,qualityStart=0,qualityResolved=false;
@@ -61,12 +61,23 @@ if(mission){
  mission.addEventListener('click',toggleMission);
  mission.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleMission();}});
 }
-function openMenu(open){content.hidden=!open;menu.setAttribute('aria-expanded',String(open));menu.textContent=open?'✕ CLOSE':'☰ MENU';}
+function openMenu(open){
+ content.hidden=!open;
+ menu.setAttribute('aria-expanded',String(open));
+ menu.textContent=open?'✕ CLOSE':'☰ MENU';
+ document.body.classList.toggle('bw-mobile-menu-open',open);
+ if(open){
+  for(const id of ['bw-actions','bw-adventure','bw-cloud-panel']){const panel=$(id);if(panel?.tagName==='DETAILS')panel.open=false;}
+  mission?.classList.remove('expanded');mission?.setAttribute('aria-expanded','false');
+  release();
+ }
+}
 menu.addEventListener('click',()=>openMenu(content.hidden));
 document.addEventListener('keydown',e=>{if(e.code==='Escape')openMenu(false);});
 const exitLinks=content.querySelectorAll?.('a')||[];
 for(const a of exitLinks)a.addEventListener('click',()=>openMenu(false));
-for(const b of content.querySelectorAll?.('button')||[])if(b!==menu)b.addEventListener('click',()=>{if(b!==worldToggle)openMenu(false);});
+for(const b of content.querySelectorAll?.('button')||[])if(b!==menu)b.addEventListener('click',()=>{if(b!==worldToggle && b!==qualityButton && !b.closest('details'))openMenu(false);});
+content.addEventListener('toggle',e=>{if(e.target?.tagName!=='DETAILS'||!e.target.open)return;for(const other of content.querySelectorAll('details[open]'))if(other!==e.target)other.open=false;},true);
 let pointer=null;
 function move(e){
  const rect=pad.getBoundingClientRect(),middle=rect.left+rect.width/2;
