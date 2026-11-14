@@ -9,3 +9,22 @@
  .hotbar{z-index:21!important}
 }
 @media(max-width:390px){#jw-enter-sports:not([hidden]){bottom:calc(193px + env(safe-area-inset-bottom))!important;max-width:37vw!important;font-size:9px!important}#bw-mission{top:calc(108px + env(safe-area-inset-top))!important;max-height:103px!important}}
+
+/* Mobile menu and touch targets: keep gameplay visible without changing the engine. */
+@media (pointer:coarse) {
+ #controls .ctrl-btn {touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+ #controls .ctrl-btn:active {filter:brightness(1.22)}
+ #toolbar-extra {overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+}
+@media(max-width:650px){
+ #toolbar-extra {box-sizing:border-box!important;max-height:min(68dvh,620px)!important;overflow-y:auto!important;overflow-x:hidden!important;padding-bottom:calc(16px + env(safe-area-inset-bottom))!important}
+ #toolbar-extra button,#toolbar-extra select {min-height:44px}
+ #toolbar-extra details {max-width:100%}
+ .hotbar {max-width:calc(100vw - 16px)!important;overflow-x:auto!important;overscroll-behavior-x:contain!important;-webkit-overflow-scrolling:touch!important;scrollbar-width:none}
+ .hotbar::-webkit-scrollbar {display:none}
+ #bw-mission {pointer-events:auto;max-width:min(46vw,260px)!important}
+}
+@media(max-width:390px){
+ #toolbar-extra {max-height:60dvh!important}
+ #bw-mission {max-width:44vw!important}
+}
