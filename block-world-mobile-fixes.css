@@ -28,3 +28,11 @@
  #toolbar-extra {max-height:60dvh!important}
  #bw-mission {max-width:44vw!important}
 }
+
+/* Keep the consolidated mobile menu above world HUD but below explicit dialogs. */
+@media(max-width:650px){
+ body.bw-mobile-menu-open #bw-mission {opacity:.35!important;pointer-events:none!important}
+ body.bw-mobile-menu-open #controls,body.bw-mobile-menu-open .hotbar {pointer-events:none!important;opacity:.45!important}
+ body.bw-mobile-menu-open #toolbar-extra {z-index:42!important;max-width:calc(100vw - 24px)!important}
+ #bw-menu-toggle[hidden] {display:none!important}
+}
