@@ -24,3 +24,15 @@ test('stadium loads current arena module',()=>{
  assert.match(html,/type="module" src="\.\/jozefworld-arena\.js\?/);
  assert.match(html,/id="practice"/);
 });
+
+test('soccer passing selects a teammate and AI has a decision cooldown',()=>{
+ assert.match(engine,/support\.slice\(id\*2,id\*2\+2\)/);
+ assert.match(engine,/aiDecisionClock=\.55/);
+ assert.match(engine,/ball\.owner===-1&&Math\.hypot\(q\.x-ball\.x/);
+});
+test('touch movement survives keyboard polling and releases on app background',()=>{
+ assert.match(engine,/let stickPointer=null/);
+ assert.match(engine,/if\(stickPointer===null\)/);
+ assert.match(engine,/window\.addEventListener\('blur'/);
+ assert.match(engine,/document\.addEventListener\('visibilitychange'/);
+});
