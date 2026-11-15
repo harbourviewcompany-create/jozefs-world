@@ -2,9 +2,10 @@ import {createClient} from 'https://esm.sh/@supabase/supabase-js@2.57.0';
 const $=id=>document.getElementById(id),c=$('field'),g=c.getContext('2d'),cfg=window.JW_FAMILY_CLOUD;
 const sports=['soccer','hockey','football','baseball'],query=new URLSearchParams(location.search);
 const progressKey='jozefworld-sports-achievements-v1';let progress={wins:0,matches:0,goals:0,trophies:[]};try{progress={...progress,...JSON.parse(localStorage.getItem(progressKey)||'{}')}}catch(_){}function saveProgress(){try{localStorage.setItem(progressKey,JSON.stringify(progress))}catch(_){}}function trophy(name){if(!progress.trophies.includes(name)){progress.trophies.push(name);saveProgress();announce('TROPHY UNLOCKED · '+name)}}
+const support=[{x:.34,y:.29},{x:.34,y:.71},{x:.66,y:.29},{x:.66,y:.71}];
 let pendingAction=null,goalFx=0,room='',peerReady=false,actionCounter=0,lastActionCounter=0,reconnectAttempts=0;let sport=sports.includes(query.get('sport'))?query.get('sport'):'soccer',role='practice',channel=null,db=null,connected=false,lastPeer=0,last=0,sendAt=0,seq=0,remoteSeq=0,flash=0,notice='',axis={x:0,y:0},keys={},clock=120,score=[0,0],finished=false,lock=0,outs=0,inning=1,batTimer=0,ball={x:.5,y:.5,vx:0,vy:0,owner:-1},players=[{x:.24,y:.5,face:1,cd:0},{x:.76,y:.5,face:-1,cd:0}],keeper=[.5,.5],input={x:0,y:0,action:null},guestInput={x:0,y:0,action:null};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
-function resetRound(){players[0].x=.24;players[0].y=.5;players[1].x=.76;players[1].y=.5;ball={x:.5,y:.5,vx:0,vy:0,owner:-1};lock=1.1;keeper=[.5,.5]}
+function resetRound(){support.forEach((q,n)=>{q.x=n<2?.34:.66;q.y=n%2===0?.29:.71});players[0].x=.24;players[0].y=.5;players[1].x=.76;players[1].y=.5;ball={x:.5,y:.5,vx:0,vy:0,owner:-1};lock=1.1;keeper=[.5,.5]}
 function reset(){clock=120;score=[0,0];finished=false;outs=0;inning=1;resetRound();announce('FIRST TO 5 · 2 MINUTES')}
 function announce(v){notice=v;flash=1.8}
 function setSport(v,send=true){if(role==='jozef'&&connected)return; sport=v;reset();document.querySelectorAll('[data-sport]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.sport===v)));$('shoot').textContent={soccer:'SHOOT',hockey:'SLAP SHOT',football:'THROW',baseball:'SWING'}[v];$('secondary').textContent={soccer:'PASS',hockey:'PASS',football:'DASH',baseball:'BUNT'}[v];if(send)broadcast({t:'sport',sport:v});}
@@ -29,6 +30,26 @@ function recordMatch(winner){if(role==='jozef')return;progress.matches++;if(winn
 function step(dt){if(finished)return;if(role!=='practice'&&(!peerReady||performance.now()-lastPeer>5000))return;clock=Math.max(0,clock-dt);lock=Math.max(0,lock-dt);for(const p of players)p.cd=Math.max(0,p.cd-dt);if(clock<=0){finished=true;recordMatch(score[0]===score[1]?-1:score[0]>score[1]?0:1);announce(score[0]===score[1]?'DRAW MATCH':(score[0]>score[1]?'DADDY':'JOZEF')+' WINS!');return}
 const cpu=players[1],defending=ball.owner===0&&players[0].x>.58,target=ball.owner===1?{x:.16,y:clamp(.5+(cpu.y-.5)*.4,.35,.65)}:defending?{x:clamp(players[0].x+.05,.3,.93),y:players[0].y}:ball;const aiPace=clamp(.56+(score[0]-score[1])*.045,.48,.82);const control=[input,role==='practice'?{x:clamp((target.x-cpu.x)*2.1,-aiPace,aiPace),y:clamp((target.y-cpu.y)*2.1,-aiPace,aiPace),action:null}:guestInput];
 for(let i=0;i<2;i++){const p=players[i],a=control[i];let dx=clamp(a.x||0,-1,1),dy=clamp(a.y||0,-1,1),m=Math.max(1,Math.hypot(dx,dy));p.x=clamp(p.x+dx/m*dt*.38,.035,.965);p.y=clamp(p.y+dy/m*dt*.48,.06,.94);if(Math.abs(dx)>.1)p.face=Math.sign(dx);if(a.action){action(a.action,i);a.action=null}}
+if(sport==='soccer'&&lock<=0){
+ // Four supporting outfielders create passing lanes and defend space in solo matches.
+ for(let n=0;n<support.length;n++){
+  const q=support[n],side=n<2?0:1,homeX=side===0?.34:.66;
+  const carrier=ball.owner===side?players[side]:ball;
+  const lane=n%2===0?.29:.71;
+  const chase=ball.owner===-1&&Math.abs(ball.x-q.x)<.22;
+  const tx=chase?ball.x:clamp(homeX+(carrier.x-.5)*.48,.12,.88);
+  const ty=chase?ball.y:clamp(lane+(carrier.y-.5)*.22,.12,.88);
+  const dx=tx-q.x,dy=ty-q.y,mag=Math.hypot(dx,dy)||1;
+  const speed=chase?.32:.23;
+  q.x=clamp(q.x+dx/mag*Math.min(mag,dt*speed),.05,.95);
+  q.y=clamp(q.y+dy/mag*Math.min(mag,dt*speed),.1,.9);
+  if(chase&&Math.hypot(q.x-ball.x,q.y-ball.y)<.05&&Math.hypot(ball.vx,ball.vy)<.85){
+   ball.owner=-1;ball.x=q.x+(side===0?.055:-.055);ball.y=q.y;
+   ball.vx=(side===0?1:-1)*(.55+Math.random()*.16);
+   ball.vy=clamp((.5-q.y)*.6,-.4,.4);
+  }
+ }
+}
 if(sport==='baseball'){batTimer+=dt;if(batTimer>2.2){batTimer=0;ball={x:.82,y:.4+Math.random()*.2,vx:-.45,vy:0,owner:-1}}}
 if(role==='practice'&&lock<=0&&players[1].cd<=0&&ball.owner===1&&players[1].x<.47){action('shoot',1)}if(ball.owner>=0){const p=players[ball.owner];ball.x=p.x+p.face*.04;ball.y=p.y+.02}else{ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;let drag=sport==='hockey'?.992:.978;ball.vx*=Math.pow(drag,dt*60);ball.vy*=Math.pow(drag,dt*60);if(ball.y<.08||ball.y>.92){ball.y=clamp(ball.y,.08,.92);ball.vy*=-.7}if(lock<=0&&sport!=='baseball')for(let i=0;i<2;i++)if(dist(players[i],ball)<.065&&Math.hypot(ball.vx,ball.vy)<.85&&players[i].cd<=0){ball.owner=i;ball.vx=ball.vy=0;break}}
 if(sport!=='baseball'&&lock<=0){if(ball.x>.98){if(sport==='football'||Math.abs(ball.y-.5)<.19){if(Math.abs(ball.y-keeper[1])>.09||sport==='football')scoreGoal(0);else{ball.vx=-.5;announce('SAVED!')}}else ball.vx=-.6;ball.x=.975}if(ball.x<.02){if(sport==='football'||Math.abs(ball.y-.5)<.19){if(Math.abs(ball.y-keeper[0])>.09||sport==='football')scoreGoal(1);else{ball.vx=.5;announce('SAVED!')}}else ball.vx=.6;ball.x=.025}}
@@ -37,6 +58,12 @@ function draw(t){const w=c.clientWidth,h=c.clientHeight,d=Math.min(devicePixelRa
 g.fillStyle='#17324a';g.fillRect(0,0,1,.085);g.fillRect(0,.915,1,.085);for(let i=0;i<95;i++){g.fillStyle=['#57a5c6','#f1cb81','#f78c80','#b7e8d8'][i%4];g.fillRect((i*37%97)/100,.012+(i%3)*.02,.008,.009);g.fillRect((i*43%97)/100,.945+(i%3)*.014,.008,.009)}
 g.save();g.translate(0,.085);g.scale(1,.83);g.fillStyle={soccer:'#2d885c',hockey:'#b8e6ef',football:'#397d4c',baseball:'#7aa75b'}[sport];g.fillRect(0,0,1,1);if(sport==='soccer'||sport==='football')for(let i=0;i<10;i++){g.fillStyle=i%2?'#ffffff09':'#0000000b';g.fillRect(i/10,0,.1,1)}g.strokeStyle=sport==='hockey'?'#4581b6':'#eaf7e8';g.lineWidth=.004;g.strokeRect(.035,.04,.93,.92);g.strokeStyle='#ffffff44';g.lineWidth=.0015;for(let j=0;j<7;j++){let xx=.08+j*.14;g.beginPath();g.moveTo(xx,.05);g.lineTo(xx,.95);g.stroke()}g.strokeStyle=sport==='hockey'?'#4581b6':'#eaf7e8';g.lineWidth=.004;g.beginPath();g.moveTo(.5,.04);g.lineTo(.5,.96);g.stroke();g.beginPath();g.ellipse(.5,.5,.12,.15,0,0,7);g.stroke();g.strokeRect(.035,.31,.11,.38);g.strokeRect(.855,.31,.11,.38);if(sport==='hockey'){g.strokeStyle='#c65367';g.beginPath();g.moveTo(.5,.04);g.lineTo(.5,.96);g.stroke();g.strokeStyle='#4d8ec5';for(const x of [.28,.72]){g.beginPath();g.moveTo(x,.04);g.lineTo(x,.96);g.stroke()}}if(sport==='football')for(let x=.1;x<.96;x+=.1){g.beginPath();g.moveTo(x,.04);g.lineTo(x,.96);g.stroke()}if(sport==='baseball'){g.fillStyle='#c79d73';g.beginPath();g.moveTo(.5,.16);g.lineTo(.84,.5);g.lineTo(.5,.84);g.lineTo(.16,.5);g.closePath();g.fill();g.stroke()}
 for(const side of [0,1]){const x=side?.96:.04;g.strokeStyle='#eafaff';g.lineWidth=.008;g.beginPath();g.moveTo(x,.31);g.lineTo(x,.69);g.stroke();g.fillStyle='#f6f9fb';g.fillRect(x+(side?-.012:0),keeper[side]-.035,.012,.07);g.strokeStyle='#d8f7ff88';g.lineWidth=.002;for(let n=0;n<4;n++){let yy=.31+n*.095;g.beginPath();g.moveTo(x+(side?-.025:.025),yy);g.lineTo(x,yy);g.stroke()}}
+if(sport==='soccer')for(let n=0;n<support.length;n++){
+ const q=support[n];g.fillStyle='#071e2b66';g.beginPath();g.ellipse(q.x,q.y+.022,.024,.009,0,0,7);g.fill();
+ g.fillStyle=n<2?'#4ac7f0':'#fa8d70';g.fillRect(q.x-.015,q.y-.02,.03,.037);
+ g.fillStyle='#f1c29b';g.beginPath();g.arc(q.x,q.y-.031,.014,0,7);g.fill();
+ g.fillStyle='#112d43';g.fillRect(q.x-.014,q.y-.043,.028,.009);
+}
 for(let i=0;i<2;i++){const p=players[i],bob=Math.sin(t/110+i)*.008;g.fillStyle='#061b2e77';g.beginPath();g.ellipse(p.x,p.y+.033,.035,.013,0,0,7);g.fill();g.strokeStyle='#123049';g.lineWidth=.009;g.beginPath();g.moveTo(p.x-.013,p.y+.01);g.lineTo(p.x-.015+bob,p.y+.047);g.moveTo(p.x+.013,p.y+.01);g.lineTo(p.x+.015-bob,p.y+.047);g.stroke();if(ball.owner===i){g.strokeStyle='#ffe27b';g.lineWidth=.004;g.beginPath();g.ellipse(p.x,p.y,.046,.067,0,0,7);g.stroke()}const avatarStyle=localStorage.getItem('jw-avatar-style')||'explorer';g.fillStyle=avatarStyle==='astronaut'?(i?'#e6ecff':'#d2f7ff'):avatarStyle==='athlete'?(i?'#f7c14d':'#e44b5c'):(i?'#ff8669':'#45c2ff');g.fillRect(p.x-.023,p.y-.025+bob,.046,.047);g.fillStyle=i?'#ffd1c2':'#d8f6ff';g.fillRect(p.x-.021,p.y-.009+bob,.042,.008);g.strokeStyle='#e4b58d';g.lineWidth=.009;g.beginPath();g.moveTo(p.x-.024,p.y-.014+bob);g.lineTo(p.x-.035,p.y+.009+bob+Math.sin(t/90+i)*.012);g.moveTo(p.x+.024,p.y-.014+bob);g.lineTo(p.x+.035,p.y+.009+bob-Math.sin(t/90+i)*.012);g.stroke();g.fillStyle='#e9b68c';g.beginPath();g.arc(p.x,p.y-.038+bob,.022,0,7);g.fill();g.fillStyle=i?'#833e40':'#1c527b';g.fillRect(p.x-.022,p.y-.056+bob,.044,.013);if(sport==='hockey'){g.strokeStyle='#8c6a47';g.lineWidth=.006;g.beginPath();g.moveTo(p.x+.027,p.y-.01);g.lineTo(p.x+.05,p.y+.04);g.lineTo(p.x+.07,p.y+.04);g.stroke()}}
 g.fillStyle=sport==='hockey'?'#1a2938':sport==='football'?'#b46b37':'#fff';g.beginPath();g.ellipse(ball.x,ball.y,sport==='football'?.023:.014,sport==='football'?.012:.016,0,0,7);g.fill();g.restore();if(goalFx>0){g.globalAlpha=Math.min(.22,goalFx*.2);g.fillStyle='#fff3a3';g.fillRect(0,0,1,1);g.globalAlpha=1}if(flash>0){g.globalAlpha=Math.min(1,flash);g.fillStyle='#fff';g.font='bold .032px system-ui';g.textAlign='center';g.fillText(notice,.5,.13);g.globalAlpha=1}}
 function hud(){const tr=$('trophies');if(tr)tr.textContent='TROPHIES · '+progress.wins+' WINS · '+progress.goals+' GOALS · '+progress.trophies.join(' / ');const secs=Math.ceil(clock),time=Math.floor(secs/60)+':'+String(secs%60).padStart(2,'0');$('score').textContent='DADDY '+score[0]+(sport==='football'?' TD':'')+'  —  '+score[1]+' JOZEF  ·  '+time+(sport==='baseball'?' · OUTS '+outs:'')}
