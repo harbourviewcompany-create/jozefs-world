@@ -36,3 +36,17 @@
  body.bw-mobile-menu-open #toolbar-extra {z-index:42!important;max-width:calc(100vw - 24px)!important}
  #bw-menu-toggle[hidden] {display:none!important}
 }
+
+/* One menu authority: legacy WORLD MENU is never a second floating panel. */
+#bw-menu-toggle{display:none!important}
+#bw-actions:not(#toolbar-extra #bw-actions){display:none!important}
+@media(max-width:650px){
+ body.bw-mobile-menu-open #jw-enter-sports,
+ body.bw-mobile-menu-open #notice,
+ body.bw-mobile-menu-open .game-notice,
+ body.bw-mobile-menu-open #game-notice {visibility:hidden!important;pointer-events:none!important}
+ body.bw-mobile-menu-open #toolbar-extra{position:fixed!important;left:12px!important;right:12px!important;top:calc(160px + env(safe-area-inset-top))!important;bottom:calc(175px + env(safe-area-inset-bottom))!important;width:auto!important;max-width:none!important;max-height:none!important;overflow-y:auto!important;z-index:95!important}
+ body.bw-mobile-menu-open #toolbar{z-index:96!important}
+ body.bw-mobile-menu-open #bw-mission{visibility:hidden!important}
+ #toolbar-extra[hidden]{display:none!important}
+}
