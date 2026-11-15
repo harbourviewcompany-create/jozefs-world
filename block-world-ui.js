@@ -12,9 +12,16 @@ for(const id of ['bw-adventure','bw-cloud-panel']){
  const panel=$(id);
  if(panel){content.appendChild(panel);panel.classList.add('bw-menu-panel');panel.open=false;}
 }
-const worldActions=$('bw-actions');
-if(worldActions){content.appendChild(worldActions);worldActions.classList.remove('closed');}
-const worldToggle=$('bw-menu-toggle');if(worldToggle){worldToggle.hidden=true;worldToggle.setAttribute('aria-hidden','true');}
+function consolidateLegacyMenu(){
+ const actions=$('bw-actions');
+ if(actions&&actions.parentElement!==content){content.appendChild(actions);actions.classList.remove('closed');}
+ const toggle=$('bw-menu-toggle');
+ if(toggle){toggle.hidden=true;toggle.setAttribute('aria-hidden','true');toggle.style.display='none';}
+}
+consolidateLegacyMenu();
+// The original world engine creates some HUD elements after this script executes.
+const legacyObserver=new MutationObserver(()=>consolidateLegacyMenu());
+legacyObserver.observe(document.body,{childList:true,subtree:true});
 // Graphics preset is entirely client-side and doesn't touch player/world saves.
 const QUALKEY='jozefs-block-visual-quality-v1';
 let qualityPref='auto',qualityFrames=0,qualityStart=0,qualityResolved=false;
