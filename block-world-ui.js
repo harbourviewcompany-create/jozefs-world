@@ -19,6 +19,7 @@ function consolidateLegacyMenu(){
  if(toggle){toggle.hidden=true;toggle.setAttribute('aria-hidden','true');toggle.style.display='none';}
 }
 consolidateLegacyMenu();
+const worldToggle=$('bw-menu-toggle');
 // The original world engine creates some HUD elements after this script executes.
 const legacyObserver=new MutationObserver(()=>consolidateLegacyMenu());
 legacyObserver.observe(document.body,{childList:true,subtree:true});
