@@ -29,7 +29,7 @@ const server=http.createServer((req,res)=>{
      assert.ok(box.y<160,'globe starts above the fold; top='+box.y+' viewport='+viewport.width+'x'+viewport.height);
      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'no horizontal scroll');
      const state=await page.evaluate(()=>window.JozefWorldCore.progress());
-     assert.equal(state.selected,'adventure');
+     assert.equal(state.selected,'video-chat');
      assert.equal(await page.locator('.studio-hero').isVisible(),false,'old marketing hero remains optional');
      assert.ok(state.webgl||state.fallback,'game is usable even without graphics support');
      const gpuAvailable=await page.evaluate(()=>{
@@ -40,7 +40,7 @@ const server=http.createServer((req,res)=>{
      await page.locator('#jw-worldcore-next').click();
      assert.equal(await page.locator('#jw-worldcore-selected-title').textContent(),'Together','next plate previews without navigating');
      await page.locator('#jw-worldcore-prev').click();
-     assert.equal(await page.locator('#jw-worldcore-selected-title').textContent(),'Adventure');
+     assert.equal(await page.locator('#jw-worldcore-selected-title').textContent(),'Video Chat');
      const nextBox=await page.locator('#jw-worldcore-enter').boundingBox();
      assert.ok(nextBox.height>=40,'primary CTA stays tappable');
      await page.locator('#jw-worldcore-list-toggle').click();
@@ -58,7 +58,7 @@ const server=http.createServer((req,res)=>{
      await page.locator('#jw-worldcore-index button[data-world="1"]').click();
      assert.equal(await page.locator('#jw-worldcore-selected-title').textContent(),'Together');
      await page.locator('#jw-worldcore-index button[data-world="0"]').click();
-     assert.equal(await page.locator('#jw-worldcore-selected-title').textContent(),'Adventure');
+     assert.equal(await page.locator('#jw-worldcore-selected-title').textContent(),'Video Chat');
      if(!state.fallback){
       const canvas=page.locator('#jw-worldcore-canvas');
       await canvas.focus();
@@ -68,12 +68,12 @@ const server=http.createServer((req,res)=>{
       assert.ok((await canvas.boundingBox()).width>140,'touch target is usefully sized');
      }
      await page.locator('#jw-worldcore-enter').click();
-     await page.waitForFunction(()=>location.hash==='#adventure'&&document.querySelector('#adventure').classList.contains('active'),null,{timeout:7000});
+     await page.waitForFunction(()=>location.pathname.endsWith('/family-video.html'),null,{timeout:7000});
      await page.goBack();
      await page.waitForFunction(()=>document.querySelector('#home').classList.contains('active'),null,{timeout:7000});
      await page.locator('#jw-worldcore-dashboard').click();
      assert.ok(await page.locator('.hq-launchpad').isVisible(),'legacy launchpad remains accessible behind dashboard');
-     assert.equal(await page.locator('.hq-launchpad a').count(),6);
+     assert.equal(await page.locator('.hq-launchpad a').count(),7);
      assert.ok(await page.locator('.hq-details').isVisible());
      await page.locator('#jw-worldcore-dashboard').click();
      assert.equal(await page.locator('.hq-launchpad').isVisible(),false);

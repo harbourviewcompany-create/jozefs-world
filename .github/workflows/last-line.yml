@@ -1,0 +1,21 @@
+name: Last Line smoke
+on: [pull_request, push]
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --check last-line/game-3d.js && node --check last-line/simulation.js && node --check last-line/game.js && node tests/last-line-smoke.cjs
+
+      - run: npm install --no-save --package-lock=false playwright@1.56.1
+      - run: npx playwright install --with-deps chromium webkit
+      - run: node tests/last-line-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: last-line-browser-screenshots
+          path: last-line-*.png
+          if-no-files-found: ignore
