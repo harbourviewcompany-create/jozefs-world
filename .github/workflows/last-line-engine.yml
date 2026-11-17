@@ -1,0 +1,20 @@
+name: Last Line typed engine
+on: [push, pull_request]
+jobs:
+  engine:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: last-line
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm test
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: last-line-engine-build
+          path: last-line/engine-dist

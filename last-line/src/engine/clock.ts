@@ -1,0 +1,1 @@
+export class FixedClock {private accumulator=0; readonly dt=1/60; tick(elapsed:number,step:(dt:number)=>void){this.accumulator+=Math.min(.1,Math.max(0,elapsed));let count=0;while(this.accumulator+1e-9>=this.dt){step(this.dt);this.accumulator-=this.dt;count++}return count} }

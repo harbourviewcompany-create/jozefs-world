@@ -1,0 +1,19 @@
+{
+  "name": "last-line-engine",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit && vite build",
+    "test": "vitest run",
+    "dev": "vite"
+  },
+  "dependencies": {
+    "@babylonjs/core": "8.0.0",
+    "@babylonjs/havok": "1.3.10"
+  },
+  "devDependencies": {
+    "typescript": "5.8.3",
+    "vite": "6.3.5",
+    "vitest": "3.1.4"
+  }
+}

@@ -1,0 +1,1 @@
+export class Keeper {x=0;v=0;step(dt:number,axis:number){const target=Math.max(-1,Math.min(1,axis))*6;this.v+=Math.max(-18*dt,Math.min(18*dt,target-this.v));this.x=Math.max(-4.5,Math.min(4.5,this.x+this.v*dt));} }
