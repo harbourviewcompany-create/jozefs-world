@@ -21,8 +21,10 @@ function consolidateLegacyMenu(){
 consolidateLegacyMenu();
 const worldToggle=$('bw-menu-toggle');
 // The original world engine creates some HUD elements after this script executes.
-const legacyObserver=new MutationObserver(()=>consolidateLegacyMenu());
-legacyObserver.observe(document.body,{childList:true,subtree:true});
+if(typeof MutationObserver==='function'){
+ const legacyObserver=new MutationObserver(()=>consolidateLegacyMenu());
+ legacyObserver.observe(document.body,{childList:true,subtree:true});
+}
 // Graphics preset is entirely client-side and doesn't touch player/world saves.
 const QUALKEY='jozefs-block-visual-quality-v1';
 let qualityPref='auto',qualityFrames=0,qualityStart=0,qualityResolved=false;

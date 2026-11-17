@@ -21,7 +21,7 @@ const compressed=Buffer.from(encoded,'base64');
 if(compressed.length<100||compressed.length>2*1024*1024||
    compressed[0]!==0x1f||compressed[1]!==0x8b)
   throw new Error('Invalid 2D world gzip payload');
-const code=zlib.gunzipSync(compressed,{maxOutputLength:4*1024*1024}).toString('utf8');
+const code=zlib.gunzipSync(compressed,{maxOutputLength:4*1024*1024}).toString('utf8').replaceAll('function resizefunction resize','function resize');
 if(code.length<1000||!code.includes('BlockWorld'))
   throw new Error('2D world source missing expected game engine');
 new vm.Script(code,{filename:'block-world-engine.js'});
