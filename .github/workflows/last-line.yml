@@ -8,4 +8,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node --check last-line/game.js && node tests/last-line-smoke.cjs
+      - run: node --check last-line/game-3d.js && node --check last-line/simulation.js && node --check last-line/game.js && node tests/last-line-smoke.cjs
