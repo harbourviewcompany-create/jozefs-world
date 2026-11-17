@@ -48,7 +48,7 @@ on:
   workflow_dispatch:
 jobs:
   block-world:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       contents: read
@@ -64,7 +64,7 @@ jobs:
           node tests/block-world-3d-smoke.cjs
 
   browser-performance:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: read
