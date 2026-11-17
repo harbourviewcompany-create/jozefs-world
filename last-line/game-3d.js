@@ -1,0 +1,30 @@
+(()=>{'use strict';
+const canvas=document.getElementById('pitch'),notice=document.getElementById('notice');
+if(!window.BABYLON){notice.querySelector('p').textContent='3D engine unavailable. Reload with internet access.';document.getElementById('start').disabled=true;return}
+const B=BABYLON,V=B.Vector3,m=new LastLineMatch(),keys={};let paused=false,acc=0,clock=0;
+const engine=new B.Engine(canvas,true,{preserveDrawingBuffer:false,stencil:true});engine.setHardwareScalingLevel(Math.max(1,devicePixelRatio/1.5));
+const scene=new B.Scene(engine);scene.clearColor=new B.Color4(.05,.10,.19,1);scene.fogMode=B.Scene.FOGMODE_EXP;scene.fogDensity=.003;
+const camera=new B.FreeCamera('keeper cam',new V(0,5,-62),scene);camera.minZ=.2;camera.maxZ=250;camera.fov=1.05;
+new B.HemisphericLight('sky',new V(0,1,0),scene).intensity=.85;const sun=new B.DirectionalLight('floodlights',new V(-.4,-1,.5),scene);sun.intensity=1.4;sun.position=new V(15,30,-20);
+function mat(n,c){let a=new B.StandardMaterial(n,scene);a.diffuseColor=B.Color3.FromHexString(c);return a}
+const grass=[mat('grass light','#327b43'),mat('grass dark','#28663c')],white=mat('chalk','#ffffff'),steel=mat('stand','#31465d'),seat=mat('seats','#537c9a'),skin=mat('skin','#b9815c'),boot=mat('boots','#15202b'),kits=[mat('home','#32b9fc'),mat('away','#ec4555'),mat('keeper','#e8ed42')];
+function box(n,x,y,z,w,h,d,material,parent){let a=B.MeshBuilder.CreateBox(n,{width:w,height:h,depth:d},scene);a.position.set(x,y,z);a.material=material;if(parent)a.parent=parent;return a}
+function stripe(x,z,w,d){box('mark',x,.018,z,w,.025,d,white)}
+for(let i=0;i<14;i++)box('turf',0,-.06,-52.5+(i+.5)*7.5,68,.12,7.5,grass[i%2]);
+stripe(-34,0,.12,105);stripe(34,0,.12,105);stripe(0,0,68,.12);
+for(const s of [-1,1]){let z=s*52.5;stripe(0,z,68,.12);for(let x of [-20.16,20.16])stripe(x,z-s*8.25,.12,16.5);stripe(0,z-s*16.5,40.32,.12);for(let x of [-3.66,3.66])box('post',x,1.22,z,.12,2.44,.12,white);box('bar',0,2.44,z,7.44,.12,.12,white);for(let i=0;i<=18;i++){let x=-3.66+i*7.32/18;box('net strand',x,1.22,z+s*2,.025,2.44,.025,white)}for(let i=0;i<=8;i++)box('net strand',0,i*.305,z+s*2,7.32,.025,.025,white);}
+const circle=B.MeshBuilder.CreateTorus('center',{diameter:18.3,thickness:.07,tessellation:64},scene);circle.position.y=.03;circle.material=white;
+for(let side of [-1,1])for(let row=0;row<7;row++){box('stand',side*(39+row*1.5),row*.65,0,1.5,.8,116,row%2?seat:steel);box('end stand',0,row*.65,side*(59+row*1.5),76,.8,1.5,row%2?seat:steel)}
+function joint(n,parent,x,y,z){let j=new B.TransformNode(n,scene);j.parent=parent;j.position.set(x,y,z);return j}
+function limb(parent,n,x,y,z,r,len,material){let a=B.MeshBuilder.CreateCylinder(n,{height:len,diameter:r*2,tessellation:8},scene);a.parent=parent;a.position.set(x,y,z);a.material=material;return a}
+function rig(p,i){let root=new B.TransformNode('player'+i,scene),body=joint('body',root,0,.95,0);let kit=kits[p.keeper?2:p.t];box('shirt',0,.25,0,.48,.56,.29,kit,body);box('shorts',0,-.12,0,.42,.25,.29,boot,body);let head=B.MeshBuilder.CreateSphere('head',{diameter:.24,segments:10},scene);head.parent=body;head.position.y=.68;head.material=skin;let arms=[],legs=[];for(let s of [-1,1]){let arm=joint('shoulder',body,s*.29,.45,0);limb(arm,'sleeve',0,-.13,0,.085,.26,kit);let elbow=joint('elbow',arm,0,-.26,0);limb(elbow,'forearm',0,-.13,0,.06,.26,skin);box('hand',0,-.29,0,.13,.14,.13,p.keeper?white:skin,elbow);arms.push(arm);let hip=joint('hip',body,s*.13,-.19,0);limb(hip,'thigh',0,-.2,0,.1,.4,kit);let knee=joint('knee',hip,0,-.4,0);limb(knee,'sock',0,-.17,0,.073,.34,white);box('boot',0,-.36,.06,.16,.12,.29,boot,knee);legs.push({hip,knee})}return{root,body,arms,legs,x:p.x,z:p.z}}
+const rigs=m.players.map(rig),ball=B.MeshBuilder.CreateSphere('match ball',{diameter:.22,segments:16},scene);ball.material=white;
+let last=performance.now();function frame(){let now=performance.now(),dt=Math.min(.1,(now-last)/1000);last=now;if(!paused){acc+=dt;while(acc>=1/60){m.step(1/60,keys);acc-=1/60}clock+=dt}
+m.players.forEach((p,i)=>{let a=rigs[i],dx=p.x-a.x,dz=p.z-a.z,speed=Math.hypot(dx,dz)/Math.max(dt,.001),swing=Math.sin(clock*11+i)*Math.min(.85,speed*.12);a.root.position.set(p.x,p.h,p.z);if(speed>.15)a.root.rotation.y=Math.atan2(dx,dz);if(p===m.home)a.root.rotation.y=0;a.body.rotation.z=p===m.home?-m.dive*.95:0;for(let j=0;j<2;j++){let s=j?1:-1;a.legs[j].hip.rotation.x=s*swing;a.legs[j].knee.rotation.x=Math.max(0,-s*swing)*.9;a.arms[j].rotation.x=-s*swing*.7;a.arms[j].rotation.z=p.keeper?s*(m.dive&&p===m.home?1.25:.35):s*.16}a.x=p.x;a.z=p.z});
+ball.position.set(m.ball.x,m.ball.y,m.ball.z);ball.rotation.x+=m.ball.vz*dt;ball.rotation.z-=m.ball.vx*dt;
+camera.position.x+=(m.home.x-camera.position.x)*Math.min(1,dt*8);camera.position.z=m.home.z-9;camera.position.y=4.1;camera.setTarget(new V(m.home.x*.65,1,m.home.z+18));
+document.getElementById('score').textContent='JOZ '+m.score[0]+' : '+m.score[1]+' RIV | '+Math.floor(m.time/60)+':'+String(Math.floor(m.time%60)).padStart(2,'0');document.getElementById('info').textContent='Saves '+m.saves+' · Shots '+m.shots+' · Half '+m.half;
+if(m.phase==='half'||m.phase==='full'){notice.hidden=false;notice.querySelector('h1').textContent=m.phase==='half'?'HALF TIME':'FULL TIME';document.getElementById('start').textContent=m.phase==='half'?'Second half':'Rematch'}scene.render()}
+document.getElementById('start').onclick=()=>{if(m.phase==='full')m.reset();m.kickoff(m.half===2?1:0);notice.hidden=true;paused=false};document.getElementById('pause').onclick=e=>{paused=!paused;e.target.textContent=paused?'Resume':'Pause'};
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key===' ')e.preventDefault()});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);addEventListener('blur',()=>Object.keys(keys).forEach(k=>keys[k]=false));document.querySelectorAll('[data-key]').forEach(b=>{let k=b.dataset.key;b.onpointerdown=e=>{b.setPointerCapture(e.pointerId);keys[k]=true};b.onpointerup=b.onpointercancel=b.onlostpointercapture=()=>keys[k]=false});addEventListener('resize',()=>engine.resize());engine.runRenderLoop(frame);
+})();
