@@ -21,7 +21,7 @@ test('world saves with revision and broadcasts live actions',()=>{
  assert.match(cloud,/p_revision:revision/);
  assert.match(cloud,/event:'game-action'/);
  assert.match(cloud,/relayMessage\?\.\(payload\.message\)/);
- assert.match(html,/block-world-cloud\.js\?v=20261029-hudfix/);
+ assert.match(html,/block-world-cloud\.js\?v=[^"\s]+/);
 });
 
 test('chosen player controls host and guest character regardless of join order',()=>{

@@ -9,10 +9,12 @@ test('2D loader and fallback parse as valid JavaScript',async()=>{
     assert.doesNotThrow(()=>new Script(source,{filename:file}));
   }
 });
-test('2D page references the current loader and its eleven world chunks',async()=>{
+test('2D page retains emergency loader and its eleven world chunks',async()=>{
   const html=await readFile(new URL('block-world.html',root),'utf8');
   const loader=await readFile(new URL('block-world.js',root),'utf8');
-  assert.match(html,/block-world\.js\?v=20261106-loader-syntaxfix-v4/);
+  assert.match(html,/block-world-engine\.js\?v=/);
+  assert.match(html,/block-world\.js\?v=/);
+  assert.match(html,/onerror="window\.Jozef2DStartup\.fail\(\)"/);
   assert.match(loader,/const n = 11/);
   assert.match(loader,/block-world-up-/);
   assert.match(loader,/__jw2dLoadFailure/);

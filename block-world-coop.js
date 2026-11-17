@@ -65,7 +65,7 @@ function status(msg, keepLoader){
  const bar=$('coop-live');
  if(bar){
   const live=ready&&connected();
-  bar.textContent=role==='host'?(live?'● DADDY + JOZEF · LIVE':'● DADDY · WAITING FOR JOZEF'):role==='guest'?(live?'● JOZEF · LIVE WITH DADDY':'● JOZEF · FINDING DADDY'):'● SOLO';
+  bar.textContent=role==='host'?(live?'● LIVE TOGETHER · DADDY + JOZEF':'● DADDY · WAITING FOR JOZEF'):role==='guest'?(live?'● LIVE TOGETHER · JOZEF + DADDY':'● JOZEF · FINDING DADDY'):'● PLAYING SOLO';
   bar.className=live?'coop-live online':'coop-live';
  }
  // Keep the kid-friendly loader up until we are fully connected
@@ -282,8 +282,8 @@ function scheduleGuestRetry(){
  if(role!=='guest'||ready)return;
  clearTimeout(retryTimer);
  retryCount++;
- status('Still looking for Daddy… ('+retryCount+')', true);
- retryTimer=setTimeout(()=>{if(role==='guest'&&!ready)join(true);},Math.min(12000,600+retryCount*400));
+ status('Still looking for Daddy. Retrying automatically ('+retryCount+')', true);
+ retryTimer=setTimeout(()=>{if(role==='guest'&&!ready)join(true);},Math.min(15000,800+retryCount*500));
 }
 
 function join(isRetry){
@@ -331,7 +331,7 @@ function join(isRetry){
 
  joinTimer=setTimeout(()=>{
   if(role==='guest'&&!ready){
-   status('Daddy is offline. Keep this open — trying again…', true);
+   status('Daddy is offline. Waiting and trying again automatically', true);
    scheduleGuestRetry();
   }
  },20000);

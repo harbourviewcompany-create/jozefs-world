@@ -209,7 +209,15 @@
 <script src="./peerjs.min.js" defer></script>
 <script src="./block-world-art-forest.js?v=20261108-iosfix" defer></script>
 <script src="./block-world-network.js?v=20261029-v3" defer></script>
-<script src="./block-world.js?v=20261108-iosfix-v5" defer></script>
+<script>
+window.Jozef2DStartup={fail:function(){
+ if(this.retried)return;this.retried=true;
+ const script=document.createElement('script');script.src='./block-world.js?v=20261108-iosfix-v5';
+ script.onerror=function(){const el=document.getElementById('health');if(el)el.textContent='World load failed. Refresh to retry.';};
+ document.head.appendChild(script);
+}};
+</script>
+<script src="./block-world-engine.js?v=20261117" defer onerror="window.Jozef2DStartup.fail()"></script>
 <script src="./block-world-coop.js?v=20261030-jozefworld-v13" defer></script>
 <script src="./block-world-ui.js?v=20261114-single-drawer-3" defer></script>
 <script src="./block-world-adventure.js?v=20261101-coop-xp-v3" defer></script>
